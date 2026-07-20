@@ -1,0 +1,140 @@
+/* ===========================================================================
+   PRESAGE — design tokens
+
+   Aesthetic brief: an instrument, not a dashboard.
+
+   The reference points are Linear and Stripe, not the glassmorphic
+   "mission control" look. Reasons, in order of importance:
+
+   1. Colour has to mean something here. If panels glow and gradients drift,
+      the threat ramp stops reading as information and becomes decoration.
+      So: near-monochrome chrome, and saturation reserved almost entirely for
+      the threat scale. When the meter goes red it is the only red on screen.
+
+   2. Judges have seen forty dark dashboards with purple gradients. Restraint
+      is the differentiator, not more effects.
+
+   3. Every number on this screen is evidence. Instrument-grade mono numerals
+      with tabular figures read as measurement; proportional sans reads as
+      marketing copy.
+
+   Typography is Satoshi (geometric, distinctive) + JetBrains Mono (data).
+   Deliberately not Inter/Roboto/system — those are the tell of a generated UI.
+   =========================================================================== */
+
+:root {
+  /* ---- Typography ------------------------------------------------------ */
+  --font-display: "Satoshi", "Space Grotesk", ui-sans-serif, sans-serif;
+  --font-body: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  /* Type scale — 1.25 ratio, clamped for viewport safety on a projector. */
+  --t-2xs: 0.6875rem;  /* 11px — labels, axis ticks */
+  --t-xs: 0.75rem;     /* 12px — metadata */
+  --t-sm: 0.8125rem;   /* 13px — body small, transcript */
+  --t-base: 0.9375rem; /* 15px */
+  --t-md: 1.125rem;
+  --t-lg: 1.5rem;
+  --t-xl: 2rem;
+  --t-2xl: clamp(2.5rem, 4vw, 3.5rem);   /* threat score */
+  --t-3xl: clamp(3.5rem, 6vw, 5rem);
+
+  --tracking-tight: -0.02em;
+  --tracking-label: 0.09em;   /* uppercase micro-labels */
+
+  /* ---- Spacing: 4px base, 8px rhythm ---------------------------------- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+
+  /* ---- Radii: small and consistent. Big radii read as "app", not
+         "instrument". ------------------------------------------------- */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-pill: 999px;
+
+  /* ---- Motion ---------------------------------------------------------
+     Fast and physical. The meter must feel wired to the data, so its
+     response is near-instant; entrances are slower because they are
+     narrative. Nothing "floats". */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);      /* expo out — entrances */
+  --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* overshoot — stamps */
+  --t-instant: 90ms;
+  --t-fast: 180ms;
+  --t-med: 320ms;
+  --t-slow: 620ms;
+
+  /* ---- Z ---------------------------------------------------------------- */
+  --z-base: 1;
+  --z-sticky: 50;
+  --z-overlay: 400;
+  --z-modal: 800;
+  --z-toast: 900;
+  --z-vignette: 950;   /* threat vignette sits above content, below toasts */
+}
+
+/* =========================== DARK (default) =============================== */
+:root,
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Neutrals — a cool, very slightly blue-black. Pure #000 kills depth and
+     makes hairlines invisible on a projector. */
+  --bg: #08090b;
+  --bg-raised: #0c0e11;
+  --panel: #101317;
+  --panel-hover: #151920;
+
+  --line: rgba(255, 255, 255, 0.07);   /* hairline borders */
+  --line-strong: rgba(255, 255, 255, 0.13);
+
+  --ink: #e8eaed;          /* primary text */
+  --ink-muted: #9198a3;    /* secondary */
+  --ink-faint: #5f6672;    /* tertiary, axis labels */
+
+  /* Single UI accent — steel blue. Used for focus, active states, the
+     forecast chip. Never for threat. */
+  --accent: #4d8dff;
+  --accent-dim: rgba(77, 141, 255, 0.14);
+
+  /* ---- Threat ramp: the only saturated colour on screen ---------------
+     Desaturated relative to pure web colours so it reads as an instrument
+     scale rather than an alert badge. */
+  --calm: #35c08b;
+  --watch: #b8c34a;
+  --elevated: #e0a33c;
+  --high: #ec6a45;
+  --critical: #f2473f;
+
+  --calm-dim: rgba(53, 192, 139, 0.13);
+  --watch-dim: rgba(184, 195, 74, 0.13);
+  --elevated-dim: rgba(224, 163, 60, 0.13);
+  --high-dim: rgba(236, 106, 69, 0.14);
+  --critical-dim: rgba(242, 71, 63, 0.16);
+
+  --safe: var(--calm);
+  --danger: var(--critical);
+
+  /* Shadows: tight and dark. No coloured glows. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.55);
+}
+
+/* Threat level is set on <html data-threat="..."> by the app, so any component
+   can respond to the call's state without prop-drilling. This is what drives
+   the vignette and the meter hue in one place. */
+html[data-threat="CALM"] { --threat-color: var(--calm); --threat-dim: var(--calm-dim); }
+html[data-threat="WATCH"] { --threat-color: var(--watch); --threat-dim: var(--watch-dim); }
+html[data-threat="ELEVATED"] { --threat-color: var(--elevated); --threat-dim: var(--elevated-dim); }
+html[data-threat="HIGH"] { --threat-color: var(--high); --threat-dim: var(--high-dim); }
+html[data-threat="CRITICAL"] { --threat-color: var(--critical); --threat-dim: var(--critical-dim); }
+html:not([data-threat]) { --threat-color: var(--ink-faint); --threat-dim: transparent; }

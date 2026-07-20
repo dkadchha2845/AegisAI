@@ -1,0 +1,183 @@
+{
+  "matrix": {
+    "GREETING": {
+      "GREETING": 0.0040650406504065045,
+      "AUTHORITY_CLAIM": 0.9715447154471545,
+      "FEAR_INDUCTION": 0.0040650406504065045,
+      "ISOLATION": 0.0040650406504065045,
+      "VERIFICATION_DEMAND": 0.0040650406504065045,
+      "PAYMENT_SETUP": 0.0040650406504065045,
+      "PAYMENT_EXECUTION": 0.0040650406504065045,
+      "BENIGN": 0.0040650406504065045
+    },
+    "AUTHORITY_CLAIM": {
+      "GREETING": 0.0035714285714285713,
+      "AUTHORITY_CLAIM": 0.0035714285714285713,
+      "FEAR_INDUCTION": 0.48928571428571427,
+      "ISOLATION": 0.125,
+      "VERIFICATION_DEMAND": 0.0035714285714285713,
+      "PAYMENT_SETUP": 0.3678571428571429,
+      "PAYMENT_EXECUTION": 0.0035714285714285713,
+      "BENIGN": 0.0035714285714285713
+    },
+    "FEAR_INDUCTION": {
+      "GREETING": 0.006944444444444444,
+      "AUTHORITY_CLAIM": 0.24305555555555555,
+      "FEAR_INDUCTION": 0.006944444444444444,
+      "ISOLATION": 0.4791666666666667,
+      "VERIFICATION_DEMAND": 0.24305555555555555,
+      "PAYMENT_SETUP": 0.006944444444444444,
+      "PAYMENT_EXECUTION": 0.006944444444444444,
+      "BENIGN": 0.006944444444444444
+    },
+    "ISOLATION": {
+      "GREETING": 0.0047169811320754715,
+      "AUTHORITY_CLAIM": 0.0047169811320754715,
+      "FEAR_INDUCTION": 0.1650943396226415,
+      "ISOLATION": 0.0047169811320754715,
+      "VERIFICATION_DEMAND": 0.4858490566037736,
+      "PAYMENT_SETUP": 0.0047169811320754715,
+      "PAYMENT_EXECUTION": 0.32547169811320753,
+      "BENIGN": 0.0047169811320754715
+    },
+    "VERIFICATION_DEMAND": {
+      "GREETING": 0.006944444444444444,
+      "AUTHORITY_CLAIM": 0.006944444444444444,
+      "FEAR_INDUCTION": 0.006944444444444444,
+      "ISOLATION": 0.24305555555555555,
+      "VERIFICATION_DEMAND": 0.006944444444444444,
+      "PAYMENT_SETUP": 0.7152777777777778,
+      "PAYMENT_EXECUTION": 0.006944444444444444,
+      "BENIGN": 0.006944444444444444
+    },
+    "PAYMENT_SETUP": {
+      "GREETING": 0.0047169811320754715,
+      "AUTHORITY_CLAIM": 0.0047169811320754715,
+      "FEAR_INDUCTION": 0.0047169811320754715,
+      "ISOLATION": 0.32547169811320753,
+      "VERIFICATION_DEMAND": 0.0047169811320754715,
+      "PAYMENT_SETUP": 0.0047169811320754715,
+      "PAYMENT_EXECUTION": 0.6462264150943396,
+      "BENIGN": 0.0047169811320754715
+    },
+    "PAYMENT_EXECUTION": {
+      "GREETING": 0.023809523809523808,
+      "AUTHORITY_CLAIM": 0.023809523809523808,
+      "FEAR_INDUCTION": 0.023809523809523808,
+      "ISOLATION": 0.8333333333333334,
+      "VERIFICATION_DEMAND": 0.023809523809523808,
+      "PAYMENT_SETUP": 0.023809523809523808,
+      "PAYMENT_EXECUTION": 0.023809523809523808,
+      "BENIGN": 0.023809523809523808
+    },
+    "BENIGN": {
+      "GREETING": 0.125,
+      "AUTHORITY_CLAIM": 0.125,
+      "FEAR_INDUCTION": 0.125,
+      "ISOLATION": 0.125,
+      "VERIFICATION_DEMAND": 0.125,
+      "PAYMENT_SETUP": 0.125,
+      "PAYMENT_EXECUTION": 0.125,
+      "BENIGN": 0.125
+    }
+  },
+  "dwell_turns": {
+    "GREETING": {
+      "median": 2,
+      "n": 119
+    },
+    "AUTHORITY_CLAIM": {
+      "median": 2,
+      "n": 136
+    },
+    "PAYMENT_SETUP": {
+      "median": 3,
+      "n": 102
+    },
+    "ISOLATION": {
+      "median": 2,
+      "n": 119
+    },
+    "PAYMENT_EXECUTION": {
+      "median": 4,
+      "n": 102
+    },
+    "FEAR_INDUCTION": {
+      "median": 2,
+      "n": 85
+    },
+    "BENIGN": {
+      "median": 8,
+      "n": 85
+    },
+    "VERIFICATION_DEMAND": {
+      "median": 2,
+      "n": 68
+    }
+  },
+  "eta_to_payment": {
+    "GREETING": {
+      "median_turns": 12,
+      "p25": 8,
+      "n": 102
+    },
+    "AUTHORITY_CLAIM": {
+      "median_turns": 10,
+      "p25": 6,
+      "n": 102
+    },
+    "PAYMENT_SETUP": {
+      "median_turns": 3,
+      "p25": 2,
+      "n": 85
+    },
+    "ISOLATION": {
+      "median_turns": 4,
+      "p25": 2,
+      "n": 85
+    },
+    "FEAR_INDUCTION": {
+      "median_turns": 11,
+      "p25": 8,
+      "n": 68
+    },
+    "VERIFICATION_DEMAND": {
+      "median_turns": 6,
+      "p25": 4,
+      "n": 51
+    }
+  },
+  "raw_counts": {
+    "GREETING": {
+      "AUTHORITY_CLAIM": 119
+    },
+    "AUTHORITY_CLAIM": {
+      "PAYMENT_SETUP": 51,
+      "FEAR_INDUCTION": 68,
+      "ISOLATION": 17
+    },
+    "FEAR_INDUCTION": {
+      "ISOLATION": 34,
+      "AUTHORITY_CLAIM": 17,
+      "VERIFICATION_DEMAND": 17
+    },
+    "ISOLATION": {
+      "PAYMENT_EXECUTION": 34,
+      "VERIFICATION_DEMAND": 51,
+      "FEAR_INDUCTION": 17
+    },
+    "VERIFICATION_DEMAND": {
+      "PAYMENT_SETUP": 51,
+      "ISOLATION": 17
+    },
+    "PAYMENT_SETUP": {
+      "ISOLATION": 34,
+      "PAYMENT_EXECUTION": 68
+    },
+    "PAYMENT_EXECUTION": {
+      "ISOLATION": 17
+    },
+    "BENIGN": {}
+  },
+  "note": "matrix is over collapsed stage runs (self-transitions excluded); dwell_turns gives the median number of utterances spent in a stage"
+}

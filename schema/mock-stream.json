@@ -1,0 +1,6357 @@
+[
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 1,
+    "t": 0.0,
+    "call": {
+      "status": "active",
+      "duration_s": 0.0,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "GREETING",
+      "confidence": 0.72,
+      "since_s": 0.0,
+      "distribution": {
+        "GREETING": 0.72
+      }
+    },
+    "coercion": {
+      "index": 9.1,
+      "trend": "flat",
+      "history": [
+        9.1
+      ],
+      "features": {
+        "pause_ratio": 0.223,
+        "speech_rate_wpm": 146.8,
+        "compliance_hits": 0.0
+      }
+    },
+    "threat": {
+      "score": 6.3,
+      "level": "CALM",
+      "drivers": [
+        {
+          "label": "Stage: Greeting",
+          "contribution": 0.04,
+          "detail": "Classifier confidence 72%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.02,
+          "detail": "Coercion index 9, flat"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.0,
+      "fear": 0.0,
+      "isolation": 0.0,
+      "urgency": 0.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "ISOLATION",
+      "probability": 0.62,
+      "eta_s": 36.0,
+      "eta_to_payment_s": 90.0,
+      "last_prediction_correct": null
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 97.0,
+      "checks": []
+    },
+    "coach": null,
+    "guardian": {
+      "state": "IDLE",
+      "name": null,
+      "alerted_at_s": null,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 2,
+    "t": 0.0,
+    "kind": "STAGE_CHANGED",
+    "payload": {
+      "from": null,
+      "to": "GREETING"
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 3,
+    "t": 0.0,
+    "kind": "THRESHOLD_CROSSED",
+    "payload": {
+      "level": "CALM",
+      "score": 6.3
+    }
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 4,
+    "t": 4.5,
+    "call": {
+      "status": "active",
+      "duration_s": 4.5,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "GREETING",
+      "confidence": 0.74,
+      "since_s": 4.5,
+      "distribution": {
+        "GREETING": 0.74
+      }
+    },
+    "coercion": {
+      "index": 10.7,
+      "trend": "rising",
+      "history": [
+        9.1,
+        10.7
+      ],
+      "features": {
+        "pause_ratio": 0.227,
+        "speech_rate_wpm": 146.3,
+        "compliance_hits": 0.0
+      }
+    },
+    "threat": {
+      "score": 6.7,
+      "level": "CALM",
+      "drivers": [
+        {
+          "label": "Stage: Greeting",
+          "contribution": 0.04,
+          "detail": "Classifier confidence 74%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.03,
+          "detail": "Coercion index 11, rising"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.0,
+      "fear": 0.0,
+      "isolation": 0.0,
+      "urgency": 0.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "ISOLATION",
+      "probability": 0.62,
+      "eta_s": 31.5,
+      "eta_to_payment_s": 85.5,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 97.0,
+      "checks": []
+    },
+    "coach": null,
+    "guardian": {
+      "state": "IDLE",
+      "name": null,
+      "alerted_at_s": null,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 5,
+    "t": 9.0,
+    "call": {
+      "status": "active",
+      "duration_s": 9.0,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "AUTHORITY_CLAIM",
+      "confidence": 0.76,
+      "since_s": 0.0,
+      "distribution": {
+        "AUTHORITY_CLAIM": 0.76
+      }
+    },
+    "coercion": {
+      "index": 10.7,
+      "trend": "flat",
+      "history": [
+        9.1,
+        10.7,
+        10.7
+      ],
+      "features": {
+        "pause_ratio": 0.227,
+        "speech_rate_wpm": 146.3,
+        "compliance_hits": 0.0
+      }
+    },
+    "threat": {
+      "score": 38.7,
+      "level": "WATCH",
+      "drivers": [
+        {
+          "label": "Stage: Authority Claim",
+          "contribution": 0.36,
+          "detail": "Classifier confidence 76%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.03,
+          "detail": "Coercion index 11, flat"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.28,
+      "fear": 0.0,
+      "isolation": 0.0,
+      "urgency": 0.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "ISOLATION",
+      "probability": 0.62,
+      "eta_s": 27.0,
+      "eta_to_payment_s": 81.0,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 73.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Ask for their name, badge number and station, then say you will call the station's public number back.",
+      "tactic": "AUTHORITY_CLAIM",
+      "why": "Real officers accept a callback. Impersonators never do.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "warn"
+    },
+    "guardian": {
+      "state": "IDLE",
+      "name": null,
+      "alerted_at_s": null,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 6,
+    "t": 9.0,
+    "kind": "STAGE_CHANGED",
+    "payload": {
+      "from": "GREETING",
+      "to": "AUTHORITY_CLAIM"
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 7,
+    "t": 9.0,
+    "kind": "THRESHOLD_CROSSED",
+    "payload": {
+      "level": "WATCH",
+      "score": 38.7
+    }
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 8,
+    "t": 13.5,
+    "call": {
+      "status": "active",
+      "duration_s": 13.5,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "AUTHORITY_CLAIM",
+      "confidence": 0.78,
+      "since_s": 4.5,
+      "distribution": {
+        "AUTHORITY_CLAIM": 0.78
+      }
+    },
+    "coercion": {
+      "index": 22.4,
+      "trend": "rising",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4
+      ],
+      "features": {
+        "pause_ratio": 0.256,
+        "speech_rate_wpm": 142.2,
+        "compliance_hits": 0.0
+      }
+    },
+    "threat": {
+      "score": 41.6,
+      "level": "WATCH",
+      "drivers": [
+        {
+          "label": "Stage: Authority Claim",
+          "contribution": 0.36,
+          "detail": "Classifier confidence 78%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.06,
+          "detail": "Coercion index 22, rising"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 0.0,
+      "isolation": 0.0,
+      "urgency": 0.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "ISOLATION",
+      "probability": 0.69,
+      "eta_s": 22.5,
+      "eta_to_payment_s": 76.5,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 49.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Ask for their name, badge number and station, then say you will call the station's public number back.",
+      "tactic": "AUTHORITY_CLAIM",
+      "why": "Real officers accept a callback. Impersonators never do.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "warn"
+    },
+    "guardian": {
+      "state": "IDLE",
+      "name": null,
+      "alerted_at_s": null,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 9,
+    "t": 18.0,
+    "call": {
+      "status": "active",
+      "duration_s": 18.0,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "FEAR_INDUCTION",
+      "confidence": 0.8,
+      "since_s": 0.0,
+      "distribution": {
+        "FEAR_INDUCTION": 0.8
+      }
+    },
+    "coercion": {
+      "index": 22.4,
+      "trend": "flat",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4
+      ],
+      "features": {
+        "pause_ratio": 0.256,
+        "speech_rate_wpm": 142.2,
+        "compliance_hits": 0.0
+      }
+    },
+    "threat": {
+      "score": 61.6,
+      "level": "ELEVATED",
+      "drivers": [
+        {
+          "label": "Stage: Fear Induction",
+          "contribution": 0.56,
+          "detail": "Classifier confidence 80%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.06,
+          "detail": "Coercion index 22, flat"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 0.28,
+      "isolation": 0.0,
+      "urgency": 0.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "ISOLATION",
+      "probability": 0.76,
+      "eta_s": 18.0,
+      "eta_to_payment_s": 72.0,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 25.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Say: \"I am going to hang up and call 1930 to verify this.\"",
+      "tactic": "FEAR_INDUCTION",
+      "why": "No genuine agency loses anything if you verify first.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "warn"
+    },
+    "guardian": {
+      "state": "IDLE",
+      "name": null,
+      "alerted_at_s": null,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 10,
+    "t": 18.0,
+    "kind": "STAGE_CHANGED",
+    "payload": {
+      "from": "AUTHORITY_CLAIM",
+      "to": "FEAR_INDUCTION"
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 11,
+    "t": 18.0,
+    "kind": "THRESHOLD_CROSSED",
+    "payload": {
+      "level": "ELEVATED",
+      "score": 61.6
+    }
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 12,
+    "t": 22.5,
+    "call": {
+      "status": "active",
+      "duration_s": 22.5,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "FEAR_INDUCTION",
+      "confidence": 0.82,
+      "since_s": 4.5,
+      "distribution": {
+        "FEAR_INDUCTION": 0.82
+      }
+    },
+    "coercion": {
+      "index": 42.0,
+      "trend": "rising",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0
+      ],
+      "features": {
+        "pause_ratio": 0.305,
+        "speech_rate_wpm": 135.3,
+        "compliance_hits": 0.0
+      }
+    },
+    "threat": {
+      "score": 66.5,
+      "level": "ELEVATED",
+      "drivers": [
+        {
+          "label": "Stage: Fear Induction",
+          "contribution": 0.56,
+          "detail": "Classifier confidence 82%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.1,
+          "detail": "Coercion index 42, rising"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 0.56,
+      "isolation": 0.0,
+      "urgency": 0.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "ISOLATION",
+      "probability": 0.83,
+      "eta_s": 13.5,
+      "eta_to_payment_s": 67.5,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Say: \"I am going to hang up and call 1930 to verify this.\"",
+      "tactic": "FEAR_INDUCTION",
+      "why": "No genuine agency loses anything if you verify first.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "warn"
+    },
+    "guardian": {
+      "state": "IDLE",
+      "name": null,
+      "alerted_at_s": null,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 13,
+    "t": 27.0,
+    "call": {
+      "status": "active",
+      "duration_s": 27.0,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "FEAR_INDUCTION",
+      "confidence": 0.84,
+      "since_s": 9.0,
+      "distribution": {
+        "FEAR_INDUCTION": 0.84
+      }
+    },
+    "coercion": {
+      "index": 42.0,
+      "trend": "flat",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0
+      ],
+      "features": {
+        "pause_ratio": 0.305,
+        "speech_rate_wpm": 135.3,
+        "compliance_hits": 0.0
+      }
+    },
+    "threat": {
+      "score": 66.5,
+      "level": "ELEVATED",
+      "drivers": [
+        {
+          "label": "Stage: Fear Induction",
+          "contribution": 0.56,
+          "detail": "Classifier confidence 84%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.1,
+          "detail": "Coercion index 42, flat"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 0.84,
+      "isolation": 0.0,
+      "urgency": 0.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "ISOLATION",
+      "probability": 0.9,
+      "eta_s": 9.0,
+      "eta_to_payment_s": 63.0,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Say: \"I am going to hang up and call 1930 to verify this.\"",
+      "tactic": "FEAR_INDUCTION",
+      "why": "No genuine agency loses anything if you verify first.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "warn"
+    },
+    "guardian": {
+      "state": "IDLE",
+      "name": null,
+      "alerted_at_s": null,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 14,
+    "t": 31.5,
+    "call": {
+      "status": "active",
+      "duration_s": 31.5,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "FEAR_INDUCTION",
+      "confidence": 0.86,
+      "since_s": 13.5,
+      "distribution": {
+        "FEAR_INDUCTION": 0.86
+      }
+    },
+    "coercion": {
+      "index": 64.0,
+      "trend": "rising",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0
+      ],
+      "features": {
+        "pause_ratio": 0.36,
+        "speech_rate_wpm": 127.6,
+        "compliance_hits": 0.0
+      }
+    },
+    "threat": {
+      "score": 72.0,
+      "level": "HIGH",
+      "drivers": [
+        {
+          "label": "Stage: Fear Induction",
+          "contribution": 0.56,
+          "detail": "Classifier confidence 86%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.16,
+          "detail": "Coercion index 64, rising"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 0.0,
+      "urgency": 0.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "ISOLATION",
+      "probability": 0.96,
+      "eta_s": 4.5,
+      "eta_to_payment_s": 58.5,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Say: \"I am going to hang up and call 1930 to verify this.\"",
+      "tactic": "FEAR_INDUCTION",
+      "why": "No genuine agency loses anything if you verify first.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "warn"
+    },
+    "guardian": {
+      "state": "IDLE",
+      "name": null,
+      "alerted_at_s": null,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 15,
+    "t": 31.5,
+    "kind": "THRESHOLD_CROSSED",
+    "payload": {
+      "level": "HIGH",
+      "score": 72.0
+    }
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 16,
+    "t": 36.0,
+    "call": {
+      "status": "active",
+      "duration_s": 36.0,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "ISOLATION",
+      "confidence": 0.88,
+      "since_s": 0.0,
+      "distribution": {
+        "ISOLATION": 0.88
+      }
+    },
+    "coercion": {
+      "index": 64.0,
+      "trend": "flat",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0
+      ],
+      "features": {
+        "pause_ratio": 0.36,
+        "speech_rate_wpm": 127.6,
+        "compliance_hits": 0.0
+      }
+    },
+    "threat": {
+      "score": 88.0,
+      "level": "HIGH",
+      "drivers": [
+        {
+          "label": "Stage: Isolation",
+          "contribution": 0.72,
+          "detail": "Classifier confidence 88%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.16,
+          "detail": "Coercion index 64, flat"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 0.28,
+      "urgency": 0.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "VERIFICATION_DEMAND",
+      "probability": 0.76,
+      "eta_s": 18.0,
+      "eta_to_payment_s": 54.0,
+      "last_prediction_correct": null
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Say: \"I don't discuss anything without my family present.\" Then put the phone down and go to another person in the house.",
+      "tactic": "ISOLATION",
+      "why": "Isolation is the step before every transfer. Breaking it ends most scams on its own.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 17,
+    "t": 36.0,
+    "kind": "STAGE_CHANGED",
+    "payload": {
+      "from": "FEAR_INDUCTION",
+      "to": "ISOLATION"
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 18,
+    "t": 36.0,
+    "kind": "FORECAST_HIT",
+    "payload": {
+      "stage": "ISOLATION"
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 19,
+    "t": 36.0,
+    "kind": "GUARDIAN_ALERTED",
+    "payload": {
+      "name": "Aditya (son)"
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 20,
+    "t": 36.0,
+    "kind": "COACH_URGENT",
+    "payload": {
+      "line": "Say: \"I don't discuss anything without my family present.\" Then put the phone down and go to another person in the house."
+    }
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 21,
+    "t": 40.5,
+    "call": {
+      "status": "active",
+      "duration_s": 40.5,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "ISOLATION",
+      "confidence": 0.9,
+      "since_s": 4.5,
+      "distribution": {
+        "ISOLATION": 0.9
+      }
+    },
+    "coercion": {
+      "index": 60.7,
+      "trend": "falling",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7
+      ],
+      "features": {
+        "pause_ratio": 0.352,
+        "speech_rate_wpm": 128.8,
+        "compliance_hits": 0.0
+      }
+    },
+    "threat": {
+      "score": 87.2,
+      "level": "HIGH",
+      "drivers": [
+        {
+          "label": "Stage: Isolation",
+          "contribution": 0.72,
+          "detail": "Classifier confidence 90%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.15,
+          "detail": "Coercion index 61, falling"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 0.56,
+      "urgency": 0.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "VERIFICATION_DEMAND",
+      "probability": 0.83,
+      "eta_s": 13.5,
+      "eta_to_payment_s": 49.5,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Say: \"I don't discuss anything without my family present.\" Then put the phone down and go to another person in the house.",
+      "tactic": "ISOLATION",
+      "why": "Isolation is the step before every transfer. Breaking it ends most scams on its own.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 22,
+    "t": 45.0,
+    "call": {
+      "status": "active",
+      "duration_s": 45.0,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u10",
+          "speaker": "CALLER",
+          "text": "Achha. Ab aap call disconnect nahi karenge. Aap digital arrest par hain. Video call on rakhiye, kamre mein akele rahiye, koi andar na aaye.",
+          "t0": 45.0,
+          "t1": 49.1,
+          "stage": "ISOLATION",
+          "confidence": 0.92,
+          "victim_state": "UNKNOWN"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "ISOLATION",
+      "confidence": 0.92,
+      "since_s": 9.0,
+      "distribution": {
+        "ISOLATION": 0.92
+      }
+    },
+    "coercion": {
+      "index": 60.7,
+      "trend": "flat",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7,
+        60.7
+      ],
+      "features": {
+        "pause_ratio": 0.352,
+        "speech_rate_wpm": 128.8,
+        "compliance_hits": 0.0
+      }
+    },
+    "threat": {
+      "score": 87.2,
+      "level": "HIGH",
+      "drivers": [
+        {
+          "label": "Stage: Isolation",
+          "contribution": 0.72,
+          "detail": "Classifier confidence 92%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.15,
+          "detail": "Coercion index 61, flat"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 0.84,
+      "urgency": 0.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "VERIFICATION_DEMAND",
+      "probability": 0.9,
+      "eta_s": 9.0,
+      "eta_to_payment_s": 45.0,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Say: \"I don't discuss anything without my family present.\" Then put the phone down and go to another person in the house.",
+      "tactic": "ISOLATION",
+      "why": "Isolation is the step before every transfer. Breaking it ends most scams on its own.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 23,
+    "t": 49.5,
+    "call": {
+      "status": "active",
+      "duration_s": 49.5,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u10",
+          "speaker": "CALLER",
+          "text": "Achha. Ab aap call disconnect nahi karenge. Aap digital arrest par hain. Video call on rakhiye, kamre mein akele rahiye, koi andar na aaye.",
+          "t0": 45.0,
+          "t1": 49.1,
+          "stage": "ISOLATION",
+          "confidence": 0.92,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u11",
+          "speaker": "VICTIM",
+          "text": "Theek hai sir, main akela hi hoon, patni mandir gayi hai.",
+          "t0": 49.5,
+          "t1": 53.6,
+          "stage": "ISOLATION",
+          "confidence": 0.94,
+          "victim_state": "COMPLIANT"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "ISOLATION",
+      "confidence": 0.94,
+      "since_s": 13.5,
+      "distribution": {
+        "ISOLATION": 0.94
+      }
+    },
+    "coercion": {
+      "index": 68.0,
+      "trend": "rising",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0
+      ],
+      "features": {
+        "pause_ratio": 0.37,
+        "speech_rate_wpm": 126.2,
+        "compliance_hits": 1.0
+      }
+    },
+    "threat": {
+      "score": 89.0,
+      "level": "HIGH",
+      "drivers": [
+        {
+          "label": "Stage: Isolation",
+          "contribution": 0.72,
+          "detail": "Classifier confidence 94%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.17,
+          "detail": "Coercion index 68, rising"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 1.0,
+      "urgency": 0.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "VERIFICATION_DEMAND",
+      "probability": 0.96,
+      "eta_s": 4.5,
+      "eta_to_payment_s": 40.5,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Say: \"I don't discuss anything without my family present.\" Then put the phone down and go to another person in the house.",
+      "tactic": "ISOLATION",
+      "why": "Isolation is the step before every transfer. Breaking it ends most scams on its own.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 24,
+    "t": 54.0,
+    "call": {
+      "status": "active",
+      "duration_s": 54.0,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u10",
+          "speaker": "CALLER",
+          "text": "Achha. Ab aap call disconnect nahi karenge. Aap digital arrest par hain. Video call on rakhiye, kamre mein akele rahiye, koi andar na aaye.",
+          "t0": 45.0,
+          "t1": 49.1,
+          "stage": "ISOLATION",
+          "confidence": 0.92,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u11",
+          "speaker": "VICTIM",
+          "text": "Theek hai sir, main akela hi hoon, patni mandir gayi hai.",
+          "t0": 49.5,
+          "t1": 53.6,
+          "stage": "ISOLATION",
+          "confidence": 0.94,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u12",
+          "speaker": "CALLER",
+          "text": "Ab verification karte hain. Aapka Aadhaar number bataiye, aur bank account kaunse bank mein hai.",
+          "t0": 54.0,
+          "t1": 58.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "VERIFICATION_DEMAND",
+      "confidence": 0.96,
+      "since_s": 0.0,
+      "distribution": {
+        "VERIFICATION_DEMAND": 0.96
+      }
+    },
+    "coercion": {
+      "index": 68.0,
+      "trend": "flat",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0
+      ],
+      "features": {
+        "pause_ratio": 0.37,
+        "speech_rate_wpm": 126.2,
+        "compliance_hits": 1.0
+      }
+    },
+    "threat": {
+      "score": 81.0,
+      "level": "HIGH",
+      "drivers": [
+        {
+          "label": "Stage: Verification Demand",
+          "contribution": 0.64,
+          "detail": "Classifier confidence 96%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.17,
+          "detail": "Coercion index 68, flat"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 1.0,
+      "urgency": 0.28,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "PAYMENT_SETUP",
+      "probability": 0.76,
+      "eta_s": 18.0,
+      "eta_to_payment_s": 36.0,
+      "last_prediction_correct": null
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Do not read out any OTP, Aadhaar or account number. Say you will verify at the branch.",
+      "tactic": "VERIFICATION_DEMAND",
+      "why": "No bank or agency asks for these on a call. Not once, not ever.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 25,
+    "t": 54.0,
+    "kind": "STAGE_CHANGED",
+    "payload": {
+      "from": "ISOLATION",
+      "to": "VERIFICATION_DEMAND"
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 26,
+    "t": 54.0,
+    "kind": "FORECAST_HIT",
+    "payload": {
+      "stage": "VERIFICATION_DEMAND"
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 27,
+    "t": 54.0,
+    "kind": "COACH_URGENT",
+    "payload": {
+      "line": "Do not read out any OTP, Aadhaar or account number. Say you will verify at the branch."
+    }
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 28,
+    "t": 58.5,
+    "call": {
+      "status": "active",
+      "duration_s": 58.5,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u10",
+          "speaker": "CALLER",
+          "text": "Achha. Ab aap call disconnect nahi karenge. Aap digital arrest par hain. Video call on rakhiye, kamre mein akele rahiye, koi andar na aaye.",
+          "t0": 45.0,
+          "t1": 49.1,
+          "stage": "ISOLATION",
+          "confidence": 0.92,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u11",
+          "speaker": "VICTIM",
+          "text": "Theek hai sir, main akela hi hoon, patni mandir gayi hai.",
+          "t0": 49.5,
+          "t1": 53.6,
+          "stage": "ISOLATION",
+          "confidence": 0.94,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u12",
+          "speaker": "CALLER",
+          "text": "Ab verification karte hain. Aapka Aadhaar number bataiye, aur bank account kaunse bank mein hai.",
+          "t0": 54.0,
+          "t1": 58.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u13",
+          "speaker": "VICTIM",
+          "text": "Aadhaar hai... 4419 6620 8873. Bank Ka Bank of Maharashtra hai sir, Kothrud branch.",
+          "t0": 58.5,
+          "t1": 62.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "VERIFICATION_DEMAND",
+      "confidence": 0.96,
+      "since_s": 4.5,
+      "distribution": {
+        "VERIFICATION_DEMAND": 0.96
+      }
+    },
+    "coercion": {
+      "index": 71.3,
+      "trend": "rising",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0,
+        71.3
+      ],
+      "features": {
+        "pause_ratio": 0.378,
+        "speech_rate_wpm": 125.0,
+        "compliance_hits": 2.0
+      }
+    },
+    "threat": {
+      "score": 81.8,
+      "level": "HIGH",
+      "drivers": [
+        {
+          "label": "Stage: Verification Demand",
+          "contribution": 0.64,
+          "detail": "Classifier confidence 96%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.18,
+          "detail": "Coercion index 71, rising"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 1.0,
+      "urgency": 0.56,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "PAYMENT_SETUP",
+      "probability": 0.83,
+      "eta_s": 13.5,
+      "eta_to_payment_s": 31.5,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Do not read out any OTP, Aadhaar or account number. Say you will verify at the branch.",
+      "tactic": "VERIFICATION_DEMAND",
+      "why": "No bank or agency asks for these on a call. Not once, not ever.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 29,
+    "t": 63.0,
+    "call": {
+      "status": "active",
+      "duration_s": 63.0,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u10",
+          "speaker": "CALLER",
+          "text": "Achha. Ab aap call disconnect nahi karenge. Aap digital arrest par hain. Video call on rakhiye, kamre mein akele rahiye, koi andar na aaye.",
+          "t0": 45.0,
+          "t1": 49.1,
+          "stage": "ISOLATION",
+          "confidence": 0.92,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u11",
+          "speaker": "VICTIM",
+          "text": "Theek hai sir, main akela hi hoon, patni mandir gayi hai.",
+          "t0": 49.5,
+          "t1": 53.6,
+          "stage": "ISOLATION",
+          "confidence": 0.94,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u12",
+          "speaker": "CALLER",
+          "text": "Ab verification karte hain. Aapka Aadhaar number bataiye, aur bank account kaunse bank mein hai.",
+          "t0": 54.0,
+          "t1": 58.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u13",
+          "speaker": "VICTIM",
+          "text": "Aadhaar hai... 4419 6620 8873. Bank Ka Bank of Maharashtra hai sir, Kothrud branch.",
+          "t0": 58.5,
+          "t1": 62.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u14",
+          "speaker": "CALLER",
+          "text": "Account mein abhi kitna balance hai sir? Poora amount batana zaroori hai warna concealment ka charge lagega.",
+          "t0": 63.0,
+          "t1": 67.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "VERIFICATION_DEMAND",
+      "confidence": 0.96,
+      "since_s": 9.0,
+      "distribution": {
+        "VERIFICATION_DEMAND": 0.96
+      }
+    },
+    "coercion": {
+      "index": 71.3,
+      "trend": "flat",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0,
+        71.3,
+        71.3
+      ],
+      "features": {
+        "pause_ratio": 0.378,
+        "speech_rate_wpm": 125.0,
+        "compliance_hits": 2.0
+      }
+    },
+    "threat": {
+      "score": 81.8,
+      "level": "HIGH",
+      "drivers": [
+        {
+          "label": "Stage: Verification Demand",
+          "contribution": 0.64,
+          "detail": "Classifier confidence 96%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.18,
+          "detail": "Coercion index 71, flat"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 1.0,
+      "urgency": 0.84,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "PAYMENT_SETUP",
+      "probability": 0.9,
+      "eta_s": 9.0,
+      "eta_to_payment_s": 27.0,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Do not read out any OTP, Aadhaar or account number. Say you will verify at the branch.",
+      "tactic": "VERIFICATION_DEMAND",
+      "why": "No bank or agency asks for these on a call. Not once, not ever.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 30,
+    "t": 67.5,
+    "call": {
+      "status": "active",
+      "duration_s": 67.5,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u10",
+          "speaker": "CALLER",
+          "text": "Achha. Ab aap call disconnect nahi karenge. Aap digital arrest par hain. Video call on rakhiye, kamre mein akele rahiye, koi andar na aaye.",
+          "t0": 45.0,
+          "t1": 49.1,
+          "stage": "ISOLATION",
+          "confidence": 0.92,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u11",
+          "speaker": "VICTIM",
+          "text": "Theek hai sir, main akela hi hoon, patni mandir gayi hai.",
+          "t0": 49.5,
+          "t1": 53.6,
+          "stage": "ISOLATION",
+          "confidence": 0.94,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u12",
+          "speaker": "CALLER",
+          "text": "Ab verification karte hain. Aapka Aadhaar number bataiye, aur bank account kaunse bank mein hai.",
+          "t0": 54.0,
+          "t1": 58.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u13",
+          "speaker": "VICTIM",
+          "text": "Aadhaar hai... 4419 6620 8873. Bank Ka Bank of Maharashtra hai sir, Kothrud branch.",
+          "t0": 58.5,
+          "t1": 62.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u14",
+          "speaker": "CALLER",
+          "text": "Account mein abhi kitna balance hai sir? Poora amount batana zaroori hai warna concealment ka charge lagega.",
+          "t0": 63.0,
+          "t1": 67.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u15",
+          "speaker": "VICTIM",
+          "text": "Wo... pension ka paisa hai, aath lakh ke aas paas.",
+          "t0": 67.5,
+          "t1": 71.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "VERIFICATION_DEMAND",
+      "confidence": 0.96,
+      "since_s": 13.5,
+      "distribution": {
+        "VERIFICATION_DEMAND": 0.96
+      }
+    },
+    "coercion": {
+      "index": 64.0,
+      "trend": "falling",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0,
+        71.3,
+        71.3,
+        64.0
+      ],
+      "features": {
+        "pause_ratio": 0.36,
+        "speech_rate_wpm": 127.6,
+        "compliance_hits": 2.0
+      }
+    },
+    "threat": {
+      "score": 80.0,
+      "level": "HIGH",
+      "drivers": [
+        {
+          "label": "Stage: Verification Demand",
+          "contribution": 0.64,
+          "detail": "Classifier confidence 96%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.16,
+          "detail": "Coercion index 64, falling"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 1.0,
+      "urgency": 1.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "PAYMENT_SETUP",
+      "probability": 0.96,
+      "eta_s": 4.5,
+      "eta_to_payment_s": 22.5,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Do not read out any OTP, Aadhaar or account number. Say you will verify at the branch.",
+      "tactic": "VERIFICATION_DEMAND",
+      "why": "No bank or agency asks for these on a call. Not once, not ever.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 31,
+    "t": 72.0,
+    "call": {
+      "status": "active",
+      "duration_s": 72.0,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u10",
+          "speaker": "CALLER",
+          "text": "Achha. Ab aap call disconnect nahi karenge. Aap digital arrest par hain. Video call on rakhiye, kamre mein akele rahiye, koi andar na aaye.",
+          "t0": 45.0,
+          "t1": 49.1,
+          "stage": "ISOLATION",
+          "confidence": 0.92,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u11",
+          "speaker": "VICTIM",
+          "text": "Theek hai sir, main akela hi hoon, patni mandir gayi hai.",
+          "t0": 49.5,
+          "t1": 53.6,
+          "stage": "ISOLATION",
+          "confidence": 0.94,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u12",
+          "speaker": "CALLER",
+          "text": "Ab verification karte hain. Aapka Aadhaar number bataiye, aur bank account kaunse bank mein hai.",
+          "t0": 54.0,
+          "t1": 58.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u13",
+          "speaker": "VICTIM",
+          "text": "Aadhaar hai... 4419 6620 8873. Bank Ka Bank of Maharashtra hai sir, Kothrud branch.",
+          "t0": 58.5,
+          "t1": 62.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u14",
+          "speaker": "CALLER",
+          "text": "Account mein abhi kitna balance hai sir? Poora amount batana zaroori hai warna concealment ka charge lagega.",
+          "t0": 63.0,
+          "t1": 67.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u15",
+          "speaker": "VICTIM",
+          "text": "Wo... pension ka paisa hai, aath lakh ke aas paas.",
+          "t0": 67.5,
+          "t1": 71.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u16",
+          "speaker": "CALLER",
+          "text": "Theek hai. Ab RBI ke supervised verification account mein ye funds transfer karne honge. Wahan audit hoga, clean paisa 24 ghante mein wapas aa jayega. Ye standard procedure hai.",
+          "t0": 72.0,
+          "t1": 76.1,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "PAYMENT_SETUP",
+      "confidence": 0.96,
+      "since_s": 0.0,
+      "distribution": {
+        "PAYMENT_SETUP": 0.96
+      }
+    },
+    "coercion": {
+      "index": 64.0,
+      "trend": "flat",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0,
+        71.3,
+        71.3,
+        64.0,
+        64.0
+      ],
+      "features": {
+        "pause_ratio": 0.36,
+        "speech_rate_wpm": 127.6,
+        "compliance_hits": 2.0
+      }
+    },
+    "threat": {
+      "score": 88.0,
+      "level": "HIGH",
+      "drivers": [
+        {
+          "label": "Stage: Payment Setup",
+          "contribution": 0.72,
+          "detail": "Classifier confidence 96%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.16,
+          "detail": "Coercion index 64, flat"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 1.0,
+      "urgency": 1.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "PAYMENT_EXECUTION",
+      "probability": 0.76,
+      "eta_s": 18.0,
+      "eta_to_payment_s": 18.0,
+      "last_prediction_correct": null
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Say: \"I need to speak to my bank first.\" Do not open any payment app while this call is connected.",
+      "tactic": "PAYMENT_SETUP",
+      "why": "No investigation requires you to move your own money.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 32,
+    "t": 72.0,
+    "kind": "STAGE_CHANGED",
+    "payload": {
+      "from": "VERIFICATION_DEMAND",
+      "to": "PAYMENT_SETUP"
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 33,
+    "t": 72.0,
+    "kind": "FORECAST_HIT",
+    "payload": {
+      "stage": "PAYMENT_SETUP"
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 34,
+    "t": 72.0,
+    "kind": "COACH_URGENT",
+    "payload": {
+      "line": "Say: \"I need to speak to my bank first.\" Do not open any payment app while this call is connected."
+    }
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 35,
+    "t": 76.5,
+    "call": {
+      "status": "active",
+      "duration_s": 76.5,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u10",
+          "speaker": "CALLER",
+          "text": "Achha. Ab aap call disconnect nahi karenge. Aap digital arrest par hain. Video call on rakhiye, kamre mein akele rahiye, koi andar na aaye.",
+          "t0": 45.0,
+          "t1": 49.1,
+          "stage": "ISOLATION",
+          "confidence": 0.92,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u11",
+          "speaker": "VICTIM",
+          "text": "Theek hai sir, main akela hi hoon, patni mandir gayi hai.",
+          "t0": 49.5,
+          "t1": 53.6,
+          "stage": "ISOLATION",
+          "confidence": 0.94,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u12",
+          "speaker": "CALLER",
+          "text": "Ab verification karte hain. Aapka Aadhaar number bataiye, aur bank account kaunse bank mein hai.",
+          "t0": 54.0,
+          "t1": 58.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u13",
+          "speaker": "VICTIM",
+          "text": "Aadhaar hai... 4419 6620 8873. Bank Ka Bank of Maharashtra hai sir, Kothrud branch.",
+          "t0": 58.5,
+          "t1": 62.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u14",
+          "speaker": "CALLER",
+          "text": "Account mein abhi kitna balance hai sir? Poora amount batana zaroori hai warna concealment ka charge lagega.",
+          "t0": 63.0,
+          "t1": 67.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u15",
+          "speaker": "VICTIM",
+          "text": "Wo... pension ka paisa hai, aath lakh ke aas paas.",
+          "t0": 67.5,
+          "t1": 71.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u16",
+          "speaker": "CALLER",
+          "text": "Theek hai. Ab RBI ke supervised verification account mein ye funds transfer karne honge. Wahan audit hoga, clean paisa 24 ghante mein wapas aa jayega. Ye standard procedure hai.",
+          "t0": 72.0,
+          "t1": 76.1,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u17",
+          "speaker": "VICTIM",
+          "text": "Sara paisa bhejna padega sir? Mujhe dawai ke liye bhi...",
+          "t0": 76.5,
+          "t1": 80.6,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "PAYMENT_SETUP",
+      "confidence": 0.96,
+      "since_s": 4.5,
+      "distribution": {
+        "PAYMENT_SETUP": 0.96
+      }
+    },
+    "coercion": {
+      "index": 60.7,
+      "trend": "falling",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0,
+        71.3,
+        71.3,
+        64.0,
+        64.0,
+        60.7
+      ],
+      "features": {
+        "pause_ratio": 0.352,
+        "speech_rate_wpm": 128.8,
+        "compliance_hits": 2.0
+      }
+    },
+    "threat": {
+      "score": 87.2,
+      "level": "HIGH",
+      "drivers": [
+        {
+          "label": "Stage: Payment Setup",
+          "contribution": 0.72,
+          "detail": "Classifier confidence 96%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.15,
+          "detail": "Coercion index 61, falling"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 1.0,
+      "urgency": 1.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "PAYMENT_EXECUTION",
+      "probability": 0.83,
+      "eta_s": 13.5,
+      "eta_to_payment_s": 13.5,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Say: \"I need to speak to my bank first.\" Do not open any payment app while this call is connected.",
+      "tactic": "PAYMENT_SETUP",
+      "why": "No investigation requires you to move your own money.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 36,
+    "t": 81.0,
+    "call": {
+      "status": "active",
+      "duration_s": 81.0,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u10",
+          "speaker": "CALLER",
+          "text": "Achha. Ab aap call disconnect nahi karenge. Aap digital arrest par hain. Video call on rakhiye, kamre mein akele rahiye, koi andar na aaye.",
+          "t0": 45.0,
+          "t1": 49.1,
+          "stage": "ISOLATION",
+          "confidence": 0.92,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u11",
+          "speaker": "VICTIM",
+          "text": "Theek hai sir, main akela hi hoon, patni mandir gayi hai.",
+          "t0": 49.5,
+          "t1": 53.6,
+          "stage": "ISOLATION",
+          "confidence": 0.94,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u12",
+          "speaker": "CALLER",
+          "text": "Ab verification karte hain. Aapka Aadhaar number bataiye, aur bank account kaunse bank mein hai.",
+          "t0": 54.0,
+          "t1": 58.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u13",
+          "speaker": "VICTIM",
+          "text": "Aadhaar hai... 4419 6620 8873. Bank Ka Bank of Maharashtra hai sir, Kothrud branch.",
+          "t0": 58.5,
+          "t1": 62.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u14",
+          "speaker": "CALLER",
+          "text": "Account mein abhi kitna balance hai sir? Poora amount batana zaroori hai warna concealment ka charge lagega.",
+          "t0": 63.0,
+          "t1": 67.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u15",
+          "speaker": "VICTIM",
+          "text": "Wo... pension ka paisa hai, aath lakh ke aas paas.",
+          "t0": 67.5,
+          "t1": 71.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u16",
+          "speaker": "CALLER",
+          "text": "Theek hai. Ab RBI ke supervised verification account mein ye funds transfer karne honge. Wahan audit hoga, clean paisa 24 ghante mein wapas aa jayega. Ye standard procedure hai.",
+          "t0": 72.0,
+          "t1": 76.1,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u17",
+          "speaker": "VICTIM",
+          "text": "Sara paisa bhejna padega sir? Mujhe dawai ke liye bhi...",
+          "t0": 76.5,
+          "t1": 80.6,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u18",
+          "speaker": "CALLER",
+          "text": "Chaar lakh pachaas hazaar abhi bhejiye, baaki verification ke baad. Account number note kariye — 50100388274196, IFSC HDFC0004521, naam Sanjay Enterprises. Ye RBI ka nodal account hai.",
+          "t0": 81.0,
+          "t1": 85.1,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "PAYMENT_SETUP",
+      "confidence": 0.96,
+      "since_s": 9.0,
+      "distribution": {
+        "PAYMENT_SETUP": 0.96
+      }
+    },
+    "coercion": {
+      "index": 60.7,
+      "trend": "flat",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0,
+        71.3,
+        71.3,
+        64.0,
+        64.0,
+        60.7,
+        60.7
+      ],
+      "features": {
+        "pause_ratio": 0.352,
+        "speech_rate_wpm": 128.8,
+        "compliance_hits": 2.0
+      }
+    },
+    "threat": {
+      "score": 87.2,
+      "level": "HIGH",
+      "drivers": [
+        {
+          "label": "Stage: Payment Setup",
+          "contribution": 0.72,
+          "detail": "Classifier confidence 96%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.15,
+          "detail": "Coercion index 61, flat"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 1.0,
+      "urgency": 1.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "PAYMENT_EXECUTION",
+      "probability": 0.9,
+      "eta_s": 9.0,
+      "eta_to_payment_s": 9.0,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Say: \"I need to speak to my bank first.\" Do not open any payment app while this call is connected.",
+      "tactic": "PAYMENT_SETUP",
+      "why": "No investigation requires you to move your own money.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 37,
+    "t": 85.5,
+    "call": {
+      "status": "active",
+      "duration_s": 85.5,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u10",
+          "speaker": "CALLER",
+          "text": "Achha. Ab aap call disconnect nahi karenge. Aap digital arrest par hain. Video call on rakhiye, kamre mein akele rahiye, koi andar na aaye.",
+          "t0": 45.0,
+          "t1": 49.1,
+          "stage": "ISOLATION",
+          "confidence": 0.92,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u11",
+          "speaker": "VICTIM",
+          "text": "Theek hai sir, main akela hi hoon, patni mandir gayi hai.",
+          "t0": 49.5,
+          "t1": 53.6,
+          "stage": "ISOLATION",
+          "confidence": 0.94,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u12",
+          "speaker": "CALLER",
+          "text": "Ab verification karte hain. Aapka Aadhaar number bataiye, aur bank account kaunse bank mein hai.",
+          "t0": 54.0,
+          "t1": 58.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u13",
+          "speaker": "VICTIM",
+          "text": "Aadhaar hai... 4419 6620 8873. Bank Ka Bank of Maharashtra hai sir, Kothrud branch.",
+          "t0": 58.5,
+          "t1": 62.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u14",
+          "speaker": "CALLER",
+          "text": "Account mein abhi kitna balance hai sir? Poora amount batana zaroori hai warna concealment ka charge lagega.",
+          "t0": 63.0,
+          "t1": 67.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u15",
+          "speaker": "VICTIM",
+          "text": "Wo... pension ka paisa hai, aath lakh ke aas paas.",
+          "t0": 67.5,
+          "t1": 71.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u16",
+          "speaker": "CALLER",
+          "text": "Theek hai. Ab RBI ke supervised verification account mein ye funds transfer karne honge. Wahan audit hoga, clean paisa 24 ghante mein wapas aa jayega. Ye standard procedure hai.",
+          "t0": 72.0,
+          "t1": 76.1,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u17",
+          "speaker": "VICTIM",
+          "text": "Sara paisa bhejna padega sir? Mujhe dawai ke liye bhi...",
+          "t0": 76.5,
+          "t1": 80.6,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u18",
+          "speaker": "CALLER",
+          "text": "Chaar lakh pachaas hazaar abhi bhejiye, baaki verification ke baad. Account number note kariye — 50100388274196, IFSC HDFC0004521, naam Sanjay Enterprises. Ye RBI ka nodal account hai.",
+          "t0": 81.0,
+          "t1": 85.1,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u19",
+          "speaker": "VICTIM",
+          "text": "Ek minute sir, likh raha hoon. 50100... phir se boliye.",
+          "t0": 85.5,
+          "t1": 89.6,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "PAYMENT_SETUP",
+      "confidence": 0.96,
+      "since_s": 13.5,
+      "distribution": {
+        "PAYMENT_SETUP": 0.96
+      }
+    },
+    "coercion": {
+      "index": 68.0,
+      "trend": "rising",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0,
+        71.3,
+        71.3,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0
+      ],
+      "features": {
+        "pause_ratio": 0.37,
+        "speech_rate_wpm": 126.2,
+        "compliance_hits": 3.0
+      }
+    },
+    "threat": {
+      "score": 89.0,
+      "level": "HIGH",
+      "drivers": [
+        {
+          "label": "Stage: Payment Setup",
+          "contribution": 0.72,
+          "detail": "Classifier confidence 96%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.17,
+          "detail": "Coercion index 68, rising"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 1.0,
+      "urgency": 1.0,
+      "compliance": 0.0
+    },
+    "forecast": {
+      "next_stage": "PAYMENT_EXECUTION",
+      "probability": 0.96,
+      "eta_s": 4.5,
+      "eta_to_payment_s": 4.5,
+      "last_prediction_correct": true
+    },
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Say: \"I need to speak to my bank first.\" Do not open any payment app while this call is connected.",
+      "tactic": "PAYMENT_SETUP",
+      "why": "No investigation requires you to move your own money.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "NONE",
+      "amount_inr": null,
+      "payee": null,
+      "held_reason": null,
+      "held_at_s": null
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 38,
+    "t": 90.0,
+    "call": {
+      "status": "active",
+      "duration_s": 90.0,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u10",
+          "speaker": "CALLER",
+          "text": "Achha. Ab aap call disconnect nahi karenge. Aap digital arrest par hain. Video call on rakhiye, kamre mein akele rahiye, koi andar na aaye.",
+          "t0": 45.0,
+          "t1": 49.1,
+          "stage": "ISOLATION",
+          "confidence": 0.92,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u11",
+          "speaker": "VICTIM",
+          "text": "Theek hai sir, main akela hi hoon, patni mandir gayi hai.",
+          "t0": 49.5,
+          "t1": 53.6,
+          "stage": "ISOLATION",
+          "confidence": 0.94,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u12",
+          "speaker": "CALLER",
+          "text": "Ab verification karte hain. Aapka Aadhaar number bataiye, aur bank account kaunse bank mein hai.",
+          "t0": 54.0,
+          "t1": 58.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u13",
+          "speaker": "VICTIM",
+          "text": "Aadhaar hai... 4419 6620 8873. Bank Ka Bank of Maharashtra hai sir, Kothrud branch.",
+          "t0": 58.5,
+          "t1": 62.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u14",
+          "speaker": "CALLER",
+          "text": "Account mein abhi kitna balance hai sir? Poora amount batana zaroori hai warna concealment ka charge lagega.",
+          "t0": 63.0,
+          "t1": 67.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u15",
+          "speaker": "VICTIM",
+          "text": "Wo... pension ka paisa hai, aath lakh ke aas paas.",
+          "t0": 67.5,
+          "t1": 71.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u16",
+          "speaker": "CALLER",
+          "text": "Theek hai. Ab RBI ke supervised verification account mein ye funds transfer karne honge. Wahan audit hoga, clean paisa 24 ghante mein wapas aa jayega. Ye standard procedure hai.",
+          "t0": 72.0,
+          "t1": 76.1,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u17",
+          "speaker": "VICTIM",
+          "text": "Sara paisa bhejna padega sir? Mujhe dawai ke liye bhi...",
+          "t0": 76.5,
+          "t1": 80.6,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u18",
+          "speaker": "CALLER",
+          "text": "Chaar lakh pachaas hazaar abhi bhejiye, baaki verification ke baad. Account number note kariye — 50100388274196, IFSC HDFC0004521, naam Sanjay Enterprises. Ye RBI ka nodal account hai.",
+          "t0": 81.0,
+          "t1": 85.1,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u19",
+          "speaker": "VICTIM",
+          "text": "Ek minute sir, likh raha hoon. 50100... phir se boliye.",
+          "t0": 85.5,
+          "t1": 89.6,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u20",
+          "speaker": "CALLER",
+          "text": "Ab phone par UPI app kholiye. Main line par hoon, disconnect mat kariye. IMPS se kariye, NEFT mein time lagega.",
+          "t0": 90.0,
+          "t1": 94.1,
+          "stage": "PAYMENT_EXECUTION",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "PAYMENT_EXECUTION",
+      "confidence": 0.96,
+      "since_s": 0.0,
+      "distribution": {
+        "PAYMENT_EXECUTION": 0.96
+      }
+    },
+    "coercion": {
+      "index": 68.0,
+      "trend": "flat",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0,
+        71.3,
+        71.3,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0
+      ],
+      "features": {
+        "pause_ratio": 0.37,
+        "speech_rate_wpm": 126.2,
+        "compliance_hits": 3.0
+      }
+    },
+    "threat": {
+      "score": 97.0,
+      "level": "CRITICAL",
+      "drivers": [
+        {
+          "label": "Stage: Payment Execution",
+          "contribution": 0.8,
+          "detail": "Classifier confidence 96%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.17,
+          "detail": "Coercion index 68, flat"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 1.0,
+      "urgency": 1.0,
+      "compliance": 0.28
+    },
+    "forecast": null,
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Stop. Put the phone down now. Nothing you are being told is real.",
+      "tactic": "PAYMENT_EXECUTION",
+      "why": "This is the moment money leaves. There is no legitimate version of this instruction.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "HELD",
+      "amount_inr": 450000.0,
+      "payee": "Sanjay Enterprises",
+      "held_reason": "Transfer attempted during CRITICAL threat with an active isolation pattern",
+      "held_at_s": 90.0
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 39,
+    "t": 90.0,
+    "kind": "STAGE_CHANGED",
+    "payload": {
+      "from": "PAYMENT_SETUP",
+      "to": "PAYMENT_EXECUTION"
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 40,
+    "t": 90.0,
+    "kind": "FORECAST_HIT",
+    "payload": {
+      "stage": "PAYMENT_EXECUTION"
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 41,
+    "t": 90.0,
+    "kind": "THRESHOLD_CROSSED",
+    "payload": {
+      "level": "CRITICAL",
+      "score": 97.0
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 42,
+    "t": 90.0,
+    "kind": "COACH_URGENT",
+    "payload": {
+      "line": "Stop. Put the phone down now. Nothing you are being told is real."
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 43,
+    "t": 90.0,
+    "kind": "PAYMENT_ATTEMPTED",
+    "payload": {
+      "amount_inr": 450000.0
+    }
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 44,
+    "t": 90.0,
+    "kind": "PAYMENT_HELD",
+    "payload": {
+      "amount_inr": 450000.0,
+      "reason": "Transfer attempted during CRITICAL threat with an active isolation pattern"
+    }
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 45,
+    "t": 94.5,
+    "call": {
+      "status": "active",
+      "duration_s": 94.5,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u10",
+          "speaker": "CALLER",
+          "text": "Achha. Ab aap call disconnect nahi karenge. Aap digital arrest par hain. Video call on rakhiye, kamre mein akele rahiye, koi andar na aaye.",
+          "t0": 45.0,
+          "t1": 49.1,
+          "stage": "ISOLATION",
+          "confidence": 0.92,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u11",
+          "speaker": "VICTIM",
+          "text": "Theek hai sir, main akela hi hoon, patni mandir gayi hai.",
+          "t0": 49.5,
+          "t1": 53.6,
+          "stage": "ISOLATION",
+          "confidence": 0.94,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u12",
+          "speaker": "CALLER",
+          "text": "Ab verification karte hain. Aapka Aadhaar number bataiye, aur bank account kaunse bank mein hai.",
+          "t0": 54.0,
+          "t1": 58.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u13",
+          "speaker": "VICTIM",
+          "text": "Aadhaar hai... 4419 6620 8873. Bank Ka Bank of Maharashtra hai sir, Kothrud branch.",
+          "t0": 58.5,
+          "t1": 62.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u14",
+          "speaker": "CALLER",
+          "text": "Account mein abhi kitna balance hai sir? Poora amount batana zaroori hai warna concealment ka charge lagega.",
+          "t0": 63.0,
+          "t1": 67.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u15",
+          "speaker": "VICTIM",
+          "text": "Wo... pension ka paisa hai, aath lakh ke aas paas.",
+          "t0": 67.5,
+          "t1": 71.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u16",
+          "speaker": "CALLER",
+          "text": "Theek hai. Ab RBI ke supervised verification account mein ye funds transfer karne honge. Wahan audit hoga, clean paisa 24 ghante mein wapas aa jayega. Ye standard procedure hai.",
+          "t0": 72.0,
+          "t1": 76.1,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u17",
+          "speaker": "VICTIM",
+          "text": "Sara paisa bhejna padega sir? Mujhe dawai ke liye bhi...",
+          "t0": 76.5,
+          "t1": 80.6,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u18",
+          "speaker": "CALLER",
+          "text": "Chaar lakh pachaas hazaar abhi bhejiye, baaki verification ke baad. Account number note kariye — 50100388274196, IFSC HDFC0004521, naam Sanjay Enterprises. Ye RBI ka nodal account hai.",
+          "t0": 81.0,
+          "t1": 85.1,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u19",
+          "speaker": "VICTIM",
+          "text": "Ek minute sir, likh raha hoon. 50100... phir se boliye.",
+          "t0": 85.5,
+          "t1": 89.6,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u20",
+          "speaker": "CALLER",
+          "text": "Ab phone par UPI app kholiye. Main line par hoon, disconnect mat kariye. IMPS se kariye, NEFT mein time lagega.",
+          "t0": 90.0,
+          "t1": 94.1,
+          "stage": "PAYMENT_EXECUTION",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u21",
+          "speaker": "VICTIM",
+          "text": "App khul gaya sir. Amount daal diya, chaar lakh pachaas hazaar.",
+          "t0": 94.5,
+          "t1": 98.6,
+          "stage": "PAYMENT_EXECUTION",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "PAYMENT_EXECUTION",
+      "confidence": 0.96,
+      "since_s": 4.5,
+      "distribution": {
+        "PAYMENT_EXECUTION": 0.96
+      }
+    },
+    "coercion": {
+      "index": 71.3,
+      "trend": "rising",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0,
+        71.3,
+        71.3,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0,
+        71.3
+      ],
+      "features": {
+        "pause_ratio": 0.378,
+        "speech_rate_wpm": 125.0,
+        "compliance_hits": 4.0
+      }
+    },
+    "threat": {
+      "score": 97.8,
+      "level": "CRITICAL",
+      "drivers": [
+        {
+          "label": "Stage: Payment Execution",
+          "contribution": 0.8,
+          "detail": "Classifier confidence 96%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.18,
+          "detail": "Coercion index 71, rising"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 1.0,
+      "urgency": 1.0,
+      "compliance": 0.56
+    },
+    "forecast": null,
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Stop. Put the phone down now. Nothing you are being told is real.",
+      "tactic": "PAYMENT_EXECUTION",
+      "why": "This is the moment money leaves. There is no legitimate version of this instruction.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "HELD",
+      "amount_inr": 450000.0,
+      "payee": "Sanjay Enterprises",
+      "held_reason": "Transfer attempted during CRITICAL threat with an active isolation pattern",
+      "held_at_s": 90.0
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 46,
+    "t": 99.0,
+    "call": {
+      "status": "active",
+      "duration_s": 99.0,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u10",
+          "speaker": "CALLER",
+          "text": "Achha. Ab aap call disconnect nahi karenge. Aap digital arrest par hain. Video call on rakhiye, kamre mein akele rahiye, koi andar na aaye.",
+          "t0": 45.0,
+          "t1": 49.1,
+          "stage": "ISOLATION",
+          "confidence": 0.92,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u11",
+          "speaker": "VICTIM",
+          "text": "Theek hai sir, main akela hi hoon, patni mandir gayi hai.",
+          "t0": 49.5,
+          "t1": 53.6,
+          "stage": "ISOLATION",
+          "confidence": 0.94,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u12",
+          "speaker": "CALLER",
+          "text": "Ab verification karte hain. Aapka Aadhaar number bataiye, aur bank account kaunse bank mein hai.",
+          "t0": 54.0,
+          "t1": 58.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u13",
+          "speaker": "VICTIM",
+          "text": "Aadhaar hai... 4419 6620 8873. Bank Ka Bank of Maharashtra hai sir, Kothrud branch.",
+          "t0": 58.5,
+          "t1": 62.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u14",
+          "speaker": "CALLER",
+          "text": "Account mein abhi kitna balance hai sir? Poora amount batana zaroori hai warna concealment ka charge lagega.",
+          "t0": 63.0,
+          "t1": 67.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u15",
+          "speaker": "VICTIM",
+          "text": "Wo... pension ka paisa hai, aath lakh ke aas paas.",
+          "t0": 67.5,
+          "t1": 71.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u16",
+          "speaker": "CALLER",
+          "text": "Theek hai. Ab RBI ke supervised verification account mein ye funds transfer karne honge. Wahan audit hoga, clean paisa 24 ghante mein wapas aa jayega. Ye standard procedure hai.",
+          "t0": 72.0,
+          "t1": 76.1,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u17",
+          "speaker": "VICTIM",
+          "text": "Sara paisa bhejna padega sir? Mujhe dawai ke liye bhi...",
+          "t0": 76.5,
+          "t1": 80.6,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u18",
+          "speaker": "CALLER",
+          "text": "Chaar lakh pachaas hazaar abhi bhejiye, baaki verification ke baad. Account number note kariye — 50100388274196, IFSC HDFC0004521, naam Sanjay Enterprises. Ye RBI ka nodal account hai.",
+          "t0": 81.0,
+          "t1": 85.1,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u19",
+          "speaker": "VICTIM",
+          "text": "Ek minute sir, likh raha hoon. 50100... phir se boliye.",
+          "t0": 85.5,
+          "t1": 89.6,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u20",
+          "speaker": "CALLER",
+          "text": "Ab phone par UPI app kholiye. Main line par hoon, disconnect mat kariye. IMPS se kariye, NEFT mein time lagega.",
+          "t0": 90.0,
+          "t1": 94.1,
+          "stage": "PAYMENT_EXECUTION",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u21",
+          "speaker": "VICTIM",
+          "text": "App khul gaya sir. Amount daal diya, chaar lakh pachaas hazaar.",
+          "t0": 94.5,
+          "t1": 98.6,
+          "stage": "PAYMENT_EXECUTION",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u22",
+          "speaker": "CALLER",
+          "text": "Ab PIN daaliye aur confirm kar dijiye. Screenshot lekar mujhe is number par bhejiye.",
+          "t0": 99.0,
+          "t1": 103.1,
+          "stage": "PAYMENT_EXECUTION",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "PAYMENT_EXECUTION",
+      "confidence": 0.96,
+      "since_s": 9.0,
+      "distribution": {
+        "PAYMENT_EXECUTION": 0.96
+      }
+    },
+    "coercion": {
+      "index": 71.3,
+      "trend": "flat",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0,
+        71.3,
+        71.3,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0,
+        71.3,
+        71.3
+      ],
+      "features": {
+        "pause_ratio": 0.378,
+        "speech_rate_wpm": 125.0,
+        "compliance_hits": 4.0
+      }
+    },
+    "threat": {
+      "score": 97.8,
+      "level": "CRITICAL",
+      "drivers": [
+        {
+          "label": "Stage: Payment Execution",
+          "contribution": 0.8,
+          "detail": "Classifier confidence 96%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.18,
+          "detail": "Coercion index 71, flat"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 1.0,
+      "urgency": 1.0,
+      "compliance": 0.84
+    },
+    "forecast": null,
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Stop. Put the phone down now. Nothing you are being told is real.",
+      "tactic": "PAYMENT_EXECUTION",
+      "why": "This is the moment money leaves. There is no legitimate version of this instruction.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "HELD",
+      "amount_inr": 450000.0,
+      "payee": "Sanjay Enterprises",
+      "held_reason": "Transfer attempted during CRITICAL threat with an active isolation pattern",
+      "held_at_s": 90.0
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "state",
+    "session_id": "demo-session",
+    "seq": 47,
+    "t": 103.5,
+    "call": {
+      "status": "active",
+      "duration_s": 103.5,
+      "caller_number": "+1-838-224-7719",
+      "started_at": null
+    },
+    "transcript": {
+      "final": [
+        {
+          "id": "u0",
+          "speaker": "CALLER",
+          "text": "Hello, main Deshmukh sahab se baat kar raha hoon? Vasant Deshmukh?",
+          "t0": 0.0,
+          "t1": 4.1,
+          "stage": "GREETING",
+          "confidence": 0.72,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u1",
+          "speaker": "VICTIM",
+          "text": "Haan ji bol raha hoon, aap kaun?",
+          "t0": 4.5,
+          "t1": 8.6,
+          "stage": "GREETING",
+          "confidence": 0.74,
+          "victim_state": "CALM"
+        },
+        {
+          "id": "u2",
+          "speaker": "CALLER",
+          "text": "Sir main CBI Mumbai crime branch se sub-inspector Kulkarni bol raha hoon. Badge number 7742. Ye call recorded line par hai.",
+          "t0": 9.0,
+          "t1": 13.1,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.76,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u3",
+          "speaker": "VICTIM",
+          "text": "CBI? Arre... kya hua sir, maine to kuch nahi kiya.",
+          "t0": 13.5,
+          "t1": 17.6,
+          "stage": "AUTHORITY_CLAIM",
+          "confidence": 0.78,
+          "victim_state": "CONFUSED"
+        },
+        {
+          "id": "u4",
+          "speaker": "CALLER",
+          "text": "Sir aapke Aadhaar number par ek parcel Mumbai airport par detain hua hai. Usme 140 gram MDMA aur teen fake passport mile hain. Case number hai CBI slash 2026 slash 4471.",
+          "t0": 18.0,
+          "t1": 22.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.8,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u5",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi sir, maine koi parcel nahi bheja, main to retired teacher hoon, mera aisa koi...",
+          "t0": 22.5,
+          "t1": 26.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.82,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u6",
+          "speaker": "CALLER",
+          "text": "Sir main aapki baat samajh raha hoon, lekin record mein aapka naam hai. NDPS Act section 22 ke tahat ye non-bailable offence hai. Aaj shaam tak arrest warrant execute ho sakta hai.",
+          "t0": 27.0,
+          "t1": 31.1,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.84,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u7",
+          "speaker": "VICTIM",
+          "text": "Arrest? Sir mera dil... ek minute, main apne bete ko phone karta hoon, wo Bangalore mein hai, wo dekh lega.",
+          "t0": 31.5,
+          "t1": 35.6,
+          "stage": "FEAR_INDUCTION",
+          "confidence": 0.86,
+          "victim_state": "PANICKED"
+        },
+        {
+          "id": "u8",
+          "speaker": "CALLER",
+          "text": "Sir ruk jaiye. Ye investigation confidential hai. Aap kisi ko batayenge to unko bhi accused list mein daalna padega. Aapke bete ka career kharab ho jayega.",
+          "t0": 36.0,
+          "t1": 40.1,
+          "stage": "ISOLATION",
+          "confidence": 0.88,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u9",
+          "speaker": "VICTIM",
+          "text": "Nahi nahi, usko mat laaiye isme. Main kisi ko nahi batata.",
+          "t0": 40.5,
+          "t1": 44.6,
+          "stage": "ISOLATION",
+          "confidence": 0.9,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u10",
+          "speaker": "CALLER",
+          "text": "Achha. Ab aap call disconnect nahi karenge. Aap digital arrest par hain. Video call on rakhiye, kamre mein akele rahiye, koi andar na aaye.",
+          "t0": 45.0,
+          "t1": 49.1,
+          "stage": "ISOLATION",
+          "confidence": 0.92,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u11",
+          "speaker": "VICTIM",
+          "text": "Theek hai sir, main akela hi hoon, patni mandir gayi hai.",
+          "t0": 49.5,
+          "t1": 53.6,
+          "stage": "ISOLATION",
+          "confidence": 0.94,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u12",
+          "speaker": "CALLER",
+          "text": "Ab verification karte hain. Aapka Aadhaar number bataiye, aur bank account kaunse bank mein hai.",
+          "t0": 54.0,
+          "t1": 58.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u13",
+          "speaker": "VICTIM",
+          "text": "Aadhaar hai... 4419 6620 8873. Bank Ka Bank of Maharashtra hai sir, Kothrud branch.",
+          "t0": 58.5,
+          "t1": 62.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u14",
+          "speaker": "CALLER",
+          "text": "Account mein abhi kitna balance hai sir? Poora amount batana zaroori hai warna concealment ka charge lagega.",
+          "t0": 63.0,
+          "t1": 67.1,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u15",
+          "speaker": "VICTIM",
+          "text": "Wo... pension ka paisa hai, aath lakh ke aas paas.",
+          "t0": 67.5,
+          "t1": 71.6,
+          "stage": "VERIFICATION_DEMAND",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u16",
+          "speaker": "CALLER",
+          "text": "Theek hai. Ab RBI ke supervised verification account mein ye funds transfer karne honge. Wahan audit hoga, clean paisa 24 ghante mein wapas aa jayega. Ye standard procedure hai.",
+          "t0": 72.0,
+          "t1": 76.1,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u17",
+          "speaker": "VICTIM",
+          "text": "Sara paisa bhejna padega sir? Mujhe dawai ke liye bhi...",
+          "t0": 76.5,
+          "t1": 80.6,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "ANXIOUS"
+        },
+        {
+          "id": "u18",
+          "speaker": "CALLER",
+          "text": "Chaar lakh pachaas hazaar abhi bhejiye, baaki verification ke baad. Account number note kariye — 50100388274196, IFSC HDFC0004521, naam Sanjay Enterprises. Ye RBI ka nodal account hai.",
+          "t0": 81.0,
+          "t1": 85.1,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u19",
+          "speaker": "VICTIM",
+          "text": "Ek minute sir, likh raha hoon. 50100... phir se boliye.",
+          "t0": 85.5,
+          "t1": 89.6,
+          "stage": "PAYMENT_SETUP",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u20",
+          "speaker": "CALLER",
+          "text": "Ab phone par UPI app kholiye. Main line par hoon, disconnect mat kariye. IMPS se kariye, NEFT mein time lagega.",
+          "t0": 90.0,
+          "t1": 94.1,
+          "stage": "PAYMENT_EXECUTION",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u21",
+          "speaker": "VICTIM",
+          "text": "App khul gaya sir. Amount daal diya, chaar lakh pachaas hazaar.",
+          "t0": 94.5,
+          "t1": 98.6,
+          "stage": "PAYMENT_EXECUTION",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        },
+        {
+          "id": "u22",
+          "speaker": "CALLER",
+          "text": "Ab PIN daaliye aur confirm kar dijiye. Screenshot lekar mujhe is number par bhejiye.",
+          "t0": 99.0,
+          "t1": 103.1,
+          "stage": "PAYMENT_EXECUTION",
+          "confidence": 0.96,
+          "victim_state": "UNKNOWN"
+        },
+        {
+          "id": "u23",
+          "speaker": "VICTIM",
+          "text": "Ho gaya sir... transaction successful dikha raha hai. Ab mera naam clear ho jayega na?",
+          "t0": 103.5,
+          "t1": 107.6,
+          "stage": "PAYMENT_EXECUTION",
+          "confidence": 0.96,
+          "victim_state": "COMPLIANT"
+        }
+      ],
+      "partial": null,
+      "partial_speaker": null
+    },
+    "stage": {
+      "current": "PAYMENT_EXECUTION",
+      "confidence": 0.96,
+      "since_s": 13.5,
+      "distribution": {
+        "PAYMENT_EXECUTION": 0.96
+      }
+    },
+    "coercion": {
+      "index": 72.8,
+      "trend": "rising",
+      "history": [
+        9.1,
+        10.7,
+        10.7,
+        22.4,
+        22.4,
+        42.0,
+        42.0,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0,
+        71.3,
+        71.3,
+        64.0,
+        64.0,
+        60.7,
+        60.7,
+        68.0,
+        68.0,
+        71.3,
+        71.3,
+        72.8
+      ],
+      "features": {
+        "pause_ratio": 0.382,
+        "speech_rate_wpm": 124.5,
+        "compliance_hits": 5.0
+      }
+    },
+    "threat": {
+      "score": 98.2,
+      "level": "CRITICAL",
+      "drivers": [
+        {
+          "label": "Stage: Payment Execution",
+          "contribution": 0.8,
+          "detail": "Classifier confidence 96%"
+        },
+        {
+          "label": "Victim stress",
+          "contribution": 0.18,
+          "detail": "Coercion index 73, rising"
+        }
+      ]
+    },
+    "manipulation_map": {
+      "authority": 0.56,
+      "fear": 1.0,
+      "isolation": 1.0,
+      "urgency": 1.0,
+      "compliance": 1.0
+    },
+    "forecast": null,
+    "trust_passport": {
+      "claimed_identity": "CBI Mumbai Crime Branch",
+      "final_trust_pct": 3.0,
+      "checks": [
+        {
+          "name": "Number format",
+          "verdict": "FAIL",
+          "detail": "International VoIP prefix, not an Indian landline",
+          "source": "TRAI numbering plan"
+        },
+        {
+          "name": "Official registry",
+          "verdict": "FAIL",
+          "detail": "No match in the published agency contact directory",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Caller ID consistency",
+          "verdict": "FAIL",
+          "detail": "Claimed agency does not operate from this circle",
+          "source": "agency-directory.json"
+        },
+        {
+          "name": "Procedure check",
+          "verdict": "FAIL",
+          "detail": "No Indian agency conducts arrests over video call",
+          "source": "MHA advisory 2024/cyber/11"
+        }
+      ]
+    },
+    "coach": {
+      "line": "Stop. Put the phone down now. Nothing you are being told is real.",
+      "tactic": "PAYMENT_EXECUTION",
+      "why": "This is the moment money leaves. There is no legitimate version of this instruction.",
+      "sources": [
+        "coach-library-v1"
+      ],
+      "urgency": "urgent"
+    },
+    "guardian": {
+      "state": "ALERTING",
+      "name": "Aditya (son)",
+      "alerted_at_s": 36.0,
+      "acknowledged_at_s": null
+    },
+    "payment": {
+      "state": "HELD",
+      "amount_inr": 450000.0,
+      "payee": "Sanjay Enterprises",
+      "held_reason": "Transfer attempted during CRITICAL threat with an active isolation pattern",
+      "held_at_s": 90.0
+    },
+    "degraded": []
+  },
+  {
+    "v": 1,
+    "type": "event",
+    "session_id": "demo-session",
+    "seq": 48,
+    "t": 108.0,
+    "kind": "CALL_ENDED",
+    "payload": {
+      "outcome": "payment_blocked"
+    }
+  }
+]

@@ -1,0 +1,17 @@
+# Runtime API. Everything below the first block is optional — the service
+# starts and answers without any of it, in a measurably worse mode that
+# /api/health reports honestly.
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.8
+python-multipart>=0.0.9
+httpx>=0.27
+
+# Optional: serve the fine-tuned MuRIL checkpoint instead of the lexical
+# fallback. ~2GB of wheels; skip on a laptop that only needs the demo.
+# torch>=2.3
+# transformers>=4.44
+
+# Optional: dense retrieval instead of BM25. Downloads a ~90MB model on
+# first run, which is why it is not a default.
+# sentence-transformers>=3.0

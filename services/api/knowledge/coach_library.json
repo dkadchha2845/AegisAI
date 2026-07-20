@@ -1,0 +1,128 @@
+{
+  "_comment": [
+    "Curated coach lines. Retrieved at runtime, never generated.",
+    "",
+    "This file is the reason the coach is safe to ship. Every line a frightened",
+    "person is told to say has been read and approved in advance by a human;",
+    "nothing unvetted is ever put in their mouth mid-call. An LLM may rank or",
+    "reword the *explanation* shown to the responder, but the `line` field is",
+    "delivered verbatim.",
+    "",
+    "Lines are indexed by stage and ordered within a stage by escalation, so",
+    "the coach can offer a firmer response if the first one does not land."
+  ],
+  "lines": [
+    {
+      "stage": "GREETING",
+      "line": "Before we go further — which department, and can I call you back on the number listed on your website?",
+      "tactic": "Call-back test",
+      "why": "A genuine caller loses nothing if you verify them. Someone impersonating an institution loses everything.",
+      "urgency": "info",
+      "sources": ["scam-playbooks.md § AUTHORITY_CLAIM"]
+    },
+    {
+      "stage": "AUTHORITY_CLAIM",
+      "line": "I'll verify this myself. Give me your department and I'll call the number I look up.",
+      "tactic": "Independent verification",
+      "why": "Never use a number the caller supplies. Looking it up yourself is the whole point of the check.",
+      "urgency": "warn",
+      "sources": ["scam-playbooks.md § AUTHORITY_CLAIM", "rbi-advisories.md § Real case numbers are not read out over the phone as proof"]
+    },
+    {
+      "stage": "AUTHORITY_CLAIM",
+      "line": "No agency handles a case over the phone. If this is real, send it in writing and I'll come to the station.",
+      "tactic": "Move to a channel that scammers cannot use",
+      "why": "Written process and in-person attendance are the two things a phone scammer cannot follow you into.",
+      "urgency": "warn",
+      "sources": ["rbi-advisories.md § No agency conducts a \"digital arrest\""]
+    },
+    {
+      "stage": "FEAR_INDUCTION",
+      "line": "If there's a warrant, it will still be there in an hour. I'm going to check this before I do anything else.",
+      "tactic": "Break the artificial clock",
+      "why": "Urgency is the tool. Naming it out loud and refusing the deadline removes the pressure the rest of the script depends on.",
+      "urgency": "warn",
+      "sources": ["scam-playbooks.md § FEAR_INDUCTION"]
+    },
+    {
+      "stage": "FEAR_INDUCTION",
+      "line": "Real legal notices arrive on paper. Post it to my address and I'll respond to it.",
+      "tactic": "Demand documentation",
+      "why": "Genuine proceedings are documented and slow. A consequence that is both catastrophic and immediate is manufactured.",
+      "urgency": "warn",
+      "sources": ["scam-playbooks.md § FEAR_INDUCTION"]
+    },
+    {
+      "stage": "ISOLATION",
+      "line": "I don't keep things from my family. I'm putting you on speaker.",
+      "tactic": "Break the isolation",
+      "why": "Secrecy is load-bearing. Getting one more person into the room ends most of these calls immediately.",
+      "urgency": "urgent",
+      "sources": ["scam-playbooks.md § ISOLATION"]
+    },
+    {
+      "stage": "ISOLATION",
+      "line": "There is no such thing as a digital arrest. I'm hanging up and calling 1930.",
+      "tactic": "Name the script and exit",
+      "why": "Naming the tactic collapses it, and 1930 is the number that actually helps. Hanging up carries no legal consequence whatsoever.",
+      "urgency": "urgent",
+      "sources": ["rbi-advisories.md § No agency conducts a \"digital arrest\"", "rbi-advisories.md § The 1930 helpline and cybercrime.gov.in"]
+    },
+    {
+      "stage": "VERIFICATION_DEMAND",
+      "line": "If you're really from my bank, you already have my details. I'm not reading anything out.",
+      "tactic": "Invert the burden of proof",
+      "why": "Being asked for details the institution would already hold proves the caller does not hold them.",
+      "urgency": "urgent",
+      "sources": ["rbi-advisories.md § Banks and the RBI never ask for OTP, PIN, CVV or passwords"]
+    },
+    {
+      "stage": "VERIFICATION_DEMAND",
+      "line": "Nobody legitimate asks for an OTP. That request just told me what this call is.",
+      "tactic": "Treat the OTP request as the verdict",
+      "why": "There is no legitimate reason for any caller to want your OTP. It is the cleanest single-signal test available.",
+      "urgency": "urgent",
+      "sources": ["rbi-advisories.md § Banks and the RBI never ask for OTP, PIN, CVV or passwords"]
+    },
+    {
+      "stage": "PAYMENT_SETUP",
+      "line": "No agency asks anyone to transfer money to prove they're innocent. I'm not sending anything.",
+      "tactic": "Refuse the premise, not the amount",
+      "why": "Arguing about the amount concedes the framing. The framing itself is the fraud.",
+      "urgency": "urgent",
+      "sources": ["rbi-advisories.md § Money is never seized by asking the owner to send it"]
+    },
+    {
+      "stage": "PAYMENT_SETUP",
+      "line": "The RBI doesn't hold personal accounts. Whatever account you're describing isn't what you say it is.",
+      "tactic": "Contradict the specific false claim",
+      "why": "The supervised-account story only works on someone who does not know the RBI holds no retail accounts.",
+      "urgency": "urgent",
+      "sources": ["rbi-advisories.md § The RBI holds no personal customer accounts"]
+    },
+    {
+      "stage": "PAYMENT_EXECUTION",
+      "line": "Stop. Don't enter the PIN. Put the phone down and call 1930.",
+      "tactic": "Interrupt the transaction",
+      "why": "At this point persuasion has already failed; only stopping the keystrokes matters. A payment delayed by a minute is usually a payment that never happens.",
+      "urgency": "urgent",
+      "sources": ["scam-playbooks.md § PAYMENT_EXECUTION", "upi-safety.md § Receiving money never requires a PIN"]
+    },
+    {
+      "stage": "PAYMENT_EXECUTION",
+      "line": "You never need a PIN to receive money. If it's asking for your PIN, it's taking money out.",
+      "tactic": "Mechanical fact over argument",
+      "why": "Converts a judgement call into a check the person can make on their own screen, right now.",
+      "urgency": "urgent",
+      "sources": ["upi-safety.md § Receiving money never requires a PIN"]
+    },
+    {
+      "stage": "BENIGN",
+      "line": "No action needed — this call is behaving normally.",
+      "tactic": "Stay quiet",
+      "why": "Interrupting a legitimate call trains the user to ignore the system. Silence on benign calls is a feature.",
+      "urgency": "info",
+      "sources": ["scam-playbooks.md § BENIGN"]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "base_model": "google/muril-base-cased",
+  "seed": 20260721,
+  "epochs": 5.0,
+  "test_macro_f1": 0.22114390082298788,
+  "test_weighted_f1": 0.37644957292566517,
+  "per_class": {
+    "GREETING": {
+      "precision": 0.6666666666666666,
+      "recall": 0.9545454545454546,
+      "f1": 0.7850467289719626,
+      "support": 44.0
+    },
+    "AUTHORITY_CLAIM": {
+      "precision": 0.09090909090909091,
+      "recall": 0.2,
+      "f1": 0.125,
+      "support": 15.0
+    },
+    "FEAR_INDUCTION": {
+      "precision": 0.9285714285714286,
+      "recall": 0.2549019607843137,
+      "f1": 0.4,
+      "support": 51.0
+    },
+    "ISOLATION": {
+      "precision": 0.125,
+      "recall": 0.5,
+      "f1": 0.2,
+      "support": 4.0
+    },
+    "VERIFICATION_DEMAND": {
+      "precision": 1.0,
+      "recall": 0.041666666666666664,
+      "f1": 0.08,
+      "support": 24.0
+    },
+    "PAYMENT_SETUP": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 2.0
+    },
+    "PAYMENT_EXECUTION": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 4.0
+    },
+    "BENIGN": {
+      "precision": 0.15,
+      "recall": 0.2222222222222222,
+      "f1": 0.1791044776119403,
+      "support": 27.0
+    }
+  },
+  "false_alarms": 21,
+  "misses": 34,
+  "temperature": 0.7814396023750305,
+  "context": "previous_turn [SEP] current_turn",
+  "max_len": 128,
+  "train_size": 931,
+  "test_size": 171,
+  "split": "leave-archetypes-out, by call"
+}
