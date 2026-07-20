@@ -20,7 +20,7 @@ payment rails, and a bigger corpus so the trained model beats the regexes it
 currently loses to. All four are additive — none of them requires unpicking
 what's there.
 
-| | |
+| Measure | Where it stands |
 |---|---|
 | Lines of first-party code | ~12,400 (Python + TS/TSX) |
 | Backend tests | **16 / 16 passing** |
@@ -252,7 +252,7 @@ it's not a default. `degraded: ["rag:lexical"]` clears when it loads.
 
 These are independent — minimal merge conflict surface.
 
-| | Area | Why it's separable |
+| Track | Area | Why it's separable |
 |---|---|---|
 | **A** | P0 corpus + retraining | Touches `ml/` only. Nothing in `services/` or `apps/` |
 | **B** | P1 audio/ASR + coercion prosody | Touches `routes/session.py` + a new adapter + `coercion.py` |

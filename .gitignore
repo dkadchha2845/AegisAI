@@ -44,3 +44,6 @@ ml/artifacts/stage-classifier/*
 
 # tsc -b incremental build cache
 *.tsbuildinfo
+
+# Generated status report — regenerate from STATUS.md, do not commit
+PRESAGE-status-report.pdf
