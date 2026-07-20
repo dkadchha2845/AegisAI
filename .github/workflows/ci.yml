@@ -1,0 +1,104 @@
+# The three checks from the README, run automatically.
+#
+# The point of running them here is the contract. Python and TypeScript can
+# drift apart in a commit that passes review and imports cleanly on both
+# sides — the failure only surfaces later as a blank panel in the UI. Catching
+# that on push means the other person never pulls a broken main and spends an
+# hour assuming they broke it themselves.
+#
+# Locally the same three are:
+#   .venv/bin/python -m pytest services/api/tests -q
+#   .venv/bin/python schema/check_contract.py
+#   npm run typecheck --prefix apps/web
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# A second push to the same branch makes the first run irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: backend (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Both ends of the range the README claims. Claiming 3.9+ and only
+        # ever running 3.12 is how the floor quietly rots.
+        python: ["3.9", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: services/api/requirements.txt
+
+      - name: Install
+        run: pip install -r services/api/requirements.txt
+
+      # No checkpoint on the runner, and that is the point: this asserts the
+      # documented clean-clone path — lexical classifier, BM25 retrieval, and
+      # a service that still answers.
+      - name: Verdict regressions
+        run: python -m pytest services/api/tests -q
+
+      - name: Contract drift (Python <-> TypeScript)
+        run: python schema/check_contract.py
+
+      - name: API boots and reports its own health
+        run: |
+          python -m uvicorn services.api.main:app --port 8011 &
+          for _ in $(seq 1 60); do
+            curl -sf localhost:8011/api/health >/dev/null && break
+            sleep 0.5
+          done
+          curl -sf localhost:8011/api/health | python -c '
+          import json, sys
+          h = json.load(sys.stdin)
+          assert h["ok"], h
+          assert h["contract_version"] == 1, h
+          assert h["twin"]["fitted"], "twin did not fit - is transitions.json committed?"
+          assert h["coach"]["lines"] > 0, "coach library is empty"
+          assert h["retrieval"]["chunks"] > 0, "knowledge base loaded nothing"
+          print("health ok:", h["classifier"]["backend"], "|", h["classifier"]["reason"])
+          print("degraded:", h["degraded"])
+          '
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install
+        run: npm ci
+        working-directory: apps/web
+
+      - name: Typecheck
+        run: npm run typecheck
+        working-directory: apps/web
+
+      # Typecheck passing does not mean it bundles. Vite resolves the `@/`
+      # alias and the three/GSAP imports at build time, not at tsc time.
+      - name: Build
+        run: npm run build
+        working-directory: apps/web
