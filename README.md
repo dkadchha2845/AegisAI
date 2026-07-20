@@ -1,5 +1,7 @@
 # PRESAGE
 
+[![CI](https://github.com/dkadchha2845/presage/actions/workflows/ci.yml/badge.svg)](https://github.com/dkadchha2845/presage/actions/workflows/ci.yml)
+
 **Real-time scam-call defence for Hinglish calls.** It names the manipulation
 stage in progress, forecasts how long until money moves, and then does
 something about it — coaching the person on the line, alerting a trusted
@@ -449,6 +451,23 @@ learned the difference between asking for an OTP and warning about one.
 **If you change anything in `schema/`, run `check_contract.py` before you
 commit.** It is the one check that catches a whole class of bug that otherwise
 shows up as a blank panel in the UI three days later.
+
+### CI
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs all three on every
+push and PR to `main`, so you find out from a red badge rather than from the
+other person. It goes slightly further than the local three:
+
+- **Backend on Python 3.9 *and* 3.12** — the two ends of the range this README
+  claims. Claiming 3.9+ and only ever running 3.12 is how the floor rots.
+- **Boots the API and asserts `/api/health`** — a missing `transitions.json` or
+  an empty coach library fails in CI rather than as a blank panel mid-demo.
+  The runner has no checkpoint, which makes this an assertion about the
+  documented clean-clone path.
+- **`vite build`, not just `tsc`** — typecheck passing doesn't mean it bundles;
+  the `@/` alias and the `three`/GSAP imports resolve at build time.
+
+Full run is ~1 minute. Pushing twice cancels the older run.
 
 ---
 

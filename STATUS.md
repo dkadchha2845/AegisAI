@@ -25,7 +25,8 @@ what's there.
 | Lines of first-party code | ~12,400 (Python + TS/TSX) |
 | Backend tests | **16 / 16 passing** |
 | Contract check | **passing** (8 enums + version + 24-frame mock) |
-| Frontend typecheck | **passing**, zero errors |
+| Frontend typecheck + build | **passing**, zero errors |
+| CI | **green** on py3.9 + py3.12 + frontend, ~1 min |
 | Runs on a clean clone | **yes** — no key, no GPU, no network |
 
 ---
@@ -103,6 +104,25 @@ at **55**.
   which are load-bearing.
 - `.env.example` committed as the template. No secrets in history.
 - Clone is **2.5 MB / 109 files**.
+- `pytest` added to `requirements.txt` — it was missing, so the checks the
+  README asks for could not be run on a clean clone.
+
+### CI — added, green
+
+`.github/workflows/ci.yml` runs on every push and PR to `main`. **~1 minute,
+all jobs passing.**
+
+| Job | What it does |
+|---|---|
+| `backend (py3.9)` | install → 16 verdict regressions → contract check → boot API, assert `/api/health` |
+| `backend (py3.12)` | same, on the other end of the claimed range |
+| `frontend` | `npm ci` → typecheck → `vite build` |
+
+The health assertion is the one worth keeping: it fails if `transitions.json`
+goes missing, if the coach library empties, or if the knowledge base loads
+nothing — all of which otherwise surface as a blank panel mid-demo. The runner
+has no checkpoint, so it also asserts the documented clean-clone path
+(`lexical | no checkpoint exported`).
 
 ---
 
@@ -222,9 +242,7 @@ it's not a default. `degraded: ["rag:lexical"]` clears when it loads.
 - **No persistence.** Sessions are in-memory and die with the process. Fine for
   a demo; a blocker for anything longitudinal.
 - **No frontend tests.** Typecheck only. The backend has 16 regression cases;
-  the UI has none.
-- **No CI.** Nothing runs the three checks automatically on push. A ~20-line
-  GitHub Action would catch contract drift before it reaches the other person.
+  the UI has none. This is now the largest remaining gap in the check suite.
 - **Real-world transfer unmeasured.** 100% synthetic training data. This is an
   honest limitation to state out loud, not a bug to hide.
 
