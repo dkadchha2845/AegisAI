@@ -7,6 +7,11 @@ pydantic>=2.8
 python-multipart>=0.0.9
 httpx>=0.27
 
+# Test runner. Not optional in practice: the README asks you to run the
+# verdict regressions before every push, and a fresh clone that cannot run
+# them is a fresh clone whose checks get skipped.
+pytest>=8.0
+
 # Optional: serve the fine-tuned MuRIL checkpoint instead of the lexical
 # fallback. ~2GB of wheels; skip on a laptop that only needs the demo.
 # torch>=2.3
