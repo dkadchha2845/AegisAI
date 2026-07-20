@@ -41,3 +41,6 @@ ml/models/
 !ml/artifacts/stage-classifier/
 ml/artifacts/stage-classifier/*
 !ml/artifacts/stage-classifier/metrics.json
+
+# tsc -b incremental build cache
+*.tsbuildinfo
