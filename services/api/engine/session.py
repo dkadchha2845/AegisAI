@@ -30,6 +30,8 @@ from ..rag.store import get_kb
 from .classifier import load_classifier
 from .coercion import CoercionTracker
 from .passport import TrustPassport
+from .scripts import get_script_matcher
+from .spoofing import analyze_number
 from .threat import ManipulationAccumulator, fuse
 from .twin import DigitalTwin
 
@@ -86,10 +88,19 @@ class Session:
         self.manipulation = ManipulationAccumulator()
         self.coercion = CoercionTracker()
         self.passport = TrustPassport()
+        self.script_matcher = get_script_matcher()
+        self.script_similarity = 0.0
+        self.script_label: str | None = None
 
         self.utterances: list[Utterance] = []
         self.partial: str | None = None
         self.partial_speaker: str | None = None
+
+        # Caller-number intelligence. Computed once up front from the number
+        # alone, then refined in _recompute as the passport resolves who the
+        # caller claims to be — the sharpest check (authority vs personal
+        # mobile) needs both halves.
+        self.number_intel = analyze_number(caller_number)
 
         self.stage = "GREETING"
         self.stage_confidence = 0.0
@@ -98,6 +109,10 @@ class Session:
         self.threat_score = 0.0
         self.threat_level = "CALM"
         self.threat_drivers: list[dict] = []
+        #: Highest threat reached this call. The live meter ratchets and can ease
+        #: back; an evidence report needs the peak, not the reading at export time.
+        self.peak_threat = 0.0
+        self.peak_stage = "GREETING"
         self.coercion_index = 0.0
         self.coercion_trend = "flat"
         self.coercion_history: list[float] = []
@@ -173,6 +188,13 @@ class Session:
                 self.stage_since = now
             self.manipulation.observe(pred.label, pred.confidence)
             self.passport.observe(text, speaker)
+            # Script similarity. Keep the running peak — a line 94% similar to a
+            # known script is a fact about the call that stays true when the
+            # caller later chats about the weather.
+            m = self.script_matcher.match(text)
+            if m.similarity > self.script_similarity:
+                self.script_similarity = m.similarity
+                self.script_label = m.label
         else:
             out = self.coercion.observe(text, duration_s=duration_s)
             self.coercion_index = out.index
@@ -204,6 +226,13 @@ class Session:
         self._last_tick = now
         passport = self.passport.snapshot()
 
+        # Refine number intelligence now that the passport may have resolved a
+        # claimed identity — the Caller-ID-vs-authority check needs it.
+        self.number_intel = analyze_number(
+            self.caller_number,
+            claimed_identity=self.passport.claimed_identity,
+        )
+
         previous_level = self.threat_level
         fusion = fuse(
             stage=self.stage,
@@ -211,12 +240,18 @@ class Session:
             manipulation=self.manipulation,
             coercion_index=self.coercion_index,
             trust_pct=passport.final_trust_pct if passport.checks else None,
+            spoofing_risk=self.number_intel.risk if self.caller_number else None,
+            script_similarity=self.script_similarity,
+            script_label=self.script_label,
             previous_score=self.threat_score,
             dt_s=dt,
         )
         self.threat_score = fusion.score
         self.threat_level = fusion.level
         self.threat_drivers = [asdict(d) for d in fusion.drivers]
+        if fusion.score > self.peak_threat:
+            self.peak_threat = fusion.score
+            self.peak_stage = self.stage
 
         if fusion.level != previous_level:
             self._emit(
@@ -411,6 +446,7 @@ class Session:
                 else None
             ),
             "trust_passport": asdict(passport),
+            "number_intel": asdict(self.number_intel),
             "coach": asdict(self.coach) if self.coach else None,
             "narration": asdict(self.narration),
             "guardian": {

@@ -1,0 +1,23 @@
+{
+  "_comment": "Example fraud-reported numbers and prefixes. Synthetic, committed, and offline by design — the same discipline as upi.py, which ships no live blocklist. A real deployment would sync this from the DoT/TRAI reported-number feed and the NCRB/1930 complaint database; here it is a small illustrative sample so the check has something to fire on without a network call.",
+  "numbers": [
+    "+911140847777",
+    "+919000012345",
+    "+12026660000",
+    "+447700900000",
+    "919988776655",
+    "8000012345"
+  ],
+  "prefixes": [
+    "+9114008",
+    "+9114084",
+    "+2348",
+    "+2547"
+  ],
+  "voip_prefixes": [
+    "140",
+    "+9114",
+    "+180",
+    "+91180"
+  ]
+}

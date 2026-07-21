@@ -22,11 +22,26 @@ from dataclasses import dataclass, field
 
 from .classifier import threat_weight
 
-# Contributions sum to 1.0 at full saturation.
+# The four conversational signals sum to 1.0 at full saturation.
 W_STAGE = 0.40          # what the caller is doing right now
 W_TACTIC = 0.25         # cumulative manipulation pressure over the call
 W_COERCION = 0.20       # victim stress from the audio side
 W_TRUST = 0.15          # failed identity checks from the Trust Passport
+
+#: Number spoofing is corroborating *metadata*, not part of the conversation,
+#: so it rides as a bounded escalator on top of the four-signal sum rather than
+#: stealing weight from it: a call that reads 60 on content alone should read
+#: higher, not have its content signals diluted, when the caller ID is also
+#: forged. Capped so metadata can never manufacture a CRITICAL on its own —
+#: a spoofed number with a silent, benign conversation tops out in HIGH.
+W_SPOOF = 0.18
+
+#: Script-template similarity — how close the caller's line is to a known scam
+#: script. Also a bounded escalator, and gated by SCRIPT_MIN so ordinary
+#: conversation that happens to share common words never fires it. A real bank
+#: call does not paraphrase the CBI arrest script.
+W_SCRIPT = 0.15
+SCRIPT_MIN = 0.45
 
 #: Threat may not fall faster than this. Chosen so a full CRITICAL -> CALM
 #: takes ~40s of sustained benign conversation, which is roughly how long a
@@ -123,10 +138,14 @@ def fuse(
     manipulation: ManipulationAccumulator,
     coercion_index: float,
     trust_pct: float | None,
+    spoofing_risk: float | None = None,
+    script_similarity: float | None = None,
+    script_label: str | None = None,
     previous_score: float = 0.0,
     dt_s: float = 0.25,
 ) -> FusionResult:
-    """Combine the four signals into a 0-100 score plus its explanation."""
+    """Combine the conversational signals — plus optional number-spoofing
+    metadata — into a 0-100 score plus its explanation."""
     drivers: list[ThreatDriverOut] = []
 
     # 1. Current stage, discounted by how sure the classifier is. An uncertain
@@ -180,7 +199,41 @@ def fuse(
                 )
             )
 
-    raw = stage_component + tactic_component + coercion_component + trust_component
+    # 5. Number spoofing — corroborating metadata, added on top. Only counts
+    #    when a number was actually analysed; an absent number is not a clean
+    #    number, so `None` contributes nothing rather than reading as safe.
+    spoof_component = 0.0
+    if spoofing_risk is not None:
+        spoof_component = (spoofing_risk / 100.0) * W_SPOOF * 100
+        if spoof_component > 1:
+            drivers.append(
+                ThreatDriverOut(
+                    label="Number spoofing",
+                    contribution=round(spoof_component / 100, 3),
+                    detail=f"caller-number risk {spoofing_risk:.0f}/100",
+                )
+            )
+
+    # 6. Script-template similarity. Gated: below SCRIPT_MIN it contributes
+    #    nothing, so shared-vocabulary coincidence in a benign call is not a
+    #    signal — only a genuine paraphrase of a known script is.
+    script_component = 0.0
+    if script_similarity is not None and script_similarity >= SCRIPT_MIN:
+        script_component = script_similarity * W_SCRIPT * 100
+        if script_component > 1:
+            label = (script_label or "scam").replace("_", " ").lower()
+            drivers.append(
+                ThreatDriverOut(
+                    label="Script match",
+                    contribution=round(script_component / 100, 3),
+                    detail=f"{script_similarity:.0%} similar to a known {label} script",
+                )
+            )
+
+    raw = (
+        stage_component + tactic_component + coercion_component
+        + trust_component + spoof_component + script_component
+    )
     score = max(0.0, min(100.0, raw))
 
     # Ratchet: fast up, slow down.

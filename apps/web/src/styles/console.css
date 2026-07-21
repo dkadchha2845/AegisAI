@@ -251,6 +251,9 @@
 .passport__head { display: flex; justify-content: space-between; align-items: baseline; }
 .passport__pct { font-size: var(--t-lg); font-weight: 700; color: var(--ink); transition: color var(--t-med); }
 .passport__pct[data-low] { color: var(--critical); }
+/* Number-intel risk runs the other way: high is bad. */
+.passport__pct[data-high] { color: var(--critical); }
+.passport__risk-unit { font-size: var(--t-2xs); font-weight: 500; color: var(--ink-faint); }
 .passport__claim { margin: var(--s-2) 0 0; font-size: var(--t-xs); color: var(--ink-muted); }
 .passport__claim strong { color: var(--ink); font-weight: 500; }
 .passport__checks { list-style: none; margin: var(--s-3) 0 0; padding: 0; display: grid; gap: var(--s-3); }

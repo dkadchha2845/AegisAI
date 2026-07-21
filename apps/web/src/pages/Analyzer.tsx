@@ -17,6 +17,7 @@ import { useCallback, useRef, useState } from "react";
 import {
   AlertTriangle,
   FileUp,
+  Image as ImageIcon,
   Loader2,
   Paperclip,
   ScanLine,
@@ -27,7 +28,18 @@ import type { AnalysisResult } from "@/lib/api";
 import { pretty, stageColor } from "@/lib/stages";
 import { useHealth } from "@/hooks/useHealth";
 
-type Mode = "text" | "upi" | "file";
+type Mode = "text" | "upi" | "file" | "image";
+
+/** Communication channels the analyzer accepts. Sets the `kind` on the request
+ *  so a report can say where a message arrived — the module's multi-channel
+ *  input (SMS, WhatsApp, Telegram, Email, chat logs). */
+const CHANNELS: [string, string][] = [
+  ["text", "Transcript / other"],
+  ["sms", "SMS"],
+  ["whatsapp", "WhatsApp"],
+  ["telegram", "Telegram"],
+  ["email", "Email"],
+];
 
 const SAMPLES: { label: string; mode: Mode; value: string }[] = [
   {
@@ -61,6 +73,7 @@ Caller: Verification ke liye RBI supervised account mein 4,50,000 transfer karna
 
 export function Analyzer() {
   const [mode, setMode] = useState<Mode>("text");
+  const [channel, setChannel] = useState("text");
   const [text, setText] = useState("");
   const [claimed, setClaimed] = useState("");
   const [useLlm, setUseLlm] = useState(false);
@@ -82,7 +95,9 @@ export function Analyzer() {
         activeMode === "upi"
           ? await api.analyzeUpi(value, claimed || null)
           : await api.analyzeText(value, {
-              kind: activeMode,
+              // In text mode the channel (sms/whatsapp/…) is the kind, so a
+              // verdict carries where the message arrived.
+              kind: activeMode === "text" ? channel : activeMode,
               claimedIdentity: claimed || null,
               explain: useLlm,
             });
@@ -93,26 +108,31 @@ export function Analyzer() {
         setResult(null);
       }
     },
-    [mode, text, claimed, useLlm],
+    [mode, channel, text, claimed, useLlm],
   );
 
-  const runFile = useCallback(async (file: File) => {
-    setBusy(true);
-    setError(null);
-    const res = await api.analyzeFile(file);
-    setBusy(false);
-    if (res.ok) setResult(res.data);
-    else {
-      setError(res.error);
-      setResult(null);
-    }
-  }, []);
+  const runUpload = useCallback(
+    async (file: File, asImage: boolean) => {
+      setBusy(true);
+      setError(null);
+      const res = asImage
+        ? await api.analyzeImage(file, { claimedIdentity: claimed || null })
+        : await api.analyzeFile(file);
+      setBusy(false);
+      if (res.ok) setResult(res.data);
+      else {
+        setError(res.error);
+        setResult(null);
+      }
+    },
+    [claimed],
+  );
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragging(false);
     const file = e.dataTransfer.files?.[0];
-    if (file) runFile(file);
+    if (file) runUpload(file, mode === "image");
   };
 
   return (
@@ -136,6 +156,7 @@ export function Analyzer() {
                   ["text", "Message or transcript"],
                   ["upi", "UPI ID or QR"],
                   ["file", "Upload a file"],
+                  ["image", "Screenshot"],
                 ] as [Mode, string][]
               ).map(([m, label]) => (
                 <button
@@ -152,7 +173,7 @@ export function Analyzer() {
             </div>
 
             <div style={{ marginTop: "var(--s-4)" }}>
-              {mode === "file" ? (
+              {mode === "file" || mode === "image" ? (
                 <>
                   <div
                     className="dropzone"
@@ -168,29 +189,40 @@ export function Analyzer() {
                     tabIndex={0}
                     onKeyDown={(e) => e.key === "Enter" && fileInput.current?.click()}
                   >
-                    <FileUp size={24} />
+                    {mode === "image" ? <ImageIcon size={24} /> : <FileUp size={24} />}
                     <strong style={{ fontSize: "var(--t-sm)" }}>
-                      Drop a transcript, or click to choose
+                      {mode === "image"
+                        ? "Drop a screenshot, or click to choose"
+                        : "Drop a transcript, or click to choose"}
                     </strong>
                     <span className="small faint">
-                      .txt · .json · .csv · .md · .vtt · .srt — up to 4MB
+                      {mode === "image"
+                        ? ".png · .jpg · .webp · .tiff — up to 4MB"
+                        : ".txt · .json · .csv · .md · .vtt · .srt — up to 4MB"}
                     </span>
                   </div>
                   <input
                     ref={fileInput}
                     type="file"
                     hidden
-                    accept=".txt,.json,.csv,.md,.log,.vtt,.srt"
+                    accept={
+                      mode === "image"
+                        ? ".png,.jpg,.jpeg,.webp,.bmp,.tiff,.gif"
+                        : ".txt,.json,.csv,.md,.log,.vtt,.srt"
+                    }
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) runFile(file);
+                      if (file) runUpload(file, mode === "image");
                     }}
                   />
-                  <p className="small faint" style={{ marginTop: "var(--s-3)" }}>
-                    Images are not read here — there is no OCR in this build, and
-                    pretending otherwise would return a confident verdict on an
-                    empty string. Type out what the screenshot says instead.
-                  </p>
+                  {mode === "image" && (
+                    <p className="small faint" style={{ marginTop: "var(--s-3)" }}>
+                      OCR reads a fake police notice, a payment screenshot, or a QR
+                      code, then scores the text. If the server has no OCR engine
+                      installed it says so and asks you to type the text — it never
+                      guesses at an empty read.
+                    </p>
+                  )}
                 </>
               ) : (
                 <textarea
@@ -207,7 +239,7 @@ export function Analyzer() {
               )}
             </div>
 
-            {mode !== "file" && (
+            {mode !== "file" && mode !== "image" && (
               <>
                 <div className="row" style={{ marginTop: "var(--s-4)" }}>
                   <label className="small faint" style={{ flex: "1 1 220px" }}>
@@ -221,6 +253,23 @@ export function Analyzer() {
                       placeholder="e.g. RBI, SBI, Delhi Cyber Crime"
                     />
                   </label>
+                  {mode === "text" && (
+                    <label className="small faint" style={{ flex: "0 1 160px" }}>
+                      Channel
+                      <select
+                        className="field"
+                        style={{ marginTop: 6 }}
+                        value={channel}
+                        onChange={(e) => setChannel(e.target.value)}
+                      >
+                        {CHANNELS.map(([v, label]) => (
+                          <option key={v} value={v}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                 </div>
 
                 <div className="row" style={{ marginTop: "var(--s-4)" }}>
@@ -333,6 +382,32 @@ function ResultPanel({ result }: { result: AnalysisResult }) {
           </p>
         )}
       </div>
+
+      {result.ocr && (
+        <div className="card">
+          <h2 className="card__title">
+            Read from the image{" "}
+            <span className="mono faint small">OCR · {result.ocr.engine}</span>
+          </h2>
+          {result.ocr.text ? (
+            <pre
+              className="small"
+              style={{ whiteSpace: "pre-wrap", margin: 0, fontFamily: "inherit" }}
+            >
+              {result.ocr.text}
+            </pre>
+          ) : (
+            <p className="small muted" style={{ margin: 0 }}>
+              No text could be read from this image.
+            </p>
+          )}
+          {result.ocr.qr_payloads.length > 0 && (
+            <p className="small faint mono" style={{ marginTop: 8 }}>
+              QR: {result.ocr.qr_payloads.join(" · ")}
+            </p>
+          )}
+        </div>
+      )}
 
       {result.recommended_actions.length > 0 && (
         <div className="card">

@@ -34,6 +34,7 @@ import {
 } from "@/components/Panels";
 import { TranscriptPane } from "@/components/TranscriptPane";
 import { NarrationPanel } from "@/components/NarrationPanel";
+import { NumberIntelPanel } from "@/components/NumberIntelPanel";
 import type { PresageEvent, StateFrame } from "@/types/contract";
 
 /** Demo beats, for the rehearsal scrubber. Timings come from mock-stream.json. */
@@ -372,6 +373,9 @@ export function LiveConsole() {
           </div>
           <div className="panel pad" data-reveal>
             <TrustPassport passport={frame?.trust_passport ?? null} />
+          </div>
+          <div className="panel pad" data-reveal>
+            <NumberIntelPanel intel={frame?.number_intel ?? null} />
           </div>
           <CoachCard coach={frame?.coach ?? null} />
         </section>

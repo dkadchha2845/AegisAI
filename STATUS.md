@@ -52,8 +52,12 @@ what's there.
 | `twin.py` | ✅ | Fitted transition matrix + dwell times → time-to-payment forecast |
 | `coercion.py` | ✅ | Victim-side stress, **independent** of the classifier. Text-only, capped lower |
 | `passport.py` | ✅ | Mechanical identity checks, PASS/FAIL/**UNKNOWN**, each with a citation |
+| `spoofing.py` | ✅ | **Number Spoofing Intelligence** — Caller-ID/authority mismatch, VoIP, intl routing, reported-number, format, call frequency. Risk 0-100 + PASS/FAIL/UNKNOWN checks. Feeds fusion (`W_SPOOF`) + dispositive in the analyzer |
+| `report.py` / `report_pdf.py` | ✅ | **Evidence package** — MHA/cybercrime-compatible structured package (verdict, named signals, identity + number evidence with citations, stage timeline, transcript, reporting guidance). JSON + server-rendered PDF (reportlab, lazy/optional). `GET /api/session/{id}/report[.pdf]` |
 | `upi.py` | ✅ | VPA + QR structural checks, no blocklist, no network call |
-| `analyzer.py` | ✅ | Stateless path — reuses the *same* engine as the live path |
+| `analyzer.py` | ✅ | Stateless path — reuses the *same* engine as the live path. Accepts `caller_number` (spoofing) and multi-channel `kind` (sms/whatsapp/email) |
+| `ocr.py` | ✅ | **Pluggable OCR** (Tesseract default / EasyOCR / null) for image inputs — lazy, optional, degrades to `ocr:unavailable`. Optional QR decode. `POST /api/analyze/image` |
+| `scripts.py` | ✅ | **Scam-script similarity** — sentence-embedding (dense) / TF-cosine (lexical) match of caller lines vs known scam scripts. Bounded 0-1, gated at 0.45, surfaced as the "Script similarity NN%" threat driver + fusion signal (`W_SCRIPT`) |
 | `session.py` | ✅ | State machine → idempotent `StateFrame` snapshots + one-shot `Event` edges |
 
 Thresholds live in one screen of `session.py`: guardian at **70**, payment hold
@@ -237,8 +241,9 @@ it's not a default. `degraded: ["rag:lexical"]` clears when it loads.
 
 ### P3 — Smaller gaps
 
-- **No OCR.** Screenshots must be typed out. Deliberate — a confident verdict
-  on an empty string is worse than declining.
+- **OCR is optional, not bundled.** The pluggable engine ships, but no OCR
+  dependency is installed by default (clean-clone / CI stay light). Enable with
+  `brew install tesseract` + uncommenting the deps in `requirements.txt`.
 - **No persistence.** Sessions are in-memory and die with the process. Fine for
   a demo; a blocker for anything longitudinal.
 - **No frontend tests.** Typecheck only. The backend has 16 regression cases;

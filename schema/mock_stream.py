@@ -40,6 +40,7 @@ from models import (  # noqa: E402
     GuardianInfo,
     GuardianState,
     ManipulationMap,
+    NumberIntel,
     PassportCheck,
     PaymentInfo,
     PaymentState,
@@ -140,6 +141,48 @@ PASSPORT_CHECKS = [
      "MHA advisory 2024/cyber/11"),
 ]
 
+# Number Spoofing Intelligence. The gold call's caller ID is a US number
+# (+1-838-…) wearing a CBI badge — the signature mismatch of a digital-arrest
+# scam. Hand-built here to mirror what engine/spoofing.py produces for this
+# number, so the recorded demo shows the panel populated rather than empty.
+# The intl-routing FAIL is visible from turn 0 (the number alone gives it away);
+# the authority mismatch lands once the caller claims to be CBI at turn 2.
+NUMBER_INTEL_RISK = {"International routing": 40.0, "Caller-ID vs claimed authority": 45.0}
+NUMBER_INTEL_CONTEXT = [
+    PassportCheck(name="Number format", verdict=Verdict.PASS,
+                  detail="parses to a well-formed number", source=None),
+    PassportCheck(name="Reported number", verdict=Verdict.UNKNOWN,
+                  detail="not in the local complaint sample (illustrative, not exhaustive)",
+                  source=None),
+    PassportCheck(name="VoIP / suspicious prefix", verdict=Verdict.UNKNOWN,
+                  detail="no known VoIP/bulk prefix — this check is not exhaustive",
+                  source=None),
+    PassportCheck(name="Call frequency", verdict=Verdict.UNKNOWN,
+                  detail="not enough call history to judge frequency", source=None),
+]
+
+
+def build_number_intel(turn_index: int) -> NumberIntel:
+    fails = [
+        PassportCheck(
+            name="International routing", verdict=Verdict.FAIL,
+            detail="originates outside India (+1) while claiming an Indian agency — "
+                   "government bodies do not call from foreign numbers",
+            source="scam-playbooks.md",
+        )
+    ]
+    if turn_index >= 2:
+        fails.append(PassportCheck(
+            name="Caller-ID vs claimed authority", verdict=Verdict.FAIL,
+            detail="claims an Indian agency but the number is foreign-routed",
+            source="rbi-advisories.md",
+        ))
+    risk = min(100.0, sum(NUMBER_INTEL_RISK[c.name] for c in fails))
+    return NumberIntel(
+        number="+1-838-224-7719", risk=round(risk, 1),
+        verdict=Verdict.FAIL, checks=fails + NUMBER_INTEL_CONTEXT,
+    )
+
 
 def load_gold_call(call_id: str) -> dict:
     for line in GOLD.read_text().splitlines():
@@ -237,6 +280,18 @@ def build(call: dict, session_id: str = "demo-session") -> list[dict]:
                 detail=f"Coercion index {coercion_val:.0f}, {trend}",
             ),
         ]
+        # Script-template similarity — the module's own "Script similarity 94%"
+        # signal. Climbs as the caller works through the scripted arc.
+        if stage not in (Stage.GREETING, Stage.BENIGN):
+            sim = min(0.96, 0.62 + 0.03 * i)
+            drivers.append(
+                ThreatDriver(
+                    label="Script match",
+                    contribution=round(sim * 0.15, 2),
+                    detail=f"{sim:.0%} similar to a known "
+                           f"{stage.value.replace('_', ' ').lower()} script",
+                )
+            )
 
         # Trust Passport: evidence lands progressively, trust falls with it.
         for idx, name, verdict, detail, source in PASSPORT_CHECKS:
@@ -316,6 +371,7 @@ def build(call: dict, session_id: str = "demo-session") -> list[dict]:
                 claimed_identity="CBI Mumbai Crime Branch",
                 final_trust_pct=trust, checks=list(checks),
             ),
+            number_intel=build_number_intel(i),
             coach=coach, guardian=guardian, payment=payment,
         ))
 

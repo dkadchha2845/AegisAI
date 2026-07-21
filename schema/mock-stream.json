@@ -82,7 +82,45 @@
       "final_trust_pct": 97.0,
       "checks": []
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 40.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": null,
+    "narration": null,
     "guardian": {
       "state": "IDLE",
       "name": null,
@@ -216,7 +254,45 @@
       "final_trust_pct": 97.0,
       "checks": []
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 40.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": null,
+    "narration": null,
     "guardian": {
       "state": "IDLE",
       "name": null,
@@ -315,6 +391,11 @@
           "label": "Victim stress",
           "contribution": 0.03,
           "detail": "Coercion index 11, flat"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.1,
+          "detail": "68% similar to a known authority claim script"
         }
       ]
     },
@@ -344,6 +425,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Ask for their name, badge number and station, then say you will call the station's public number back.",
       "tactic": "AUTHORITY_CLAIM",
@@ -353,6 +477,7 @@
       ],
       "urgency": "warn"
     },
+    "narration": null,
     "guardian": {
       "state": "IDLE",
       "name": null,
@@ -486,6 +611,11 @@
           "label": "Victim stress",
           "contribution": 0.06,
           "detail": "Coercion index 22, rising"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.11,
+          "detail": "71% similar to a known authority claim script"
         }
       ]
     },
@@ -521,6 +651,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Ask for their name, badge number and station, then say you will call the station's public number back.",
       "tactic": "AUTHORITY_CLAIM",
@@ -530,6 +703,7 @@
       ],
       "urgency": "warn"
     },
+    "narration": null,
     "guardian": {
       "state": "IDLE",
       "name": null,
@@ -650,6 +824,11 @@
           "label": "Victim stress",
           "contribution": 0.06,
           "detail": "Coercion index 22, flat"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.11,
+          "detail": "74% similar to a known fear induction script"
         }
       ]
     },
@@ -691,6 +870,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Say: \"I am going to hang up and call 1930 to verify this.\"",
       "tactic": "FEAR_INDUCTION",
@@ -700,6 +922,7 @@
       ],
       "urgency": "warn"
     },
+    "narration": null,
     "guardian": {
       "state": "IDLE",
       "name": null,
@@ -855,6 +1078,11 @@
           "label": "Victim stress",
           "contribution": 0.1,
           "detail": "Coercion index 42, rising"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.12,
+          "detail": "77% similar to a known fear induction script"
         }
       ]
     },
@@ -902,6 +1130,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Say: \"I am going to hang up and call 1930 to verify this.\"",
       "tactic": "FEAR_INDUCTION",
@@ -911,6 +1182,7 @@
       ],
       "urgency": "warn"
     },
+    "narration": null,
     "guardian": {
       "state": "IDLE",
       "name": null,
@@ -1053,6 +1325,11 @@
           "label": "Victim stress",
           "contribution": 0.1,
           "detail": "Coercion index 42, flat"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.12,
+          "detail": "80% similar to a known fear induction script"
         }
       ]
     },
@@ -1100,6 +1377,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Say: \"I am going to hang up and call 1930 to verify this.\"",
       "tactic": "FEAR_INDUCTION",
@@ -1109,6 +1429,7 @@
       ],
       "urgency": "warn"
     },
+    "narration": null,
     "guardian": {
       "state": "IDLE",
       "name": null,
@@ -1262,6 +1583,11 @@
           "label": "Victim stress",
           "contribution": 0.16,
           "detail": "Coercion index 64, rising"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.12,
+          "detail": "83% similar to a known fear induction script"
         }
       ]
     },
@@ -1309,6 +1635,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Say: \"I am going to hang up and call 1930 to verify this.\"",
       "tactic": "FEAR_INDUCTION",
@@ -1318,6 +1687,7 @@
       ],
       "urgency": "warn"
     },
+    "narration": null,
     "guardian": {
       "state": "IDLE",
       "name": null,
@@ -1494,6 +1864,11 @@
           "label": "Victim stress",
           "contribution": 0.16,
           "detail": "Coercion index 64, flat"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.13,
+          "detail": "86% similar to a known isolation script"
         }
       ]
     },
@@ -1541,6 +1916,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Say: \"I don't discuss anything without my family present.\" Then put the phone down and go to another person in the house.",
       "tactic": "ISOLATION",
@@ -1550,6 +1968,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -1770,6 +2189,11 @@
           "label": "Victim stress",
           "contribution": 0.15,
           "detail": "Coercion index 61, falling"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.13,
+          "detail": "89% similar to a known isolation script"
         }
       ]
     },
@@ -1817,6 +2241,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Say: \"I don't discuss anything without my family present.\" Then put the phone down and go to another person in the house.",
       "tactic": "ISOLATION",
@@ -1826,6 +2293,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -2012,6 +2480,11 @@
           "label": "Victim stress",
           "contribution": 0.15,
           "detail": "Coercion index 61, flat"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.14,
+          "detail": "92% similar to a known isolation script"
         }
       ]
     },
@@ -2059,6 +2532,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Say: \"I don't discuss anything without my family present.\" Then put the phone down and go to another person in the house.",
       "tactic": "ISOLATION",
@@ -2068,6 +2584,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -2265,6 +2782,11 @@
           "label": "Victim stress",
           "contribution": 0.17,
           "detail": "Coercion index 68, rising"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.14,
+          "detail": "95% similar to a known isolation script"
         }
       ]
     },
@@ -2312,6 +2834,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Say: \"I don't discuss anything without my family present.\" Then put the phone down and go to another person in the house.",
       "tactic": "ISOLATION",
@@ -2321,6 +2886,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -2529,6 +3095,11 @@
           "label": "Victim stress",
           "contribution": 0.17,
           "detail": "Coercion index 68, flat"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.14,
+          "detail": "96% similar to a known verification demand script"
         }
       ]
     },
@@ -2576,6 +3147,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Do not read out any OTP, Aadhaar or account number. Say you will verify at the branch.",
       "tactic": "VERIFICATION_DEMAND",
@@ -2585,6 +3199,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -2838,6 +3453,11 @@
           "label": "Victim stress",
           "contribution": 0.18,
           "detail": "Coercion index 71, rising"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.14,
+          "detail": "96% similar to a known verification demand script"
         }
       ]
     },
@@ -2885,6 +3505,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Do not read out any OTP, Aadhaar or account number. Say you will verify at the branch.",
       "tactic": "VERIFICATION_DEMAND",
@@ -2894,6 +3557,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -3124,6 +3788,11 @@
           "label": "Victim stress",
           "contribution": 0.18,
           "detail": "Coercion index 71, flat"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.14,
+          "detail": "96% similar to a known verification demand script"
         }
       ]
     },
@@ -3171,6 +3840,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Do not read out any OTP, Aadhaar or account number. Say you will verify at the branch.",
       "tactic": "VERIFICATION_DEMAND",
@@ -3180,6 +3892,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -3421,6 +4134,11 @@
           "label": "Victim stress",
           "contribution": 0.16,
           "detail": "Coercion index 64, falling"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.14,
+          "detail": "96% similar to a known verification demand script"
         }
       ]
     },
@@ -3468,6 +4186,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Do not read out any OTP, Aadhaar or account number. Say you will verify at the branch.",
       "tactic": "VERIFICATION_DEMAND",
@@ -3477,6 +4238,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -3729,6 +4491,11 @@
           "label": "Victim stress",
           "contribution": 0.16,
           "detail": "Coercion index 64, flat"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.14,
+          "detail": "96% similar to a known payment setup script"
         }
       ]
     },
@@ -3776,6 +4543,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Say: \"I need to speak to my bank first.\" Do not open any payment app while this call is connected.",
       "tactic": "PAYMENT_SETUP",
@@ -3785,6 +4595,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -4082,6 +4893,11 @@
           "label": "Victim stress",
           "contribution": 0.15,
           "detail": "Coercion index 61, falling"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.14,
+          "detail": "96% similar to a known payment setup script"
         }
       ]
     },
@@ -4129,6 +4945,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Say: \"I need to speak to my bank first.\" Do not open any payment app while this call is connected.",
       "tactic": "PAYMENT_SETUP",
@@ -4138,6 +4997,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -4412,6 +5272,11 @@
           "label": "Victim stress",
           "contribution": 0.15,
           "detail": "Coercion index 61, flat"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.14,
+          "detail": "96% similar to a known payment setup script"
         }
       ]
     },
@@ -4459,6 +5324,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Say: \"I need to speak to my bank first.\" Do not open any payment app while this call is connected.",
       "tactic": "PAYMENT_SETUP",
@@ -4468,6 +5376,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -4753,6 +5662,11 @@
           "label": "Victim stress",
           "contribution": 0.17,
           "detail": "Coercion index 68, rising"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.14,
+          "detail": "96% similar to a known payment setup script"
         }
       ]
     },
@@ -4800,6 +5714,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Say: \"I need to speak to my bank first.\" Do not open any payment app while this call is connected.",
       "tactic": "PAYMENT_SETUP",
@@ -4809,6 +5766,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -5105,6 +6063,11 @@
           "label": "Victim stress",
           "contribution": 0.17,
           "detail": "Coercion index 68, flat"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.14,
+          "detail": "96% similar to a known payment execution script"
         }
       ]
     },
@@ -5146,6 +6109,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Stop. Put the phone down now. Nothing you are being told is real.",
       "tactic": "PAYMENT_EXECUTION",
@@ -5155,6 +6161,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -5531,6 +6538,11 @@
           "label": "Victim stress",
           "contribution": 0.18,
           "detail": "Coercion index 71, rising"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.14,
+          "detail": "96% similar to a known payment execution script"
         }
       ]
     },
@@ -5572,6 +6584,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Stop. Put the phone down now. Nothing you are being told is real.",
       "tactic": "PAYMENT_EXECUTION",
@@ -5581,6 +6636,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -5899,6 +6955,11 @@
           "label": "Victim stress",
           "contribution": 0.18,
           "detail": "Coercion index 71, flat"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.14,
+          "detail": "96% similar to a known payment execution script"
         }
       ]
     },
@@ -5940,6 +7001,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Stop. Put the phone down now. Nothing you are being told is real.",
       "tactic": "PAYMENT_EXECUTION",
@@ -5949,6 +7053,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",
@@ -6278,6 +7383,11 @@
           "label": "Victim stress",
           "contribution": 0.18,
           "detail": "Coercion index 73, rising"
+        },
+        {
+          "label": "Script match",
+          "contribution": 0.14,
+          "detail": "96% similar to a known payment execution script"
         }
       ]
     },
@@ -6319,6 +7429,49 @@
         }
       ]
     },
+    "number_intel": {
+      "number": "+1-838-224-7719",
+      "risk": 85.0,
+      "verdict": "FAIL",
+      "checks": [
+        {
+          "name": "International routing",
+          "verdict": "FAIL",
+          "detail": "originates outside India (+1) while claiming an Indian agency — government bodies do not call from foreign numbers",
+          "source": "scam-playbooks.md"
+        },
+        {
+          "name": "Caller-ID vs claimed authority",
+          "verdict": "FAIL",
+          "detail": "claims an Indian agency but the number is foreign-routed",
+          "source": "rbi-advisories.md"
+        },
+        {
+          "name": "Number format",
+          "verdict": "PASS",
+          "detail": "parses to a well-formed number",
+          "source": null
+        },
+        {
+          "name": "Reported number",
+          "verdict": "UNKNOWN",
+          "detail": "not in the local complaint sample (illustrative, not exhaustive)",
+          "source": null
+        },
+        {
+          "name": "VoIP / suspicious prefix",
+          "verdict": "UNKNOWN",
+          "detail": "no known VoIP/bulk prefix — this check is not exhaustive",
+          "source": null
+        },
+        {
+          "name": "Call frequency",
+          "verdict": "UNKNOWN",
+          "detail": "not enough call history to judge frequency",
+          "source": null
+        }
+      ]
+    },
     "coach": {
       "line": "Stop. Put the phone down now. Nothing you are being told is real.",
       "tactic": "PAYMENT_EXECUTION",
@@ -6328,6 +7481,7 @@
       ],
       "urgency": "urgent"
     },
+    "narration": null,
     "guardian": {
       "state": "ALERTING",
       "name": "Aditya (son)",

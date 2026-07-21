@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from .. import llm
 from ..config import settings
 from ..engine.analyzer import analyze_text
+from ..engine.ocr import extract_text
 from ..engine.upi import analyze_upi
 from ..rag.store import get_kb
 
@@ -31,6 +32,9 @@ router = APIRouter(prefix="/api/analyze", tags=["analyze"])
 #: that says what to do instead, rather than a generic 400.
 TEXT_SUFFIXES = {".txt", ".json", ".csv", ".md", ".log", ".vtt", ".srt"}
 
+#: Image types the OCR path accepts.
+IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff", ".gif"}
+
 
 class TextRequest(BaseModel):
     text: str = Field(min_length=1, max_length=200_000)
@@ -38,6 +42,9 @@ class TextRequest(BaseModel):
     #: What the sender claims to be, if the user knows. Enables the strongest
     #: UPI check — claimed identity against the bank-registered payee name.
     claimed_identity: Optional[str] = None
+    #: Caller number, if the artifact came from a call. Enables the number
+    #: spoofing checks (Caller-ID mismatch, VoIP, international routing).
+    caller_number: Optional[str] = None
     #: Ask the LLM to phrase the explanation. Off by default: the templated
     #: explanation is instant and offline, and this adds a network round trip.
     explain: bool = False
@@ -67,7 +74,12 @@ def _with_explanation(result: Dict[str, Any], wanted: bool) -> Dict[str, Any]:
 def analyze_text_route(req: TextRequest) -> Dict[str, Any]:
     """Free text: an SMS, a WhatsApp forward, a pasted transcript, a VPA."""
     result = asdict(
-        analyze_text(req.text, kind=req.kind, claimed_identity=req.claimed_identity)
+        analyze_text(
+            req.text,
+            kind=req.kind,
+            claimed_identity=req.claimed_identity,
+            caller_number=req.caller_number,
+        )
     )
     return _with_explanation(result, req.explain)
 
@@ -126,6 +138,84 @@ async def analyze_file_route(
         analyze_text(text, kind="file", claimed_identity=claimed_identity)
     )
     result["filename"] = file.filename
+    return result
+
+
+@router.post("/image")
+async def analyze_image_route(
+    file: UploadFile = File(...),
+    claimed_identity: Optional[str] = None,
+    caller_number: Optional[str] = None,
+) -> Dict[str, Any]:
+    """A screenshot — a fake police notice, a payment screenshot, a QR code.
+
+    OCR extracts the text, any QR payload is decoded, and both are run through
+    the same analyzer as a pasted message. If no OCR engine is installed the
+    response is an explicit `ocr:unavailable` degradation asking the user to
+    type the text, rather than a confident verdict on an empty read.
+    """
+    suffix = "." + (file.filename or "").rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else ""
+    if suffix not in IMAGE_SUFFIXES:
+        raise HTTPException(
+            status_code=415,
+            detail=(
+                f"Cannot read '{suffix or 'this file type'}' as an image. Upload a "
+                ".png, .jpg, .webp or .tiff — or paste the text directly."
+            ),
+        )
+
+    raw = await file.read()
+    if len(raw) > settings.max_upload_bytes:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Image is larger than {settings.max_upload_bytes // 1024 // 1024}MB.",
+        )
+
+    ocr = extract_text(raw)
+
+    # Fold any decoded QR payload into the text so a UPI deep link in a QR is
+    # scored by the same path as one that was pasted.
+    combined = ocr.text
+    if ocr.qr_payloads:
+        combined = (combined + "\n" + "\n".join(ocr.qr_payloads)).strip()
+
+    if not combined:
+        # Nothing readable. Say so — do not score an empty string.
+        return {
+            "kind": "image",
+            "score": 0.0,
+            "level": "CALM",
+            "verdict": "INSUFFICIENT",
+            "summary": (
+                "No text could be read from this image. "
+                + (
+                    "OCR is not installed on this server — install it, or type out "
+                    "what the screenshot says."
+                    if "ocr:unavailable" in ocr.degraded
+                    else "Try a clearer screenshot, or type out what it says."
+                )
+            ),
+            "filename": file.filename,
+            "ocr": {"engine": ocr.engine, "text": ocr.text, "qr_payloads": ocr.qr_payloads},
+            "degraded": ocr.degraded,
+            "recommended_actions": [
+                "Type out the message text and analyse that instead.",
+                "If a payment is involved, include the UPI ID or the amount requested.",
+            ],
+        }
+
+    result = asdict(
+        analyze_text(
+            combined,
+            kind="image",
+            claimed_identity=claimed_identity,
+            caller_number=caller_number,
+        )
+    )
+    result["filename"] = file.filename
+    result["ocr"] = {"engine": ocr.engine, "text": ocr.text, "qr_payloads": ocr.qr_payloads}
+    # Surface OCR degradations alongside any the analyzer recorded.
+    result["degraded"] = list(dict.fromkeys(result.get("degraded", []) + ocr.degraded))
     return result
 
 

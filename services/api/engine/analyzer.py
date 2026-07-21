@@ -25,6 +25,8 @@ from ..rag.store import get_kb
 from .classifier import load_classifier
 from .coercion import CoercionTracker
 from .passport import TrustPassport
+from .scripts import get_script_matcher
+from .spoofing import analyze_number
 from .threat import ManipulationAccumulator, fuse, level_of
 from .upi import Finding, analyze_payment_framing, analyze_upi
 
@@ -41,6 +43,18 @@ DISPOSITIVE_CHECKS: dict[str, float] = {
     "Procedural plausibility": 0.95,
     "Secrecy demand": 0.9,
     "Payment to individual": 0.8,
+}
+
+#: Number-spoofing checks strong enough to settle the verdict on their own, and
+#: how hard. Kept deliberately short: a reported number, or an authority claim
+#: delivered from a personal/foreign number, is dispositive. VoIP, format, and
+#: frequency are real signals but *not* conclusive alone — legitimate
+#: businesses use VoIP — so they stay in the fusion weight where a false
+#: positive cannot be manufactured from metadata that any real caller might have.
+DISPOSITIVE_SPOOF_CHECKS: dict[str, float] = {
+    "Reported number": 0.9,
+    "Caller-ID vs claimed authority": 0.8,
+    "International routing": 0.7,
 }
 
 
@@ -72,6 +86,7 @@ class AnalysisResult:
     recommended_actions: list[str] = field(default_factory=list)
     degraded: list[str] = field(default_factory=list)
     upi: dict | None = None
+    number_intel: dict | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -201,6 +216,7 @@ def analyze_text(
     *,
     kind: str = "text",
     claimed_identity: str | None = None,
+    caller_number: str | None = None,
 ) -> AnalysisResult:
     classifier = load_classifier()
     kb = get_kb()
@@ -233,12 +249,18 @@ def analyze_text(
     history: list[str] = []
     stages_seen: list[str] = []
     coercion_index = 0.0
+    matcher = get_script_matcher()
+    script_similarity = 0.0
+    script_label: str | None = None
 
     for i, (speaker, text) in enumerate(pairs):
         if speaker == "CALLER":
             pred = classifier.predict(text, history)
             manipulation.observe(pred.label, pred.confidence)
             passport.observe(text, speaker)
+            m = matcher.match(text)
+            if m.similarity > script_similarity:
+                script_similarity, script_label = m.similarity, m.label
             if pred.label not in stages_seen:
                 stages_seen.append(pred.label)
             lines.append(
@@ -300,12 +322,40 @@ def analyze_text(
         key=lambda line: _stage_rank(line.stage) * line.confidence,
         default=None,
     )
+    # Caller-number intelligence, if a number was supplied. The claimed
+    # identity comes from the caller's own words when the user did not name it.
+    number_intel = None
+    spoofing_risk = None
+    if caller_number:
+        intel = analyze_number(
+            caller_number,
+            claimed_identity=claimed_identity or passport.claimed_identity,
+        )
+        number_intel = asdict(intel)
+        spoofing_risk = intel.risk
+        # Fold the dispositive spoofing checks into findings so they floor the
+        # score, the same way a credential request does — a foreign number
+        # claiming to be the CBI is not merely 15% of a weighted sum.
+        for check in intel.checks:
+            if check.verdict == "FAIL" and check.name in DISPOSITIVE_SPOOF_CHECKS:
+                findings.append(
+                    Finding(
+                        label=f"Number: {check.name}",
+                        weight=DISPOSITIVE_SPOOF_CHECKS[check.name],
+                        detail=check.detail,
+                        source=check.source,
+                    )
+                )
+
     fusion = fuse(
         stage=peak.stage if peak else "BENIGN",
         stage_confidence=peak.confidence if peak else 0.0,
         manipulation=manipulation,
         coercion_index=coercion_index,
         trust_pct=passport_out.final_trust_pct,
+        spoofing_risk=spoofing_risk,
+        script_similarity=script_similarity,
+        script_label=script_label,
         previous_score=0.0,
         dt_s=0.0,
     )
@@ -345,6 +395,7 @@ def analyze_text(
         recommended_actions=_actions(verdict, findings),
         degraded=degraded,
         upi=upi_payload,
+        number_intel=number_intel,
     )
 
 

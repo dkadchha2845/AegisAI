@@ -12,6 +12,11 @@ httpx>=0.27
 # them is a fresh clone whose checks get skipped.
 pytest>=8.0
 
+# Court-admissible evidence package as PDF (routes /api/session/{id}/report.pdf).
+# Pure-Python, no system libs, installs on 3.9-3.12. The JSON package works
+# without it; the PDF endpoint degrades to a clear 503 if it is absent.
+reportlab>=4.0
+
 # Optional: serve the fine-tuned MuRIL checkpoint instead of the lexical
 # fallback. ~2GB of wheels; skip on a laptop that only needs the demo.
 # torch>=2.3
@@ -20,3 +25,13 @@ pytest>=8.0
 # Optional: dense retrieval instead of BM25. Downloads a ~90MB model on
 # first run, which is why it is not a default.
 # sentence-transformers>=3.0
+
+# Optional: OCR for image inputs (screenshots, fake notices, QR). Tesseract is
+# the default backend and also needs the `tesseract` system binary
+# (`brew install tesseract` / `apt install tesseract-ocr`). Without these the
+# /api/analyze/image route degrades to `ocr:unavailable` and asks the user to
+# type the text — it never returns a verdict on an empty read.
+# pytesseract>=0.3.10
+# Pillow>=10.0
+# pyzbar>=0.1.9          # optional QR/barcode decode
+# easyocr>=1.7           # alternative backend (PRESAGE_OCR=easyocr); pulls torch

@@ -19,6 +19,8 @@ import {
   BellRing,
   Check,
   CircleDollarSign,
+  Download,
+  FileText,
   ShieldAlert,
   ShieldCheck,
   X,
@@ -26,6 +28,7 @@ import {
 import { useLiveSession } from "@/hooks/useLiveSession";
 import { NarrationPanel } from "@/components/NarrationPanel";
 import { pretty } from "@/lib/stages";
+import { getReport, reportPdfUrl, reportUrl, type EvidencePackage } from "@/lib/api";
 
 const ESCALATION = [
   { speaker: "CALLER" as const, text: "Main Delhi Cyber Crime se ACP Verma bol raha hoon." },
@@ -248,6 +251,8 @@ export function Guardian() {
               <NarrationPanel frame={frame} />
             </div>
 
+            {live.sessionId && <EvidenceCard sessionId={live.sessionId} />}
+
             {frame?.coach && (
               <div className="card">
                 <h2 className="card__title">What to say right now</h2>
@@ -267,6 +272,84 @@ export function Guardian() {
           </section>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Evidence package — the escalation artifact.
+ *
+ * "Preview" hits the JSON endpoint so a reader can see the report ID and the
+ * count of named findings before downloading; the PDF button is a plain link
+ * because the server sets Content-Disposition and the browser handles the save.
+ * Both draw from the same server-built package, so the preview can never
+ * disagree with the document that gets filed.
+ */
+function EvidenceCard({ sessionId }: { sessionId: string }) {
+  const [pkg, setPkg] = useState<EvidencePackage | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const preview = async () => {
+    setLoading(true);
+    setError(null);
+    const res = await getReport(sessionId);
+    setLoading(false);
+    if (res.ok) setPkg(res.data);
+    else setError(res.error);
+  };
+
+  return (
+    <div className="card">
+      <h2 className="card__title">Evidence package</h2>
+      <p className="muted small" style={{ marginTop: 0 }}>
+        A structured, citable package for escalation to the telecom provider or a
+        cybercrime cell — the verdict, the named signals behind it, the identity
+        and caller-number evidence, the transcript, and reporting guidance.
+      </p>
+
+      {pkg && (
+        <dl className="kv" style={{ marginTop: "var(--s-3)" }}>
+          <dt>report</dt>
+          <dd className="mono">{pkg.report_id}</dd>
+          <dt>incident</dt>
+          <dd>{pkg.incident.type}</dd>
+          <dt>peak threat</dt>
+          <dd>
+            {pkg.incident.peak_threat.toFixed(0)} / 100 — {pkg.incident.final_level}
+          </dd>
+          <dt>findings</dt>
+          <dd>{pkg.evidence.length} cited</dd>
+        </dl>
+      )}
+
+      {error && (
+        <div className="banner banner--bad" style={{ marginTop: "var(--s-3)" }}>
+          <div className="small">{error}</div>
+        </div>
+      )}
+
+      <div className="row" style={{ marginTop: "var(--s-4)" }}>
+        <button className="btn2" onClick={preview} disabled={loading}>
+          <FileText size={14} /> {loading ? "Building…" : "Preview package"}
+        </button>
+        <a
+          className="btn2 btn2--primary"
+          href={reportPdfUrl(sessionId)}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <Download size={14} /> Download PDF
+        </a>
+        <a
+          className="btn2 btn2--ghost"
+          href={reportUrl(sessionId)}
+          target="_blank"
+          rel="noreferrer"
+        >
+          View JSON
+        </a>
+      </div>
     </div>
   );
 }

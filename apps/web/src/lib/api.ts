@@ -116,6 +116,9 @@ export interface AnalysisResult {
   degraded: string[];
   upi: UpiAnalysis | null;
   filename?: string;
+  /** Present when the input was an image: which engine read it, the extracted
+   *  text, and any decoded QR payloads. */
+  ocr?: { engine: string; text: string; qr_payloads: string[] };
 }
 
 export const analyzeText = (
@@ -142,6 +145,23 @@ export const analyzeFile = (file: File) => {
   const form = new FormData();
   form.append("file", file);
   return request<AnalysisResult>("/api/analyze/file", { method: "POST", body: form });
+};
+
+/** OCR a screenshot (fake notice, payment screenshot, QR) and score the text. */
+export const analyzeImage = (
+  file: File,
+  opts: { claimedIdentity?: string | null; callerNumber?: string | null } = {},
+) => {
+  const form = new FormData();
+  form.append("file", file);
+  const qs = new URLSearchParams();
+  if (opts.claimedIdentity) qs.set("claimed_identity", opts.claimedIdentity);
+  if (opts.callerNumber) qs.set("caller_number", opts.callerNumber);
+  const q = qs.toString();
+  return request<AnalysisResult>(`/api/analyze/image${q ? `?${q}` : ""}`, {
+    method: "POST",
+    body: form,
+  });
 };
 
 // ---------------------------------------------------------------------------
@@ -264,3 +284,35 @@ export const endSession = (sessionId: string) =>
 
 export const socketUrl = (sessionId: string) =>
   `${API_BASE.replace(/^http/, "ws")}/api/session/ws/${sessionId}`;
+
+// ---------------------------------------------------------------------------
+// Evidence package (escalation artifact)
+// ---------------------------------------------------------------------------
+
+/** URL of the structured JSON evidence package. */
+export const reportUrl = (sessionId: string) =>
+  `${API_BASE}/api/session/${sessionId}/report`;
+
+/** URL of the court-admissible PDF. The server sets Content-Disposition, so
+ *  navigating here downloads the file. */
+export const reportPdfUrl = (sessionId: string) =>
+  `${API_BASE}/api/session/${sessionId}/report.pdf`;
+
+export interface EvidencePackage {
+  report_id: string;
+  generated_at: string;
+  incident: { type: string; peak_threat: number; final_level: string; peak_stage: string };
+  call: { session_id: string; caller_number: string | null; duration_s: number };
+  assessment: {
+    claimed_identity: string | null;
+    identity_trust_pct: number | null;
+    caller_number_risk: number | null;
+    caller_number_verdict: string | null;
+  };
+  evidence: { category: string; finding: string; detail: string; source: string | null }[];
+  citations: string[];
+  reporting_guidance: string[];
+}
+
+export const getReport = (sessionId: string) =>
+  request<EvidencePackage>(`/api/session/${sessionId}/report`);

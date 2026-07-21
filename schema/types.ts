@@ -187,6 +187,19 @@ export interface TrustPassport {
   checks: PassportCheck[];
 }
 
+/** Caller-number intelligence — the metadata half of a verdict.
+ *
+ *  Reuses `PassportCheck` rows so both render with one component. `risk` runs
+ *  opposite to the passport's trust percentage — higher means more likely
+ *  spoofed — because the number is evidence *against* a caller. */
+export interface NumberIntel {
+  number: string | null;
+  /** 0–100, higher = more likely spoofed / fraudulent */
+  risk: number;
+  verdict: Verdict;
+  checks: PassportCheck[];
+}
+
 /** Retrieved from a curated, safety-reviewed library — never generated at runtime. */
 export interface CoachSuggestion {
   line: string;
@@ -251,6 +264,7 @@ export interface StateFrame {
   manipulation_map: ManipulationMap;
   forecast: Forecast | null;
   trust_passport: TrustPassport | null;
+  number_intel: NumberIntel | null;
   coach: CoachSuggestion | null;
   narration: Narration | null;
   guardian: GuardianInfo;

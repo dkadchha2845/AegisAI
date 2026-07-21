@@ -14,9 +14,12 @@ import asyncio
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from ..config import settings
+from ..engine.report import build_evidence_package
+from ..engine.report_pdf import pdf_available, render_pdf
 from ..engine.session import registry
 
 router = APIRouter(prefix="/api/session", tags=["session"])
@@ -115,6 +118,48 @@ def approve_payment(session_id: str) -> Dict[str, Any]:
     session = _require(session_id)
     session.approve_payment()
     return {"frame": session.frame(), "events": session.drain_events()}
+
+
+@router.get("/{session_id}/report")
+def evidence_report(session_id: str) -> Dict[str, Any]:
+    """The structured, MHA/cybercrime-compatible evidence package.
+
+    Machine-readable and self-describing: the verdict, the named signals behind
+    it, the identity and caller-number evidence with citations, the manipulation
+    timeline, the full transcript, and reporting guidance. This is the artifact
+    that turns an in-app alert into something a telecom provider or cybercrime
+    cell can act on and file.
+    """
+    session = _require(session_id)
+    return build_evidence_package(session)
+
+
+@router.get("/{session_id}/report.pdf")
+def evidence_report_pdf(session_id: str) -> Response:
+    """The same evidence package rendered as a court-admissible PDF.
+
+    Degrades honestly: if reportlab is not installed the JSON endpoint still
+    works and this returns a 503 that says what to do, rather than a stack
+    trace or a silent empty file.
+    """
+    session = _require(session_id)
+    if not pdf_available():
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "PDF rendering is unavailable — reportlab is not installed. "
+                "Install it (`pip install reportlab`) or use GET "
+                f"/api/session/{session_id}/report for the JSON package."
+            ),
+        )
+    package = build_evidence_package(session)
+    pdf = render_pdf(package)
+    filename = f"{package['report_id']}.pdf"
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.delete("/{session_id}")

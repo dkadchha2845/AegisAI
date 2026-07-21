@@ -46,6 +46,12 @@ class Settings:
     # return citations; only the ranking quality differs.
     prefer_dense_embeddings: bool = _flag("PRESAGE_DENSE_RAG", True)
 
+    # --- OCR (image inputs — screenshots, notices, QR) --------------------
+    # tesseract (default) | easyocr | none. Every backend is optional and
+    # degrades to `ocr:unavailable` if its dependency (or Tesseract's system
+    # binary) is missing, so a clean clone still starts.
+    ocr_backend: str = os.getenv("PRESAGE_OCR", "tesseract")
+
     # --- LLM (explanations only, never scoring) ---------------------------
     llm_backend: str = os.getenv("PRESAGE_LLM", "none")
     llm_model: str | None = os.getenv("PRESAGE_MODEL") or None

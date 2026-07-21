@@ -207,6 +207,22 @@ class TrustPassport(BaseModel):
     checks: list[PassportCheck] = Field(default_factory=list)
 
 
+class NumberIntel(BaseModel):
+    """Caller-number intelligence — the metadata half of a verdict.
+
+    Reuses `PassportCheck` for its rows so the UI renders both with one
+    component: same PASS/FAIL/UNKNOWN grammar, same citation discipline.
+    `risk` runs the opposite direction to the passport's trust percentage —
+    higher means more likely spoofed — because the number is evidence *against*
+    a caller, where the passport measures evidence *for* them.
+    """
+
+    number: Optional[str] = None
+    risk: float = Field(ge=0, le=100)
+    verdict: Verdict
+    checks: list[PassportCheck] = Field(default_factory=list)
+
+
 class CoachSuggestion(BaseModel):
     """Retrieved, never generated at runtime. `line` comes from a curated,
     safety-reviewed library so nothing unvetted is ever put in a frightened
@@ -282,6 +298,7 @@ class StateFrame(BaseModel):
     manipulation_map: ManipulationMap = Field(default_factory=ManipulationMap)
     forecast: Optional[Forecast] = None
     trust_passport: Optional[TrustPassport] = None
+    number_intel: Optional[NumberIntel] = None
     coach: Optional[CoachSuggestion] = None
     narration: Optional[Narration] = None
     guardian: GuardianInfo = Field(default_factory=GuardianInfo)

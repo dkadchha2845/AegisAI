@@ -243,6 +243,7 @@ Interactive docs at **http://localhost:8000/docs** once the API is running.
 | `POST` | `/api/analyze/text` | `{ text, claimed_org?, explain? }` |
 | `POST` | `/api/analyze/upi` | `{ vpa \| qr_payload, amount? }` |
 | `POST` | `/api/analyze/file` | multipart upload, ≤4 MB, `.txt/.json/.csv` |
+| `POST` | `/api/analyze/image` | screenshot → OCR → scored; degrades if no OCR engine |
 | `GET` | `/api/knowledge/search` | `?q=…&k=5` |
 | `GET` | `/api/knowledge/docs` | — |
 
@@ -258,6 +259,8 @@ Interactive docs at **http://localhost:8000/docs** once the API is running.
 | `POST` | `/api/session/{id}/payment/attempt` | Attempt a payment (may be held) |
 | `POST` | `/api/session/{id}/payment/cancel` | Cancel a held payment |
 | `POST` | `/api/session/{id}/payment/approve` | Override the hold |
+| `GET` | `/api/session/{id}/report` | Structured evidence package (JSON) for escalation |
+| `GET` | `/api/session/{id}/report.pdf` | The same package as a court-admissible PDF |
 | `DELETE` | `/api/session/{id}` | End the call |
 | `WS` | `/api/session/ws/{id}` | `StateFrame` snapshots @ 4 Hz + `Event` edges |
 
@@ -542,8 +545,10 @@ picking up next doesn't have to reverse-engineer the state from the diff.
 
 ## Not in this build
 
-- **No OCR.** Screenshots must be typed out; returning a confident verdict on
-  an empty string would be worse than declining.
+- **OCR is optional.** Screenshots are read when an OCR engine is installed
+  (`PRESAGE_OCR=tesseract` + the `tesseract` binary, or `easyocr`); without one
+  the image path returns `ocr:unavailable` and asks you to type the text rather
+  than guessing at an empty read.
 - **No live audio.** The coercion index runs text-only and is capped lower to
   say so.
 - **Synthetic training data only.** Real-world transfer is unmeasured.
