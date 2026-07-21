@@ -48,3 +48,12 @@ export const pretty = (stage: string) =>
     .join(" ");
 
 export const stageColor = (stage: string) => STAGE_COLOR[stage] ?? "var(--ink-faint)";
+
+/** Cities the Module 2 gazetteer knows, offered in the Shield's city picker so
+ *  "fraud near you" can resolve to a real hotspot. Mirrors intel/geo.py::CITIES. */
+export const CITY_OPTIONS = [
+  "Bengaluru", "Mysuru", "Mangaluru", "Hyderabad", "Warangal", "Chennai",
+  "Coimbatore", "Madurai", "Mumbai", "Pune", "Nagpur", "Delhi", "Gurugram",
+  "Noida", "Lucknow", "Jaipur", "Ahmedabad", "Surat", "Kolkata", "Patna",
+  "Bhopal", "Kochi", "Visakhapatnam", "Bhubaneswar",
+] as const;

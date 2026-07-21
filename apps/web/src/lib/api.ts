@@ -338,13 +338,24 @@ export const getReport = (sessionId: string) =>
 export interface AuthUser {
   id: number;
   email: string;
-  role: "viewer" | "analyst" | "admin";
+  role: "viewer" | "analyst" | "admin" | "owner";
+  org_id: number | null;
   disabled: boolean;
   created_at: string | null;
 }
 
+export interface Organization {
+  id: number;
+  slug: string;
+  name: string;
+  created_at: string | null;
+  members?: number;
+  cases?: number;
+}
+
 export interface MeResponse {
   user: AuthUser;
+  org: Organization | null;
   auth_enforced: boolean;
 }
 
@@ -358,11 +369,23 @@ export const getMe = () => request<MeResponse>("/api/auth/me");
 
 export const listUsers = () => request<{ users: AuthUser[] }>("/api/auth/users");
 
-export const createUser = (email: string, password: string, role: string) =>
+export const createUser = (email: string, password: string, role: string, orgId?: number) =>
   request<{ user: AuthUser }>("/api/auth/users", {
     method: "POST",
-    body: JSON.stringify({ email, password, role }),
+    body: JSON.stringify({ email, password, role, org_id: orgId ?? null }),
   });
+
+export const listOrgs = () =>
+  request<{ organizations: Organization[] }>("/api/orgs");
+
+export const createOrg = (name: string) =>
+  request<{ organization: Organization }>("/api/orgs", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+
+export const getCurrentOrg = () =>
+  request<{ organization: Organization | null; is_owner: boolean }>("/api/orgs/current");
 
 export interface CaseSummary {
   report_id: string;
@@ -397,3 +420,237 @@ export interface AuditEvent {
 
 export const getAudit = (action?: string) =>
   request<{ events: AuditEvent[] }>(`/api/audit${action ? `?action=${action}` : ""}`);
+
+// ---------------------------------------------------------------------------
+// Module 2 — FIGAE (fraud intelligence & geospatial)
+// ---------------------------------------------------------------------------
+
+export interface IntelStats {
+  total_cases: number;
+  module1_cases: number;
+  active_clusters: number;
+  campaigns: number;
+  high_risk_clusters: number;
+  linked_entities: number;
+  total_loss_inr: number;
+  graph_nodes: number;
+  graph_edges: number;
+}
+
+export interface Cluster {
+  cluster_id: string;
+  size: number;
+  primary_scam: string;
+  primary_scam_name: string;
+  shared_phones: string[];
+  shared_upi_ids: string[];
+  shared_wallets: string[];
+  states: string[];
+  total_loss_inr: number;
+  peak_threat: number;
+  mean_threat: number;
+  risk: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  risk_score: number;
+  case_ids: string[];
+  is_campaign: boolean;
+}
+
+export interface GraphNode {
+  id: string;
+  kind: string;
+  label: string;
+  cases: number | null;
+  threat: number | null;
+  cluster?: string | null;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+}
+
+export interface GraphData {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  truncated?: boolean;
+  cluster_id?: string;
+}
+
+export interface Hotspot {
+  name: string;
+  level: string;
+  cases: number;
+  total_loss_inr: number;
+  lat: number;
+  lon: number;
+  risk: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  top_scam: string | null;
+}
+
+export interface RiskFactor {
+  factor: string;
+  contribution: number;
+  detail: string;
+}
+
+export interface InvestigationReport {
+  cluster_id: string;
+  generated_at: string;
+  summary: {
+    linked_cases: number;
+    primary_scam: string;
+    shared_phone_numbers: number;
+    shared_upi_ids: number;
+    shared_wallets: number;
+    affected_states: string[];
+    total_loss_inr: number;
+    risk_level: string;
+    risk_score: number;
+    is_campaign: boolean;
+  };
+  evidence: {
+    shared_phones: string[];
+    shared_upi_ids: string[];
+    shared_wallets: string[];
+    case_ids: string[];
+  };
+  risk_factors: RiskFactor[];
+  narrative: string;
+  narrative_llm?: string;
+  suggested_actions: string[];
+  disclaimer: string;
+}
+
+export interface LinkPrediction {
+  source: string;
+  target: string;
+  via: string[];
+  confidence: number;
+  relation: string;
+}
+
+export interface CentralityEntity {
+  id: string;
+  kind: string;
+  value: string;
+  cases: number;
+  cluster: string | null;
+}
+
+export const getIntelStats = () => request<IntelStats>("/api/intel/stats");
+export const getClusters = () => request<{ clusters: Cluster[] }>("/api/intel/clusters");
+export const getClusterDetail = (id: string) =>
+  request<{ cluster: Cluster; graph: GraphData; report: InvestigationReport }>(
+    `/api/intel/clusters/${id}`,
+  );
+export const getGeo = () =>
+  request<{ states: Hotspot[]; districts: Hotspot[]; cities: Hotspot[] }>("/api/intel/geo");
+export const getCentrality = () =>
+  request<{ entities: CentralityEntity[] }>("/api/intel/centrality");
+export const getLinkPredictions = () =>
+  request<{ predictions: LinkPrediction[] }>("/api/intel/links");
+export const getFullGraph = (limit = 300) =>
+  request<GraphData>(`/api/intel/graph?limit=${limit}`);
+export const searchIntel = (q: string) =>
+  request<{
+    query: string;
+    kind?: string;
+    matches: {
+      kind: string;
+      value: string;
+      cases: string[];
+      case_count: number;
+      clusters: string[];
+    }[];
+  }>(`/api/intel/search?q=${encodeURIComponent(q)}`);
+
+// ---------------------------------------------------------------------------
+// Module 3 — CFSRP (citizen fraud shield)
+// ---------------------------------------------------------------------------
+
+export interface Helpline {
+  name: string;
+  value: string;
+  action: string;
+  detail: string;
+  priority: string;
+}
+
+export interface Guidance {
+  stage: string;
+  threat_level: string;
+  headline: string;
+  actions: string[];
+  coach_line: string | null;
+  coach_why: string | null;
+  sources: string[];
+}
+
+export interface EmergencyResponse {
+  severity: "info" | "warn" | "urgent";
+  title: string;
+  checklist: string[];
+  helplines: Helpline[];
+  show_panic_banner: boolean;
+}
+
+export interface VerifyResult {
+  verdict: Verdict;
+  level: string;
+  score: number;
+  stage: string;
+  summary: string;
+  analysis: AnalysisResult;
+  intel: {
+    known_infrastructure: boolean;
+    matched_entities: { kind: string; value: string; case_count: number }[];
+    clusters: {
+      cluster_id: string;
+      primary_scam: string;
+      size: number;
+      risk: string;
+      states: string[];
+    }[];
+  };
+  guidance: Guidance;
+  emergency: EmergencyResponse;
+  nearby_hotspots: Hotspot[];
+  degraded: string[];
+}
+
+export interface VerifyRequestBody {
+  text?: string;
+  number?: string | null;
+  upi?: string | null;
+  claimed_identity?: string | null;
+  city?: string | null;
+  channel?: string;
+}
+
+export const getHelplines = () => request<{ helplines: Helpline[] }>("/api/shield/helplines");
+
+export const shieldVerify = (body: VerifyRequestBody) =>
+  request<VerifyResult>("/api/shield/verify", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
+export const shieldPreserve = (body: VerifyRequestBody) =>
+  request<{ token: string; summary: Record<string, unknown>; result: VerifyResult }>(
+    "/api/shield/preserve",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+
+export const getVault = (token: string) =>
+  request<{ summary: Record<string, unknown>; result: VerifyResult; submitted_text: string }>(
+    `/api/shield/vault/${token}`,
+  );
+
+export const complaintPdfUrl = (token: string) =>
+  `${API_BASE}/api/shield/vault/${token}/complaint.pdf`;
+
+export const getAwareness = () =>
+  request<{
+    trending_scams: { cluster_id: string; scam: string; size: number; risk: string; states: string[] }[];
+    hotspot_states: Hotspot[];
+  }>("/api/shield/awareness");

@@ -18,10 +18,11 @@ import {
   type ReactNode,
 } from "react";
 import * as api from "@/lib/api";
-import type { AuthUser } from "@/lib/api";
+import type { AuthUser, Organization } from "@/lib/api";
 
 interface AuthState {
   user: AuthUser | null;
+  org: Organization | null;
   enforced: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
@@ -33,6 +34,7 @@ const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [org, setOrg] = useState<Organization | null>(null);
   const [enforced, setEnforced] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -40,9 +42,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await api.getMe();
     if (res.ok) {
       setUser(res.data.user);
+      setOrg(res.data.org);
       setEnforced(res.data.auth_enforced);
     } else {
       setUser(null);
+      setOrg(null);
     }
     setLoading(false);
   }, []);
@@ -71,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   return (
-    <AuthContext.Provider value={{ user, enforced, loading, login, logout, refresh }}>
+    <AuthContext.Provider value={{ user, org, enforced, loading, login, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   );

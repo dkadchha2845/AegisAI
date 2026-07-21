@@ -101,7 +101,13 @@ def test_login_success_and_me(enforced):
     token = r.json()["token"]
     me = enforced.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert me.status_code == 200
-    assert me.json()["user"]["role"] == "admin"
+    body = me.json()
+    # The seeded account is the platform owner (superadmin), which outranks admin
+    # so every admin-gated route still resolves for it.
+    assert body["user"]["role"] == "owner"
+    # It belongs to the default tenant, and /me now carries that org.
+    assert body["org"] is not None
+    assert body["org"]["slug"] == "kavach"
 
 
 def test_login_wrong_password_is_401(enforced):

@@ -80,8 +80,14 @@ def set_seed(seed: int) -> None:
     torch.cuda.manual_seed_all(seed)
 
 
+#: Optional per-split filename override (e.g. a subsampled balanced set for a
+#: faster CPU run). Test is always the full held-out split so the reported
+#: number stays comparable and honest.
+_SPLIT_FILES: dict[str, str] = {}
+
+
 def load_split(split: str) -> list[dict]:
-    path = DATA / f"{split}.jsonl"
+    path = DATA / _SPLIT_FILES.get(split, f"{split}.jsonl")
     return [json.loads(l) for l in path.read_text().splitlines() if l.strip()]
 
 
@@ -159,7 +165,16 @@ def main() -> int:
         "--device", default=None, choices=["cpu", "cuda", "mps"],
         help="override device selection (default: cuda if present, else cpu)",
     )
+    parser.add_argument("--train-file", default=None,
+                        help="override train split filename (e.g. train_fast.jsonl)")
+    parser.add_argument("--val-file", default=None,
+                        help="override val split filename")
     args = parser.parse_args()
+
+    if args.train_file:
+        _SPLIT_FILES["train"] = args.train_file
+    if args.val_file:
+        _SPLIT_FILES["val"] = args.val_file
 
     set_seed(args.seed)
 
@@ -237,8 +252,13 @@ def main() -> int:
         fp16=(device == "cuda"),
         use_cpu=(device == "cpu"),
         # MuRIL's published weights contain non-contiguous tensor views, which
-        # safetensors refuses to serialise ("You are trying to save a non
-        # contiguous tensor: bert.encoder.layer.0.attention.self.query.weight").
+        # safetensors refuses to serialise. The Trainer saves a checkpoint every
+        # epoch (load_best_model_at_end needs it), and that save must therefore
+        # use the torch-native format too — not just the final save_pretrained
+        # below. Without this the run trains fine and then dies at the first
+        # epoch-boundary save with "You are trying to save a non contiguous
+        # tensor: bert.encoder.layer.0.attention.self.query.weight".
+        save_safetensors=False,
         # This is a property of the checkpoint, not of the device — it fails
         # identically on CPU and MPS. The torch-native format has no such
         # restriction and reloads identically; the cost is a slightly larger
@@ -261,10 +281,16 @@ def main() -> int:
     macro = f1_score(y_true, y_pred, average="macro", zero_division=0)
 
     print(f"\n=== TEST macro-F1: {macro:.4f} ===\n")
-    print(classification_report(y_true, y_pred, target_names=LABELS, zero_division=0, digits=3))
+    # `labels=` is not optional: if the held-out test set happens to be missing a
+    # class (a rare stage can have zero test rows on some splits), sklearn raises
+    # "Number of classes N does not match size of target_names 8" without it,
+    # crashing the run after training has already finished.
+    _all = list(range(len(LABELS)))
+    print(classification_report(y_true, y_pred, target_names=LABELS, labels=_all,
+                                zero_division=0, digits=3))
 
     report = classification_report(
-        y_true, y_pred, target_names=LABELS, zero_division=0, output_dict=True
+        y_true, y_pred, target_names=LABELS, labels=_all, zero_division=0, output_dict=True
     )
     print("Critical-class recall:")
     for label in CRITICAL:

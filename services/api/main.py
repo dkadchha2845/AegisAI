@@ -25,9 +25,11 @@ from .db import SessionLocal, init_db
 from .engine import classifier as classifier_mod
 from .engine.classifier import load_classifier
 from .engine.twin import DigitalTwin
+from .intel import get_intel
 from .rag.coach import get_coach
 from .rag.store import get_kb
-from .routes import analyze, auth, reports, session
+from .routes import analyze, auth, intel, orgs, reports, session, shield
+from .security import RateLimitMiddleware, SecurityHeadersMiddleware
 
 app = FastAPI(
     title="PRESAGE API",
@@ -35,6 +37,14 @@ app = FastAPI(
     description="Real-time scam-call analysis, artifact checking, and the "
                 "Digital Twin forecast.",
 )
+
+# Order matters: middleware added last runs first. We want security headers on
+# every response (including a 429), and the limiter to run before routing but
+# after CORS has had its say on preflight. Starlette runs them outermost-first
+# in reverse add order, so add headers, then rate limit, then CORS — CORS ends
+# up outermost and preflight is handled before anything else.
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware, enabled=settings.rate_limit_enabled)
 
 app.add_middleware(
     CORSMiddleware,
@@ -48,6 +58,9 @@ app.include_router(analyze.router)
 app.include_router(session.router)
 app.include_router(auth.router)
 app.include_router(reports.router)
+app.include_router(intel.router)
+app.include_router(shield.router)
+app.include_router(orgs.router)
 
 
 @app.on_event("startup")
@@ -66,6 +79,14 @@ def warm() -> None:
     _db = SessionLocal()
     try:
         seed_admin(_db)
+        # Build the FIGAE fraud graph from the historical seed plus any Module 1
+        # cases already persisted, so /api/intel answers on the first click. On
+        # a fresh in-memory DB this is just the seed; a durable DB carries real
+        # saved cases into the graph across restarts.
+        from .models_db import CaseRecord
+
+        records = [r.package_json for r in _db.query(CaseRecord).all()]
+        get_intel().rebuild(extra_records=records)
     finally:
         _db.close()
 
@@ -128,8 +149,26 @@ def health() -> Dict[str, Any]:
         },
         "coach": {"lines": sum(len(v) for v in get_coach().by_stage.values())},
         "llm": llm.status(),
+        "intel": _intel_status(),
         "degraded": degraded,
     }
+
+
+def _intel_status() -> Dict[str, Any]:
+    """FIGAE (Module 2) health: graph size and cluster count. Wrapped so a graph
+    build failure degrades the field rather than the whole health check."""
+    try:
+        g = get_intel().graph()
+        s = g.stats()
+        return {
+            "backend": "networkx",
+            "cases": s["total_cases"],
+            "clusters": s["active_clusters"],
+            "campaigns": s["campaigns"],
+            "entities": s["linked_entities"],
+        }
+    except Exception as exc:  # noqa: BLE001 - health must never 500
+        return {"backend": "networkx", "error": str(exc)[:120]}
 
 
 @app.get("/api/model/card")

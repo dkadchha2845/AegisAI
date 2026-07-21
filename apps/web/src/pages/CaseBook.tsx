@@ -16,7 +16,8 @@ import { useAuth } from "@/context/AuthContext";
 
 export function CaseBook() {
   const auth = useAuth();
-  const isAdmin = auth.user?.role === "admin";
+  const isAdmin = auth.user?.role === "admin" || auth.user?.role === "owner";
+  const isOwner = auth.user?.role === "owner";
 
   return (
     <div className="page">
@@ -24,11 +25,13 @@ export function CaseBook() {
       <h1 className="page__title">Case book</h1>
       <p className="page__lede">
         Saved evidence packages, the append-only activity log, and user
-        management. Everything here is scoped by role — an analyst can save and
-        read cases; the audit log and user list are admin-only.
+        management — all scoped to your organisation. An analyst can save and
+        read cases; the audit log and user list are admin-only; managing
+        organisations is reserved for the platform owner.
       </p>
 
       <IdentityCard />
+      {isOwner && <Organizations />}
       <SavedCases />
       {isAdmin && <AuditLog />}
       {isAdmin && <Users />}
@@ -64,10 +67,13 @@ function IdentityCard() {
           <div style={{ flex: 1 }}>
             Signed in as <strong>{auth.user.email}</strong>{" "}
             <span className="chip" data-tone="ok">{auth.user.role}</span>
+            {auth.org && (
+              <span className="chip" style={{ marginLeft: 6 }}>{auth.org.name}</span>
+            )}
             <p className="small muted" style={{ margin: "4px 0 0" }}>
               {auth.enforced
-                ? "Authentication is enforced."
-                : "Open mode — no login required for the demo; you are acting as the seeded admin."}
+                ? `Authentication is enforced. Tenant: ${auth.org?.name ?? "—"}.`
+                : "Open mode — no login required for the demo; you are acting as the seeded platform owner."}
             </p>
           </div>
           {auth.enforced && (
@@ -102,6 +108,78 @@ function IdentityCard() {
       {error && (
         <div className="banner banner--bad" style={{ marginTop: "var(--s-3)" }}>
           <div className="small">{error}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------- organizations */
+
+function Organizations() {
+  const [rows, setRows] = useState<api.Organization[] | null>(null);
+  const [name, setName] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const res = await api.listOrgs();
+    if (res.ok) setRows(res.data.organizations);
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const add = async () => {
+    setMsg(null);
+    if (name.trim().length < 2) {
+      setMsg("Enter an organisation name.");
+      return;
+    }
+    const res = await api.createOrg(name.trim());
+    if (res.ok) {
+      setName("");
+      void load();
+    } else {
+      setMsg(res.error);
+    }
+  };
+
+  return (
+    <div className="card">
+      <h2 className="card__title">Organisations</h2>
+      <p className="small muted" style={{ marginTop: 0 }}>
+        Tenants on this platform. Users, saved cases, and the audit log are scoped
+        to one of these; the fraud-intelligence graph is shared across all of them.
+      </p>
+      {rows && (
+        <div className="cb-tablewrap">
+          <table className="cb-table">
+            <thead>
+              <tr><th>Organisation</th><th>Slug</th><th>Members</th><th>Cases</th><th>Created</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((o) => (
+                <tr key={o.id}>
+                  <td><strong>{o.name}</strong></td>
+                  <td className="mono small">{o.slug}</td>
+                  <td>{o.members ?? "—"}</td>
+                  <td>{o.cases ?? "—"}</td>
+                  <td className="small muted">{fmt(o.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <div className="row" style={{ gap: "var(--s-2)", marginTop: "var(--s-4)", flexWrap: "wrap" }}>
+        <input className="field" placeholder="New organisation name (e.g. Delhi Cyber Cell)"
+               value={name} onChange={(e) => setName(e.target.value)} style={{ flex: "1 1 240px" }} />
+        <button className="btn2 btn2--primary" onClick={add}>Create organisation</button>
+      </div>
+      {msg && (
+        <div className="banner banner--bad" style={{ marginTop: "var(--s-3)" }}>
+          <div className="small">{msg}</div>
         </div>
       )}
     </div>

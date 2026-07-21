@@ -15,6 +15,10 @@ on a clean clone" promise; it only *enables* persistence when you configure it.
 
 from __future__ import annotations
 
+import atexit
+import os
+import tempfile
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -23,18 +27,43 @@ from .config import settings
 
 Base = declarative_base()
 
-#: True when running the ephemeral in-memory database — surfaced on /api/health.
+#: True when running the ephemeral (no DATABASE_URL) database — surfaced on
+#: /api/health. Still ephemeral: the temp file below is unique per process and
+#: deleted on exit, so a clean clone boots with zero setup and nothing persists.
 EPHEMERAL = settings.database_url is None
 
-_url = settings.database_url or "sqlite://"  # sqlite:// == in-memory
-
 _kwargs: dict = {}
-if _url.startswith("sqlite"):
-    # FastAPI serves sync routes from a threadpool; the in-memory DB must be a
-    # single shared connection or each thread would get its own empty database.
-    _kwargs["connect_args"] = {"check_same_thread": False}
-    if ":memory:" in _url or _url == "sqlite://":
-        _kwargs["poolclass"] = StaticPool
+
+if settings.database_url:
+    # Operator-configured store — honour it exactly. A shared in-memory URL still
+    # needs StaticPool; a file or Postgres URL uses normal pooling.
+    _url = settings.database_url
+    if _url.startswith("sqlite"):
+        _kwargs["connect_args"] = {"check_same_thread": False, "timeout": 30}
+        if ":memory:" in _url or _url == "sqlite://":
+            _kwargs["poolclass"] = StaticPool
+else:
+    # Ephemeral default: a temp FILE, not a shared in-memory connection.
+    #
+    # A shared `:memory:` database needs StaticPool — one connection reused for
+    # every thread — because a second connection to `:memory:` opens a *different*
+    # empty database. But FastAPI serves sync routes from a threadpool, and a
+    # single sqlite connection driven from many threads at once segfaults the
+    # native sqlite library (reproducibly, under a few concurrent requests). A
+    # temp file sidesteps this entirely: each thread checks out its own
+    # connection, sqlite serialises file access itself, and the file is deleted
+    # on exit — so this is still zero-config and still ephemeral, just crash-safe.
+    _tmp = tempfile.NamedTemporaryFile(prefix="kavach-", suffix=".db", delete=False)
+    _tmp.close()
+    _url = f"sqlite:///{_tmp.name}"
+    _kwargs["connect_args"] = {"check_same_thread": False, "timeout": 30}
+
+    @atexit.register
+    def _cleanup_ephemeral_db() -> None:  # pragma: no cover - process teardown
+        try:
+            os.unlink(_tmp.name)
+        except OSError:
+            pass
 
 engine = create_engine(_url, **_kwargs)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)

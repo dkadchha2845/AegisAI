@@ -47,3 +47,6 @@ ml/artifacts/stage-classifier/*
 
 # Generated status report — regenerate from STATUS.md, do not commit
 PRESAGE-status-report.pdf
+
+# Temporary subsampled training splits (regenerated on demand)
+ml/data/processed/*_fast.jsonl

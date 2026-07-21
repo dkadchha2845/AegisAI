@@ -14,6 +14,8 @@ import {
   BookOpen,
   FolderArchive,
   LayoutDashboard,
+  LifeBuoy,
+  Network,
   ScanLine,
   ShieldCheck,
   Sparkles,
@@ -26,7 +28,9 @@ export interface NavItem {
   blurb: string;
   /** Longer copy for the dashboard card. */
   detail: string;
-  group: "Monitor" | "Investigate" | "Understand" | "Platform";
+  group: "Monitor" | "Investigate" | "Protect" | "Understand" | "Platform";
+  /** Which KAVACH module this surface belongs to, for the dashboard grouping. */
+  module?: 1 | 2 | 3;
 }
 
 export const NAV: NavItem[] = [
@@ -68,6 +72,31 @@ export const NAV: NavItem[] = [
       "Paste or upload anything suspicious — an SMS, a call transcript, a UPI "
       + "ID, a QR payload — and get a scored verdict with its reasoning.",
     group: "Investigate",
+    module: 1,
+  },
+  {
+    to: "/intel",
+    label: "Fraud intel",
+    icon: Network,
+    blurb: "Fraud networks, hotspots, campaigns",
+    detail:
+      "Module 2 (FIGAE): the fraud knowledge graph, geospatial hotspots, "
+      + "campaign clustering, and AI investigation reports that connect single "
+      + "detections into organised-crime intelligence.",
+    group: "Investigate",
+    module: 2,
+  },
+  {
+    to: "/shield",
+    label: "Citizen shield",
+    icon: LifeBuoy,
+    blurb: "Verify a threat, get real-time guidance",
+    detail:
+      "Module 3 (CFSRP): the citizen-facing shield — verify a suspicious call "
+      + "or message, get stage-aware guidance and emergency response, preserve "
+      + "evidence, and generate a cybercrime complaint.",
+    group: "Protect",
+    module: 3,
   },
   {
     to: "/cases",
@@ -101,6 +130,6 @@ export const NAV: NavItem[] = [
   },
 ];
 
-export const GROUPS = ["Monitor", "Investigate", "Platform", "Understand"] as const;
+export const GROUPS = ["Monitor", "Investigate", "Protect", "Platform", "Understand"] as const;
 
 export const byGroup = (group: string) => NAV.filter((item) => item.group === group);

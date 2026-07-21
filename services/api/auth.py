@@ -95,6 +95,7 @@ def create_token(user: User) -> str:
         "sub": user.email,
         "uid": user.id,
         "role": user.role,
+        "org": user.org_id,
         "iat": now,
         "exp": now + settings.token_ttl_s,
     }
@@ -138,11 +139,18 @@ def get_user_by_email(db: Session, email: str) -> Optional[User]:
     return db.query(User).filter(User.email == email.lower().strip()).first()
 
 
-def create_user(db: Session, email: str, password: str, role: str = "viewer") -> User:
+def create_user(
+    db: Session,
+    email: str,
+    password: str,
+    role: str = "viewer",
+    org_id: int | None = None,
+) -> User:
     user = User(
         email=email.lower().strip(),
         password_hash=hash_password(password),
         role=role if role in ROLE_RANK else "viewer",
+        org_id=org_id,
     )
     db.add(user)
     db.commit()
@@ -151,17 +159,27 @@ def create_user(db: Session, email: str, password: str, role: str = "viewer") ->
 
 
 def seed_admin(db: Session) -> None:
-    """Create the default admin if the user table is empty. Idempotent."""
+    """Create the default org + admin if the user table is empty. Idempotent.
+
+    The admin is seeded as `owner` so a single-org install still has someone who
+    can create further organisations — the platform superadmin. In open (demo)
+    mode this is who every request acts as, so all the org tooling is reachable
+    without a login.
+    """
+    from .orgs import get_or_create_default_org
+
+    default_org = get_or_create_default_org(db)
     if db.query(User).count() > 0:
         return
     create_user(
         db,
         settings.default_admin_email,
         settings.default_admin_password,
-        role="admin",
+        role="owner",
+        org_id=default_org.id,
     )
-    print(f"[presage] seeded default admin {settings.default_admin_email!r} — "
-          "change the password (PRESAGE_ADMIN_PASSWORD)")
+    print(f"[presage] seeded default org {default_org.slug!r} + owner "
+          f"{settings.default_admin_email!r} — change the password (PRESAGE_ADMIN_PASSWORD)")
 
 
 # --- request dependencies ---------------------------------------------------

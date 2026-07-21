@@ -74,8 +74,11 @@ class Settings:
     default_admin_email: str = os.getenv("PRESAGE_ADMIN_EMAIL", "admin@kavach.local")
     default_admin_password: str = os.getenv("PRESAGE_ADMIN_PASSWORD", "changeme")
 
-    # --- Transport --------------------------------------------------------
+    # --- Transport & hardening --------------------------------------------
     cors_origins: tuple[str, ...] = ("http://localhost:5173", "http://127.0.0.1:5173")
+    # In-process rate limiting + security headers. On by default; flip off with
+    # PRESAGE_RATELIMIT=0 for a load test or a single-tenant offline appliance.
+    rate_limit_enabled: bool = _flag("PRESAGE_RATELIMIT", True)
     # Frames per second pushed over the socket. 4 is plenty: the transcript
     # updates on utterance boundaries, and the meter interpolates in CSS.
     frame_hz: float = float(os.getenv("PRESAGE_FRAME_HZ", "4"))

@@ -1,33 +1,38 @@
-# PRESAGE — build status
+# PRESAGE / KAVACH — build status
 
-**Last updated:** 21 July 2026
+**Last updated:** 22 July 2026
 **Verified against:** a clean run of the full check suite on this commit.
 
 This is the running record of what is built and what is left. **Update it when
 you finish something** — the person picking up next shouldn't have to
 reverse-engineer the state from the diff.
 
+> Full write-up of the latest work: [`docs/IMPLEMENTATION-REPORT.md`](docs/IMPLEMENTATION-REPORT.md).
+> Phase-1 audit: [`docs/AUDIT.md`](docs/AUDIT.md).
+
 ---
 
 ## TL;DR
 
-The **product is complete and demoable end to end.** All 7 screens work, the
-live-call pipeline runs, the analyzer scores artifacts, and every component
-has a working fallback. Nothing is a stub.
+**All three KAVACH modules are built and demoable end to end** — Detect (Module 1
+RSSIE) → Connect (Module 2 FIGAE) → Protect (Module 3 CFSRP). There are now 10
+screens plus an awwwards landing and a dedicated login. Multi-tenant orgs, a
+security-hardening pass, and a 5× corpus expansion landed this session, along
+with a **fix for a reproducible API segfault** under concurrent load.
 
 What's left is the **outer ring**: real audio in, real notifications out, real
-payment rails, and a bigger corpus so the trained model beats the regexes it
-currently loses to. All four are additive — none of them requires unpicking
-what's there.
+payment rails, and the ~2-hour full-corpus MuRIL retrain. All additive.
 
 | Measure | Where it stands |
 |---|---|
-| Lines of first-party code | ~12,400 (Python + TS/TSX) |
-| Backend tests | **16 / 16 passing** |
+| KAVACH modules | **3 of 3** (RSSIE + FIGAE + CFSRP) |
+| Backend tests | **84 passing** (verdicts, intel, shield, security, orgs, auth, casebook, ocr, report, scripts, spoofing) |
 | Contract check | **passing** (8 enums + version + 24-frame mock) |
-| Frontend typecheck + build | **passing**, zero errors |
-| CI | **green** on py3.9 + py3.12 + frontend, ~1 min |
+| Frontend typecheck + build | **passing**, zero errors; main bundle 845 kB → **48 kB** (vendor split) |
+| Corpus | **338 calls** — valid leave-archetypes-out benchmark (see Track 3 note) |
+| Fraud graph | **114 cases → 9 clusters / 9 campaigns** |
 | Runs on a clean clone | **yes** — no key, no GPU, no network |
+| API under concurrent load | **stable** (was SIGSEGV — see Module fixes) |
 
 ---
 
@@ -58,6 +63,36 @@ what's there.
 | `analyzer.py` | ✅ | Stateless path — reuses the *same* engine as the live path. Accepts `caller_number` (spoofing) and multi-channel `kind` (sms/whatsapp/email) |
 | `ocr.py` | ✅ | **Pluggable OCR** (Tesseract default / EasyOCR / null) for image inputs — lazy, optional, degrades to `ocr:unavailable`. Optional QR decode. `POST /api/analyze/image` |
 | `scripts.py` | ✅ | **Scam-script similarity** — sentence-embedding (dense) / TF-cosine (lexical) match of caller lines vs known scam scripts. Bounded 0-1, gated at 0.45, surfaced as the "Script similarity NN%" threat driver + fusion signal (`W_SCRIPT`) |
+
+### Module 2 — FIGAE fraud intelligence (`services/api/intel/`, `routes/intel.py`) — complete
+
+Fraud knowledge graph (NetworkX), community/campaign detection, centrality, link
+prediction, geospatial hotspots (India gazetteer), dynamic cluster risk scoring
+(LOW–CRITICAL), and AI investigation reports. Seeded historical repository with
+reused infrastructure + live ingest of Module 1 saved cases. `FC-001` reproduces
+the PDF's FC-021 exemplar. Frontend `/intel`: force-directed graph, India hotspot
+map, cluster list, investigation report, entity search. **10 tests** (`test_intel.py`).
+
+### Module 3 — CFSRP citizen shield (`services/api/shield/`, `routes/shield.py`) — complete
+
+Threat verification (fuses Module 1 scoring + Module 2 cluster lookup), stage-aware
+guidance (coach verbatim), emergency response (helpline directory + checklist),
+token-addressed evidence vault (`CitizenReport`), structured complaint generator
+(reuses the PDF renderer), awareness feed. Public routes. Frontend `/shield`.
+**9 tests** (`test_shield.py`).
+
+### Landing + login + multi-tenant — complete
+
+Awwwards landing (`Home.tsx`, outside the shell, WebGL hero + GSAP), dedicated
+`/login` (`Login.tsx`), all routes lazy-loaded. `Organization` model + `org_id`
+scoping + `owner` role; backward compatible (default org seeded). **3 isolation
+tests** (`test_orgs.py`).
+
+### Security hardening — complete
+
+`security.py`: token-bucket rate limiter, CSP + 4 hardening headers, login backoff
+(CWE-307). **5 tests** (`test_security.py`). Plus the **temp-file DB fix** in
+`db.py` that resolved a reproducible SIGSEGV under concurrent SQLite access.
 
 ### Platform (Track 2) — SaaS layer, optional and off by default
 
@@ -143,11 +178,28 @@ has no checkpoint, so it also asserts the documented clean-clone path
 
 Ordered by how much they'd improve the product per hour spent.
 
-### P0 — Corpus expansion (unblocks the model)
+### P0 — Corpus expansion (attempted; the honest result) + 2 pipeline bugs fixed
 
-**This is the single highest-value task and it is squarely a data problem.**
+**Outcome:** the fine-tuned model still loses to the lexical baseline on a *valid*
+benchmark, and KAVACH serves the baseline. But the training pipeline now runs.
 
-The MuRIL checkpoint trains beautifully and then *loses to a pile of regexes*:
+What happened this session (full account in
+[`docs/IMPLEMENTATION-REPORT.md` §7](docs/IMPLEMENTATION-REPORT.md)):
+
+- Built `ml/synth_seeds.py`, a deterministic **no-LLM** generator (Gemini quota is
+  exhausted). Expanding 5× improved class balance but the shared phrase banks
+  **leak across the leave-archetypes-out split** — the held-out score inflated to
+  a meaningless **0.9986**. So the expansion was **reverted**; the committed
+  corpus is the original 338 calls, whose split is valid.
+- Fixed **two real latent bugs** so a retrain actually completes: `train.py` was
+  missing `save_safetensors=False` (every run crashed at the epoch save on MuRIL's
+  non-contiguous tensors), and `classification_report` crashed on a split missing
+  a class. Both fixed.
+- The real unblock remains **LLM-diverse generation** (genuine per-archetype
+  vocabulary), which is offline / quota-blocked.
+
+Standing diagnosis (unchanged — the MuRIL checkpoint trains beautifully and then
+*loses to a pile of regexes* on unseen archetypes; 0.368 lexical vs 0.221 MuRIL):
 
 | backend | val macro-F1 | **test macro-F1** (held-out archetypes) |
 |---|---:|---:|

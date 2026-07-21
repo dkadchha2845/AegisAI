@@ -25,11 +25,12 @@ def record(
     actor: Optional[str] = None,
     target: Optional[str] = None,
     detail: Optional[str] = None,
+    org_id: Optional[int] = None,
 ) -> None:
     """Append one event. Best-effort — swallows its own errors."""
     try:
         db.add(AuditEvent(actor=actor or "anonymous", action=action,
-                          target=target, detail=detail))
+                          target=target, detail=detail, org_id=org_id))
         db.commit()
     except Exception:  # noqa: BLE001 - logging must never break the caller
         db.rollback()
