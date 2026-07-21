@@ -58,6 +58,22 @@ class Settings:
     gemini_key: str | None = os.getenv("GEMINI_API_KEY") or None
     ollama_host: str = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
 
+    # --- Persistence & auth -----------------------------------------------
+    # SQLAlchemy URL. Unset => an ephemeral in-memory SQLite (tagged
+    # `db:ephemeral`), so the clean-clone demo still boots with zero setup.
+    # Point it at a file or Postgres to persist: DATABASE_URL=sqlite:///kavach.db
+    database_url: str | None = os.getenv("DATABASE_URL") or None
+    # Off by default so the demo needs no login. Flip on to require a bearer
+    # token on protected routes: PRESAGE_AUTH=1.
+    auth_enforced: bool = _flag("PRESAGE_AUTH", False)
+    # HMAC signing key for session tokens. Empty => a per-process key is
+    # generated (dev), and tokens do not survive a restart — set this in prod.
+    secret_key: str = os.getenv("PRESAGE_SECRET_KEY", "")
+    token_ttl_s: int = int(os.getenv("PRESAGE_TOKEN_TTL", str(12 * 3600)))
+    # Seeded on first boot if the user table is empty. Change the password.
+    default_admin_email: str = os.getenv("PRESAGE_ADMIN_EMAIL", "admin@kavach.local")
+    default_admin_password: str = os.getenv("PRESAGE_ADMIN_PASSWORD", "changeme")
+
     # --- Transport --------------------------------------------------------
     cors_origins: tuple[str, ...] = ("http://localhost:5173", "http://127.0.0.1:5173")
     # Frames per second pushed over the socket. 4 is plenty: the transcript

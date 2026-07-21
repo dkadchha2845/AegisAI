@@ -264,6 +264,23 @@ Interactive docs at **http://localhost:8000/docs** once the API is running.
 | `DELETE` | `/api/session/{id}` | End the call |
 | `WS` | `/api/session/ws/{id}` | `StateFrame` snapshots @ 4 Hz + `Event` edges |
 
+### Auth (optional — off by default)
+
+Authentication is **off by default** (`auth.mode: "open (demo)"` in `/api/health`);
+the demo needs no login. Set `PRESAGE_AUTH=1` to require a bearer token on
+protected routes. A default admin (`admin@kavach.local` / `changeme`) is seeded
+on first boot — change it with `PRESAGE_ADMIN_PASSWORD`.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/auth/login` | `{ email, password }` → `{ token, user }` |
+| `GET` | `/api/auth/me` | Current identity (seeded admin in open mode) |
+| `GET` | `/api/auth/users` | List users (**admin**) |
+| `POST` | `/api/auth/users` | Create a user (**admin**) |
+
+Storage is optional too: leave `DATABASE_URL` unset for an ephemeral in-memory
+DB (`db:ephemeral`), or point it at SQLite/Postgres to persist.
+
 ### Meta
 
 | Method | Path |

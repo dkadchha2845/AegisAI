@@ -17,14 +17,17 @@ from typing import Any, Dict
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from . import db as db_mod
 from . import llm
+from .auth import auth_enabled, seed_admin
 from .config import settings
+from .db import SessionLocal, init_db
 from .engine import classifier as classifier_mod
 from .engine.classifier import load_classifier
 from .engine.twin import DigitalTwin
 from .rag.coach import get_coach
 from .rag.store import get_kb
-from .routes import analyze, session
+from .routes import analyze, auth, session
 
 app = FastAPI(
     title="PRESAGE API",
@@ -43,6 +46,7 @@ app.add_middleware(
 
 app.include_router(analyze.router)
 app.include_router(session.router)
+app.include_router(auth.router)
 
 
 @app.on_event("startup")
@@ -55,6 +59,14 @@ def warm() -> None:
     load_classifier()
     get_kb()
     get_coach()
+    # Provision the database and the seeded admin. Cheap and idempotent; on the
+    # default in-memory DB this just recreates an empty schema each boot.
+    init_db()
+    _db = SessionLocal()
+    try:
+        seed_admin(_db)
+    finally:
+        _db.close()
 
 
 def _comparison() -> Dict[str, Any]:
@@ -74,13 +86,26 @@ def health() -> Dict[str, Any]:
     classifier = load_classifier()
     kb = get_kb()
     twin = DigitalTwin()
-    degraded = list(kb.degraded) + list(twin.degraded)
+    degraded = list(kb.degraded) + list(twin.degraded) + db_mod.degraded()
     if classifier.backend != "muril":
         degraded.append("clf:lexical_fallback")
 
     return {
         "ok": True,
         "contract_version": 1,
+        "auth": {
+            "enforced": auth_enabled(),
+            "backend": "jwt-hs256",
+            # In open mode the API acts as the seeded admin; say so rather than
+            # implying a login happened.
+            "mode": "enforced" if auth_enabled() else "open (demo)",
+        },
+        "database": {
+            "backend": "sqlite" if (settings.database_url or "").startswith("sqlite")
+                       or settings.database_url is None else "external",
+            "persistent": not db_mod.EPHEMERAL,
+            "url_configured": settings.database_url is not None,
+        },
         "classifier": {
             "backend": classifier.backend,
             "checkpoint": str(settings.classifier_dir),
