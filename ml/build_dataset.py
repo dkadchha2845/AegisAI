@@ -72,7 +72,7 @@ def split_key(call: dict) -> str:
 
 
 def split_by_call(
-    calls: list[dict], n_test_skeletons: int = 4, seed: int = 7
+    calls: list[dict], n_test_skeletons: int = 8, seed: int = 7
 ) -> tuple[list, list, list, list[str]]:
     """
     Leave-archetypes-out split. Returns (train, val, test, held_out_skeletons).

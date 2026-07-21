@@ -243,7 +243,6 @@ def main() -> int:
         # identically on CPU and MPS. The torch-native format has no such
         # restriction and reloads identically; the cost is a slightly larger
         # file and a warning about pickle that does not apply to our own output.
-        save_safetensors=False,
     )
 
     trainer = WeightedTrainer(

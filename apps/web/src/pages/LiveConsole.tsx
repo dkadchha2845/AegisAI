@@ -18,11 +18,12 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Radio, Send, SkipForward, Wifi, WifiOff } from "lucide-react";
+import { Radio, Send, SkipForward, Wifi, WifiOff, Mic, MicOff } from "lucide-react";
 import { gsap, prefersReducedMotion } from "@/lib/gsap";
 import { useReveal } from "@/hooks/useReveal";
 import { useStreamPlayer } from "@/hooks/useStreamPlayer";
 import { useLiveSession } from "@/hooks/useLiveSession";
+import { useVoice } from "@/hooks/useVoice";
 import { ThreatDrivers, ThreatMeter } from "@/components/ThreatMeter";
 import { ForecastChip } from "@/components/ForecastChip";
 import {
@@ -74,7 +75,12 @@ export function LiveConsole() {
   const [hitSeq, setHitSeq] = useState(0);
   const [scriptIndex, setScriptIndex] = useState(0);
   const [draft, setDraft] = useState("");
+  const [activeSpeaker, setActiveSpeaker] = useState<"CALLER" | "VICTIM">("CALLER");
   const t = frame?.t ?? 0;
+
+  const voice = useVoice((text) => {
+    live.say(text, activeSpeaker);
+  });
 
   useReveal(rootRef, [source]);
 
@@ -268,39 +274,53 @@ export function LiveConsole() {
           </div>
         </div>
       ) : (
-        <div className="injectbar">
+        <div className="injectbar" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <button
+            className="btn"
+            data-active={voice.isListening || undefined}
+            disabled={live.connection !== "live"}
+            onClick={voice.toggle}
+            title="Toggle Microphone"
+            style={{ padding: "0 12px", height: "100%", background: voice.isListening ? "var(--color-critical)" : undefined }}
+          >
+            {voice.isListening ? <Mic size={16} /> : <MicOff size={16} />}
+          </button>
+          
+          <select
+            className="field"
+            style={{ width: "120px", height: "100%" }}
+            value={activeSpeaker}
+            onChange={(e) => setActiveSpeaker(e.target.value as "CALLER" | "VICTIM")}
+            disabled={live.connection !== "live"}
+          >
+            <option value="CALLER">Caller</option>
+            <option value="VICTIM">Victim</option>
+          </select>
+
           <input
             className="field"
-            value={draft}
-            placeholder="Type what the caller says, then press Enter…"
-            disabled={live.connection !== "live"}
+            value={voice.isListening ? voice.interimTranscript : draft}
+            placeholder={voice.isListening ? "Listening..." : "Type or speak to inject…"}
+            disabled={live.connection !== "live" || voice.isListening}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && draft.trim()) {
-                live.say(draft, "CALLER");
+                live.say(draft, activeSpeaker);
                 setDraft("");
               }
             }}
+            style={{ flex: 1 }}
           />
+
           <button
             className="btn"
-            disabled={live.connection !== "live" || !draft.trim()}
+            disabled={live.connection !== "live" || voice.isListening || !draft.trim()}
             onClick={() => {
-              live.say(draft, "CALLER");
+              live.say(draft, activeSpeaker);
               setDraft("");
             }}
           >
-            <Send size={13} /> as caller
-          </button>
-          <button
-            className="btn btn--ghost"
-            disabled={live.connection !== "live" || !draft.trim()}
-            onClick={() => {
-              live.say(draft, "VICTIM");
-              setDraft("");
-            }}
-          >
-            as victim
+            <Send size={13} /> Send
           </button>
         </div>
       )}
