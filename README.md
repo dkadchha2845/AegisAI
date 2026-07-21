@@ -281,6 +281,15 @@ on first boot — change it with `PRESAGE_ADMIN_PASSWORD`.
 Storage is optional too: leave `DATABASE_URL` unset for an ephemeral in-memory
 DB (`db:ephemeral`), or point it at SQLite/Postgres to persist.
 
+### Case book & audit
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/session/{id}/report/save` | Persist the evidence package as a case (**analyst**) |
+| `GET` | `/api/reports` | List saved cases (**viewer**) |
+| `GET` | `/api/reports/{report_id}` | Read a saved case in full (**viewer**) |
+| `GET` | `/api/audit` | Append-only activity log — logins, exports, payment overrides (**admin**) |
+
 ### Meta
 
 | Method | Path |

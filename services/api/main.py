@@ -27,7 +27,7 @@ from .engine.classifier import load_classifier
 from .engine.twin import DigitalTwin
 from .rag.coach import get_coach
 from .rag.store import get_kb
-from .routes import analyze, auth, session
+from .routes import analyze, auth, reports, session
 
 app = FastAPI(
     title="PRESAGE API",
@@ -47,6 +47,7 @@ app.add_middleware(
 app.include_router(analyze.router)
 app.include_router(session.router)
 app.include_router(auth.router)
+app.include_router(reports.router)
 
 
 @app.on_event("startup")

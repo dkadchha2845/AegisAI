@@ -13,14 +13,19 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
+from .. import audit
+from ..auth import get_current_user
 from ..config import settings
+from ..db import get_db
 from ..engine.report import build_evidence_package
 from ..engine.report_pdf import pdf_available, render_pdf
 from ..engine.session import registry
+from ..models_db import User
 
 router = APIRouter(prefix="/api/session", tags=["session"])
 
@@ -100,23 +105,48 @@ def guardian_ack(session_id: str, name: Optional[str] = None) -> Dict[str, Any]:
 
 
 @router.post("/{session_id}/payment/attempt")
-def attempt_payment(session_id: str, req: PaymentRequest) -> Dict[str, Any]:
+def attempt_payment(
+    session_id: str,
+    req: PaymentRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
     session = _require(session_id)
     outcome = session.attempt_payment(req.amount_inr, req.payee)
+    audit.record(
+        db, "payment.attempt", actor=user.email, target=session_id,
+        detail=f"₹{req.amount_inr:.0f} -> {outcome.get('state')}"
+               + (f" ({outcome.get('reason')})" if outcome.get("reason") else ""),
+    )
     return {"outcome": outcome, "frame": session.frame(), "events": session.drain_events()}
 
 
 @router.post("/{session_id}/payment/cancel")
-def cancel_payment(session_id: str) -> Dict[str, Any]:
+def cancel_payment(
+    session_id: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
     session = _require(session_id)
     session.cancel_payment()
+    audit.record(db, "payment.cancel", actor=user.email, target=session_id)
     return {"frame": session.frame(), "events": session.drain_events()}
 
 
 @router.post("/{session_id}/payment/approve")
-def approve_payment(session_id: str) -> Dict[str, Any]:
+def approve_payment(
+    session_id: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
     session = _require(session_id)
     session.approve_payment()
+    # The override — the single most consequential action in the product. It
+    # always leaves a trace: who released a hold the system had flagged.
+    audit.record(
+        db, "payment.override", actor=user.email, target=session_id,
+        detail=f"released hold at threat {session.threat_score:.0f}/100",
+    )
     return {"frame": session.frame(), "events": session.drain_events()}
 
 

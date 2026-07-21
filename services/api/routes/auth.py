@@ -15,6 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from .. import audit
 from ..auth import (
     auth_enabled,
     create_token,
@@ -56,7 +57,10 @@ def login(req: LoginRequest, db: Session = Depends(get_db)) -> Dict[str, Any]:
     dummy = "pbkdf2_sha256$240000$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     ok = verify_password(req.password, user.password_hash if user else dummy)
     if not user or user.disabled or not ok:
+        audit.record(db, "login.failed", actor=req.email,
+                     detail="invalid email or password")
         raise HTTPException(status_code=401, detail="Invalid email or password")
+    audit.record(db, "login", actor=user.email)
     return {"token": create_token(user), "user": user.as_public()}
 
 
@@ -79,7 +83,7 @@ def list_users(
 @router.post("/users", status_code=201)
 def add_user(
     req: NewUserRequest,
-    _: User = Depends(require_role("admin")),
+    admin: User = Depends(require_role("admin")),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
     if req.role not in ROLES:
@@ -87,4 +91,6 @@ def add_user(
     if get_user_by_email(db, req.email):
         raise HTTPException(status_code=409, detail="A user with that email already exists")
     user = create_user(db, req.email, req.password, role=req.role)
+    audit.record(db, "user.create", actor=admin.email, target=user.email,
+                 detail=f"role={user.role}")
     return {"user": user.as_public()}
