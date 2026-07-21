@@ -58,6 +58,15 @@ what's there.
 | `analyzer.py` | ✅ | Stateless path — reuses the *same* engine as the live path. Accepts `caller_number` (spoofing) and multi-channel `kind` (sms/whatsapp/email) |
 | `ocr.py` | ✅ | **Pluggable OCR** (Tesseract default / EasyOCR / null) for image inputs — lazy, optional, degrades to `ocr:unavailable`. Optional QR decode. `POST /api/analyze/image` |
 | `scripts.py` | ✅ | **Scam-script similarity** — sentence-embedding (dense) / TF-cosine (lexical) match of caller lines vs known scam scripts. Bounded 0-1, gated at 0.45, surfaced as the "Script similarity NN%" threat driver + fusion signal (`W_SCRIPT`) |
+
+### Platform (Track 2) — SaaS layer, optional and off by default
+
+| Piece | Status | Notes |
+|---|---|---|
+| DB (`db.py`, `models_db.py`) | ✅ | SQLAlchemy, in-memory by default (`db:ephemeral`), persists via `DATABASE_URL`. Clean-clone demo preserved. |
+| Auth + RBAC (`auth.py`, `routes/auth.py`) | ✅ | pbkdf2 + HS256 (stdlib only), roles viewer/analyst/admin, off by default (`PRESAGE_AUTH`), open mode = seeded admin. |
+| Persistence + audit (`routes/reports.py`, `audit.py`) | ✅ | Save evidence packages as cases; append-only audit log (logins, exports, payment overrides). |
+| Frontend (`/cases`, `AuthContext`) | ✅ | Case book UI: saved cases, activity log, users, sign-in — role-scoped. Guardian "Save to case book". |
 | `session.py` | ✅ | State machine → idempotent `StateFrame` snapshots + one-shot `Event` edges |
 
 Thresholds live in one screen of `session.py`: guardian at **70**, payment hold

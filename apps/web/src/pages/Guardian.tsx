@@ -21,6 +21,7 @@ import {
   CircleDollarSign,
   Download,
   FileText,
+  FolderArchive,
   ShieldAlert,
   ShieldCheck,
   X,
@@ -28,7 +29,14 @@ import {
 import { useLiveSession } from "@/hooks/useLiveSession";
 import { NarrationPanel } from "@/components/NarrationPanel";
 import { pretty } from "@/lib/stages";
-import { getReport, reportPdfUrl, reportUrl, type EvidencePackage } from "@/lib/api";
+import {
+  getReport,
+  reportPdfUrl,
+  reportUrl,
+  saveReport,
+  type EvidencePackage,
+} from "@/lib/api";
+import { Link } from "react-router-dom";
 
 const ESCALATION = [
   { speaker: "CALLER" as const, text: "Main Delhi Cyber Crime se ACP Verma bol raha hoon." },
@@ -289,6 +297,8 @@ function EvidenceCard({ sessionId }: { sessionId: string }) {
   const [pkg, setPkg] = useState<EvidencePackage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const preview = async () => {
     setLoading(true);
@@ -296,6 +306,15 @@ function EvidenceCard({ sessionId }: { sessionId: string }) {
     const res = await getReport(sessionId);
     setLoading(false);
     if (res.ok) setPkg(res.data);
+    else setError(res.error);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    setError(null);
+    const res = await saveReport(sessionId);
+    setSaving(false);
+    if (res.ok) setSavedId(res.data.record.report_id);
     else setError(res.error);
   };
 
@@ -333,8 +352,11 @@ function EvidenceCard({ sessionId }: { sessionId: string }) {
         <button className="btn2" onClick={preview} disabled={loading}>
           <FileText size={14} /> {loading ? "Building…" : "Preview package"}
         </button>
+        <button className="btn2 btn2--primary" onClick={save} disabled={saving}>
+          <FolderArchive size={14} /> {saving ? "Saving…" : "Save to case book"}
+        </button>
         <a
-          className="btn2 btn2--primary"
+          className="btn2"
           href={reportPdfUrl(sessionId)}
           target="_blank"
           rel="noreferrer"
@@ -350,6 +372,13 @@ function EvidenceCard({ sessionId }: { sessionId: string }) {
           View JSON
         </a>
       </div>
+
+      {savedId && (
+        <p className="small" style={{ marginTop: "var(--s-3)" }}>
+          Saved as <span className="mono">{savedId}</span> —{" "}
+          <Link to="/cases">open the case book</Link>.
+        </p>
+      )}
     </div>
   );
 }

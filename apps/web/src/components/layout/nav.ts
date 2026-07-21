@@ -12,6 +12,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   BookOpen,
+  FolderArchive,
   LayoutDashboard,
   ScanLine,
   ShieldCheck,
@@ -25,7 +26,7 @@ export interface NavItem {
   blurb: string;
   /** Longer copy for the dashboard card. */
   detail: string;
-  group: "Monitor" | "Investigate" | "Understand";
+  group: "Monitor" | "Investigate" | "Understand" | "Platform";
 }
 
 export const NAV: NavItem[] = [
@@ -69,6 +70,16 @@ export const NAV: NavItem[] = [
     group: "Investigate",
   },
   {
+    to: "/cases",
+    label: "Case book",
+    icon: FolderArchive,
+    blurb: "Saved cases, activity log, users",
+    detail:
+      "Persisted evidence packages, the append-only audit log, and user "
+      + "management — the platform surface behind the live tools.",
+    group: "Platform",
+  },
+  {
     to: "/knowledge",
     label: "Knowledge base",
     icon: BookOpen,
@@ -90,6 +101,6 @@ export const NAV: NavItem[] = [
   },
 ];
 
-export const GROUPS = ["Monitor", "Investigate", "Understand"] as const;
+export const GROUPS = ["Monitor", "Investigate", "Platform", "Understand"] as const;
 
 export const byGroup = (group: string) => NAV.filter((item) => item.group === group);

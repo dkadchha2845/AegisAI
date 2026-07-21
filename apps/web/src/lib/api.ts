@@ -17,14 +17,28 @@ export type ApiResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: string; status?: number };
 
+// --- session token ---------------------------------------------------------
+// Persisted so a reload keeps you signed in. Auth is off by default on the
+// server (open mode), so an absent token is the normal case, not an error.
+const TOKEN_KEY = "kavach.token";
+export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
+export const setToken = (token: string | null): void => {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  else localStorage.removeItem(TOKEN_KEY);
+};
+
 async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
   try {
+    const token = getToken();
+    const authHeader: Record<string, string> = token
+      ? { Authorization: `Bearer ${token}` }
+      : {};
     const res = await fetch(`${API_BASE}${path}`, {
       ...init,
       headers:
         init?.body instanceof FormData
-          ? init?.headers
-          : { "content-type": "application/json", ...(init?.headers ?? {}) },
+          ? { ...authHeader, ...(init?.headers ?? {}) }
+          : { "content-type": "application/json", ...authHeader, ...(init?.headers ?? {}) },
     });
     if (!res.ok) {
       // FastAPI puts the useful message in `detail`. Surfacing it beats
@@ -316,3 +330,70 @@ export interface EvidencePackage {
 
 export const getReport = (sessionId: string) =>
   request<EvidencePackage>(`/api/session/${sessionId}/report`);
+
+// ---------------------------------------------------------------------------
+// Auth, users, case book & audit (Track 2 platform)
+// ---------------------------------------------------------------------------
+
+export interface AuthUser {
+  id: number;
+  email: string;
+  role: "viewer" | "analyst" | "admin";
+  disabled: boolean;
+  created_at: string | null;
+}
+
+export interface MeResponse {
+  user: AuthUser;
+  auth_enforced: boolean;
+}
+
+export const login = (email: string, password: string) =>
+  request<{ token: string; user: AuthUser }>("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+
+export const getMe = () => request<MeResponse>("/api/auth/me");
+
+export const listUsers = () => request<{ users: AuthUser[] }>("/api/auth/users");
+
+export const createUser = (email: string, password: string, role: string) =>
+  request<{ user: AuthUser }>("/api/auth/users", {
+    method: "POST",
+    body: JSON.stringify({ email, password, role }),
+  });
+
+export interface CaseSummary {
+  report_id: string;
+  session_id: string;
+  created_at: string | null;
+  created_by: string | null;
+  caller_number: string | null;
+  incident_type: string | null;
+  peak_threat: number | null;
+  final_level: string | null;
+}
+
+export const listReports = () => request<{ reports: CaseSummary[] }>("/api/reports");
+
+export const getSavedReport = (reportId: string) =>
+  request<{ record: CaseSummary; package: EvidencePackage }>(`/api/reports/${reportId}`);
+
+export const saveReport = (sessionId: string) =>
+  request<{ record: CaseSummary; package: EvidencePackage }>(
+    `/api/session/${sessionId}/report/save`,
+    { method: "POST" },
+  );
+
+export interface AuditEvent {
+  id: number;
+  ts: string | null;
+  actor: string | null;
+  action: string;
+  target: string | null;
+  detail: string | null;
+}
+
+export const getAudit = (action?: string) =>
+  request<{ events: AuditEvent[] }>(`/api/audit${action ? `?action=${action}` : ""}`);

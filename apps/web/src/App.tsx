@@ -13,11 +13,13 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AuthProvider } from "@/context/AuthContext";
 import { Home } from "@/pages/Home";
 import { Dashboard } from "@/pages/Dashboard";
 import { LiveConsole } from "@/pages/LiveConsole";
 import { Analyzer } from "@/pages/Analyzer";
 import { Guardian } from "@/pages/Guardian";
+import { CaseBook } from "@/pages/CaseBook";
 import { Knowledge } from "@/pages/Knowledge";
 import { ModelCard } from "@/pages/ModelCard";
 import "@/styles/global.css";
@@ -27,20 +29,23 @@ import "@/styles/app.css";
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<AppShell />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/console" element={<LiveConsole />} />
-            <Route path="/guardian" element={<Guardian />} />
-            <Route path="/analyzer" element={<Analyzer />} />
-            <Route path="/knowledge" element={<Knowledge />} />
-            <Route path="/model" element={<ModelCard />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/console" element={<LiveConsole />} />
+              <Route path="/guardian" element={<Guardian />} />
+              <Route path="/analyzer" element={<Analyzer />} />
+              <Route path="/cases" element={<CaseBook />} />
+              <Route path="/knowledge" element={<Knowledge />} />
+              <Route path="/model" element={<ModelCard />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

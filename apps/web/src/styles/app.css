@@ -706,3 +706,22 @@ html[data-layout="fixed"] .sidebar { height: calc(100vh - var(--topbar-h)); }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ------------------------------------------------------------------ *
+ * Case book — tables for saved cases, the audit log, and users.
+ * ------------------------------------------------------------------ */
+.card__title { display: flex; align-items: center; gap: var(--s-2); }
+.card__title .cb-refresh { margin-left: auto; font-size: var(--t-xs); padding: 2px 8px; }
+
+.cb-tablewrap { overflow-x: auto; margin-top: var(--s-3); }
+.cb-table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); }
+.cb-table th {
+  text-align: left; font-weight: 600; color: var(--ink-muted);
+  padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+.cb-table td {
+  padding: 8px 10px; border-bottom: 1px solid var(--line);
+  vertical-align: top; color: var(--ink);
+}
+.cb-table tbody tr:last-child td { border-bottom: none; }
+.cb-table tbody tr:hover td { background: color-mix(in srgb, var(--ink) 4%, transparent); }
