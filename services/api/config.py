@@ -17,6 +17,31 @@ from dataclasses import dataclass
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _load_dotenv(path: Path) -> None:
+    """Minimal .env loader — real environment variables always win.
+
+    The repo ships a .env.example and the README tells people to copy it, but
+    nothing was reading the file: every capability it configured (Gemini
+    explanations, a persistent DATABASE_URL) silently stayed off. A dependency
+    on python-dotenv is not worth it for KEY=value lines, so parse them here.
+    """
+    try:
+        for line in path.read_text().splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            key, value = key.strip(), value.strip().strip("'\"")
+            if key and key not in os.environ:
+                os.environ[key] = value
+    except OSError:
+        pass
+
+
+_load_dotenv(REPO_ROOT / ".env")
+
 ML_DIR = REPO_ROOT / "ml"
 ARTIFACT_DIR = Path(os.getenv("PRESAGE_ARTIFACTS", ML_DIR / "artifacts"))
 KNOWLEDGE_DIR = Path(__file__).resolve().parent / "knowledge"

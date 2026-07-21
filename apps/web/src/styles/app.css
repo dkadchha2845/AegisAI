@@ -387,6 +387,9 @@ html[data-layout="fixed"] .sidebar { height: calc(100vh - var(--topbar-h)); }
 .btn2:active:not(:disabled) { transform: translateY(1px); }
 .btn2:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn2--primary { background: var(--accent); border-color: var(--accent); color: #04070f; font-weight: 600; }
+/* The light theme deepens the accent for contrast on white, which flips the
+   readable text colour on top of it. */
+html[data-theme="light"] .btn2--primary { color: #fff; }
 .btn2--primary:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 88%, white); }
 .btn2--danger { border-color: color-mix(in srgb, var(--critical) 55%, transparent); color: var(--critical); }
 .btn2--ghost { border-color: transparent; color: var(--ink-muted); }

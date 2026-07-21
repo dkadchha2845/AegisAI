@@ -13,8 +13,8 @@
  * `StateFrame`, animating off discrete events rather than diffing frames.
  */
 
-import { lazy, Suspense } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
@@ -35,6 +35,30 @@ const CaseBook = lazy(() => import("@/pages/CaseBook").then((m) => ({ default: m
 const Knowledge = lazy(() => import("@/pages/Knowledge").then((m) => ({ default: m.Knowledge })));
 const ModelCard = lazy(() => import("@/pages/ModelCard").then((m) => ({ default: m.ModelCard })));
 
+/** Per-route document titles — the tab should say where you are, not repeat
+ *  the tagline. Rendered inside BrowserRouter so useLocation is available. */
+const TITLES: Record<string, string> = {
+  "/": "KAVACH — AI for Digital Public Safety",
+  "/login": "Sign in · KAVACH",
+  "/dashboard": "Dashboard · KAVACH",
+  "/console": "Live console · KAVACH",
+  "/guardian": "Guardian · KAVACH",
+  "/analyzer": "Analyzer · KAVACH",
+  "/intel": "Fraud intel · KAVACH",
+  "/shield": "Citizen shield · KAVACH",
+  "/cases": "Case book · KAVACH",
+  "/knowledge": "Knowledge base · KAVACH",
+  "/model": "Model card · KAVACH",
+};
+
+function RouteTitle() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    document.title = TITLES[pathname] ?? "KAVACH";
+  }, [pathname]);
+  return null;
+}
+
 function Loading() {
   return (
     <div className="routeloading">
@@ -48,6 +72,7 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+          <RouteTitle />
           <Suspense fallback={<Loading />}>
             <Routes>
               <Route path="/" element={<Home />} />

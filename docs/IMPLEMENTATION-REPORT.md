@@ -266,3 +266,78 @@ suspicious 0.99.
 every score is cited, and the fine-tuned model is served *only if it beats the
 baseline*. That rigor is exactly what a law-enforcement / financial-institution
 buyer needs, and it is rare in a hackathon build.
+
+---
+
+## 11. Session 3 (22 Jul) — full-product QA pass, fixes, and RAG fine-tune
+
+This session was verification-driven: every screen was driven in a real
+browser, every flow exercised end to end, and the defects found were fixed the
+same hour. Then retrieval and the explainer were brought from "honestly
+degraded" to actually live.
+
+### 11.1 What was tested (all passing after fixes)
+
+| Flow | Result |
+|---|---|
+| Landing — hero, pipeline, live stats (from API), scam arc, principles | ✅ |
+| Login — seeded-admin sign-in → redirect to dashboard | ✅ |
+| Live console — recorded stream: stages, meter ratchet, twin forecast, number intel, script match | ✅ |
+| Guardian — 5-line escalation → threat 82 → alert fires → **payment HELD** → acknowledge → cancel → **save case** | ✅ |
+| Analyzer — digital-arrest sample → verdict + cited checks + what-to-do | ✅ |
+| Fraud intel — stats, cluster list, FC-001 force graph, entity search | ✅ |
+| Citizen shield — verify (91 CRITICAL, FC-001/FC-002 infra match, Mumbai hotspots) → evidence vault token → complaint PDF | ✅ |
+| Case book — identity, orgs table, saved cases, audit log | ✅ |
+| Knowledge base — suggested queries → ranked, cited results | ✅ |
+| Model card — live serving state, measured F1 table | ✅ |
+| Evidence PDF endpoint (`/report.pdf`) | ✅ 200, `application/pdf` |
+| Mobile (375px) — landing, login, shield, console: no horizontal overflow | ✅ |
+| Light theme — landing, intel (after the fix below) | ✅ |
+
+### 11.2 Defects found and fixed, in order
+
+| # | Defect | Fix (file) |
+|---|---|---|
+| 1 | **Theme toggle was dead** — `data-theme="light"` was set but no light tokens existed anywhere, so the sun/moon button did nothing on every screen | Full light-theme block in [`tokens.css`](../apps/web/src/styles/tokens.css); `.btn2--primary` contrast flip in [`app.css`](../apps/web/src/styles/app.css). The ThreatField shader already had a `uLight` uniform waiting — the CSS was the only missing piece |
+| 2 | **Static tab title** — every route showed "PRESAGE — Live Call" | Per-route `document.title` (`RouteTitle` in [`App.tsx`](../apps/web/src/App.tsx)); base title in `index.html` |
+| 3 | **Intel stat clipped** — "₹12,15,67,100" overflowed its card | Indian-system compact formatting (`₹12.16 cr`) in [`Intel.tsx`](../apps/web/src/pages/Intel.tsx); defensive wrap on `.stat__n` |
+| 4 | **Landing principles rendered 3+1** — auto-fit split four cards unevenly | `.grid2--pairs` (strict 2×2, collapses at 720px) |
+| 5 | **Saved cases silently vanished in dev** — any file touch (even `ml/`) reloaded uvicorn, and the ephemeral temp-file DB dies with the process. A case saved from Guardian was gone minutes later | `--reload-dir services --reload-dir schema` in `.claude/launch.json`; root cause documented here |
+| 6 | **`db:ephemeral` showed "no description"** on the dashboard degraded panel | Added copy for `db:ephemeral`, `ocr:unavailable`, `asr:local_fallback` in [`Dashboard.tsx`](../apps/web/src/pages/Dashboard.tsx) |
+| 7 | **`.env` was never read** — `PRESAGE_LLM=gemini` + key sat in the file while health said `not configured` | Dependency-free `.env` loader in [`config.py`](../services/api/config.py) (real env always wins) |
+| 8 | **Gemini default model was retired** — `gemini-2.0-flash` now 429s (and 1.5 404s), so every explanation fell back to the template | Default switched to the rolling alias `gemini-flash-lite-latest` in [`llm.py`](../services/api/llm.py); pin via `PRESAGE_MODEL` |
+
+### 11.3 RAG + explainer fine-tune (measured, in the project's own style)
+
+- **Dense retrieval is now live** — `sentence-transformers` installed, MiniLM
+  warm-cached. `/api/health` reports `backend: dense`; `rag:lexical` cleared.
+  Paraphrase probe: *"can police arrest me over video call"* → top hit is
+  `rbi-advisories.md § No agency conducts a "digital arrest"` at 0.61 — the
+  exact section, from a query sharing almost no keywords with it.
+- **Knowledge corpus 26 → 31 chunks** — new
+  [`scam-variants.md`](../services/api/knowledge/scam-variants.md) covering the
+  campaign families Module 2 actually tracks but the KB never documented:
+  investment/trading groups, KYC-expiry phishing, courier/customs, refund-QR.
+  Verified: *"trading group asking tax before withdrawal"* retrieves the new
+  section first (0.49).
+- **LLM explanations work end to end** — the analyzer's `explain` flag now
+  returns real Gemini prose ("…high risk score of 87 out of 100… do not share
+  any personal details…") and still never touches a score. On failure it
+  degrades to templates with `llm:unavailable`, as before.
+- **Dense script-matching measured and rejected.** With MiniLM, dense cosine on
+  short Hinglish lines cannot separate benign from scam (benign "naya debit
+  card branch se collect kar lijiye" 0.707 vs real authority-claim 0.686 —
+  overlap, no usable threshold), and it broke the false-positive regression
+  test. The script matcher therefore stays **lexical by measurement, not by
+  fallback** (documented in [`scripts.py`](../services/api/engine/scripts.py)),
+  behind `PRESAGE_DENSE_SCRIPTS=1` for when a multilingual model is evaluated.
+  This is the same promotion-by-evidence rule the MuRIL checkpoint follows.
+
+### 11.4 Verification after all changes
+
+```
+pytest services/api/tests -q      → 84 passed
+schema/check_contract.py          → contract consistent
+npm run typecheck && vite build   → clean, bundle unchanged
+/api/health                       → degraded: [db:ephemeral, clf:lexical_fallback]  (both intentional)
+```

@@ -20,6 +20,13 @@ screens plus an awwwards landing and a dedicated login. Multi-tenant orgs, a
 security-hardening pass, and a 5× corpus expansion landed this session, along
 with a **fix for a reproducible API segfault** under concurrent load.
 
+**Session 3 (22 Jul):** a full in-browser QA pass of every screen and flow
+(8 defects found → all fixed, incl. a dead light theme and a dev-reload
+data-loss trap), **dense retrieval live** (31 chunks / 4 docs), **Gemini
+explanations working** (retired-model default fixed, `.env` finally loaded),
+and dense script-matching **measured and rejected** on false-positive
+discipline. See [`docs/IMPLEMENTATION-REPORT.md` §11](docs/IMPLEMENTATION-REPORT.md).
+
 What's left is the **outer ring**: real audio in, real notifications out, real
 payment rails, and the ~2-hour full-corpus MuRIL retrain. All additive.
 
@@ -284,21 +291,23 @@ this is the right call; for anything real it's the hard part (and mostly a
 regulatory problem, not a code one). **Document it as simulated — don't imply
 otherwise in the pitch.**
 
-### P2 — LLM explainer is implemented but unconfigured
+### ~~P2 — LLM explainer~~ DONE (22 Jul)
 
-`llm.py` has working Gemini, Ollama, and Anthropic backends. `/api/health`
-currently reports `{"backend": "none", "configured": false}`, so explanations
-fall back to templates.
+Working end to end: `config.py` now loads `.env` (nothing did before), and the
+default Gemini model is the rolling alias `gemini-flash-lite-latest` (the old
+pinned `gemini-2.0-flash` default is retired upstream and 429s). Explanations
+are real prose, still never touch a score, and degrade to templates with
+`llm:unavailable` on failure.
 
-**Task (5 minutes):** set `PRESAGE_LLM=gemini` + `GEMINI_API_KEY` in `.env`, or
-run `scripts/ollama-up.sh` for the fully-offline path. Then confirm `/analyzer`
-returns a prose explanation and that it still **never touches a score**.
+### ~~P2 — Dense retrieval~~ DONE (22 Jul)
 
-### P2 — Dense retrieval not installed
-
-Implemented and auto-selecting; just uncomment `sentence-transformers` in
-`services/api/requirements.txt`. Downloads ~90 MB on first run, which is why
-it's not a default. `degraded: ["rag:lexical"]` clears when it loads.
+`sentence-transformers` installed in the venv, MiniLM warm-cached.
+`/api/health` reports `backend: dense`, 31 chunks / 4 docs (new
+`scam-variants.md` covers investment/KYC/courier/refund-QR families).
+`rag:lexical` cleared. Note: dense **script** matching was measured and
+rejected — MiniLM can't separate benign from scam on short Hinglish lines —
+so the script matcher stays lexical (see `scripts.py` docstring),
+gated behind `PRESAGE_DENSE_SCRIPTS=1`.
 
 ### P3 — Smaller gaps
 

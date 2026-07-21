@@ -34,6 +34,16 @@ const DEGRADED_COPY: Record<string, string> = {
   "llm:unavailable":
     "The LLM explainer was requested but could not be reached. Templated "
     + "explanations are being used instead.",
+  "db:ephemeral":
+    "No DATABASE_URL is configured, so saved cases, users, and the audit log "
+    + "live in a temporary store that resets with the process. Point "
+    + "DATABASE_URL at a file or Postgres to persist them.",
+  "ocr:unavailable":
+    "No OCR engine is installed, so screenshot analysis is disabled. Install "
+    + "Tesseract (brew install tesseract) to enable it.",
+  "asr:local_fallback":
+    "Live audio transcription is not configured; transcripts come from text "
+    + "input only.",
 };
 
 export function Dashboard() {

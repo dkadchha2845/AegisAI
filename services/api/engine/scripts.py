@@ -27,9 +27,15 @@ import math
 import re
 from dataclasses import dataclass
 
-from ..config import settings
+from ..config import settings  # noqa: F401  (kept: PRESAGE_DENSE_SCRIPTS may join Settings)
 
 _TOKEN = re.compile(r"[a-z0-9]+")
+
+
+def _flag_dense_scripts() -> bool:
+    import os
+
+    return os.getenv("PRESAGE_DENSE_SCRIPTS", "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _tok(text: str) -> list[str]:
@@ -119,10 +125,22 @@ class _DenseMatcher:
 
 
 class ScriptMatcher:
+    """Template matcher. Lexical by default — a measured choice, not a fallback.
+
+    With all-MiniLM-L6-v2, dense cosine on short Hinglish lines does not
+    separate benign from scam: a benign "naya debit card branch se collect kar
+    lijiye" scores 0.707 while a real authority-claim line scores 0.686, so no
+    threshold exists that keeps the false-positive discipline. TF-cosine keeps
+    clean separation on the same probes (benign < 0.2, scam templates > 0.5).
+    Dense stays available behind PRESAGE_DENSE_SCRIPTS=1 for when a multilingual
+    embedding model is evaluated and measured to win — same promotion-by-
+    evidence rule as the MuRIL checkpoint.
+    """
+
     def __init__(self, templates: list[tuple[str, str]] | None = None):
         templates = templates or SCRIPT_TEMPLATES
         self._impl: _LexicalMatcher | _DenseMatcher
-        if settings.prefer_dense_embeddings:
+        if _flag_dense_scripts():
             try:
                 self._impl = _DenseMatcher(templates)
             except Exception as exc:  # no torch / no model cache / offline

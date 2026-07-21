@@ -47,7 +47,10 @@ class LLMUnavailable(RuntimeError):
 def _gemini(prompt: str) -> str:
     if not settings.gemini_key:
         raise LLMUnavailable("GEMINI_API_KEY not set")
-    model = settings.llm_model or "gemini-2.0-flash"
+    # The rolling alias, not a pinned version: Google retires pinned Gemini
+    # names (1.5-flash, 2.0-flash both 404/429 now) and a dead default turns
+    # every explanation into the template fallback. Pin via PRESAGE_MODEL.
+    model = settings.llm_model or "gemini-flash-lite-latest"
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     )
