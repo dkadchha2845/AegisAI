@@ -123,9 +123,11 @@ export function Shield() {
       const content = await file.text();
       setText(content);
       setOcrNote(`Loaded from ${file.name}`);
+      setMode("text");
+    } catch {
+      setOcrNote("Could not read this file — try again or paste the text manually.");
     } finally {
       setOcrBusy(false);
-      setMode("text");
     }
   };
 
@@ -136,7 +138,8 @@ export function Shield() {
     setOcrBusy(false);
     if (res.ok) {
       const ocr = res.data.ocr;
-      setText(ocr?.text ?? "");
+      const extracted = ocr?.text ?? "";
+      setText(extracted);
       const bits: string[] = [];
       if (ocr) bits.push(`Read via OCR (${ocr.engine})`);
       if (ocr?.qr_payloads.length) bits.push("QR code detected");
@@ -144,8 +147,11 @@ export function Shield() {
       const qrUpi = ocr?.qr_payloads.find((p) => p.startsWith("upi://"));
       const m = qrUpi?.match(/[?&]pa=([^&]+)/);
       if (m) setUpi(decodeURIComponent(m[1]));
+      // Only switch to text editing mode if OCR actually extracted content
+      if (extracted.trim()) setMode("text");
+    } else {
+      setOcrNote(res.error ?? "Could not read this image — try again or use a different screenshot.");
     }
-    setMode("text");
   };
 
   const runAudio = async (file: File) => {
@@ -158,13 +164,13 @@ export function Shield() {
       if (asr?.text) {
         setText(asr.text);
         setOcrNote(`Transcribed with ${asr.backend}`);
+        setMode("text");
       } else {
-        setOcrNote(asr?.reason ?? "Couldn't transcribe this audio — you can type what was said below.");
+        setOcrNote(asr?.reason ?? "Couldn't transcribe this audio — try again or type what was said.");
       }
     } else {
-      setOcrNote(res.error);
+      setOcrNote(res.error ?? "Could not process this audio — try again or use a different file.");
     }
-    setMode("text");
   };
 
   const handleFile = (file: File, m: Mode) => {
