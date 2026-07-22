@@ -12,7 +12,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Activity, ArrowRight, FolderArchive, ScanSearch, Siren } from "lucide-react";
 import * as api from "@/lib/api";
-import type { Hotspot } from "@/lib/api";
+import type { Hotspot, ScamPoint } from "@/lib/api";
+import { ScamMap } from "@/components/map/ScamMap";
 import { useAuth } from "@/context/AuthContext";
 
 const TASKS = [
@@ -52,11 +53,20 @@ export function CitizenHome() {
     trending_scams: { cluster_id: string; scam: string; size: number; risk: string; states: string[] }[];
     hotspot_states: Hotspot[];
   } | null>(null);
+  const [points, setPoints] = useState<ScamPoint[]>([]);
+  const [scamTypes, setScamTypes] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     void (async () => {
       const res = await api.getAwareness();
       if (res.ok) setAwareness(res.data);
+    })();
+    void (async () => {
+      const res = await api.getPoints();
+      if (res.ok) {
+        setPoints(res.data.points);
+        setScamTypes(res.data.scam_types);
+      }
     })();
   }, []);
 
@@ -110,22 +120,24 @@ export function CitizenHome() {
             </div>
           </div>
 
-          {awareness.hotspot_states.length > 0 && (
-            <div className="card">
-              <h2 className="card__title">Where it's happening most</h2>
-              <div className="stack" style={{ gap: 6 }}>
-                {awareness.hotspot_states.slice(0, 6).map((h) => (
-                  <div key={h.name} className="row" style={{ justifyContent: "space-between" }}>
-                    <span className="small">{h.name}</span>
-                    <span className="chip" data-risk={h.risk}>
-                      {h.cases} reports · {h.risk}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </>
+      )}
+
+      {points.length > 0 && (
+        <div className="card">
+          <h2 className="card__title">Scam hotspots near you</h2>
+          <p className="small muted" style={{ marginTop: 0, marginBottom: "var(--s-3)" }}>
+            Every dot is a reported scam. Tap “Scams near me” to see what&apos;s active around you,
+            or filter by type and by how recent.
+          </p>
+          <ScamMap
+            points={points}
+            scamTypes={scamTypes}
+            height={420}
+            enableFilters
+            showUserLocation
+          />
+        </div>
       )}
 
       <p className="small faint" style={{ marginTop: "var(--s-5)" }}>

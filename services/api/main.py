@@ -71,6 +71,10 @@ def warm() -> None:
     judge clicks Analyze.
     """
     load_classifier()
+    from .engine.ocr import load_ocr
+    from .ingest.asr import load_asr
+    load_ocr()
+    load_asr()
     get_kb()
     get_coach()
     # Provision the database and the seeded admin. Cheap and idempotent; on the

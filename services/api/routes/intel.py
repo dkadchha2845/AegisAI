@@ -15,7 +15,7 @@ architecture the PDF argues for.
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -85,6 +85,48 @@ def geospatial(_: User = Depends(require_role("viewer"))) -> Dict[str, Any]:
 
     g = get_intel().graph()
     return hotspots([c.as_dict() for c in g.cases])
+
+
+@router.get("/points")
+def geo_points(_: User = Depends(require_role("viewer"))) -> Dict[str, Any]:
+    """Per-case map points — the granular layer under the aggregated hotspots.
+
+    Each case that resolves to a known city becomes one dated, geo-located
+    marker, so the interactive map can cluster individual reports and filter
+    them by scam type and by date. Cases whose city is not in the gazetteer are
+    dropped rather than placed at a guessed centroid — a marker in the wrong
+    place is worse than one fewer marker.
+    """
+    from ..intel.geo import CITIES
+    from ..intel.repository import scam_name
+
+    g = get_intel().graph()
+    points: List[Dict[str, Any]] = []
+    scam_types: Dict[str, str] = {}
+    for c in g.cases:
+        row = CITIES.get(c.city or "")
+        if not row:
+            continue
+        lat, lon = row[0], row[1]
+        scam_types[c.scam_type] = scam_name(c.scam_type)
+        points.append(
+            {
+                "id": c.case_id,
+                "lat": lat,
+                "lon": lon,
+                "city": c.city,
+                "state": c.state,
+                "scam_type": c.scam_type,
+                "scam_name": scam_name(c.scam_type),
+                "risk": c.threat_level,
+                "amount_inr": c.amount_inr,
+                "reported_at": c.reported_at,
+            }
+        )
+    return {
+        "points": points,
+        "scam_types": [{"id": k, "name": v} for k, v in sorted(scam_types.items())],
+    }
 
 
 @router.get("/centrality")

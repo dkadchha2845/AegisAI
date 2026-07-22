@@ -8,7 +8,7 @@ declare global {
   }
 }
 
-export function useVoice(onFinal: (text: string) => void) {
+export function useVoice(onFinal: (text: string) => void, lang: string = "hi-IN") {
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +21,8 @@ export function useVoice(onFinal: (text: string) => void) {
     onFinalRef.current = onFinal;
   }, [onFinal]);
 
+  // Recreated when the language changes so the citizen's choice actually reaches
+  // the recogniser — hi-IN transcribes Hindi/Hinglish, en-IN plain English.
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -31,7 +33,7 @@ export function useVoice(onFinal: (text: string) => void) {
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = "hi-IN"; // Use Hindi/Hinglish standard
+    recognition.lang = lang;
 
     recognition.onresult = (event: any) => {
       let interim = "";
@@ -74,7 +76,7 @@ export function useVoice(onFinal: (text: string) => void) {
       recognition.onend = null;
       recognition.stop();
     };
-  }, []);
+  }, [lang]);
 
   const toggle = useCallback(() => {
     if (!recognitionRef.current) return;

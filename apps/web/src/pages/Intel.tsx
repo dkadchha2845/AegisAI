@@ -31,7 +31,7 @@ import type {
   LinkPrediction,
 } from "@/lib/api";
 import { ForceGraph } from "@/components/intel/ForceGraph";
-import { HotspotMap } from "@/components/intel/HotspotMap";
+import { ScamMap } from "@/components/map/ScamMap";
 
 const inr = (n: number) => "₹" + Math.round(n).toLocaleString("en-IN");
 
@@ -171,7 +171,7 @@ export function Intel() {
       <div className="intel-geo-grid">
         <div className="card">
           <h2 className="card__title"><MapPin size={16} /> Geospatial hotspots</h2>
-          <HotspotMap hotspots={geo} />
+          <ScamMap hotspots={geo} height={420} enableFilters showUserLocation />
         </div>
 
         <div className="stack">

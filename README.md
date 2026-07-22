@@ -1,11 +1,8 @@
-# PRESAGE
+# KAVACH: AI for Digital Public Safety
 
 [![CI](https://github.com/dkadchha2845/presage/actions/workflows/ci.yml/badge.svg)](https://github.com/dkadchha2845/presage/actions/workflows/ci.yml)
 
-**Real-time scam-call defence for Hinglish calls.** It names the manipulation
-stage in progress, forecasts how long until money moves, and then does
-something about it — coaching the person on the line, alerting a trusted
-contact, and holding the payment.
+**Real-time AI shield against Digital Arrests and Voice Fraud.** KAVACH listens to calls, detects manipulation tactics (fear, urgency, isolation), forecasts the scammer's next move, and provides real-time coaching to citizens before the money moves.
 
 > Not a substitute for reporting fraud on **1930** or at **cybercrime.gov.in**.
 

@@ -31,6 +31,7 @@ const Profile = lazy(() => import("@/pages/Profile").then((m) => ({ default: m.P
 const LiveProtection = lazy(() => import("@/pages/LiveProtection").then((m) => ({ default: m.LiveProtection })));
 const Dashboard = lazy(() => import("@/pages/Dashboard").then((m) => ({ default: m.Dashboard })));
 const LiveConsole = lazy(() => import("@/pages/LiveConsole").then((m) => ({ default: m.LiveConsole })));
+const AdminDashboard = lazy(() => import("@/pages/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
 const Analyzer = lazy(() => import("@/pages/Analyzer").then((m) => ({ default: m.Analyzer })));
 const Guardian = lazy(() => import("@/pages/Guardian").then((m) => ({ default: m.Guardian })));
 const Intel = lazy(() => import("@/pages/Intel").then((m) => ({ default: m.Intel })));
@@ -53,6 +54,7 @@ const TITLES: Record<string, string> = {
   "/emergency": "Emergency · KAVACH",
   "/profile": "Profile · KAVACH",
   // Analyst tools (reachable from Profile)
+  "/admin": "Admin · KAVACH",
   "/dashboard": "Dashboard · KAVACH",
   "/analyst/console": "Live console (analyst) · KAVACH",
   "/intel": "Fraud intel · KAVACH",
@@ -98,6 +100,24 @@ function RequireAuth({ children }: { children?: ReactNode }) {
   return <>{children ?? <Outlet />}</>;
 }
 
+/**
+ * Role gate, layered on top of RequireAuth. The backend already enforces the
+ * same `admin`+ requirement on every /api/auth/users and admin route, so this is
+ * defence-in-depth and UX (don't show a citizen a 403), not the security
+ * boundary itself. `owner` outranks `admin`, so both pass.
+ */
+const ROLE_RANK: Record<string, number> = { viewer: 0, analyst: 1, admin: 2, owner: 3 };
+function RequireRole({ min }: { min: "analyst" | "admin" }) {
+  const { authed, user, loading } = useAuth();
+  const location = useLocation();
+  if (loading) return <Loading />;
+  if (!authed) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  if ((ROLE_RANK[user?.role ?? "viewer"] ?? 0) < ROLE_RANK[min]) {
+    return <Navigate to="/home" replace />;
+  }
+  return <Outlet />;
+}
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -136,6 +156,11 @@ export default function App() {
                   <Route path="/analyzer" element={<Analyzer />} />
                   <Route path="/intel" element={<Intel />} />
                   <Route path="/model" element={<ModelCard />} />
+                </Route>
+
+                {/* Admin-only — the platform-operator dashboard. */}
+                <Route element={<RequireRole min="admin" />}>
+                  <Route path="/admin" element={<AdminDashboard />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/home" replace />} />
               </Route>

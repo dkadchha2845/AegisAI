@@ -1,0 +1,171 @@
+/* ===========================================================================
+   ScamMap — interactive OpenStreetMap surface.
+   Chrome is neutral; risk hue is the only colour that carries meaning, matching
+   the rest of the product's colour discipline.
+   =========================================================================== */
+
+.scam-map {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* --- filter / geolocation toolbar ---------------------------------------- */
+.scam-map__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+.scam-map__filtericon { color: var(--ink-faint); display: inline-flex; }
+.scam-map__select {
+  font: inherit;
+  font-size: var(--t-xs);
+  padding: 5px 8px;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.scam-map__select:hover { border-color: var(--line-strong); }
+
+.scam-map__seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.scam-map__segbtn {
+  font: inherit;
+  font-size: var(--t-2xs);
+  padding: 5px 9px;
+  color: var(--ink-muted);
+  background: var(--panel);
+  border: 0;
+  border-right: 1px solid var(--line);
+  cursor: pointer;
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.scam-map__segbtn:last-child { border-right: 0; }
+.scam-map__segbtn:hover { color: var(--ink); background: var(--panel-hover); }
+.scam-map__segbtn[data-on] { color: var(--accent); background: var(--accent-dim); }
+
+.scam-map__locate {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: var(--t-xs);
+  padding: 5px 12px;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.scam-map__locate:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.scam-map__locate:disabled { opacity: 0.6; cursor: progress; }
+
+/* --- map canvas ---------------------------------------------------------- */
+.scam-map__canvas {
+  width: 100%;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--bg-raised);
+}
+.scam-map__leaflet {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-raised);
+}
+
+/* Leaflet chrome, themed to the app rather than its default blue/white. */
+.scam-map .leaflet-container { font: inherit; }
+.scam-map .leaflet-control-zoom a {
+  background: var(--panel);
+  color: var(--ink);
+  border-color: var(--line);
+}
+.scam-map .leaflet-control-zoom a:hover { background: var(--panel-hover); }
+.scam-map .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  color: var(--ink-faint);
+  font-size: 9px;
+}
+.scam-map .leaflet-control-attribution a { color: var(--ink-muted); }
+.scam-map .leaflet-bar { border: 1px solid var(--line); }
+
+/* --- markers ------------------------------------------------------------- */
+.scam-pin span {
+  display: block;
+  border-radius: 50%;
+  background: var(--pin);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pin) 55%, transparent),
+    0 1px 4px rgba(0, 0, 0, 0.4);
+}
+.scam-you span {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--bg);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+/* --- cluster bubbles ----------------------------------------------------- */
+.scam-cluster__b {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--bg);
+  background: color-mix(in srgb, var(--elevated) 88%, transparent);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--elevated) 30%, transparent);
+}
+.scam-cluster__b[data-tier="mid"] {
+  background: color-mix(in srgb, var(--high) 88%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--high) 30%, transparent);
+}
+.scam-cluster__b[data-tier="high"] {
+  background: color-mix(in srgb, var(--critical) 90%, transparent);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--critical) 32%, transparent);
+}
+
+/* --- popups -------------------------------------------------------------- */
+.scam-map .leaflet-popup-content-wrapper {
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-2, 0 8px 30px rgba(0, 0, 0, 0.35));
+}
+.scam-map .leaflet-popup-tip { background: var(--panel); border: 1px solid var(--line-strong); }
+.scam-map .leaflet-popup-content { margin: var(--s-3) var(--s-4); }
+.scam-popup { display: grid; gap: 3px; min-width: 120px; }
+.scam-popup__title { font-size: var(--t-sm); }
+.scam-popup__risk { font-size: var(--t-2xs); font-weight: 700; letter-spacing: 0.06em; }
+.scam-popup__row { font-size: var(--t-xs); color: var(--ink-muted); }
+.scam-popup__row.muted { color: var(--ink-faint); }
+
+/* --- footer -------------------------------------------------------------- */
+.scam-map__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  font-size: var(--t-2xs);
+  color: var(--ink-faint);
+}
+.scam-map__count { color: var(--ink-muted); }
+.scam-map__near strong { color: var(--ink); }
+.scam-map__geoerr { color: var(--elevated); }

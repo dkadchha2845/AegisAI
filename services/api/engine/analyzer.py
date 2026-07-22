@@ -145,13 +145,33 @@ def normalise(raw: str) -> list[tuple[str, str]]:
             pairs.append(("CALLER", line))
 
     # Unlabelled multi-line text: assume it alternates, starting with the
-    # caller. A single-block SMS stays as one caller utterance.
-    if not labelled_any and len(pairs) > 1:
+    # caller. A single-block SMS/notice is one-sided, so it does NOT alternate —
+    # instead we split it into sentences, all attributed to the caller. Without
+    # this, a forwarded paragraph is classified as a single stage, and a
+    # multi-stage scam whose danger sits in its last sentence ("...buy gift cards
+    # and read me the codes") is scored on its opening line alone. The sentence
+    # splitter is language-aware — Devanagari danda as well as ./!/? — so a Hindi
+    # or English paste both fan out into per-sentence stages.
+    if not labelled_any and len(pairs) == 1:
+        sentences = _split_sentences(pairs[0][1])
+        if len(sentences) > 1:
+            pairs = [("CALLER", s) for s in sentences]
+    elif not labelled_any and len(pairs) > 1:
         pairs = [
             ("CALLER" if i % 2 == 0 else "VICTIM", text)
             for i, (_, text) in enumerate(pairs)
         ]
     return pairs[:MAX_UTTERANCES]
+
+
+_SENTENCE_SPLIT = re.compile(r"(?<=[.!?।])\s+|\s*[\n;]+\s*")
+
+
+def _split_sentences(text: str) -> list[str]:
+    """Sentence-ish chunks for a one-sided block. Conservative: only splits on
+    real sentence terminators, so a phone number or UPI id is never torn apart."""
+    parts = [p.strip() for p in _SENTENCE_SPLIT.split(text) if p and len(p.strip()) >= 3]
+    return parts or [text]
 
 
 def looks_like_upi(text: str) -> bool:

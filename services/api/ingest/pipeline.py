@@ -23,7 +23,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from . import asr, diarize, language, metadata as metadata_mod, normalize, ocr
+from ..engine import ocr
+from . import asr, diarize, language, metadata as metadata_mod, normalize
 from .types import Modality, RawInput, Turn
 
 
@@ -168,21 +169,16 @@ def process_input(raw: RawInput) -> IngestResult:
                 False, ProcessedInput(envelope=envelope),
                 reason="No image content was supplied.",
             )
-        result = ocr.read_image(raw.blob)
-        backends["ocr"] = result.backend
+        result = ocr.extract_text(raw.blob)
+        backends["ocr"] = result.engine
         degraded += result.degraded
         qr_payloads = result.qr_payloads
-        if not result.ok:
+        if not result.text and "ocr:failed" in result.degraded:
             return IngestResult(
                 False, ProcessedInput(envelope=envelope, qr_payloads=qr_payloads),
-                backends=backends, degraded=degraded, reason=result.reason,
+                backends=backends, degraded=degraded, reason="Could not read this image. Paste the text instead.",
             )
         text_for_analysis = result.text
-        if result.mean_confidence and result.mean_confidence < 0.55:
-            warnings.append(
-                f"OCR confidence is low ({result.mean_confidence:.0%}). Check the "
-                "extracted text before trusting the verdict."
-            )
         if ocr.looks_like_payment_confirmation(text_for_analysis):
             warnings.append(
                 "This looks like a payment confirmation. If money has already "

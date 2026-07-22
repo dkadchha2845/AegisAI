@@ -551,6 +551,22 @@ export interface Hotspot {
   top_scam: string | null;
 }
 
+/** One fraud case placed on the map — the granular layer under the hotspots.
+ *  Dated and typed, so the interactive map can cluster and filter by scam type
+ *  and by date. */
+export interface ScamPoint {
+  id: string;
+  lat: number;
+  lon: number;
+  city: string | null;
+  state: string | null;
+  scam_type: string;
+  scam_name: string;
+  risk: "CALM" | "WATCH" | "ELEVATED" | "HIGH" | "CRITICAL" | string;
+  amount_inr: number;
+  reported_at: string;
+}
+
 export interface RiskFactor {
   factor: string;
   contribution: number;
@@ -606,6 +622,10 @@ export const getClusters = () => request<{ clusters: Cluster[] }>("/api/intel/cl
 export const getClusterDetail = (id: string) =>
   request<{ cluster: Cluster; graph: GraphData; report: InvestigationReport }>(
     `/api/intel/clusters/${id}`,
+  );
+export const getPoints = () =>
+  request<{ points: ScamPoint[]; scam_types: { id: string; name: string }[] }>(
+    "/api/intel/points",
   );
 export const getGeo = () =>
   request<{ states: Hotspot[]; districts: Hotspot[]; cities: Hotspot[] }>("/api/intel/geo");
@@ -690,7 +710,11 @@ export interface ExtractedEntities {
   upi_ids: string[];
   emails: string[];
   websites: string[];
+  bank_accounts?: string[];
+  banks?: string[];
   authorities: string[];
+  locations?: string[];
+  scam_keywords?: string[];
   amounts: string[];
 }
 

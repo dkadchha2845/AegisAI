@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import * as api from "@/lib/api";
 import type { AnalysisResult, VerifyResult } from "@/lib/api";
-import { HotspotMap } from "@/components/intel/HotspotMap";
+import { ScamMap } from "@/components/map/ScamMap";
 import { pretty, stageColor } from "@/lib/stages";
 
 export const VERDICT_COPY: Record<string, string> = {
@@ -256,7 +256,12 @@ export function InvestigationReport({
             </p>
           ) : (
             <>
-              <HotspotMap hotspots={result.nearby_hotspots} height={320} />
+              <ScamMap
+                hotspots={result.nearby_hotspots}
+                height={320}
+                enableFilters
+                showUserLocation
+              />
               <div className="stack" style={{ gap: 6, marginTop: "var(--s-3)" }}>
                 {result.nearby_hotspots.map((h) => (
                   <div key={h.name} className="row" style={{ justifyContent: "space-between" }}>
@@ -369,7 +374,11 @@ const ENTITY_GROUPS: { key: keyof NonNullable<VerifyResult["extracted_entities"]
   { key: "upi_ids", label: "UPI" },
   { key: "emails", label: "Email" },
   { key: "websites", label: "Website" },
+  { key: "bank_accounts", label: "Account" },
+  { key: "banks", label: "Bank" },
   { key: "authorities", label: "Claimed" },
+  { key: "locations", label: "Place" },
+  { key: "scam_keywords", label: "Signal" },
   { key: "amounts", label: "Amount" },
 ];
 

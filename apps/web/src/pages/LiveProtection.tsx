@@ -1,11 +1,12 @@
 /**
  * Live Protection — the citizen's real-time shield for a call in progress.
  *
- * Completely different from Analyze: no forms, no file types. The user presses
- * one button, and KAVACH listens and guides. Everything the analyst console
- * shows as instruments (manipulation map, digital twin, trust-passport table,
- * coercion sparkline) is deliberately hidden — a frightened person needs a
- * verdict, a timeline they can read, and one clear instruction, not a cockpit.
+ * Same engine as the analyst Live Console, same instrument aesthetic (the
+ * topbar, the threat gauge, the vignette, the panel grid) — but every technical
+ * readout is re-voiced for a frightened person. "Authority impersonation node"
+ * becomes "The caller claims to be from a government office." A trust passport
+ * becomes an Identity Check. The manipulation map becomes "What we're noticing."
+ * The wow of the cockpit stays; the cognitive load comes off.
  *
  * Two ways to run it, one renderer:
  *   • "Start Live Protection" opens a real backend session and streams the
@@ -20,6 +21,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import gsap from "gsap";
 import {
   AlertTriangle,
   Mic,
@@ -31,13 +33,15 @@ import {
   Wifi,
 } from "lucide-react";
 import * as api from "@/lib/api";
-import type { VerifyResult } from "@/lib/api";
-import type { PresageEvent, StateFrame } from "@/types/contract";
+import type { Hotspot, VerifyResult } from "@/lib/api";
+import type { ManipulationMap, PresageEvent, StateFrame } from "@/types/contract";
 import { useStreamPlayer } from "@/hooks/useStreamPlayer";
 import { useLiveSession } from "@/hooks/useLiveSession";
 import { useVoice } from "@/hooks/useVoice";
+import { ThreatMeter } from "@/components/ThreatMeter";
+import { TranscriptPane } from "@/components/TranscriptPane";
+import { ScamMap } from "@/components/map/ScamMap";
 import { InvestigationReport } from "@/components/report/InvestigationReport";
-import { pretty } from "@/lib/stages";
 
 type Phase = "idle" | "live" | "report";
 type Source = "mic" | "demo" | null;
@@ -57,11 +61,71 @@ function rampIndex(level?: string): number {
   }
 }
 
+/** One plain-language verdict for the big number, so a citizen never has to
+ *  interpret "ELEVATED" vs "WATCH". */
+function threatVerdict(level?: string): string {
+  switch (level) {
+    case "CRITICAL":
+      return "Scam — hang up now";
+    case "HIGH":
+      return "Very likely a scam";
+    case "ELEVATED":
+      return "This looks suspicious";
+    case "WATCH":
+      return "Be careful";
+    default:
+      return "Nothing alarming yet";
+  }
+}
+
+/** Conversation stage, said the way a person would describe it. */
+const STAGE_PLAIN: Record<string, string> = {
+  GREETING: "Just getting started",
+  AUTHORITY_CLAIM: "Claiming to be an official",
+  FEAR_INDUCTION: "Trying to scare you",
+  ISOLATION: "Telling you to keep it secret",
+  VERIFICATION_DEMAND: "Asking for codes or details",
+  PAYMENT_SETUP: "Setting up a money transfer",
+  PAYMENT_EXECUTION: "Pushing you to pay now",
+  BENIGN: "Normal conversation",
+};
+
+/** What each tactic *is*, in one sentence. Drives "What we're noticing". */
+const TACTIC_SENTENCE: Array<[keyof ManipulationMap, string]> = [
+  ["authority", "The caller claims to be from a bank, the police, or a government office."],
+  ["fear", "The caller is trying to frighten you into acting."],
+  ["isolation", "The caller wants you to stay on the line and tell no one."],
+  ["urgency", "The caller is rushing you to act immediately."],
+  ["compliance", "The caller is walking you step-by-step into doing what they say."],
+];
+
+/** The next move, phrased as a prediction a person can act on. */
+const NEXT_PLAIN: Record<string, string> = {
+  GREETING: "make small talk to build trust",
+  AUTHORITY_CLAIM: "claim to be an official",
+  FEAR_INDUCTION: "try to frighten you",
+  ISOLATION: "tell you to keep this secret",
+  VERIFICATION_DEMAND: "ask for codes or personal details",
+  PAYMENT_SETUP: "set up a money transfer",
+  PAYMENT_EXECUTION: "push you to pay right now",
+  BENIGN: "carry on normally",
+};
+
+/** Identity Check verdict from the trust percentage (which counts *down* from
+ *  ~97 as claims fail). */
+function identityVerdict(pct?: number | null): { text: string; bad: boolean } {
+  if (pct == null) return { text: "Checking the caller's story…", bad: false };
+  if (pct < 25) return { text: "This is almost certainly fake.", bad: true };
+  if (pct < 50) return { text: "We can't verify this — treat it as fake.", bad: true };
+  if (pct < 80) return { text: "Some of this doesn't add up.", bad: true };
+  return { text: "Nothing disproven yet — stay careful.", bad: false };
+}
+
 function eventLine(e: PresageEvent): string | null {
   const p = e.payload as Record<string, unknown>;
   switch (e.kind) {
     case "STAGE_CHANGED":
-      return `Caller moved to ${pretty(String(p.to ?? "")).toLowerCase()}`;
+      return `Caller moved to “${STAGE_PLAIN[String(p.to ?? "")] ?? "a new stage"}”`;
     case "THRESHOLD_CROSSED":
       return `Risk rose to ${RAMP[rampIndex(String(p.level))]}`;
     case "GUARDIAN_ALERTED":
@@ -93,29 +157,46 @@ export function LiveProtection() {
   const [reportError, setReportError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [hotspots, setHotspots] = useState<Hotspot[]>([]);
   const [intelMatches, setIntelMatches] = useState<
     { kind: string; value: string; case_count: number; clusters: string[] }[]
   >([]);
 
+  const [language, setLanguage] = useState<string>("hi-IN");
   const player = useStreamPlayer(false, 1);
   const live = useLiveSession();
-  const voice = useVoice((text) => live.say(text, "CALLER"));
+  const voice = useVoice((text) => live.say(text, "CALLER"), language);
 
   const frame: StateFrame | null = source === "mic" ? live.frame : player.frame;
   const onEvent = source === "mic" ? live.onEvent : player.onEvent;
 
   const searched = useRef(new Set<string>());
   const endedRef = useRef(false);
+  const cockpitRef = useRef<HTMLDivElement>(null);
 
-  // Threat level → <html data-threat> so the ambient vignette reacts, same as
-  // the analyst console.
+  // GSAP animation for panel entrance
+  useEffect(() => {
+    if (phase === "live" && cockpitRef.current) {
+      const panels = cockpitRef.current.querySelectorAll(".panel");
+      gsap.fromTo(
+        panels,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.6, stagger: 0.05, ease: "power3.out" }
+      );
+    }
+  }, [phase]);
+
+  // Threat level → <html data-threat> so the ambient vignette and the gauge hue
+  // react, exactly as they do on the analyst console. Only while a call is live
+  // — the report and idle screens are ordinary chrome and must not stay tinted.
   useEffect(() => {
     const level = frame?.threat?.level;
-    if (level) document.documentElement.dataset.threat = level;
+    if (phase === "live" && level) document.documentElement.dataset.threat = level;
+    else delete document.documentElement.dataset.threat;
     return () => {
       delete document.documentElement.dataset.threat;
     };
-  }, [frame?.threat?.level]);
+  }, [frame?.threat?.level, phase]);
 
   const endCall = useCallback(async () => {
     if (endedRef.current) return;
@@ -161,6 +242,21 @@ export function LiveProtection() {
     });
   }, [onEvent, phase, endCall]);
 
+  // Nearby scam activity — pulled once when the call opens. District-level if we
+  // have it, else cities; either way it's the real Module 2 geo feed.
+  useEffect(() => {
+    if (phase !== "live") return;
+    let alive = true;
+    void api.getGeo().then((res) => {
+      if (!alive || !res.ok) return;
+      const list = res.data.districts?.length ? res.data.districts : res.data.cities ?? [];
+      setHotspots(list.slice(0, 14));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [phase]);
+
   // Live "has this happened before" — mine the running transcript for a caller
   // number / UPI and cross-reference Module 2, debounced by a searched-set so a
   // value is looked up once, not every frame.
@@ -200,6 +296,7 @@ export function LiveProtection() {
     setReport(null);
     setReportError(null);
     setIntelMatches([]);
+    setHotspots([]);
     setToken(null);
     endedRef.current = false;
     searched.current = new Set();
@@ -286,6 +383,25 @@ export function LiveProtection() {
           </p>
         </header>
 
+        <div className="live-lang">
+          <label className="label" htmlFor="live-lang">
+            Call language
+          </label>
+          <select
+            id="live-lang"
+            className="field"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+          >
+            <option value="hi-IN">Hindi / Hinglish</option>
+            <option value="en-IN">English</option>
+            <option value="en-US">English (US)</option>
+          </select>
+          <span className="small faint">
+            Sets what KAVACH listens for. Hindi / Hinglish handles code-mixed calls.
+          </span>
+        </div>
+
         <div className="live-start">
           <button className="btn2 btn2--primary btn2--lg" onClick={startMic}>
             <Mic size={18} /> Start Live Protection
@@ -306,108 +422,223 @@ export function LiveProtection() {
   // phase === "live"
   const level = frame?.threat?.level;
   const ri = rampIndex(level);
-  const critical = ri >= 3 || frame?.stage?.current?.startsWith("PAYMENT");
+  const stageCur = frame?.stage?.current;
+  const paymentStage = stageCur === "PAYMENT_SETUP" || stageCur === "PAYMENT_EXECUTION";
+  // Prominent "hang up" only when confidence is genuinely high — CRITICAL, or
+  // HIGH while money is being set up.
+  const hangUp = ri >= 3 || (ri >= 2 && paymentStage);
+  const hot = level === "HIGH" || level === "CRITICAL";
+
   const claimed = frame?.trust_passport?.claimed_identity;
   const trustPct = frame?.trust_passport?.final_trust_pct;
-  const coachLine = frame?.coach?.line;
-  const interim = voice.interimTranscript;
-  const lastLines = (frame?.transcript.final ?? []).slice(-3);
+  const idv = identityVerdict(trustPct);
+  const idChecks = frame?.trust_passport?.checks ?? [];
+
+  const mmap = frame?.manipulation_map;
+  const noticing = mmap
+    ? TACTIC_SENTENCE.map(([k, sentence]) => ({ k, sentence, v: mmap[k] })).filter((n) => n.v > 0.05)
+        .sort((a, b) => b.v - a.v)
+    : [];
+
+  const forecast = frame?.forecast;
+  const coach = frame?.coach;
+
+  // Feed the mic's in-flight words into the transcript's partial slot so the
+  // one transcript component shows both recorded and live speech.
+  const transcript = frame?.transcript
+    ? {
+        ...frame.transcript,
+        partial:
+          frame.transcript.partial ?? (source === "mic" ? voice.interimTranscript || null : null),
+      }
+    : { final: [], partial: null, partial_speaker: null };
 
   return (
-    <div className="page live-protect">
-      <header className="page__head">
-        <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
-          <h1 className="page__title" style={{ margin: 0 }}>
-            <span className="live-dot" /> {source === "demo" ? "Demo call" : "Listening…"}
-          </h1>
+    <div className="page live-cockpit" ref={cockpitRef}>
+      <div className="vignette" data-on={hot || undefined} />
+
+      {/* topbar — the console's call header, re-voiced */}
+      <header className="cockpit-top">
+        <p className="cockpit-top__title">
+          <span className="live-dot" /> {source === "demo" ? "Live Protection · demo call" : "Live Protection"}
+        </p>
+        <div className="cockpit-top__meta">
           <span className="chip" data-tone={source === "mic" ? "ok" : undefined}>
             {source === "mic" ? <Wifi size={13} /> : <Radio size={13} />}{" "}
-            {source === "mic" ? (voice.isListening ? "mic on" : "mic paused") : "recorded"}
+            {source === "mic" ? (voice.isListening ? "listening" : "mic paused") : "recorded"}
           </span>
+          {frame?.call.caller_number && <span className="mono">{frame.call.caller_number}</span>}
+          <span className="mono">{mmss(frame?.t ?? 0)}</span>
+        </div>
+        <div className="cockpit-top__ctrls">
+          {source === "mic" && (
+            <button className="btn2 btn2--sm" onClick={voice.toggle}>
+              {voice.isListening ? <MicOff size={14} /> : <Mic size={14} />}
+              {voice.isListening ? "Pause" : "Resume"}
+            </button>
+          )}
+          <button className="btn2 btn2--sm btn2--danger" onClick={endCall}>
+            <PhoneOff size={14} /> End &amp; get report
+          </button>
         </div>
       </header>
 
-      {critical && (
-        <div className="panicbanner" style={{ marginBottom: "var(--s-4)" }}>
+      {hangUp && (
+        <div className="panicbanner cockpit-banner">
           <div className="panicbanner__head">
-            <AlertTriangle size={18} /> Hang up now. This looks like a scam.
+            <AlertTriangle size={18} /> Hang up now. This is a scam.
           </div>
           <p className="small" style={{ margin: "var(--s-2) 0 0" }}>
-            Do not share any OTP or Aadhaar number, and do not transfer money. No real officer keeps
-            you on a call to move money.
+            Do not share any OTP or Aadhaar number, and do not transfer money. No real officer or bank
+            keeps you on a call to move money “for safety”.
           </p>
         </div>
       )}
 
-      {/* the three things a citizen watches */}
-      <div className="live-grid">
-        <div className="card live-stat">
-          <p className="label">Threat</p>
-          <div className="threat-ramp">
-            {RAMP.map((word, i) => (
-              <span key={word} className="threat-ramp__step" data-on={i <= ri || undefined} data-risk={word}>
-                {word}
-              </span>
-            ))}
-          </div>
+      <div className="cockpit-grid">
+        {/* ---- main column: the conversation itself ---- */}
+        <div className="cockpit-col">
+          <section className="panel cockpit-transcript">
+            <TranscriptPane transcript={transcript} />
+          </section>
+
+          <section className="panel pad">
+            <p className="label">What&apos;s happened so far</p>
+            {events.length === 0 ? (
+              <p className="small muted" style={{ margin: "var(--s-2) 0 0" }}>
+                Nothing alarming yet. KAVACH will note each turn of the call here.
+              </p>
+            ) : (
+              <ul className="live-timeline" style={{ marginTop: "var(--s-3)" }}>
+                {events.map((e, i) => (
+                  <li key={`${e.seq}-${i}`}>
+                    <span className="live-timeline__t mono">{mmss(e.t)}</span>
+                    <span>{eventLine(e)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </div>
-        <div className="card live-stat">
-          <p className="label">Conversation stage</p>
-          <strong className="live-stat__v">{frame?.stage ? pretty(frame.stage.current) : "Listening…"}</strong>
+
+        {/* ---- middle column: how dangerous, where we are, what's next ---- */}
+        <div className="cockpit-col">
+          <section className="panel pad">
+            <p className="label">Current threat level</p>
+            <ThreatMeter threat={frame?.threat ?? null} />
+            <p className="threat-verdict">{threatVerdict(level)}</p>
+          </section>
+
+          <section className="panel pad">
+            <p className="label">Conversation stage</p>
+            <strong className="live-stat__v" style={{ display: "block", marginTop: 6 }}>
+              {stageCur ? STAGE_PLAIN[stageCur] ?? "Listening…" : "Listening…"}
+            </strong>
+          </section>
+
+          <section className="panel pad whatnext">
+            <p className="label">What may happen next</p>
+            {forecast ? (
+              <p className="whatnext__line">
+                {forecast.eta_to_payment_s != null ? (
+                  <>
+                    If this continues, the caller will likely ask you to move money in about{" "}
+                    <span className="whatnext__eta">~{Math.round(forecast.eta_to_payment_s)}s</span>.
+                  </>
+                ) : (
+                  <>Next, expect the caller to {NEXT_PLAIN[forecast.next_stage] ?? "escalate"}.</>
+                )}
+              </p>
+            ) : (
+              <p className="small muted" style={{ margin: "var(--s-2) 0 0" }}>
+                No escalation predicted yet.
+              </p>
+            )}
+          </section>
         </div>
-        <div className="card live-stat">
-          <p className="label">Identity</p>
-          <strong className="live-stat__v">{claimed ?? "Unknown"}</strong>
-          {claimed && trustPct != null && (
-            <span className="small" data-tone={trustPct < 50 ? "bad" : undefined}>
-              {trustPct < 50 ? "Unverified — likely fake" : "Checks out so far"}
-            </span>
-          )}
+
+        {/* ---- right column: what to do, who they claim to be, the tactics ---- */}
+        <div className="cockpit-col">
+          <section className="panel pad guidance-card">
+            <p className="label">
+              <ShieldCheck size={13} style={{ verticalAlign: "-2px", marginRight: 6 }} />
+              What to do right now
+            </p>
+            {coach ? (
+              <>
+                <p className="coachline__quote" style={{ margin: "var(--s-2) 0 0" }}>
+                  {coach.line}
+                </p>
+                {coach.why && <p className="small faint" style={{ margin: "6px 0 0" }}>{coach.why}</p>}
+              </>
+            ) : (
+              <p className="small muted" style={{ margin: "var(--s-2) 0 0" }}>
+                Stay on the line and don&apos;t share anything yet. KAVACH will tell you what to say.
+              </p>
+            )}
+          </section>
+
+          <section className="panel pad">
+            <p className="label">Identity check</p>
+            {claimed ? (
+              <p className="passport__claim" style={{ marginTop: "var(--s-2)" }}>
+                Claims to be <strong>{claimed}</strong>
+              </p>
+            ) : (
+              <p className="small muted" style={{ margin: "var(--s-2) 0 0" }}>
+                The caller hasn&apos;t claimed an identity yet.
+              </p>
+            )}
+            <p className="idcheck__verdict" data-bad={idv.bad || undefined}>
+              {idv.text}
+            </p>
+            {idChecks.length > 0 && (
+              <ul className="passport__checks" style={{ marginTop: "var(--s-3)" }}>
+                {idChecks.map((c) => (
+                  <li className="passport__check" key={c.name} data-verdict={c.verdict}>
+                    <span className="passport__mark" aria-hidden="true">
+                      {c.verdict === "FAIL" ? "✕" : c.verdict === "PASS" ? "✓" : "?"}
+                    </span>
+                    <span className="passport__name">{c.name}</span>
+                    <span className="passport__detail">{c.detail}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="panel pad">
+            <p className="label">What we&apos;re noticing</p>
+            {noticing.length === 0 ? (
+              <p className="small muted" style={{ margin: "var(--s-2) 0 0" }}>
+                No scam tactics spotted yet.
+              </p>
+            ) : (
+              <ul className="notice-list" style={{ marginTop: "var(--s-3)" }}>
+                {noticing.map((n) => (
+                  <li className="notice-row" key={n.k}>
+                    <span className="notice-row__text">{n.sentence}</span>
+                    <span className="notice-track" aria-hidden="true">
+                      <i style={{ transform: `scaleX(${Math.min(1, n.v)})` }} />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </div>
       </div>
 
-      {/* what to say now */}
-      {coachLine && (
-        <div className="card guidance-card" style={{ marginTop: "var(--s-4)" }}>
-          <h2 className="card__title">
-            <ShieldCheck size={16} /> What to do now
-          </h2>
-          <p className="coachline__quote" style={{ margin: "var(--s-2) 0 0" }}>
-            {coachLine}
-          </p>
-          {frame?.coach?.why && <p className="small faint">{frame.coach.why}</p>}
-        </div>
-      )}
-
-      <div className="live-grid live-grid--2" style={{ marginTop: "var(--s-4)" }}>
-        {/* timeline */}
-        <div className="card">
-          <h2 className="card__title">What's happened so far</h2>
-          {events.length === 0 ? (
-            <p className="small muted" style={{ margin: 0 }}>
-              Nothing alarming yet. KAVACH will note each turn of the call here.
-            </p>
-          ) : (
-            <ul className="live-timeline">
-              {events.map((e, i) => (
-                <li key={`${e.seq}-${i}`}>
-                  <span className="live-timeline__t mono">{mmss(e.t)}</span>
-                  <span>{eventLine(e)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* has this happened before */}
-        <div className="card">
-          <h2 className="card__title">Has this happened before?</h2>
+      {/* ---- wide row: the two "is this real / am I alone" questions ---- */}
+      <div className="cockpit-grid cockpit-grid--wide">
+        <section className="panel pad">
+          <p className="label">Has this happened before?</p>
           {intelMatches.length === 0 ? (
-            <p className="small muted" style={{ margin: 0 }}>
+            <p className="small muted" style={{ margin: "var(--s-2) 0 0" }}>
               Checking as the call goes… nothing matched to a known fraud network yet.
             </p>
           ) : (
-            <div className="stack" style={{ gap: 6 }}>
+            <div className="stack" style={{ gap: 6, marginTop: "var(--s-3)" }}>
               {intelMatches.map((m) => (
                 <div key={`${m.kind}-${m.value}`} className="row" style={{ justifyContent: "space-between" }}>
                   <span className="small">
@@ -420,45 +651,25 @@ export function LiveProtection() {
               ))}
             </div>
           )}
-        </div>
+        </section>
+
+        <section className="panel pad">
+          <p className="label">Nearby scam activity</p>
+          {hotspots.length === 0 ? (
+            <p className="small muted" style={{ margin: "var(--s-2) 0 0" }}>
+              Loading the latest reports near you…
+            </p>
+          ) : (
+            <>
+              <p className="small faint" style={{ margin: "var(--s-2) 0 var(--s-2)" }}>
+                Areas reporting the most scam calls right now.
+              </p>
+              <ScamMap hotspots={hotspots} height={260} />
+            </>
+          )}
+        </section>
       </div>
 
-      {/* live transcript tail */}
-      <div className="card" style={{ marginTop: "var(--s-4)" }}>
-        <h2 className="card__title">Live transcript</h2>
-        <div className="stack" style={{ gap: 6 }}>
-          {lastLines.map((u) => (
-            <p key={u.id} className="small" style={{ margin: 0 }}>
-              <span className="mono faint" style={{ marginRight: 8 }}>
-                {u.speaker}
-              </span>
-              {u.text}
-            </p>
-          ))}
-          {interim && (
-            <p className="small faint" style={{ margin: 0, fontStyle: "italic" }}>
-              {interim}…
-            </p>
-          )}
-          {lastLines.length === 0 && !interim && (
-            <p className="small muted" style={{ margin: 0 }}>
-              {source === "mic" ? "Say something, or wait for the caller…" : "Starting…"}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="row" style={{ gap: "var(--s-2)", marginTop: "var(--s-5)" }}>
-        <button className="btn2 btn2--danger" onClick={endCall}>
-          <PhoneOff size={15} /> End &amp; get my report
-        </button>
-        {source === "mic" && (
-          <button className="btn2" onClick={voice.toggle}>
-            {voice.isListening ? <MicOff size={15} /> : <Mic size={15} />}
-            {voice.isListening ? "Pause mic" : "Resume mic"}
-          </button>
-        )}
-      </div>
       {voice.error && source === "mic" && (
         <p className="small faint" style={{ marginTop: "var(--s-3)" }}>
           Microphone: {voice.error}. You can still try the demo call, or use Analyze to paste what was said.

@@ -80,6 +80,17 @@ export function Profile() {
           need a sign-in.
         </p>
         <div className="tool-list">
+          {(user?.role === "admin" || user?.role === "owner") && (
+            <Link to="/admin" className="tool-row" style={{ borderColor: "color-mix(in srgb, var(--accent) 45%, transparent)" }}>
+              <BarChart3 size={18} />
+              <span className="tool-row__text">
+                <strong className="small">Admin dashboard</strong>
+                <span className="small faint">
+                  Platform health, fraud analytics, hotspot monitoring, and user management.
+                </span>
+              </span>
+            </Link>
+          )}
           {TOOLS.map((t) => (
             <Link key={t.to} to={t.to} className="tool-row">
               <t.icon size={18} />

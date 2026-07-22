@@ -285,6 +285,8 @@
 .tool-row__text { display: flex; flex-direction: column; gap: 1px; }
 
 /* --- Live Protection (citizen) --------------------------------------------- */
+.live-lang { display: grid; gap: 6px; max-width: 340px; margin-bottom: var(--s-4); }
+.live-lang .field { max-width: 240px; }
 .live-start { display: flex; gap: var(--s-3); flex-wrap: wrap; }
 
 .live-dot {
@@ -315,6 +317,112 @@
 .live-timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
 .live-timeline li { display: grid; grid-template-columns: 52px 1fr; gap: var(--s-2); font-size: var(--t-sm); line-height: 1.5; }
 .live-timeline__t { color: var(--ink-faint); font-size: var(--t-2xs); }
+
+/* --- Live Protection cockpit ------------------------------------------------
+ * The citizen live-call view borrows the analyst console's instrument language
+ * (topbar, threat vignette, panel grid) but scrolls inside the app shell like a
+ * document, so the end-of-call report transition and mobile both stay simple.
+ * -------------------------------------------------------------------------- */
+.live-cockpit { position: relative; }
+
+.btn2--sm { height: 32px; padding: 0 var(--s-3); font-size: var(--t-xs); }
+
+.cockpit-top {
+  display: flex; align-items: center; gap: var(--s-3) var(--s-4); flex-wrap: wrap;
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--bg-raised);
+  margin-bottom: var(--s-4);
+}
+.cockpit-top__title {
+  display: flex; align-items: center; margin: 0;
+  font-family: var(--font-display); font-weight: 700; font-size: var(--t-md);
+  letter-spacing: -0.01em;
+}
+.cockpit-top__meta {
+  margin-left: auto; display: flex; align-items: center; gap: var(--s-3);
+  font-size: var(--t-xs); color: var(--ink-muted);
+}
+.cockpit-top__meta .mono { color: var(--ink); }
+.cockpit-top__ctrls { display: flex; gap: var(--s-2); }
+
+.cockpit-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.85fr) minmax(0, 1fr);
+  gap: var(--s-4);
+  align-items: start;
+}
+.cockpit-grid--wide { grid-template-columns: 1fr 1fr; margin-top: var(--s-4); }
+@media (max-width: 1080px) { .cockpit-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 720px) { .cockpit-grid, .cockpit-grid--wide { grid-template-columns: 1fr; } }
+
+.cockpit-col { display: grid; gap: var(--s-4); align-content: start; min-width: 0; }
+
+.cockpit-banner { margin-bottom: var(--s-4); }
+
+/* Transcript keeps its own internal scroll — the panel just gives it a height. */
+.cockpit-transcript { height: 520px; overflow: hidden; }
+@media (max-width: 720px) { .cockpit-transcript { height: 360px; } }
+
+.threat-verdict {
+  margin: var(--s-3) 0 0; text-align: center;
+  font-family: var(--font-display); font-weight: 700; font-size: var(--t-lg);
+  letter-spacing: -0.01em; line-height: 1.2;
+  color: var(--threat-color, var(--ink));
+  transition: color var(--t-med) var(--ease-out);
+}
+
+/* "What we're noticing" — a plain sentence per tactic, with a quiet severity bar. */
+.notice-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
+.notice-row { display: grid; gap: 6px; }
+.notice-row__text { font-size: var(--t-sm); color: var(--ink); line-height: 1.5; }
+.notice-track { height: 4px; background: var(--line); border-radius: var(--r-pill); overflow: hidden; }
+.notice-track i {
+  display: block; height: 100%; background: var(--threat-color, var(--ink-faint));
+  transform-origin: left; transition: transform var(--t-slow) var(--ease-out), background var(--t-med);
+}
+
+/* Identity check verdict line. */
+.idcheck__verdict { margin: var(--s-3) 0 0; font-size: var(--t-sm); font-weight: 600; color: var(--ink); }
+.idcheck__verdict[data-bad] { color: var(--critical); }
+
+/* "What may happen next" wears the accent, the one colour the forecast owns. */
+.whatnext { border-left: 2px solid var(--accent); }
+.whatnext__line { margin: var(--s-2) 0 0; font-size: var(--t-sm); line-height: 1.6; color: var(--ink); }
+.whatnext__eta { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* --- Admin dashboard -------------------------------------------------------- */
+.admin-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-4); margin-bottom: var(--s-4); }
+@media (max-width: 820px) { .admin-kpis { grid-template-columns: 1fr 1fr; } }
+.admin-kpi { display: flex; flex-direction: column; gap: 4px; }
+.admin-kpi__icon { color: var(--accent); }
+.admin-kpi__v { font-family: var(--font-display); font-size: var(--t-xl); font-weight: 700; letter-spacing: -0.02em; }
+
+.admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); margin-bottom: var(--s-4); }
+@media (max-width: 820px) { .admin-grid { grid-template-columns: 1fr; } }
+
+.admin-status { list-style: none; margin: var(--s-2) 0 0; padding: 0; display: grid; gap: var(--s-2); }
+.admin-status__row { display: grid; grid-template-columns: 10px 120px 1fr; gap: var(--s-2); align-items: center; }
+.admin-status__dot { width: 8px; height: 8px; border-radius: 50%; }
+.admin-status__dot.is-ok { background: var(--calm); }
+.admin-status__dot.is-warn { background: var(--elevated); }
+.admin-status__v { text-align: right; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-status__d { grid-column: 2 / -1; }
+
+.admin-scores { display: grid; gap: 6px; margin-top: var(--s-2); }
+.admin-score { display: grid; grid-template-columns: 88px 1fr 44px; gap: var(--s-2); align-items: center; }
+.admin-score__bar { height: 5px; background: var(--line); border-radius: var(--r-pill); overflow: hidden; }
+.admin-score__bar i { display: block; height: 100%; background: var(--accent); transform-origin: left; transition: transform var(--t-med) var(--ease-out); }
+.admin-limits summary { cursor: pointer; color: var(--ink-muted); }
+
+.admin-table { width: 100%; border-collapse: collapse; margin-top: var(--s-2); font-size: var(--t-sm); }
+.admin-table th { text-align: left; font-size: var(--t-2xs); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--ink-faint); font-weight: 500; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.admin-table td { padding: 8px; border-bottom: 1px solid var(--line); }
+.admin-table tr:last-child td { border-bottom: 0; }
+
+.admin-adduser { display: flex; gap: var(--s-2); flex-wrap: wrap; margin-top: var(--s-4); padding-top: var(--s-4); border-top: 1px solid var(--line); }
+.admin-adduser .field { flex: 1; min-width: 140px; }
+.admin-adduser select.field { flex: 0 0 120px; }
 
 /* --- Report: detected-entities chips --------------------------------------- */
 .detected-chip { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }

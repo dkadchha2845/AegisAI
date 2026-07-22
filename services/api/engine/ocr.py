@@ -176,3 +176,22 @@ def extract_text(image_bytes: bytes) -> OcrResult:
     if not text:
         degraded.append("ocr:empty")
     return OcrResult(text=text, engine=engine.name, degraded=degraded, qr_payloads=qr)
+
+
+import re
+
+#: Text that appears on a genuine payment-app confirmation screen. Used to tell
+#: "the victim sent us proof they already paid" apart from "the scammer sent a
+#: fake notice" — the two need opposite responses, and the difference is
+#: entirely in which side the screenshot came from.
+_PAYMENT_MARKERS = re.compile(
+    r"\b(paid to|sent to|transaction successful|txn id|utr|upi ref|debited)\b", re.I
+)
+
+def looks_like_payment_confirmation(text: str) -> bool:
+    return bool(_PAYMENT_MARKERS.search(text))
+
+def status() -> dict:
+    engine = load_ocr()
+    return {"backend": engine.name, "available": not isinstance(engine, NullOcr)}
+

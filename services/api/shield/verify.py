@@ -173,7 +173,11 @@ def _extract_entities(text: str, number: Optional[str], upi: Optional[str]) -> D
         "upi_ids": _dedup(([upi] if upi else []) + list(ent.upi_ids))[:6],
         "emails": _dedup(list(ent.emails))[:6],
         "websites": _dedup(list(ent.domains))[:6],
+        "bank_accounts": _dedup(list(ent.bank_accounts))[:6],
+        "banks": _dedup(list(ent.banks))[:6],
         "authorities": _dedup(list(ent.authorities))[:6],
+        "locations": _dedup(list(ent.locations))[:6],
+        "scam_keywords": _dedup(list(ent.scam_keywords))[:8],
         "amounts": _dedup([str(a) for a in ent.amounts])[:6],
     }
 

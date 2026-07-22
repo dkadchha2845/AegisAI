@@ -48,6 +48,37 @@ _AUTHORITY = re.compile(
     re.I,
 )
 
+# Bank names a scammer poses as, or names as the destination for a transfer.
+# Display context, not a graph edge — two cases both naming "SBI" are not linked
+# by that alone, so this never feeds iter_case_entities.
+_BANK_NAMES = re.compile(
+    r"\b(state bank of india|\bsbi\b|hdfc(?: bank)?|icici(?: bank)?|axis bank|"
+    r"kotak(?: mahindra)?|punjab national bank|\bpnb\b|bank of baroda|\bbob\b|"
+    r"canara bank|union bank|yes bank|\bidfc\b|indusind|federal bank|"
+    r"paytm payments bank|india post payments)\b",
+    re.I,
+)
+
+# Account numbers only when explicitly labelled — a bare 9-18 digit run also
+# matches phone numbers, Aadhaar, and case IDs, so we require an "A/C" cue.
+_BANK_ACCT_LABELLED = re.compile(
+    r"(?:a\/?c(?:count)?(?:\s*(?:no\.?|number|#))?)\s*[:\-]?\s*(\d{9,18})\b", re.I
+)
+
+# Scam-intelligence keywords — what kind of scam this is, in the words that
+# appear on the artifact. Ordered longest-first so "digital arrest" wins over a
+# bare "arrest".
+_SCAM_KEYWORDS = [
+    "digital arrest", "money laundering", "work from home", "gift card",
+    "customs duty", "electricity bill", "sim swap", "lottery", "otp", "kyc",
+    "pan card", "aadhaar", "warrant", "parcel", "courier", "refund", "customs",
+    "loan", "investment", "trading", "blackmail", "bitcoin", "cryptocurrency",
+    "gift voucher", "insurance", "job offer", "part time",
+]
+_SCAM_KEYWORDS_RE = re.compile(
+    r"\b(" + "|".join(re.escape(k) for k in _SCAM_KEYWORDS) + r")\b", re.I
+)
+
 
 @dataclass
 class ExtractedEntities:
@@ -62,11 +93,16 @@ class ExtractedEntities:
     domains: List[str] = field(default_factory=list)
     amounts: List[float] = field(default_factory=list)
     authorities: List[str] = field(default_factory=list)
+    #: Display-only context (never graph edges): the bank a caller names, the
+    #: places mentioned, and the scam-type keywords on the artifact.
+    banks: List[str] = field(default_factory=list)
+    locations: List[str] = field(default_factory=list)
+    scam_keywords: List[str] = field(default_factory=list)
 
     def merge(self, other: "ExtractedEntities") -> None:
         for f in (
             "phones", "upi_ids", "emails", "wallets", "bank_accounts",
-            "domains", "authorities",
+            "domains", "authorities", "banks", "locations", "scam_keywords",
         ):
             seen = getattr(self, f)
             for v in getattr(other, f):
@@ -84,6 +120,9 @@ class ExtractedEntities:
             "domains": self.domains,
             "amounts": self.amounts,
             "authorities": self.authorities,
+            "banks": self.banks,
+            "locations": self.locations,
+            "scam_keywords": self.scam_keywords,
         }
 
 
@@ -106,27 +145,52 @@ def extract_from_text(text: str) -> ExtractedEntities:
         if len(n) == 10 and n not in out.phones:
             out.phones.append(n)
 
-    # UPI vs email: classify each @-token once.
-    for tok in _UPI.findall(text):
+    # Emails FIRST, keeping their character spans. A full email like
+    # `cbi.helpdesk@gov-in-portal.com` must be claimed before the looser UPI and
+    # domain patterns run, or the UPI pattern grabs the fragment `…@gov` and the
+    # domain pattern lists the local part `cbi.helpdesk` as a website.
+    email_spans: List[tuple[int, int]] = []
+    for m in _EMAIL.finditer(text):
+        tok = m.group(0)
+        email_spans.append((m.start(), m.end()))
+        if tok not in out.emails:
+            out.emails.append(tok)
+
+    def _in_email(s: int, e: int) -> bool:
+        return any(s >= es and e <= ee for es, ee in email_spans)
+
+    # UPI: @-tokens that are not part of an email. A trailing "-" or "." means
+    # the match stopped inside a longer email/domain, so it is a fragment.
+    for m in _UPI.finditer(text):
+        s, e, tok = m.start(), m.end(), m.group(0)
+        if _in_email(s, e) or text[e : e + 1] in "-.":
+            continue
         suffix = tok.split("@", 1)[1].lower()
-        if "." in tok.split("@", 1)[1] or suffix in _EMAIL_SUFFIXES:
+        if suffix in _EMAIL_SUFFIXES:
             if tok not in out.emails:
                 out.emails.append(tok)
         elif tok not in out.upi_ids:
             out.upi_ids.append(tok)
-    for tok in _EMAIL.findall(text):
-        if tok not in out.emails and tok not in out.upi_ids:
-            out.emails.append(tok)
 
     for w in _WALLET.findall(text):
         if w not in out.wallets:
             out.wallets.append(w)
 
-    for d in _DOMAIN.findall(text):
-        d = d.lower().rstrip(".")
-        # A bare VPA/email suffix ("okaxis") is not a domain; require a dot.
+    # Domains: skip local parts (a "domain" immediately followed by "@") and
+    # anything already inside a captured email — the email's own domain is not a
+    # separate website the citizen was sent to.
+    for m in _DOMAIN.finditer(text):
+        d = m.group(1).lower().rstrip(".")
+        end = m.end(1)
+        if text[end : end + 1] == "@" or _in_email(m.start(1), end):
+            continue
         if "." in d and d not in out.domains and not d.replace(".", "").isdigit():
             out.domains.append(d)
+
+    for m in _BANK_ACCT_LABELLED.finditer(text):
+        acct = m.group(1)
+        if acct not in out.bank_accounts:
+            out.bank_accounts.append(acct)
 
     for a, b in _AMOUNT.findall(text):
         raw = (a or b).replace(",", "")
@@ -141,6 +205,29 @@ def extract_from_text(text: str) -> ExtractedEntities:
         label = auth.strip().lower()
         if label and label not in out.authorities:
             out.authorities.append(label)
+
+    for bank in _BANK_NAMES.findall(text):
+        label = (bank[0] if isinstance(bank, tuple) else bank).strip().lower()
+        if label and label not in out.banks:
+            out.banks.append(label)
+
+    for kw in _SCAM_KEYWORDS_RE.findall(text):
+        label = kw.strip().lower()
+        if label and label not in out.scam_keywords:
+            out.scam_keywords.append(label)
+
+    # Locations — matched against the same gazetteer the map uses, so "fraud near
+    # you" and "places named on the call" speak of the same cities. Lazy import
+    # keeps this module free of a load-time dependency on geo.
+    try:
+        from .geo import CITIES
+
+        low = text.lower()
+        for city in CITIES:
+            if re.search(r"\b" + re.escape(city.lower()) + r"\b", low) and city not in out.locations:
+                out.locations.append(city)
+    except Exception:  # noqa: BLE001 - geo optional; locations are display-only
+        pass
 
     return out
 
