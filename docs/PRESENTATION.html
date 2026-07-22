@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KAVACH — AI for Digital Public Safety | ET AI Hackathon 2026</title>
+<style>
+  :root {
+    --bg-deep:    #060B18;
+    --bg-card:    #0D1526;
+    --bg-panel:   #111D35;
+    --accent-blue:#1A6BFF;
+    --accent-cyan:#00D4FF;
+    --accent-saf: #FF6B35;
+    --accent-gold:#FFB830;
+    --accent-green:#22C55E;
+    --accent-red: #EF4444;
+    --text-main:  #E8F0FF;
+    --text-muted: #7A8CB0;
+    --border:     rgba(26,107,255,0.25);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-deep); font-family:'Segoe UI',system-ui,sans-serif; color:var(--text-main); }
+
+  /* ── BACKGROUND PARTICLES ───────────────────── */
+  #canvas-bg { position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+  /* ── SLIDE CONTAINER ────────────────────────── */
+  #deck { position:relative; z-index:1; width:100%; height:100vh; }
+  .slide {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; justify-content:center; align-items:center;
+    padding:60px 80px;
+    opacity:0; pointer-events:none;
+    transition: opacity .55s cubic-bezier(.4,0,.2,1), transform .55s cubic-bezier(.4,0,.2,1);
+    transform: translateX(60px);
+  }
+  .slide.active { opacity:1; pointer-events:all; transform:translateX(0); }
+  .slide.exit   { opacity:0; transform:translateX(-60px); }
+
+  /* ── PROGRESS BAR ───────────────────────────── */
+  #progress { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--accent-blue),var(--accent-cyan)); transition:width .4s; z-index:100; }
+  #slide-counter { position:fixed; bottom:24px; right:32px; font-size:12px; color:var(--text-muted); letter-spacing:.05em; z-index:100; }
+  #nav { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:100; }
+  .nav-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.2); cursor:pointer; transition:.3s; }
+  .nav-dot.active { background:var(--accent-blue); transform:scale(1.4); }
+
+  /* ── NAV ARROWS ─────────────────────────────── */
+  .arrow-btn {
+    position:fixed; top:50%; z-index:100;
+    background:rgba(13,21,38,.8); border:1px solid var(--border);
+    border-radius:50%; width:44px; height:44px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transform:translateY(-50%);
+    transition:.2s; color:var(--text-main); font-size:18px;
+  }
+  .arrow-btn:hover { background:var(--accent-blue); border-color:var(--accent-blue); }
+  #btn-prev { left:20px; }
+  #btn-next { right:20px; }
+
+  /* ── UTILITIES ──────────────────────────────── */
+  .chip {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase;
+  }
+  .chip-blue  { background:rgba(26,107,255,.2); border:1px solid rgba(26,107,255,.5); color:var(--accent-cyan); }
+  .chip-saf   { background:rgba(255,107,53,.15); border:1px solid rgba(255,107,53,.5); color:var(--accent-saf); }
+  .chip-green { background:rgba(34,197,94,.15); border:1px solid rgba(34,197,94,.5);  color:var(--accent-green); }
+  .chip-gold  { background:rgba(255,184,48,.12); border:1px solid rgba(255,184,48,.4); color:var(--accent-gold); }
+  .glow-text  { background:linear-gradient(135deg,var(--accent-cyan),var(--accent-blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .saf-text   { background:linear-gradient(135deg,var(--accent-saf),var(--accent-gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+  /* ── SLIDE 1 TITLE ──────────────────────────── */
+  #s1 { text-align:center; gap:24px; }
+  #s1 .eyebrow { font-size:11px; letter-spacing:.2em; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px; }
+  #s1 h1 { font-size:96px; font-weight:900; line-height:1; letter-spacing:-3px; }
+  #s1 .tagline { font-size:20px; color:var(--text-muted); max-width:680px; line-height:1.5; }
+  #s1 .stat-row { display:flex; gap:40px; margin-top:24px; }
+  #s1 .stat { text-align:center; }
+  #s1 .stat .val { font-size:36px; font-weight:800; }
+  #s1 .stat .lbl { font-size:12px; color:var(--text-muted); margin-top:2px; }
+  #s1 .ps-badge { margin-top:8px; }
+  .shield-ring {
+    width:160px; height:160px; border-radius:50%;
+    border:3px solid var(--accent-blue);
+    box-shadow: 0 0 40px rgba(26,107,255,.4), 0 0 80px rgba(26,107,255,.15);
+    display:flex; align-items:center; justify-content:center;
+    font-size:64px;
+    animation: pulse-ring 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse-ring {
+    0%,100% { box-shadow:0 0 40px rgba(26,107,255,.4),0 0 80px rgba(26,107,255,.15); }
+    50%      { box-shadow:0 0 60px rgba(26,107,255,.7),0 0 120px rgba(26,107,255,.3); }
+  }
+
+  /* ── SLIDE 2 PROBLEM ────────────────────────── */
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:48px; width:100%; max-width:1100px; align-items:start; }
+  .three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; width:100%; max-width:1100px; }
+  .slide-title { font-size:14px; letter-spacing:.15em; color:var(--accent-cyan); text-transform:uppercase; margin-bottom:16px; }
+  .slide-h2 { font-size:44px; font-weight:800; line-height:1.15; letter-spacing:-1px; margin-bottom:20px; }
+  .slide-h2 span { color:var(--accent-saf); }
+  .slide-h3 { font-size:22px; font-weight:700; margin-bottom:12px; }
+  .body-text { font-size:15px; color:var(--text-muted); line-height:1.7; }
+  .big-stat { font-size:56px; font-weight:900; line-height:1; }
+  .stat-label { font-size:13px; color:var(--text-muted); margin-top:6px; line-height:1.4; }
+  .stat-box {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:16px; padding:28px 24px; text-align:center;
+  }
+
+  /* ── 7-STEP ARC ─────────────────────────────── */
+  .arc-container { width:100%; max-width:1100px; }
+  .arc-steps { display:flex; gap:0; width:100%; position:relative; margin:32px 0; }
+  .arc-step {
+    flex:1; text-align:center; position:relative;
+    padding:0 4px;
+  }
+  .arc-step::after {
+    content:'›'; position:absolute; right:-8px; top:22px;
+    color:var(--text-muted); font-size:20px; z-index:2;
+  }
+  .arc-step:last-child::after { display:none; }
+  .arc-dot {
+    width:44px; height:44px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 8px;
+    font-weight:700; font-size:13px;
+    border:2px solid transparent;
+    transition:.3s;
+  }
+  .arc-dot.benign { background:rgba(34,197,94,.15); border-color:var(--accent-green); color:var(--accent-green); }
+  .arc-dot.warn   { background:rgba(255,184,48,.12); border-color:var(--accent-gold); color:var(--accent-gold); }
+  .arc-dot.danger { background:rgba(239,68,68,.15); border-color:var(--accent-red); color:var(--accent-red); }
+  .arc-dot.critical { background:var(--accent-red); color:#fff; animation:blink 1s step-end infinite; }
+  @keyframes blink { 50%{opacity:.5} }
+  .arc-label { font-size:10px; color:var(--text-muted); line-height:1.3; }
+  .arc-sublabel { font-size:9px; color:var(--accent-saf); margin-top:2px; font-style:italic; }
+  .intervention-bar {
+    background:linear-gradient(90deg, rgba(255,107,53,.0), rgba(255,107,53,.25), rgba(255,107,53,.0));
+    border-top:2px dashed var(--accent-saf); border-bottom:2px dashed var(--accent-saf);
+    padding:8px 12px; text-align:center; margin:12px 0; border-radius:4px;
+    font-size:12px; color:var(--accent-saf); font-weight:600; letter-spacing:.05em;
+  }
+
+  /* ── CARD GRID ──────────────────────────────── */
+  .card {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:16px; padding:24px 20px;
+  }
+  .card-icon { font-size:32px; margin-bottom:12px; }
+  .card h4 { font-size:16px; font-weight:700; margin-bottom:8px; }
+  .card p { font-size:13px; color:var(--text-muted); line-height:1.6; }
+  .card .pill { font-size:11px; font-weight:600; color:var(--accent-cyan); margin-bottom:6px; letter-spacing:.05em; }
+
+  /* ── ARCHITECTURE DIAGRAM ───────────────────── */
+  .arch-svg { width:100%; max-width:900px; }
+
+  /* ── SCORING ENGINE ─────────────────────────── */
+  .score-bar-wrap { margin:6px 0; }
+  .score-bar-label { display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; }
+  .score-bar { height:8px; border-radius:4px; background:rgba(255,255,255,.08); overflow:hidden; }
+  .score-fill { height:100%; border-radius:4px; }
+
+  /* ── COMPARISON TABLE ───────────────────────── */
+  .compare-table { width:100%; border-collapse:collapse; font-size:13px; max-width:900px; }
+  .compare-table th, .compare-table td { padding:12px 16px; text-align:center; border-bottom:1px solid var(--border); }
+  .compare-table th { color:var(--text-muted); font-weight:600; font-size:11px; letter-spacing:.1em; text-transform:uppercase; }
+  .compare-table td:first-child { text-align:left; font-weight:600; }
+  .compare-table tr:last-child td { border-bottom:none; }
+  .compare-table .kavach-col { color:var(--accent-cyan); font-weight:700; }
+  .chk  { color:var(--accent-green); font-size:16px; }
+  .crs  { color:var(--accent-red);   font-size:16px; }
+  .hf   { color:var(--accent-gold);  font-size:14px; }
+  .compare-table .highlight-row td { background:rgba(26,107,255,.08); }
+
+  /* ── ROADMAP ────────────────────────────────── */
+  .timeline { display:flex; flex-direction:column; gap:0; position:relative; padding-left:24px; }
+  .timeline::before { content:''; position:absolute; left:6px; top:8px; bottom:8px; width:2px; background:linear-gradient(180deg,var(--accent-blue),var(--accent-cyan)); border-radius:2px; }
+  .tl-item { display:flex; gap:16px; padding:12px 0; position:relative; }
+  .tl-dot { width:14px; height:14px; border-radius:50%; margin-top:2px; flex-shrink:0; position:relative; left:-20px; border:2px solid var(--bg-deep); }
+  .tl-dot-done   { background:var(--accent-green); }
+  .tl-dot-next   { background:var(--accent-blue); }
+  .tl-dot-future { background:var(--text-muted); }
+  .tl-content { margin-left:-6px; }
+  .tl-phase { font-size:11px; color:var(--text-muted); letter-spacing:.08em; text-transform:uppercase; }
+  .tl-title { font-size:15px; font-weight:700; margin:2px 0; }
+  .tl-desc  { font-size:13px; color:var(--text-muted); line-height:1.5; }
+
+  /* ── JUDGING CRITERIA BARS ──────────────────── */
+  .criteria-row { display:flex; align-items:center; gap:16px; margin:10px 0; }
+  .criteria-name { font-size:13px; font-weight:600; width:180px; flex-shrink:0; }
+  .criteria-bar-wrap { flex:1; height:10px; background:rgba(255,255,255,.07); border-radius:5px; overflow:hidden; }
+  .criteria-fill { height:100%; border-radius:5px; }
+  .criteria-pct { font-size:13px; font-weight:700; width:36px; text-align:right; }
+
+  /* ── SLIDE 9 DEMO ───────────────────────────── */
+  .demo-steps { display:flex; flex-direction:column; gap:16px; max-width:700px; width:100%; }
+  .demo-step { display:flex; gap:16px; align-items:flex-start; }
+  .demo-num { width:36px; height:36px; border-radius:50%; background:rgba(26,107,255,.2); border:1px solid var(--accent-blue); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; color:var(--accent-cyan); flex-shrink:0; }
+  .demo-text h5 { font-size:15px; font-weight:700; margin-bottom:4px; }
+  .demo-text p  { font-size:13px; color:var(--text-muted); line-height:1.5; }
+
+  /* ── SLIDE 10 CLOSING ───────────────────────── */
+  #s10 { text-align:center; gap:28px; }
+  #s10 .big-line { font-size:54px; font-weight:900; letter-spacing:-2px; line-height:1.1; }
+  #s10 .links { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; margin-top:8px; }
+  #s10 .link-chip {
+    padding:10px 24px; border-radius:30px; font-size:14px; font-weight:600;
+    background:rgba(26,107,255,.15); border:1px solid rgba(26,107,255,.5);
+    color:var(--accent-cyan);
+  }
+  #s10 .link-chip.primary { background:var(--accent-blue); color:#fff; border-color:var(--accent-blue); }
+
+  /* ── FULL-WIDTH SLIDE HEADER ────────────────── */
+  .slide-header { width:100%; max-width:1100px; margin-bottom:32px; }
+
+  /* ── MODULE BADGES ──────────────────────────── */
+  .module-badge {
+    display:inline-flex; gap:10px; align-items:center;
+    background:var(--bg-panel); border:1px solid var(--border);
+    border-radius:12px; padding:8px 16px; margin-bottom:8px;
+  }
+  .module-badge .num { font-size:22px; font-weight:900; color:var(--accent-blue); }
+  .module-badge .info .name { font-size:13px; font-weight:700; }
+  .module-badge .info .acronym { font-size:10px; color:var(--text-muted); }
+
+  /* ── QUOTE ──────────────────────────────────── */
+  .quote-block {
+    background:var(--bg-panel); border-left:3px solid var(--accent-saf);
+    padding:16px 20px; border-radius:0 12px 12px 0;
+    font-size:15px; line-height:1.6; color:var(--text-muted); font-style:italic;
+    margin:12px 0;
+  }
+  .quote-block strong { color:var(--text-main); font-style:normal; }
+
+  /* ── METRIC CHIP ────────────────────────────── */
+  .metrics-row { display:flex; gap:20px; flex-wrap:wrap; margin-top:16px; }
+  .metric-box { background:var(--bg-panel); border:1px solid var(--border); border-radius:12px; padding:14px 20px; text-align:center; }
+  .metric-box .val { font-size:28px; font-weight:900; }
+  .metric-box .lab { font-size:11px; color:var(--text-muted); margin-top:2px; }
+
+  /* ── RESPONSIVE ─────────────────────────────── */
+  @media(max-width:900px) {
+    .slide { padding:40px 24px; }
+    #s1 h1 { font-size:60px; }
+    .two-col, .three-col { grid-template-columns:1fr; gap:20px; }
+    .slide-h2 { font-size:30px; }
+    .arc-label { font-size:8px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas-bg"></canvas>
+<div id="progress"></div>
+
+<!-- NAVIGATION -->
+<button class="arrow-btn" id="btn-prev">‹</button>
+<button class="arrow-btn" id="btn-next">›</button>
+<div id="slide-counter"></div>
+<div id="nav"></div>
+
+<div id="deck">
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 1 — TITLE
+═══════════════════════════════════════════════════════ -->
+<section class="slide" id="s1">
+  <div class="shield-ring">🛡️</div>
+  <div class="eyebrow">ET AI Hackathon 2026 &nbsp;·&nbsp; Problem Statement 6</div>
+  <h1 class="glow-text">KAVACH</h1>
+  <p class="tagline">Real-time AI Shield against <strong>Digital Arrest Scams</strong> & Voice Fraud.<br>Intervening <em>before</em> the money moves.</p>
+  <div class="stat-row">
+    <div class="stat">
+      <div class="val saf-text">₹1,776Cr</div>
+      <div class="lbl">Lost to Digital Arrests<br>Jan–Sep 2024 (MHA data)</div>
+    </div>
+    <div class="stat">
+      <div class="val saf-text">1.14M</div>
+      <div class="lbl">Cybercrime complaints<br>in 2023 (+60% YoY)</div>
+    </div>
+    <div class="stat">
+      <div class="val saf-text">7</div>
+      <div class="lbl">Psychological stages<br>KAVACH can detect</div>
+    </div>
+  </div>
+  <div class="ps-badge">
+    <span class="chip chip-blue">🔒 AI for Digital Public Safety</span>
+    &nbsp;
+    <span class="chip chip-saf">Defeating Counterfeiting, Fraud & Digital Arrest Scams</span>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 2 — THE PROBLEM
+═══════════════════════════════════════════════════════ -->
+<section class="slide" id="s2">
+  <div class="slide-header">
+    <div class="slide-title">The Problem</div>
+    <h2 class="slide-h2">An industrialised crime wave.<br><span>Reactive tools can't stop it.</span></h2>
+  </div>
+  <div class="two-col" style="max-width:1100px;width:100%">
+    <div>
+      <div class="quote-block">India registered <strong>1.14 million cybercrime complaints</strong> in 2023 — up 60% from 2022. 'Digital arrest' scams defrauded citizens of <strong>₹1,776 crore</strong> in just the first nine months of 2024.</div>
+      <p class="body-text" style="margin-top:16px">Fraudsters impersonating CBI, Customs & Police trap victims in multi-day psychological hostage situations over video call. They use <strong>spoofed numbers</strong>, <strong>AI-generated voices</strong>, and <strong>fake government portals</strong>.</p>
+      <div class="metrics-row" style="margin-top:20px">
+        <div class="metric-box"><div class="val saf-text">60%</div><div class="lab">YoY rise<br>cybercrime</div></div>
+        <div class="metric-box"><div class="val saf-text">20–90<br><span style="font-size:16px">min</span></div><div class="lab">avg scam<br>call duration</div></div>
+        <div class="metric-box"><div class="val saf-text">0</div><div class="lab">real-time<br>tools exist</div></div>
+      </div>
+    </div>
+    <div>
+      <h3 class="slide-h3" style="margin-bottom:16px">What law enforcement lacks</h3>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="card" style="border-color:rgba(239,68,68,.3)">
+          <div class="pill" style="color:var(--accent-red)">❌ MISSING</div>
+          <h4>Intelligence before mass victimisation</h4>
+          <p>Current portals (1930, cybercrime.gov.in) only capture reports after money has moved — too late to recover.</p>
+        </div>
+        <div class="card" style="border-color:rgba(239,68,68,.3)">
+          <div class="pill" style="color:var(--accent-red)">❌ MISSING</div>
+          <h4>Point-of-contact threat detection</h4>
+          <p>No tool exists that analyses a call while it is happening and warns the victim in real time.</p>
+        </div>
+        <div class="card" style="border-color:rgba(239,68,68,.3)">
+          <div class="pill" style="color:var(--accent-red)">❌ MISSING</div>
+          <h4>Multi-source intelligence fusion</h4>
+          <p>Fraud rings span telecom, banking, and physical networks — but these datasets are siloed.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 3 — THE 7-STEP ARC
+═══════════════════════════════════════════════════════ -->
+<section class="slide" id="s3">
+  <div class="arc-container">
+    <div class="slide-title">The Core Insight</div>
+    <h2 class="slide-h2">A scam is not a single lie.<br>It's a <span>7-step psychological arc.</span></h2>
+    <p class="body-text" style="margin-bottom:24px">By step 4 (Isolation) the victim is too panicked to think straight. By step 5 it's often too late. <strong>KAVACH identifies the exact stage — automatically — and intervenes before payment.</strong></p>
+    <div class="arc-steps">
+      <div class="arc-step">
+        <div class="arc-dot benign">1</div>
+        <div class="arc-label">GREETING</div>
+        <div class="arc-sublabel">Calm frame</div>
+      </div>
+      <div class="arc-step">
+        <div class="arc-dot warn">2</div>
+        <div class="arc-label">AUTHORITY CLAIM</div>
+        <div class="arc-sublabel">"I'm from CBI"</div>
+      </div>
+      <div class="arc-step">
+        <div class="arc-dot warn">3</div>
+        <div class="arc-label">FEAR INDUCTION</div>
+        <div class="arc-sublabel">Narcotics charge</div>
+      </div>
+      <div class="arc-step" style="position:relative">
+        <div class="arc-dot danger">4</div>
+        <div class="arc-label">ISOLATION</div>
+        <div class="arc-sublabel">"Tell no one"</div>
+      </div>
+      <div class="arc-step">
+        <div class="arc-dot danger">5</div>
+        <div class="arc-label">VERIFICATION DEMAND</div>
+        <div class="arc-sublabel">Aadhaar / OTP</div>
+      </div>
+      <div class="arc-step">
+        <div class="arc-dot critical">6</div>
+        <div class="arc-label">PAYMENT SETUP</div>
+        <div class="arc-sublabel">"Supervised a/c"</div>
+      </div>
+      <div class="arc-step">
+        <div class="arc-dot critical">7</div>
+        <div class="arc-label">PAYMENT EXECUTION</div>
+        <div class="arc-sublabel">Money moved ❌</div>
+      </div>
+    </div>
+    <div class="intervention-bar" style="width:57%;margin-left:28.5%">
+      ⚡ KAVACH INTERVENTION WINDOW — Steps 2–5 (10–15 minutes to act)
+    </div>
+    <div style="display:flex;gap:24px;margin-top:20px">
+      <div class="card" style="flex:1">
+        <div class="pill">💡 KAVACH detects</div>
+        <h4>Stage probability distribution</h4>
+        <p>Never a bare argmax — returns full distribution across all 8 classes (7 scam stages + BENIGN) so threshold tuning is separate from classification.</p>
+      </div>
+      <div class="card" style="flex:1">
+        <div class="pill" style="color:var(--accent-saf)">🎯 Key insight</div>
+        <h4>BENIGN is the hardest class</h4>
+        <p>A real bank calling about a real transaction uses the same vocabulary. KAVACH's false-positive discipline makes this the broadest, strictest class.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 4 — SOLUTION OVERVIEW (3 MODULES)
+═══════════════════════════════════════════════════════ -->
+<section class="slide" id="s4">
+  <div class="slide-header">
+    <div class="slide-title">The Solution</div>
+    <h2 class="slide-h2">Three integrated modules.<br><span>One unified defence.</span></h2>
+  </div>
+  <div class="three-col" style="width:100%;max-width:1100px">
+    <div class="card" style="border-color:rgba(26,107,255,.5)">
+      <div class="module-badge">
+        <span class="num">01</span>
+        <div class="info"><div class="name">RSSIE</div><div class="acronym">Real-time Scam Session Intelligence Engine</div></div>
+      </div>
+      <h4 style="margin-bottom:8px">🛡️ Live Protection</h4>
+      <p>Streams the citizen's call audio through Whisper ASR + speaker diarization. Runs the deterministic threat engine and surfaces a real-time Threat Meter + coaching prompt. Intervention happens before step 6.</p>
+      <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px">
+        <span class="chip chip-blue">Whisper ASR</span>
+        <span class="chip chip-blue">MuRIL Classifier</span>
+        <span class="chip chip-blue">4 Hz WebSocket</span>
+      </div>
+    </div>
+    <div class="card" style="border-color:rgba(255,107,53,.5)">
+      <div class="module-badge">
+        <span class="num" style="color:var(--accent-saf)">02</span>
+        <div class="info"><div class="name">FIGAE</div><div class="acronym">Fraud Intelligence Graph & Analytics Engine</div></div>
+      </div>
+      <h4 style="margin-bottom:8px">🕸️ Fraud Graph Intelligence</h4>
+      <p>NetworkX fraud knowledge graph. Community detection finds scam clusters. Geospatial hotspot mapping on an India gazetteer. AI investigation reports auto-generated per cluster. Court-admissible PDF export.</p>
+      <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px">
+        <span class="chip chip-saf">NetworkX Graph</span>
+        <span class="chip chip-saf">9 clusters / 114 cases</span>
+        <span class="chip chip-saf">PDF Evidence</span>
+      </div>
+    </div>
+    <div class="card" style="border-color:rgba(34,197,94,.5)">
+      <div class="module-badge">
+        <span class="num" style="color:var(--accent-green)">03</span>
+        <div class="info"><div class="name">CFSRP</div><div class="acronym">Citizen Fraud Shield & Response Platform</div></div>
+      </div>
+      <h4 style="margin-bottom:8px">🌐 Citizen Self-Service</h4>
+      <p>Public-facing threat verification, stage-aware plain-language coaching (verbatim human-reviewed lines), emergency helpline directory, structured complaint generator, and an awareness feed — all in zero-auth mode.</p>
+      <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px">
+        <span class="chip chip-green">No login required</span>
+        <span class="chip chip-green">14 coach scripts</span>
+        <span class="chip chip-green">1930 Auto-report</span>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:24px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+    <span class="chip chip-blue">📱 React Web App</span>
+    <span class="chip chip-blue">⚡ FastAPI Backend</span>
+    <span class="chip chip-gold">🤖 MuRIL + Gemini Flash</span>
+    <span class="chip chip-green">✅ 84 Tests Passing</span>
+    <span class="chip chip-green">🔄 CI / CD Green</span>
+    <span class="chip chip-saf">🇮🇳 Hinglish + Hindi</span>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 5 — TECHNOLOGY ARCHITECTURE
+═══════════════════════════════════════════════════════ -->
+<section class="slide" id="s5">
+  <div class="slide-header">
+    <div class="slide-title">Technical Architecture</div>
+    <h2 class="slide-h2">Deterministic AI engine.<br><span>LLM as explainer, never decider.</span></h2>
+  </div>
+  <div style="width:100%;max-width:1100px">
+    <!-- SVG Architecture Diagram -->
+    <svg viewBox="0 0 900 340" class="arch-svg" xmlns="http://www.w3.org/2000/svg" style="max-height:300px">
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="rgba(26,107,255,.7)"/>
+        </marker>
+        <linearGradient id="gBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#1A6BFF" stop-opacity=".9"/>
+          <stop offset="100%" stop-color="#00D4FF" stop-opacity=".9"/>
+        </linearGradient>
+        <linearGradient id="gSaf" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#FF6B35" stop-opacity=".9"/>
+          <stop offset="100%" stop-color="#FFB830" stop-opacity=".9"/>
+        </linearGradient>
+        <linearGradient id="gGreen" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#22C55E" stop-opacity=".9"/>
+          <stop offset="100%" stop-color="#00D4FF" stop-opacity=".6"/>
+        </linearGradient>
+      </defs>
+
+      <!-- INPUT LAYER -->
+      <g>
+        <rect x="10" y="40" width="130" height="44" rx="8" fill="rgba(13,21,38,.9)" stroke="rgba(26,107,255,.4)" stroke-width="1.5"/>
+        <text x="75" y="57" text-anchor="middle" fill="#7A8CB0" font-size="9" font-family="Segoe UI">🎤 Live Audio</text>
+        <text x="75" y="72" text-anchor="middle" fill="#7A8CB0" font-size="9" font-family="Segoe UI">WebSocket Stream</text>
+      </g>
+      <g>
+        <rect x="10" y="100" width="130" height="44" rx="8" fill="rgba(13,21,38,.9)" stroke="rgba(26,107,255,.4)" stroke-width="1.5"/>
+        <text x="75" y="117" text-anchor="middle" fill="#7A8CB0" font-size="9" font-family="Segoe UI">📷 Screenshots</text>
+        <text x="75" y="132" text-anchor="middle" fill="#7A8CB0" font-size="9" font-family="Segoe UI">WhatsApp / OCR</text>
+      </g>
+      <g>
+        <rect x="10" y="160" width="130" height="44" rx="8" fill="rgba(13,21,38,.9)" stroke="rgba(26,107,255,.4)" stroke-width="1.5"/>
+        <text x="75" y="177" text-anchor="middle" fill="#7A8CB0" font-size="9" font-family="Segoe UI">💬 Text Input</text>
+        <text x="75" y="192" text-anchor="middle" fill="#7A8CB0" font-size="9" font-family="Segoe UI">SMS / WhatsApp</text>
+      </g>
+
+      <!-- ARROWS to ingestion -->
+      <line x1="140" y1="62" x2="188" y2="130" stroke="rgba(26,107,255,.5)" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="140" y1="122" x2="188" y2="130" stroke="rgba(26,107,255,.5)" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="140" y1="182" x2="188" y2="130" stroke="rgba(26,107,255,.5)" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- INGESTION -->
+      <rect x="190" y="105" width="130" height="50" rx="8" fill="url(#gBlue)" opacity=".85"/>
+      <text x="255" y="125" text-anchor="middle" fill="white" font-size="11" font-weight="bold" font-family="Segoe UI">Ingestion</text>
+      <text x="255" y="142" text-anchor="middle" fill="rgba(255,255,255,.8)" font-size="9" font-family="Segoe UI">Whisper · OCR · Diarize</text>
+
+      <!-- Arrow to unified transcript -->
+      <line x1="320" y1="130" x2="368" y2="130" stroke="rgba(26,107,255,.5)" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- UNIFIED TRANSCRIPT -->
+      <rect x="370" y="110" width="120" height="40" rx="8" fill="rgba(13,21,38,.9)" stroke="rgba(0,212,255,.5)" stroke-width="1.5"/>
+      <text x="430" y="127" text-anchor="middle" fill="#00D4FF" font-size="10" font-weight="bold" font-family="Segoe UI">Unified</text>
+      <text x="430" y="142" text-anchor="middle" fill="#00D4FF" font-size="10" font-family="Segoe UI">Transcript</text>
+
+      <!-- Arrows to 3 classifiers -->
+      <line x1="490" y1="125" x2="538" y2="80" stroke="rgba(26,107,255,.5)" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="490" y1="130" x2="538" y2="130" stroke="rgba(26,107,255,.5)" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="490" y1="135" x2="538" y2="180" stroke="rgba(26,107,255,.5)" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- 3 CLASSIFIERS -->
+      <rect x="540" y="55" width="110" height="40" rx="6" fill="rgba(13,21,38,.9)" stroke="rgba(26,107,255,.4)" stroke-width="1"/>
+      <text x="595" y="72" text-anchor="middle" fill="#E8F0FF" font-size="9" font-family="Segoe UI">Stage Classifier</text>
+      <text x="595" y="86" text-anchor="middle" fill="#7A8CB0" font-size="8" font-family="Segoe UI">MuRIL + Lexical</text>
+
+      <rect x="540" y="110" width="110" height="40" rx="6" fill="rgba(13,21,38,.9)" stroke="rgba(26,107,255,.4)" stroke-width="1"/>
+      <text x="595" y="127" text-anchor="middle" fill="#E8F0FF" font-size="9" font-family="Segoe UI">Coercion Index</text>
+      <text x="595" y="141" text-anchor="middle" fill="#7A8CB0" font-size="8" font-family="Segoe UI">Victim-side stress</text>
+
+      <rect x="540" y="165" width="110" height="40" rx="6" fill="rgba(13,21,38,.9)" stroke="rgba(26,107,255,.4)" stroke-width="1"/>
+      <text x="595" y="182" text-anchor="middle" fill="#E8F0FF" font-size="9" font-family="Segoe UI">Identity Passport</text>
+      <text x="595" y="196" text-anchor="middle" fill="#7A8CB0" font-size="8" font-family="Segoe UI">CBI/Customs rules</text>
+
+      <!-- Arrows to fusion -->
+      <line x1="650" y1="75" x2="698" y2="125" stroke="rgba(26,107,255,.5)" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="650" y1="130" x2="698" y2="130" stroke="rgba(26,107,255,.5)" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="650" y1="185" x2="698" y2="135" stroke="rgba(26,107,255,.5)" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- FUSION -->
+      <circle cx="720" cy="130" r="32" fill="url(#gSaf)" opacity=".9"/>
+      <text x="720" y="125" text-anchor="middle" fill="white" font-size="10" font-weight="bold" font-family="Segoe UI">Threat</text>
+      <text x="720" y="139" text-anchor="middle" fill="white" font-size="10" font-weight="bold" font-family="Segoe UI">Fusion</text>
+
+      <!-- OUTPUTS -->
+      <line x1="752" y1="115" x2="790" y2="75" stroke="rgba(255,184,48,.6)" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="752" y1="130" x2="790" y2="130" stroke="rgba(255,184,48,.6)" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="752" y1="145" x2="790" y2="185" stroke="rgba(34,197,94,.6)" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <rect x="793" y="52" width="100" height="40" rx="8" fill="rgba(26,107,255,.15)" stroke="rgba(26,107,255,.5)" stroke-width="1.5"/>
+      <text x="843" y="69" text-anchor="middle" fill="#E8F0FF" font-size="9" font-weight="bold" font-family="Segoe UI">Citizen Coach</text>
+      <text x="843" y="83" text-anchor="middle" fill="#7A8CB0" font-size="8" font-family="Segoe UI">+ Gemini explain</text>
+
+      <rect x="793" y="110" width="100" height="40" rx="8" fill="rgba(255,107,53,.1)" stroke="rgba(255,107,53,.5)" stroke-width="1.5"/>
+      <text x="843" y="127" text-anchor="middle" fill="#E8F0FF" font-size="9" font-weight="bold" font-family="Segoe UI">Investigation</text>
+      <text x="843" y="141" text-anchor="middle" fill="#7A8CB0" font-size="8" font-family="Segoe UI">Report + PDF</text>
+
+      <rect x="793" y="165" width="100" height="40" rx="8" fill="rgba(34,197,94,.1)" stroke="rgba(34,197,94,.5)" stroke-width="1.5"/>
+      <text x="843" y="182" text-anchor="middle" fill="#E8F0FF" font-size="9" font-weight="bold" font-family="Segoe UI">Fraud Graph</text>
+      <text x="843" y="196" text-anchor="middle" fill="#7A8CB0" font-size="8" font-family="Segoe UI">+ Scam Map</text>
+
+      <!-- Labels -->
+      <text x="255" y="170" text-anchor="middle" fill="rgba(26,107,255,.5)" font-size="9" font-style="italic" font-family="Segoe UI">Local only · No PII to cloud</text>
+      <text x="720" y="188" text-anchor="middle" fill="rgba(255,184,48,.8)" font-size="9" font-style="italic" font-family="Segoe UI">0–100 score</text>
+    </svg>
+
+    <!-- Key decisions row -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px">
+      <div class="card" style="padding:16px 14px">
+        <div class="pill">🎯 Principle 1</div>
+        <p style="font-size:12px;margin-top:4px">Deterministic scoring first — no hallucinations, fully defensible in court</p>
+      </div>
+      <div class="card" style="padding:16px 14px">
+        <div class="pill">🤖 Principle 2</div>
+        <p style="font-size:12px;margin-top:4px">LLM as explainer only — Gemini never touches the score, only the prose</p>
+      </div>
+      <div class="card" style="padding:16px 14px">
+        <div class="pill">🔐 Principle 3</div>
+        <p style="font-size:12px;margin-top:4px">Local-first audio/image — Whisper & Tesseract run on backend, PII stays local</p>
+      </div>
+      <div class="card" style="padding:16px 14px">
+        <div class="pill">⚡ Principle 4</div>
+        <p style="font-size:12px;margin-top:4px">Model pre-warming at startup — zero cold-start latency on first real emergency</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 6 — SCORING ENGINE DEEP DIVE
+═══════════════════════════════════════════════════════ -->
+<section class="slide" id="s6">
+  <div class="slide-header">
+    <div class="slide-title">Scoring Engine</div>
+    <h2 class="slide-h2">Four fused signals.<br><span>One defensible verdict.</span></h2>
+  </div>
+  <div class="two-col" style="width:100%;max-width:1100px;align-items:start">
+    <div>
+      <h3 class="slide-h3">Weighted Fusion Formula</h3>
+      <div style="background:var(--bg-panel);border-radius:12px;padding:20px;font-family:monospace;font-size:13px;line-height:1.9;border:1px solid var(--border)">
+        <div style="color:var(--accent-cyan)">ThreatScore = </div>
+        <div style="padding-left:20px">
+          <span style="color:var(--accent-gold)">W_STAGE</span> <span style="color:var(--text-muted)">× stage_probability</span>  <span style="color:var(--text-muted)">(0.40)</span><br>
+          <span style="color:var(--accent-saf)">W_COERCE</span> <span style="color:var(--text-muted)">× coercion_index</span>  <span style="color:var(--text-muted)">(0.25)</span><br>
+          <span style="color:var(--accent-green)">W_PASSPORT</span> <span style="color:var(--text-muted)">× identity_fail</span>  <span style="color:var(--text-muted)">(0.20)</span><br>
+          <span style="color:var(--accent-blue)">W_SCRIPT</span> <span style="color:var(--text-muted)">× script_similarity</span>  <span style="color:var(--text-muted)">(0.15)</span>
+        </div>
+        <div style="color:var(--text-muted);font-size:11px;margin-top:8px">+ ratchet: fast up (×1.5) · slow down (×0.7)</div>
+      </div>
+      <div style="margin-top:16px">
+        <div class="score-bar-wrap">
+          <div class="score-bar-label"><span style="color:var(--accent-gold)">Stage Classifier</span><span>40%</span></div>
+          <div class="score-bar"><div class="score-fill" style="width:40%;background:linear-gradient(90deg,#FFB830,#FF6B35)"></div></div>
+        </div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-label"><span style="color:var(--accent-saf)">Coercion Index</span><span>25%</span></div>
+          <div class="score-bar"><div class="score-fill" style="width:25%;background:linear-gradient(90deg,#FF6B35,#EF4444)"></div></div>
+        </div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-label"><span style="color:var(--accent-green)">Identity Passport</span><span>20%</span></div>
+          <div class="score-bar"><div class="score-fill" style="width:20%;background:linear-gradient(90deg,#22C55E,#00D4FF)"></div></div>
+        </div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-label"><span style="color:var(--accent-blue)">Script Similarity</span><span>15%</span></div>
+          <div class="score-bar"><div class="score-fill" style="width:15%;background:linear-gradient(90deg,#1A6BFF,#00D4FF)"></div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h3 class="slide-h3">Real Example</h3>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="card" style="border-left:3px solid var(--accent-saf)">
+          <div class="pill" style="color:var(--accent-red)">CALLER SAYS</div>
+          <p style="font-size:13px;font-style:italic">"Do not disconnect. Do not tell your family. This is confidential."</p>
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+            <span class="chip chip-saf">Stage: ISOLATION (0.87)</span>
+            <span class="chip chip-saf">Script match: 0.82</span>
+          </div>
+        </div>
+        <div class="card" style="border-left:3px solid var(--accent-gold)">
+          <div class="pill" style="color:var(--accent-gold)">VICTIM RESPONDS</div>
+          <p style="font-size:13px;font-style:italic">"Okay sir, I am very scared... What should I do?"</p>
+          <div style="margin-top:8px">
+            <span class="chip chip-gold">Coercion index: +0.73</span>
+          </div>
+        </div>
+        <div class="card" style="border-left:3px solid var(--accent-red);background:rgba(239,68,68,.08)">
+          <div class="pill" style="color:var(--accent-red)">🚨 KAVACH OUTPUT</div>
+          <p style="font-size:13px;font-weight:700;color:var(--accent-red)">Threat Score: 81/100 — CRITICAL</p>
+          <p style="font-size:13px;margin-top:6px;color:var(--text-muted)"><strong style="color:var(--text-main)">Coach:</strong> <em>"This is an isolation tactic used by scammers. Real CBI/Police NEVER ask you to stay silent. Hang up and call 1930."</em></p>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+          <div class="stat-box">
+            <div class="big-stat" style="font-size:28px;color:var(--accent-green)">84</div>
+            <div class="stat-label">Tests passing across<br>all modules</div>
+          </div>
+          <div class="stat-box">
+            <div class="big-stat" style="font-size:28px;color:var(--accent-cyan)">338</div>
+            <div class="stat-label">Training calls in<br>leave-archetypes-out corpus</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 7 — FOR LAW ENFORCEMENT
+═══════════════════════════════════════════════════════ -->
+<section class="slide" id="s7">
+  <div class="slide-header">
+    <div class="slide-title">Module 2 — FIGAE</div>
+    <h2 class="slide-h2">Not just detection.<br><span>Actionable intelligence for authorities.</span></h2>
+  </div>
+  <div class="two-col" style="width:100%;max-width:1100px">
+    <div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="card">
+          <div class="card-icon">🕸️</div>
+          <h4>Fraud Knowledge Graph</h4>
+          <p>NetworkX graph links UPI IDs, phone numbers, bank accounts, and device fingerprints across cases. Community detection finds coordinated campaigns. <strong>9 clusters detected from 114 seeded cases.</strong></p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🗺️</div>
+          <h4>India Geospatial Hotspot Map</h4>
+          <p>react-leaflet map with cluster pins on an India gazetteer. Authorities see exactly where fraud rings are operating — enabling patrol prioritisation and inter-district intelligence sharing.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">📄</div>
+          <h4>Court-Admissible Evidence Package</h4>
+          <p>Auto-generated PDF with verdict, named signals, identity evidence, stage timeline, and full transcript. MHA/cybercrime-portal compatible. Reproducible, auditable — defensible in court.</p>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h3 class="slide-h3" style="margin-bottom:16px">Analyst Dashboard Capabilities</h3>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 14px;background:var(--bg-panel);border-radius:10px;border:1px solid var(--border)">
+          <span style="font-size:20px">🔍</span>
+          <div><strong style="font-size:13px">Entity Extraction</strong><br><span style="font-size:12px;color:var(--text-muted)">Auto-extracts phone numbers, UPI VPAs, bank account numbers from transcripts</span></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 14px;background:var(--bg-panel);border-radius:10px;border:1px solid var(--border)">
+          <span style="font-size:20px">📊</span>
+          <div><strong style="font-size:13px">Cluster Risk Scoring</strong><br><span style="font-size:12px;color:var(--text-muted)">LOW → CRITICAL dynamic risk per campaign. Centrality metrics identify kingpin nodes.</span></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 14px;background:var(--bg-panel);border-radius:10px;border:1px solid var(--border)">
+          <span style="font-size:20px">🔗</span>
+          <div><strong style="font-size:13px">Link Prediction</strong><br><span style="font-size:12px;color:var(--text-muted)">Graph AI surfaces unknown connections between seemingly unrelated fraud reports</span></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 14px;background:var(--bg-panel);border-radius:10px;border:1px solid var(--border)">
+          <span style="font-size:20px">⚖️</span>
+          <div><strong style="font-size:13px">RBAC Multi-Tenant</strong><br><span style="font-size:12px;color:var(--text-muted)">Owner / Admin / Analyst / Viewer roles. Org isolation. Full audit trail (append-only log).</span></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 14px;background:var(--bg-panel);border-radius:10px;border:1px solid var(--border)">
+          <span style="font-size:20px">🤖</span>
+          <div><strong style="font-size:13px">RAG Knowledge Assistant</strong><br><span style="font-size:12px;color:var(--text-muted)">31 chunks / 4 docs. Answers from cited corpus only. Dense + BM25 retrieval. No hallucination.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 8 — COMPETITIVE ADVANTAGE
+═══════════════════════════════════════════════════════ -->
+<section class="slide" id="s8">
+  <div class="slide-header">
+    <div class="slide-title">Why KAVACH Wins</div>
+    <h2 class="slide-h2">The only system that acts<br><span>before the money moves.</span></h2>
+  </div>
+  <div style="width:100%;max-width:1000px">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th class="kavach-col">KAVACH ✦</th>
+          <th>Truecaller / Call Blockers</th>
+          <th>1930 / cybercrime.gov.in</th>
+          <th>Generic LLM Wrapper</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="highlight-row">
+          <td>Real-time intervention during a call</td>
+          <td><span class="chk">✓</span></td>
+          <td><span class="crs">✗</span></td>
+          <td><span class="crs">✗</span></td>
+          <td><span class="hf">~</span></td>
+        </tr>
+        <tr>
+          <td>Understands call context & 7-step arc</td>
+          <td><span class="chk">✓</span></td>
+          <td><span class="crs">✗</span></td>
+          <td><span class="crs">✗</span></td>
+          <td><span class="hf">~</span></td>
+        </tr>
+        <tr class="highlight-row">
+          <td>Zero-hallucination / court-defensible</td>
+          <td><span class="chk">✓</span></td>
+          <td><span class="crs">✗</span></td>
+          <td><span class="crs">✗</span></td>
+          <td><span class="crs">✗</span></td>
+        </tr>
+        <tr>
+          <td>Fraud network graph intelligence</td>
+          <td><span class="chk">✓</span></td>
+          <td><span class="crs">✗</span></td>
+          <td><span class="hf">~</span></td>
+          <td><span class="crs">✗</span></td>
+        </tr>
+        <tr class="highlight-row">
+          <td>Hinglish / Hindi multi-modal (voice + image)</td>
+          <td><span class="chk">✓</span></td>
+          <td><span class="hf">~</span></td>
+          <td><span class="crs">✗</span></td>
+          <td><span class="hf">~</span></td>
+        </tr>
+        <tr>
+          <td>PDF evidence package (MHA-compatible)</td>
+          <td><span class="chk">✓</span></td>
+          <td><span class="crs">✗</span></td>
+          <td><span class="hf">~</span></td>
+          <td><span class="crs">✗</span></td>
+        </tr>
+        <tr class="highlight-row">
+          <td>No dependency on SIM/number blacklists</td>
+          <td><span class="chk">✓</span></td>
+          <td><span class="crs">✗</span></td>
+          <td><span class="crs">✗</span></td>
+          <td><span class="chk">✓</span></td>
+        </tr>
+        <tr>
+          <td>Works on clean clone, no GPU, no key</td>
+          <td><span class="chk">✓</span></td>
+          <td>N/A</td>
+          <td>N/A</td>
+          <td><span class="crs">✗</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:20px;display:flex;gap:16px;flex-wrap:wrap">
+      <div class="card" style="flex:1;min-width:200px">
+        <div class="pill">🏆 Innovation (25%)</div>
+        <p style="font-size:13px">First real-time psychological arc classifier — not a keyword filter</p>
+      </div>
+      <div class="card" style="flex:1;min-width:200px">
+        <div class="pill" style="color:var(--accent-saf)">💰 Business Impact (25%)</div>
+        <p style="font-size:13px">Directly addresses ₹1,776Cr / 9-month loss. Scalable to 1B+ citizens via telecom integration</p>
+      </div>
+      <div class="card" style="flex:1;min-width:200px">
+        <div class="pill" style="color:var(--accent-green)">⚙️ Technical Excellence (20%)</div>
+        <p style="font-size:13px">84 tests, CI green, schema-first contract, deterministic scoring, reproducible ML</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 9 — DEMO WALKTHROUGH
+═══════════════════════════════════════════════════════ -->
+<section class="slide" id="s9">
+  <div class="two-col" style="width:100%;max-width:1100px;align-items:start">
+    <div>
+      <div class="slide-title">Live Demo · 3 minutes</div>
+      <h2 class="slide-h2" style="font-size:36px">From suspicious call<br>to <span>intelligence report</span><br>in real time.</h2>
+      <p class="body-text" style="margin-top:12px">A citizen gets a call from "FedEx Customs". They put it on speaker and open KAVACH. The system does the rest.</p>
+      <div class="metrics-row" style="margin-top:20px">
+        <div class="metric-box"><div class="val saf-text" style="font-size:22px">&lt; 200ms</div><div class="lab">first threat<br>assessment</div></div>
+        <div class="metric-box"><div class="val saf-text" style="font-size:22px">4 Hz</div><div class="lab">live frame<br>updates</div></div>
+        <div class="metric-box"><div class="val saf-text" style="font-size:22px">17</div><div class="lab">API<br>endpoints</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="demo-steps">
+        <div class="demo-step">
+          <div class="demo-num">1</div>
+          <div class="demo-text">
+            <h5>Open Live Protection cockpit</h5>
+            <p>Click "Try a demo call" — plays a pre-recorded FedEx/Customs authority scam. Threat meter starts at CALM.</p>
+          </div>
+        </div>
+        <div class="demo-step">
+          <div class="demo-num">2</div>
+          <div class="demo-text">
+            <h5>Watch the arc play out</h5>
+            <p>Threat meter escalates: CALM → WATCH → WARNING → <span style="color:var(--accent-red);font-weight:700">CRITICAL</span>. Stage banner changes from AUTHORITY_CLAIM to ISOLATION. Coaching prompt appears.</p>
+          </div>
+        </div>
+        <div class="demo-step">
+          <div class="demo-num">3</div>
+          <div class="demo-text">
+            <h5>Coach breaks the isolation</h5>
+            <p><em>"This is an isolation tactic. Hang up. Real police never ask for OTPs or money over the phone."</em> — verbatim from the human-reviewed library.</p>
+          </div>
+        </div>
+        <div class="demo-step">
+          <div class="demo-num">4</div>
+          <div class="demo-text">
+            <h5>Investigation Report auto-generated</h5>
+            <p>When the call ends: full PDF with extracted entities (phone, UPI, account), stage timeline, and 1930 reporting guidance.</p>
+          </div>
+        </div>
+        <div class="demo-step">
+          <div class="demo-num">5</div>
+          <div class="demo-text">
+            <h5>Switch to Scam Map (Intel Dashboard)</h5>
+            <p>The case is immediately ingested into the fraud graph. Geospatial hotspot updates. Cluster risk re-scored.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 10 — IMPACT & ROADMAP
+═══════════════════════════════════════════════════════ -->
+<section class="slide" id="s10-content">
+  <div class="slide-header">
+    <div class="slide-title">Impact & Roadmap</div>
+    <h2 class="slide-h2">Making India the hardest<br><span>target for cyber-fraud.</span></h2>
+  </div>
+  <div class="two-col" style="width:100%;max-width:1100px;align-items:start">
+    <div>
+      <h3 class="slide-h3">Judging Criteria — Our Score</h3>
+      <div style="margin-top:8px">
+        <div class="criteria-row">
+          <span class="criteria-name">Innovation <span style="color:var(--text-muted);font-weight:400">(25%)</span></span>
+          <div class="criteria-bar-wrap"><div class="criteria-fill" style="width:93%;background:linear-gradient(90deg,#1A6BFF,#00D4FF)"></div></div>
+          <span class="criteria-pct" style="color:var(--accent-cyan)">★★★★★</span>
+        </div>
+        <div class="criteria-row">
+          <span class="criteria-name">Business Impact <span style="color:var(--text-muted);font-weight:400">(25%)</span></span>
+          <div class="criteria-bar-wrap"><div class="criteria-fill" style="width:90%;background:linear-gradient(90deg,#FF6B35,#FFB830)"></div></div>
+          <span class="criteria-pct" style="color:var(--accent-saf)">★★★★★</span>
+        </div>
+        <div class="criteria-row">
+          <span class="criteria-name">Technical Excellence <span style="color:var(--text-muted);font-weight:400">(20%)</span></span>
+          <div class="criteria-bar-wrap"><div class="criteria-fill" style="width:95%;background:linear-gradient(90deg,#22C55E,#00D4FF)"></div></div>
+          <span class="criteria-pct" style="color:var(--accent-green)">★★★★★</span>
+        </div>
+        <div class="criteria-row">
+          <span class="criteria-name">Scalability <span style="color:var(--text-muted);font-weight:400">(15%)</span></span>
+          <div class="criteria-bar-wrap"><div class="criteria-fill" style="width:80%;background:linear-gradient(90deg,#FFB830,#FF6B35)"></div></div>
+          <span class="criteria-pct" style="color:var(--accent-gold)">★★★★☆</span>
+        </div>
+        <div class="criteria-row">
+          <span class="criteria-name">User Experience <span style="color:var(--text-muted);font-weight:400">(15%)</span></span>
+          <div class="criteria-bar-wrap"><div class="criteria-fill" style="width:88%;background:linear-gradient(90deg,#1A6BFF,#FF6B35)"></div></div>
+          <span class="criteria-pct" style="color:var(--accent-cyan)">★★★★★</span>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <div class="quote-block">KAVACH directly addresses every evaluation focus: <strong>digital arrest scam detection precision/recall</strong>, <strong>fraud network detection before mass victimisation</strong>, <strong>ultra-low false positive rate</strong> (BENIGN is the largest, hardest class by design), and <strong>legally auditable evidence packages.</strong></div>
+      </div>
+    </div>
+    <div>
+      <h3 class="slide-h3" style="margin-bottom:16px">Roadmap</h3>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-dot tl-dot-done"></div>
+          <div class="tl-content">
+            <div class="tl-phase">✅ Done — Hackathon Build</div>
+            <div class="tl-title">Full 3-module working prototype</div>
+            <div class="tl-desc">Live detection, fraud graph, citizen shield, 84 tests, CI green, PDF evidence, RBAC multi-tenant.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot tl-dot-next"></div>
+          <div class="tl-content">
+            <div class="tl-phase">⚡ Next — Post-hackathon</div>
+            <div class="tl-title">Live audio + MuRIL fine-tune</div>
+            <div class="tl-desc">Real-time microphone WebSocket stream, full 2-hour MuRIL retrain on annotated corpus, Sarvam ASR for regional languages.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot tl-dot-future"></div>
+          <div class="tl-content">
+            <div class="tl-phase">🚀 Scale — Q1 2027</div>
+            <div class="tl-title">Telecom provider integration</div>
+            <div class="tl-desc">TRAI/DoT partnership, embed detection at network layer. Automated MHA alert generation. 12 regional dialects.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot tl-dot-future"></div>
+          <div class="tl-content">
+            <div class="tl-phase">🌐 Vision — 2027+</div>
+            <div class="tl-title">National cybercrime shield</div>
+            <div class="tl-desc">NCRB portal integration, automated 1930 reporting, counterfeit currency detection module, WhatsApp & IVR citizen access.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 11 — CLOSING
+═══════════════════════════════════════════════════════ -->
+<section class="slide" id="s11">
+  <div class="shield-ring" style="width:120px;height:120px;font-size:48px">🛡️</div>
+  <div class="big-line">KAVACH is live.<br><span class="glow-text">Try it now.</span></div>
+  <p class="body-text" style="max-width:600px;text-align:center;font-size:16px;margin-top:8px">
+    Every citizen's device becomes a real-time shield against cyber-fraud.<br>
+    <strong>84 tests. 17 endpoints. 3 modules. One goal: intervene before the money moves.</strong>
+  </p>
+  <div class="links">
+    <div class="link-chip primary">🛡️ Problem Statement 6</div>
+    <div class="link-chip">⚡ FastAPI + React + MuRIL</div>
+    <div class="link-chip">🇮🇳 Made for India</div>
+    <div class="link-chip">📂 GitHub: dkadchha2845/presage</div>
+  </div>
+  <div style="margin-top:24px;display:flex;gap:20px;flex-wrap:wrap;justify-content:center">
+    <div class="stat-box" style="text-align:center;min-width:120px">
+      <div class="big-stat" style="font-size:36px;color:var(--accent-green)">84</div>
+      <div class="stat-label">Tests passing</div>
+    </div>
+    <div class="stat-box" style="text-align:center;min-width:120px">
+      <div class="big-stat" style="font-size:36px;color:var(--accent-cyan)">3</div>
+      <div class="stat-label">Full modules</div>
+    </div>
+    <div class="stat-box" style="text-align:center;min-width:120px">
+      <div class="big-stat" style="font-size:36px;color:var(--accent-saf)">17</div>
+      <div class="stat-label">API endpoints</div>
+    </div>
+    <div class="stat-box" style="text-align:center;min-width:120px">
+      <div class="big-stat" style="font-size:36px;color:var(--accent-gold)">338</div>
+      <div class="stat-label">Training calls</div>
+    </div>
+    <div class="stat-box" style="text-align:center;min-width:120px">
+      <div class="big-stat" style="font-size:36px;color:var(--accent-blue)">0</div>
+      <div class="stat-label">Cold-start latency</div>
+    </div>
+  </div>
+  <p style="font-size:12px;color:var(--text-muted);margin-top:16px">Not a substitute for reporting fraud on 1930 or at cybercrime.gov.in</p>
+</section>
+
+</div><!-- /deck -->
+
+<script>
+// ── PARTICLE BACKGROUND ────────────────────────────────
+const canvas = document.getElementById('canvas-bg');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+for (let i = 0; i < 80; i++) {
+  particles.push({
+    x: Math.random() * 3000, y: Math.random() * 2000,
+    vx: (Math.random() - .5) * .15, vy: (Math.random() - .5) * .15,
+    r: Math.random() * 1.5 + .5, a: Math.random() * .35 + .05
+  });
+}
+function drawParticles() {
+  ctx.clearRect(0, 0, W, H);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+    if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(26,107,255,${p.a})`;
+    ctx.fill();
+  });
+  // Draw connecting lines
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i+1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if (d < 120) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(26,107,255,${.15*(1-d/120)})`;
+        ctx.lineWidth = .5;
+        ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// ── SLIDE NAVIGATION ───────────────────────────────────
+const slides = Array.from(document.querySelectorAll('.slide'));
+const total = slides.length;
+let current = 0;
+const progress = document.getElementById('progress');
+const counter  = document.getElementById('slide-counter');
+const nav      = document.getElementById('nav');
+
+// Build dots
+slides.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'nav-dot';
+  d.addEventListener('click', () => goTo(i));
+  nav.appendChild(d);
+});
+
+function goTo(n, dir = 1) {
+  const old = current;
+  current = Math.max(0, Math.min(total-1, n));
+  if (old === current) return;
+  slides[old].classList.remove('active');
+  slides[old].classList.add('exit');
+  setTimeout(() => slides[old].classList.remove('exit'), 600);
+  slides[current].classList.add('active');
+  slides[current].style.transform = dir > 0 ? 'translateX(60px)' : 'translateX(-60px)';
+  requestAnimationFrame(() => slides[current].style.transform = '');
+  updateUI();
+}
+
+function updateUI() {
+  progress.style.width = ((current + 1) / total * 100) + '%';
+  counter.textContent  = `${current + 1} / ${total}`;
+  document.querySelectorAll('.nav-dot').forEach((d,i) => {
+    d.classList.toggle('active', i === current);
+  });
+}
+
+// Activate first slide
+slides[0].classList.add('active');
+updateUI();
+
+document.getElementById('btn-prev').addEventListener('click', () => goTo(current-1, -1));
+document.getElementById('btn-next').addEventListener('click', () => goTo(current+1,  1));
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown'  || e.key === ' ') { e.preventDefault(); goTo(current+1, 1); }
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                     { e.preventDefault(); goTo(current-1,-1); }
+  if (e.key === 'f' || e.key === 'F') document.documentElement.requestFullscreen?.();
+});
+
+// Touch swipe
+let ts = 0, tx = 0;
+document.addEventListener('touchstart', e => { ts = e.touches[0].clientY; tx = e.touches[0].clientX; });
+document.addEventListener('touchend',   e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 60) dx < 0 ? goTo(current+1,1) : goTo(current-1,-1);
+});
+</script>
+</body>
+</html>
