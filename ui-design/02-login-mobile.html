@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presage — Log in (Mobile)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system.css">
+<style>
+  body { background: #F0E4DD; }
+  .m-visual { height: 220px; background: linear-gradient(165deg, var(--blush-200) 0%, var(--blush-100) 45%, var(--ivory-100) 100%);
+    position: relative; overflow: hidden; }
+  .m-visual .sparkle { position: absolute; width: 160px; height: 160px; border-radius: 50%; top: -40px; right: -40px;
+    background: radial-gradient(circle, rgba(255,255,255,0.55), rgba(255,255,255,0)); }
+  .m-auth { padding: 32px 28px 40px; }
+  .m-auth .logotype { display: block; margin-bottom: 28px; }
+  .m-auth h1 { margin-bottom: 6px; }
+  .m-auth .tagline-italic { color: var(--text-secondary); margin-bottom: 28px; }
+  .divider-row { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
+  .divider-row .hairline { flex: 1; }
+  .btn-google { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%;
+    background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-pill);
+    padding: 14px 28px; font-size: 15px; font-weight: 500; }
+  .g-mark { width: 18px; height: 18px; border-radius: 50%; background: conic-gradient(#EA4335 0 25%, #4285F4 25% 50%, #34A853 50% 75%, #FBBC05 75% 100%); }
+  .fields { display: flex; flex-direction: column; gap: 18px; margin-bottom: 24px; }
+  .switch-line { text-align: center; margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="phone-shell">
+  <div class="phone-screen" style="min-height:844px;">
+    <div class="status-bar"></div>
+    <div class="m-visual"><div class="sparkle"></div></div>
+    <div class="m-auth">
+      <span class="logotype">presage</span>
+      <h1 class="heading-l">Welcome back</h1>
+      <p class="tagline-italic">Let's get you dressed.</p>
+
+      <button class="btn-google"><span class="g-mark"></span>Continue with Google</button>
+
+      <div class="divider-row"><hr class="hairline"><span class="caption text-secondary">or email</span><hr class="hairline"></div>
+
+      <div class="fields">
+        <div class="input-group">
+          <label class="input-label">Email address</label>
+          <div class="input-box"><input type="email" placeholder="you@example.com"></div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Password</label>
+          <div class="input-box"><input type="password" placeholder="••••••••••"></div>
+        </div>
+      </div>
+
+      <a href="03-home-mobile.html" class="btn btn-primary btn-block btn-lg">Continue</a>
+      <p class="switch-line body-s text-secondary">New here? <a href="#" class="text-accent" style="font-weight:500;">Create an account</a></p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

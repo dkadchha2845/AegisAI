@@ -1,11 +1,17 @@
 /**
- * The navigation map. One definition, consumed by the sidebar, the command
- * palette, the dashboard grid, and the mobile menu.
+ * The navigation map — organised around what a citizen wants to *do*, not
+ * around the system's internal modules.
  *
- * Four surfaces rendering the same routes from four hand-written lists is how
- * a nav item ends up in three of them. Each entry also carries the one-line
- * description the dashboard cards and the palette both show, so the
- * explanation of what a screen does lives next to the route it describes.
+ * One definition, consumed by the sidebar and the command palette. A citizen
+ * never has to translate "should I open Analyzer or Fraud Intel?" — they think
+ * "I got a suspicious message" or "someone is calling me right now", and the
+ * destinations are named for exactly those intents. The three research modules
+ * (RSSIE / FIGAE / CFSRP) still power everything underneath; they are simply
+ * never surfaced as places a person has to navigate between.
+ *
+ * The analyst-facing surfaces (the raw fraud graph, the audit analyzer, the
+ * live-ops dashboard, the model card) still exist and are reachable from the
+ * Profile page — they are just no longer primary navigation.
  */
 
 import type { LucideIcon } from "lucide-react";
@@ -13,123 +19,74 @@ import {
   Activity,
   BookOpen,
   FolderArchive,
-  LayoutDashboard,
-  LifeBuoy,
-  Network,
-  ScanLine,
-  ShieldCheck,
-  Sparkles,
+  Home as HomeIcon,
+  ScanSearch,
+  Siren,
+  UserCircle,
 } from "lucide-react";
 
 export interface NavItem {
   to: string;
   label: string;
   icon: LucideIcon;
+  /** One-line description shown in the sidebar and the command palette. */
   blurb: string;
-  /** Longer copy for the dashboard card. */
+  /** Longer copy for cards / palette detail. */
   detail: string;
-  group: "Monitor" | "Investigate" | "Protect" | "Understand" | "Platform";
-  /** Which KAVACH module this surface belongs to, for the dashboard grouping. */
-  module?: 1 | 2 | 3;
 }
 
 export const NAV: NavItem[] = [
   {
-    to: "/dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    blurb: "System state and where to go next",
-    detail:
-      "What is loaded, what is degraded, and every capability in one place.",
-    group: "Monitor",
+    to: "/home",
+    label: "Home",
+    icon: HomeIcon,
+    blurb: "Start here",
+    detail: "Choose what happened and we'll guide you from there.",
   },
   {
-    to: "/console",
-    label: "Live console",
+    to: "/analyze",
+    label: "Analyze",
+    icon: ScanSearch,
+    blurb: "Check a message, screenshot, or number",
+    detail:
+      "Paste a suspicious message, upload a screenshot, or verify a phone "
+      + "number or UPI ID — and get a clear verdict with what to do next.",
+  },
+  {
+    to: "/live",
+    label: "Live Protection",
     icon: Activity,
-    blurb: "Watch a call as it happens",
+    blurb: "Guidance during a live call",
     detail:
-      "Transcript, threat meter, the Digital Twin forecast, and the coach — "
-      + "driven by a live session or the recorded demo stream.",
-    group: "Monitor",
+      "Watching a call as it happens — it names the danger, warns you the "
+      + "moment it turns, and tells you exactly what to say.",
   },
   {
-    to: "/guardian",
-    label: "Guardian",
-    icon: ShieldCheck,
-    blurb: "Intervene while it matters",
-    detail:
-      "Acknowledge an alert, hold a payment, or release it. The circuit "
-      + "breaker that makes the score do something.",
-    group: "Monitor",
-  },
-  {
-    to: "/analyzer",
-    label: "Analyzer",
-    icon: ScanLine,
-    blurb: "Check a message, transcript, or UPI ID",
-    detail:
-      "Paste or upload anything suspicious — an SMS, a call transcript, a UPI "
-      + "ID, a QR payload — and get a scored verdict with its reasoning.",
-    group: "Investigate",
-    module: 1,
-  },
-  {
-    to: "/intel",
-    label: "Fraud intel",
-    icon: Network,
-    blurb: "Fraud networks, hotspots, campaigns",
-    detail:
-      "Module 2 (FIGAE): the fraud knowledge graph, geospatial hotspots, "
-      + "campaign clustering, and AI investigation reports that connect single "
-      + "detections into organised-crime intelligence.",
-    group: "Investigate",
-    module: 2,
-  },
-  {
-    to: "/shield",
-    label: "Citizen shield",
-    icon: LifeBuoy,
-    blurb: "Verify a threat, get real-time guidance",
-    detail:
-      "Module 3 (CFSRP): the citizen-facing shield — verify a suspicious call "
-      + "or message, get stage-aware guidance and emergency response, preserve "
-      + "evidence, and generate a cybercrime complaint.",
-    group: "Protect",
-    module: 3,
-  },
-  {
-    to: "/cases",
-    label: "Case book",
+    to: "/reports",
+    label: "My Reports",
     icon: FolderArchive,
-    blurb: "Saved cases, activity log, users",
-    detail:
-      "Persisted evidence packages, the append-only audit log, and user "
-      + "management — the platform surface behind the live tools.",
-    group: "Platform",
+    blurb: "Your saved investigations",
+    detail: "Every check you've saved, ready to reopen or file with the police.",
   },
   {
-    to: "/knowledge",
-    label: "Knowledge base",
+    to: "/learn",
+    label: "Learn",
     icon: BookOpen,
-    blurb: "The sources behind every verdict",
-    detail:
-      "Search the curated advisory corpus the analyzer cites. Every citation "
-      + "in a result resolves to a section here.",
-    group: "Understand",
+    blurb: "How these scams work",
+    detail: "Plain-language guides to the scams going around and how to stay safe.",
   },
   {
-    to: "/model",
-    label: "Model card",
-    icon: Sparkles,
-    blurb: "What the model is, and where it is weak",
-    detail:
-      "Architecture, training data, split methodology, and the limitations "
-      + "listed as prominently as the capabilities.",
-    group: "Understand",
+    to: "/emergency",
+    label: "Emergency",
+    icon: Siren,
+    blurb: "Get help right now",
+    detail: "The helpline, the reporting portal, and a step-by-step for a scam in progress.",
+  },
+  {
+    to: "/profile",
+    label: "Profile",
+    icon: UserCircle,
+    blurb: "Account and tools",
+    detail: "Your account, plus the analyst tools behind the citizen experience.",
   },
 ];
-
-export const GROUPS = ["Monitor", "Investigate", "Protect", "Platform", "Understand"] as const;
-
-export const byGroup = (group: string) => NAV.filter((item) => item.group === group);

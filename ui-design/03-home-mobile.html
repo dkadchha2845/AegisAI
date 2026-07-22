@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presage — Home (Mobile)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system.css">
+<style>
+  body { background: #F0E4DD; }
+  .m-topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 8px; }
+  .m-page { padding: 12px 24px 24px; flex: 1; }
+  .greeting .overline { color: var(--text-accent); margin-bottom: 10px; }
+  .greeting h1 { font-size: 30px; line-height: 36px; margin-bottom: 8px; }
+  .greeting .tagline-italic { color: var(--text-secondary); font-size:16px; }
+  .quick-stack { display: flex; flex-direction: column; gap: 16px; margin: 28px 0; }
+  .quick-card { border-radius: var(--radius-lg); padding: 24px; }
+  .quick-card.stylist { background: linear-gradient(150deg, var(--mauve-500), var(--mauve-700)); color: var(--text-inverse); box-shadow: var(--shadow-elevated); }
+  .quick-card.wardrobe { background: var(--bg-surface-alt); box-shadow: var(--shadow-soft); }
+  .quick-card .ai-avatar { width: 40px; height: 40px; margin-bottom: 16px; }
+  .quick-card .wardrobe-icon { width: 40px; height: 40px; margin-bottom: 16px; border-radius: var(--radius-sm); background: var(--blush-200); }
+  .quick-card h3 { margin-bottom: 6px; }
+  .quick-card .row { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+  .recents-head { display: flex; align-items: center; justify-content: space-between; margin: 24px 0 14px; }
+  .recent-item { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border-subtle); }
+  .recent-item .ai-avatar { width: 36px; height: 36px; flex-shrink: 0; }
+  .recent-item .content { flex: 1; min-width: 0; }
+  .recent-item .content p.title { font-weight: 500; margin-bottom: 3px; }
+  .recent-item .content p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+</head>
+<body>
+<div class="phone-shell">
+  <div class="phone-screen">
+    <div class="status-bar"></div>
+    <div class="m-topbar">
+      <span class="logotype" style="font-size:20px;">presage</span>
+      <a href="06-profile-mobile.html"><div class="nav-avatar" style="width:36px;height:36px;"></div></a>
+    </div>
+
+    <div class="m-page">
+      <div class="greeting">
+        <p class="overline">Good evening</p>
+        <h1 class="display-l">Hi Ava, ready for tonight?</h1>
+        <p class="tagline-italic">Let's find a look worth remembering.</p>
+      </div>
+
+      <div class="quick-stack">
+        <a class="quick-card stylist" href="04-stylist-chat-mobile.html">
+          <div class="ai-avatar"></div>
+          <h3 class="heading-s">Ask your AI Stylist</h3>
+          <p class="body-s" style="opacity:0.85;">Get an outfit idea from your wardrobe in seconds.</p>
+          <div class="row"><span class="body-s" style="font-weight:500;">Start a conversation</span><span>→</span></div>
+        </a>
+        <a class="quick-card wardrobe" href="05-wardrobe-mobile.html">
+          <div class="wardrobe-icon"></div>
+          <h3 class="heading-s">My Wardrobe</h3>
+          <p class="body-s text-secondary">142 pieces catalogued and ready to style.</p>
+          <div class="row"><span class="body-s text-accent" style="font-weight:500;">View closet</span><span class="text-accent">→</span></div>
+        </a>
+      </div>
+
+      <div class="recents-head">
+        <h2 class="heading-s">Recent conversations</h2>
+        <a href="04-stylist-chat-mobile.html" class="body-s text-accent" style="font-weight:500;">All</a>
+      </div>
+      <div class="recent-item">
+        <div class="ai-avatar"></div>
+        <div class="content"><p class="title body-s">Rooftop dinner outfit?</p><p class="caption text-secondary">Silk cami with tailored trousers</p></div>
+      </div>
+      <div class="recent-item">
+        <div class="ai-avatar"></div>
+        <div class="content"><p class="title body-s">Plan my week of outfits</p><p class="caption text-secondary">5 looks curated for you</p></div>
+      </div>
+      <div class="recent-item">
+        <div class="ai-avatar"></div>
+        <div class="content"><p class="title body-s">Bold look for gallery opening</p><p class="caption text-secondary">Emerald wrap dress suggested</p></div>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab-item active"><div class="dot"></div><span class="lbl">Home</span></div>
+      <div class="tab-item"><div class="dot"></div><span class="lbl">Wardrobe</span></div>
+      <div class="tab-item center"><div class="fab"></div><span class="lbl">Stylist</span></div>
+      <div class="tab-item"><div class="dot"></div><span class="lbl">Saved</span></div>
+      <div class="tab-item"><div class="dot"></div><span class="lbl">Profile</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

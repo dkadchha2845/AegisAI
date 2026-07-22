@@ -35,6 +35,9 @@ TEXT_SUFFIXES = {".txt", ".json", ".csv", ".md", ".log", ".vtt", ".srt"}
 #: Image types the OCR path accepts.
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff", ".gif"}
 
+#: Audio types the speech-to-text path accepts.
+AUDIO_SUFFIXES = {".wav", ".mp3", ".m4a", ".ogg", ".flac", ".webm", ".aac"}
+
 
 class TextRequest(BaseModel):
     text: str = Field(min_length=1, max_length=200_000)
@@ -216,6 +219,69 @@ async def analyze_image_route(
     result["ocr"] = {"engine": ocr.engine, "text": ocr.text, "qr_payloads": ocr.qr_payloads}
     # Surface OCR degradations alongside any the analyzer recorded.
     result["degraded"] = list(dict.fromkeys(result.get("degraded", []) + ocr.degraded))
+    return result
+
+
+@router.post("/audio")
+async def analyze_audio_route(
+    file: UploadFile = File(...),
+    claimed_identity: Optional[str] = None,
+    caller_number: Optional[str] = None,
+) -> Dict[str, Any]:
+    """A voice note or call recording. Whisper transcribes it, then the same
+    analyzer scores the transcript.
+
+    Degrades honestly, exactly like the OCR path: if no speech-to-text backend
+    (or ffmpeg) is installed, the response carries an `asr:unavailable` reason
+    asking the user to type the transcript, never a confident verdict on an
+    empty read.
+    """
+    from ..ingest.asr import transcribe
+
+    suffix = "." + (file.filename or "").rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else ""
+    if suffix not in AUDIO_SUFFIXES:
+        raise HTTPException(
+            status_code=415,
+            detail=(
+                f"Cannot read '{suffix or 'this file type'}' as audio. Upload a "
+                ".wav, .mp3, .m4a or .ogg recording — or paste the transcript directly."
+            ),
+        )
+
+    raw = await file.read()
+    if len(raw) > settings.max_upload_bytes:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Audio is larger than {settings.max_upload_bytes // 1024 // 1024}MB.",
+        )
+
+    asr = transcribe(raw, filename=file.filename)
+    if not asr.ok or not asr.text.strip():
+        return {
+            "kind": "audio",
+            "score": 0.0,
+            "level": "CALM",
+            "verdict": "INSUFFICIENT",
+            "summary": asr.reason or "No speech could be transcribed from this audio.",
+            "filename": file.filename,
+            "asr": {"backend": asr.backend, "ok": asr.ok, "text": asr.text, "reason": asr.reason},
+            "degraded": asr.degraded or ["asr:empty"],
+            "recommended_actions": [
+                "Type out what was said and analyse that instead — the text path scores identically.",
+            ],
+        }
+
+    result = asdict(
+        analyze_text(
+            asr.text,
+            kind="audio",
+            claimed_identity=claimed_identity,
+            caller_number=caller_number,
+        )
+    )
+    result["filename"] = file.filename
+    result["asr"] = {"backend": asr.backend, "ok": True, "text": asr.text, "reason": None}
+    result["degraded"] = list(dict.fromkeys(result.get("degraded", []) + asr.degraded))
     return result
 
 

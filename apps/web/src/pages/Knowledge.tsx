@@ -70,12 +70,11 @@ export function Knowledge() {
   return (
     <div className="page">
       <header className="page__head">
-        <p className="label">Understand</p>
-        <h1 className="page__title">Knowledge assistant</h1>
+        <h1 className="page__title">Learn</h1>
         <p className="page__lede">
-          Ask anything about how Indian institutions actually operate. The answer
-          is drawn only from the curated corpus below and cites the exact sections
-          it used — grounded, so it is usable as evidence rather than as advice.
+          Ask anything about how these scams work and how real banks, police, and
+          government offices actually operate. Every answer is drawn from trusted
+          advisories and shows exactly where it came from — so you can trust it.
         </p>
       </header>
 

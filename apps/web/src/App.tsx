@@ -25,6 +25,10 @@ import "@/styles/app.css";
 import "@/styles/modules.css";
 
 const Login = lazy(() => import("@/pages/Login").then((m) => ({ default: m.Login })));
+const CitizenHome = lazy(() => import("@/pages/CitizenHome").then((m) => ({ default: m.CitizenHome })));
+const Emergency = lazy(() => import("@/pages/Emergency").then((m) => ({ default: m.Emergency })));
+const Profile = lazy(() => import("@/pages/Profile").then((m) => ({ default: m.Profile })));
+const LiveProtection = lazy(() => import("@/pages/LiveProtection").then((m) => ({ default: m.LiveProtection })));
 const Dashboard = lazy(() => import("@/pages/Dashboard").then((m) => ({ default: m.Dashboard })));
 const LiveConsole = lazy(() => import("@/pages/LiveConsole").then((m) => ({ default: m.LiveConsole })));
 const Analyzer = lazy(() => import("@/pages/Analyzer").then((m) => ({ default: m.Analyzer })));
@@ -38,16 +42,22 @@ const ModelCard = lazy(() => import("@/pages/ModelCard").then((m) => ({ default:
 /** Per-route document titles — the tab should say where you are, not repeat
  *  the tagline. Rendered inside BrowserRouter so useLocation is available. */
 const TITLES: Record<string, string> = {
-  "/": "KAVACH — AI for Digital Public Safety",
+  "/": "KAVACH — Your shield against scam calls",
   "/login": "Sign in · KAVACH",
+  // Citizen destinations
+  "/home": "Home · KAVACH",
+  "/analyze": "Analyze · KAVACH",
+  "/live": "Live Protection · KAVACH",
+  "/reports": "My Reports · KAVACH",
+  "/learn": "Learn · KAVACH",
+  "/emergency": "Emergency · KAVACH",
+  "/profile": "Profile · KAVACH",
+  // Analyst tools (reachable from Profile)
   "/dashboard": "Dashboard · KAVACH",
-  "/console": "Live console · KAVACH",
-  "/guardian": "Guardian · KAVACH",
-  "/analyzer": "Analyzer · KAVACH",
+  "/analyst/console": "Live console (analyst) · KAVACH",
   "/intel": "Fraud intel · KAVACH",
-  "/shield": "Citizen shield · KAVACH",
-  "/cases": "Case book · KAVACH",
-  "/knowledge": "Knowledge base · KAVACH",
+  "/analyzer": "Analyzer (audit) · KAVACH",
+  "/guardian": "Guardian · KAVACH",
   "/model": "Model card · KAVACH",
 };
 
@@ -99,21 +109,35 @@ export default function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route element={<AppShell />}>
-                {/* Public inside the shell — the citizen fraud shield needs no
-                    account. */}
-                <Route path="/shield" element={<Shield />} />
-                {/* Gated — the analyst console requires a sign-in. */}
+                {/* Citizen destinations — task-oriented, no account required.
+                    The three research modules power these underneath; a person
+                    never navigates between modules, only between things they
+                    want to do. */}
+                <Route path="/home" element={<CitizenHome />} />
+                <Route path="/analyze" element={<Shield />} />
+                <Route path="/live" element={<LiveProtection />} />
+                <Route path="/reports" element={<CaseBook />} />
+                <Route path="/learn" element={<Knowledge />} />
+                <Route path="/emergency" element={<Emergency />} />
+                <Route path="/profile" element={<Profile />} />
+
+                {/* Old paths keep working — redirect to their citizen homes. */}
+                <Route path="/shield" element={<Navigate to="/analyze" replace />} />
+                <Route path="/console" element={<Navigate to="/analyst/console" replace />} />
+                <Route path="/cases" element={<Navigate to="/reports" replace />} />
+                <Route path="/knowledge" element={<Navigate to="/learn" replace />} />
+
+                {/* Analyst tools — reachable from Profile, off the citizen nav,
+                    and still behind a deliberate sign-in. */}
                 <Route element={<RequireAuth />}>
                   <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/console" element={<LiveConsole />} />
+                  <Route path="/analyst/console" element={<LiveConsole />} />
                   <Route path="/guardian" element={<Guardian />} />
                   <Route path="/analyzer" element={<Analyzer />} />
                   <Route path="/intel" element={<Intel />} />
-                  <Route path="/cases" element={<CaseBook />} />
-                  <Route path="/knowledge" element={<Knowledge />} />
                   <Route path="/model" element={<ModelCard />} />
                 </Route>
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="*" element={<Navigate to="/home" replace />} />
               </Route>
             </Routes>
           </Suspense>

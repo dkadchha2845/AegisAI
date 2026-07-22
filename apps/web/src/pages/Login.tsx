@@ -193,8 +193,8 @@ export function Login() {
           )}
 
           <p className="login__foot small faint" data-reveal>
-            Citizens don't need an account — the{" "}
-            <a href="/shield">fraud shield</a> is open to everyone.
+            Citizens don't need an account —{" "}
+            <a href="/home">KAVACH</a> is open to everyone.
           </p>
         </div>
       </div>

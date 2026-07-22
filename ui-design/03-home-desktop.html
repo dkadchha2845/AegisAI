@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presage — Home (Desktop)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system.css">
+<style>
+  .page { max-width: 1120px; margin: 0 auto; padding: 64px 0 96px; }
+  .greeting .overline { color: var(--text-accent); margin-bottom: 14px; }
+  .greeting h1 { margin-bottom: 10px; }
+  .greeting .tagline-italic { color: var(--text-secondary); }
+  .quick-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; margin: 48px 0; }
+  .quick-card { border-radius: var(--radius-xl); padding: 40px; display: flex; flex-direction: column; justify-content: space-between; min-height: 220px; }
+  .quick-card.stylist { background: linear-gradient(150deg, var(--mauve-500), var(--mauve-700)); color: var(--text-inverse); box-shadow: var(--shadow-elevated); }
+  .quick-card.wardrobe { background: var(--bg-surface-alt); box-shadow: var(--shadow-soft); }
+  .quick-card .ai-avatar { width: 48px; height: 48px; margin-bottom: 24px; }
+  .quick-card .wardrobe-icon { width: 48px; height: 48px; margin-bottom: 24px; border-radius: var(--radius-sm); background: var(--blush-200); }
+  .quick-card h3 { margin-bottom: 8px; }
+  .quick-card .row { display: flex; align-items: center; justify-content: space-between; }
+  .quick-card .arrow { font-size: 20px; }
+
+  .recents { margin-top: 56px; }
+  .recents-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .recent-item { display: flex; align-items: center; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--border-subtle); }
+  .recent-item .ai-avatar { width: 40px; height: 40px; flex-shrink: 0; }
+  .recent-item .content { flex: 1; }
+  .recent-item .content p.title { font-weight: 500; margin-bottom: 4px; }
+  .recent-item .time { flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+  <nav class="nav-desktop">
+    <span class="logotype">presage</span>
+    <div class="nav-links">
+      <a class="active" href="03-home-desktop.html">Home</a>
+      <a href="04-stylist-chat-desktop.html">AI Stylist</a>
+      <a href="05-wardrobe-desktop.html">Wardrobe</a>
+    </div>
+    <a href="06-profile-desktop.html"><div class="nav-avatar"></div></a>
+  </nav>
+
+  <div class="page">
+    <div class="greeting">
+      <p class="overline">Good evening</p>
+      <h1 class="display-l">Hi Ava, ready for tonight?</h1>
+      <p class="tagline-italic">Let's find a look worth remembering.</p>
+    </div>
+
+    <div class="quick-grid">
+      <a class="quick-card stylist" href="04-stylist-chat-desktop.html">
+        <div class="ai-avatar"></div>
+        <div>
+          <h3 class="heading-m">Ask your AI Stylist</h3>
+          <p class="body-s" style="opacity:0.85; margin-bottom:24px;">Get an outfit idea from your own wardrobe in seconds.</p>
+          <div class="row"><span class="body-s" style="font-weight:500;">Start a conversation</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+      <a class="quick-card wardrobe" href="05-wardrobe-desktop.html">
+        <div class="wardrobe-icon"></div>
+        <div>
+          <h3 class="heading-m">My Wardrobe</h3>
+          <p class="body-s text-secondary" style="margin-bottom:24px;">142 pieces catalogued and ready to style.</p>
+          <div class="row"><span class="body-s text-accent" style="font-weight:500;">View closet</span><span class="arrow text-accent">→</span></div>
+        </div>
+      </a>
+    </div>
+
+    <div class="recents">
+      <div class="recents-head">
+        <h2 class="heading-m">Recent conversations</h2>
+        <a href="04-stylist-chat-desktop.html" class="body-s text-accent" style="font-weight:500;">View all</a>
+      </div>
+      <div class="recent-item">
+        <div class="ai-avatar"></div>
+        <div class="content"><p class="title body-m">What should I wear to a rooftop dinner?</p><p class="body-s text-secondary">Suggested a silk cami with tailored trousers</p></div>
+        <span class="caption text-secondary time">2h ago</span>
+      </div>
+      <div class="recent-item">
+        <div class="ai-avatar"></div>
+        <div class="content"><p class="title body-m">Plan my outfits for this week</p><p class="body-s text-secondary">5 looks curated from your wardrobe</p></div>
+        <span class="caption text-secondary time">Yesterday</span>
+      </div>
+      <div class="recent-item">
+        <div class="ai-avatar"></div>
+        <div class="content"><p class="title body-m">Something bold for a gallery opening</p><p class="body-s text-secondary">Suggested your emerald wrap dress</p></div>
+        <span class="caption text-secondary time">3 days ago</span>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

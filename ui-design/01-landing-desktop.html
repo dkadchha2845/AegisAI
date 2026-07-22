@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presage — Landing (Desktop)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system.css">
+<style>
+  .hero { display: flex; align-items: center; gap: 80px; padding: 96px 64px 80px; max-width: 1280px; margin: 0 auto; }
+  .hero-copy { flex: 1; max-width: 520px; }
+  .hero-copy .overline { color: var(--text-accent); margin-bottom: 20px; }
+  .hero-copy h1 { margin: 20px 0 24px; }
+  .hero-copy p { margin: 0 0 40px; max-width: 440px; }
+  .hero-ctas { display: flex; align-items: center; gap: 16px; }
+  .hero-visual { flex: 1; position: relative; height: 560px; border-radius: var(--radius-xl);
+    background: linear-gradient(160deg, var(--blush-100) 0%, var(--ivory-100) 55%, var(--blush-200) 100%);
+    box-shadow: var(--shadow-elevated); overflow: hidden; }
+  .hero-visual .floating-card {
+    position: absolute; bottom: 40px; left: 40px; right: 40px; background: var(--bg-surface);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-elevated); padding: 20px 24px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .hero-visual .floating-card .ai-avatar { width: 44px; height: 44px; flex-shrink: 0; }
+  .hero-visual .sparkle { position: absolute; top: 48px; right: 56px; width: 90px; height: 90px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.9), rgba(255,255,255,0)); }
+
+  .features { padding: 0 64px 96px; }
+  .features-head { text-align: center; max-width: 620px; margin: 0 auto 64px; }
+  .features-head p { margin-top: 16px; }
+  .features-grid { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; }
+  .feature { text-align: left; }
+  .feature .ai-avatar { width: 48px; height: 48px; margin-bottom: 24px; }
+  .feature h3 { margin-bottom: 12px; }
+
+  .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+  .footer-links { display: flex; gap: 32px; }
+  .footer-links a { font-size: 14px; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+
+  <nav class="nav-desktop">
+    <span class="logotype">presage</span>
+    <div class="nav-links">
+      <a href="02-login-desktop.html">Log in</a>
+      <a class="btn btn-primary" href="02-login-desktop.html">Get started</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="overline">AI Fashion Assistant</p>
+      <h1 class="display-xl">Your closet,<br>understood.</h1>
+      <p class="body-l text-secondary">A private stylist that learns your wardrobe and your taste — then tells you exactly what to wear, every day.</p>
+      <div class="hero-ctas">
+        <a href="02-login-desktop.html" class="btn btn-primary btn-lg">Get started — it's free</a>
+        <a href="#features" class="btn btn-ghost">See how it works →</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="sparkle"></div>
+      <div class="floating-card">
+        <div class="ai-avatar"></div>
+        <div>
+          <p class="body-s" style="font-weight:500;">Tonight, try your ivory slip with the tailored blazer.</p>
+          <p class="caption text-secondary" style="margin-top:4px;">Suggested by your stylist</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <div class="features-head">
+      <p class="overline text-accent">Why presage</p>
+      <h2 class="display-l" style="margin-top:16px;">Quiet luxury,<br>on demand.</h2>
+      <p class="body-m text-secondary">No feeds to scroll, no outfits to plan alone. Presage is built to feel like a daily ritual — simple enough to open every morning.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature">
+        <div class="ai-avatar"></div>
+        <h3 class="heading-s">Styled by AI</h3>
+        <p class="body-s text-secondary">Personalized outfit ideas pulled from pieces you already own, ready in seconds.</p>
+      </div>
+      <div class="feature">
+        <div class="ai-avatar"></div>
+        <h3 class="heading-s">Your digital wardrobe</h3>
+        <p class="body-s text-secondary">Catalog every piece you own and rediscover what's already in your closet.</p>
+      </div>
+      <div class="feature">
+        <div class="ai-avatar"></div>
+        <h3 class="heading-s">Effortless, daily</h3>
+        <p class="body-s text-secondary">A quiet companion that learns your taste over time — and gets better with you.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="logotype" style="font-size:18px;">presage</span>
+      <div class="footer-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Contact</a>
+      </div>
+      <span class="caption text-secondary">© 2026 Presage</span>
+    </div>
+  </footer>
+
+</body>
+</html>

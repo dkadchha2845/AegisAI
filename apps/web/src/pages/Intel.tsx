@@ -104,14 +104,14 @@ export function Intel() {
   return (
     <div className="page">
       <header className="page__head">
-        <p className="eyebrow">Module 2 · FIGAE</p>
-        <h1 className="page__title">Fraud intelligence &amp; geospatial analytics</h1>
+        <p className="eyebrow">Analyst tool</p>
+        <h1 className="page__title">Fraud intelligence graph</h1>
         <p className="page__lede">
-          Every Module 1 detection becomes a node in a continuously-evolving fraud
-          graph. Community detection connects related cases into campaigns,
-          geospatial analysis surfaces hotspots, and each cluster gets a dynamic
-          risk score and an AI investigation report — turning single scam calls
-          into organised-crime intelligence.
+          Every detection becomes a node in a continuously-evolving fraud graph.
+          Community detection connects related cases into campaigns, geospatial
+          analysis surfaces hotspots, and each cluster gets a dynamic risk score
+          and an AI investigation report — turning single scam calls into
+          organised-crime intelligence.
         </p>
       </header>
 

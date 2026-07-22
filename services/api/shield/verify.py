@@ -112,6 +112,7 @@ def verify(
     )
 
     intel_ctx = _intel_match(number, upi, artifact)
+    extracted = _extract_entities(artifact, number, upi)
 
     # Peak stage drives the guidance. The analyzer reports stages_seen; pick the
     # most advanced one as the "current stage" for guidance/response.
@@ -142,10 +143,38 @@ def verify(
         "summary": analysis.get("summary"),
         "analysis": analysis,          # full Module 1 output, for the detail view
         "intel": intel_ctx,            # Module 2 corroboration
+        "extracted_entities": extracted,  # what KAVACH pulled out, so the citizen never types it
         "guidance": guidance.as_dict(),
         "emergency": response.as_dict(),
         "nearby_hotspots": hotspots,
         "degraded": analysis.get("degraded", []),
+    }
+
+
+def _extract_entities(text: str, number: Optional[str], upi: Optional[str]) -> Dict[str, List[str]]:
+    """Everything KAVACH could pull out of the evidence on its own — so the
+    citizen never has to type a number/UPI/email the message already contains.
+    Explicitly-provided identifiers are merged in and de-duplicated."""
+    from ..intel.entities import extract_from_text
+
+    ent = extract_from_text(text or "")
+
+    def _dedup(values: List[str]) -> List[str]:
+        seen: set = set()
+        out: List[str] = []
+        for v in values:
+            if v and v not in seen:
+                seen.add(v)
+                out.append(v)
+        return out
+
+    return {
+        "phones": _dedup(([number] if number else []) + list(ent.phones))[:6],
+        "upi_ids": _dedup(([upi] if upi else []) + list(ent.upi_ids))[:6],
+        "emails": _dedup(list(ent.emails))[:6],
+        "websites": _dedup(list(ent.domains))[:6],
+        "authorities": _dedup(list(ent.authorities))[:6],
+        "amounts": _dedup([str(a) for a in ent.amounts])[:6],
     }
 
 

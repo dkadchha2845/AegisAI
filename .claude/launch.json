@@ -2,6 +2,6 @@
   "version": "0.0.1",
   "configurations": [
     { "name": "web", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--prefix", "apps/web"], "port": 5173 },
-    { "name": "api", "runtimeExecutable": ".venv/bin/uvicorn", "runtimeArgs": ["services.api.main:app", "--reload", "--reload-dir", "services", "--reload-dir", "schema", "--port", "8000"], "port": 8000 }
+    { "name": "api", "runtimeExecutable": ".venv/Scripts/python.exe", "runtimeArgs": ["-m", "uvicorn", "services.api.main:app", "--reload", "--reload-dir", "services", "--reload-dir", "schema", "--port", "8000"], "port": 8000 }
   ]
 }

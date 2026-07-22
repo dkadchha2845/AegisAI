@@ -164,6 +164,29 @@ def evidence_report(session_id: str) -> Dict[str, Any]:
     return build_evidence_package(session)
 
 
+@router.post("/{session_id}/investigate")
+def investigate_session(session_id: str, city: Optional[str] = None) -> Dict[str, Any]:
+    """Turn a live call into the same fused citizen report the Analyze page
+    produces — Module 1 (verdict) + Module 2 (fraud network / hotspots) +
+    Module 3 (guidance / complaint). This is what the citizen Live Protection
+    screen shows the moment the call ends: one investigation, two entry points.
+
+    The session's own transcript, caller number, and claimed identity are run
+    back through `shield.verify` so the live journey and the upload journey end
+    in a byte-identical report.
+    """
+    session = _require(session_id)
+    from ..shield import verify
+
+    transcript = "\n".join(f"{u.speaker}: {u.text}" for u in session.utterances)
+    return verify(
+        text=transcript,
+        number=session.caller_number,
+        claimed_identity=session.passport.claimed_identity,
+        city=city,
+    )
+
+
 @router.get("/{session_id}/report.pdf")
 def evidence_report_pdf(session_id: str) -> Response:
     """The same evidence package rendered as a court-admissible PDF.

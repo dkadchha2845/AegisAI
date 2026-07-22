@@ -10,7 +10,7 @@
 
 import { Link } from "react-router-dom";
 import { ArrowRight, RefreshCw } from "lucide-react";
-import { GROUPS, byGroup } from "@/components/layout/nav";
+import { NAV } from "@/components/layout/nav";
 import { useHealth } from "@/hooks/useHealth";
 
 /** Plain-language readings of the machine-readable `degraded` tags. The tags
@@ -179,27 +179,25 @@ export function Dashboard() {
         )}
       </section>
 
-      {GROUPS.map((group) => (
-        <section key={group} style={{ marginBottom: "var(--s-6)" }}>
-          <p className="label" style={{ marginBottom: "var(--s-3)" }}>
-            {group}
-          </p>
-          <div className="grid2">
-            {byGroup(group).map((item) => (
-              <Link key={item.to} to={item.to} className="featurecard">
-                <span className="featurecard__icon">
-                  <item.icon size={17} />
-                </span>
-                <span className="featurecard__label">{item.label}</span>
-                <p className="featurecard__detail">{item.detail}</p>
-                <span className="featurecard__go">
-                  Open <ArrowRight size={13} />
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ))}
+      <section style={{ marginBottom: "var(--s-6)" }}>
+        <p className="label" style={{ marginBottom: "var(--s-3)" }}>
+          Go to
+        </p>
+        <div className="grid2">
+          {NAV.map((item) => (
+            <Link key={item.to} to={item.to} className="featurecard">
+              <span className="featurecard__icon">
+                <item.icon size={17} />
+              </span>
+              <span className="featurecard__label">{item.label}</span>
+              <p className="featurecard__detail">{item.detail}</p>
+              <span className="featurecard__go">
+                Open <ArrowRight size={13} />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

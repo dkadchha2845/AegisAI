@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presage — My Wardrobe (Mobile)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system.css">
+<style>
+  body { background: #F0E4DD; }
+  .m-page { padding: 8px 20px 20px; flex: 1; }
+  .m-page-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; }
+  .m-page-head h1 { font-size: 26px; line-height: 32px; }
+  .toolbar { display: flex; gap: 10px; margin-bottom: 16px; }
+  .toolbar .input-box { flex: 1; padding: 12px 16px; }
+  .categories { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; }
+  .categories .pill-category { white-space: nowrap; flex-shrink: 0; }
+  .grid-wardrobe { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .card-wardrobe .meta p.title { font-weight: 500; margin-bottom: 3px; }
+  .thumb-1 { background: linear-gradient(155deg, var(--blush-200), var(--ivory-100)); }
+  .thumb-2 { background: linear-gradient(155deg, var(--champagne-500), var(--ivory-100)); }
+  .thumb-3 { background: linear-gradient(155deg, var(--mauve-500), var(--blush-200)); }
+  .thumb-4 { background: linear-gradient(155deg, var(--blush-100), var(--bg-surface-alt)); }
+  .fab-add { position: absolute; right: 20px; bottom: 108px; width: 52px; height: 52px; border-radius: 50%;
+    background: var(--accent-primary); box-shadow: var(--shadow-elevated); display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<div class="phone-shell">
+  <div class="phone-screen">
+    <div class="status-bar"></div>
+
+    <div class="m-page">
+      <div class="m-page-head">
+        <div><h1 class="display-l">My Wardrobe</h1><p class="body-s text-secondary">142 pieces</p></div>
+      </div>
+
+      <div class="toolbar">
+        <div class="input-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#6B5C5F" stroke-width="1.6"/><path d="m21 21-4.3-4.3" stroke="#6B5C5F" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <input placeholder="Search wardrobe">
+        </div>
+      </div>
+
+      <div class="categories">
+        <span class="pill-category">All</span>
+        <span class="pill-category inactive">Tops</span>
+        <span class="pill-category inactive">Bottoms</span>
+        <span class="pill-category inactive">Dresses</span>
+        <span class="pill-category inactive">Outerwear</span>
+        <span class="pill-category inactive">Shoes</span>
+      </div>
+
+      <div class="grid-wardrobe">
+        <div class="card-wardrobe"><div class="thumb thumb-1"></div><div class="meta"><p class="title body-s">Silk Slip Dress</p><p class="caption text-secondary">Dresses</p></div></div>
+        <div class="card-wardrobe"><div class="thumb thumb-2"></div><div class="meta"><p class="title body-s">Tailored Blazer</p><p class="caption text-secondary">Outerwear</p></div></div>
+        <div class="card-wardrobe"><div class="thumb thumb-3"></div><div class="meta"><p class="title body-s">Emerald Wrap Dress</p><p class="caption text-secondary">Dresses</p></div></div>
+        <div class="card-wardrobe"><div class="thumb thumb-4"></div><div class="meta"><p class="title body-s">Ivory Kitten Heels</p><p class="caption text-secondary">Shoes</p></div></div>
+      </div>
+    </div>
+
+    <div class="fab-add">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#FBF7F3" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab-item"><div class="dot"></div><span class="lbl">Home</span></div>
+      <div class="tab-item active"><div class="dot"></div><span class="lbl">Wardrobe</span></div>
+      <div class="tab-item center"><div class="fab"></div><span class="lbl">Stylist</span></div>
+      <div class="tab-item"><div class="dot"></div><span class="lbl">Saved</span></div>
+      <div class="tab-item"><div class="dot"></div><span class="lbl">Profile</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

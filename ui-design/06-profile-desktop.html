@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presage — Profile (Desktop)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system.css">
+<style>
+  .page { max-width: 880px; margin: 0 auto; padding: 56px 0 96px; }
+  .profile-head { display: flex; align-items: center; gap: 24px; margin-bottom: 48px; }
+  .profile-head .avatar-lg { width: 88px; height: 88px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, var(--champagne-500), var(--mauve-500)); box-shadow: var(--shadow-elevated); flex-shrink: 0; }
+  .profile-head .info { flex: 1; }
+  .profile-head h1 { margin-bottom: 4px; }
+
+  .panel { background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-soft); padding: 32px; margin-bottom: 24px; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .pref-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  .outfits-row { display: flex; gap: 16px; }
+  .outfit-thumb { width: 140px; }
+  .outfit-thumb .thumb { aspect-ratio: 4/5; border-radius: var(--radius-md); }
+  .outfit-thumb p { margin-top: 8px; }
+  .t1 { background: linear-gradient(155deg, var(--blush-200), var(--ivory-100)); }
+  .t2 { background: linear-gradient(155deg, var(--champagne-500), var(--ivory-100)); }
+  .t3 { background: linear-gradient(155deg, var(--mauve-500), var(--blush-200)); }
+  .t4 { background: linear-gradient(155deg, var(--blush-100), var(--bg-surface-alt)); }
+
+  .settings-list .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; border-bottom: 1px solid var(--border-subtle); }
+  .settings-list .setting-row:last-child { border-bottom: none; }
+  .setting-row .chevron { color: var(--text-secondary); }
+  .setting-row.danger span { color: var(--mauve-600); }
+</style>
+</head>
+<body>
+
+  <nav class="nav-desktop">
+    <span class="logotype">presage</span>
+    <div class="nav-links">
+      <a href="03-home-desktop.html">Home</a>
+      <a href="04-stylist-chat-desktop.html">AI Stylist</a>
+      <a href="05-wardrobe-desktop.html">Wardrobe</a>
+    </div>
+    <a href="06-profile-desktop.html"><div class="nav-avatar"></div></a>
+  </nav>
+
+  <div class="page">
+    <div class="profile-head">
+      <div class="avatar-lg"></div>
+      <div class="info">
+        <h1 class="heading-l">Ava Whitfield</h1>
+        <p class="body-s text-secondary">ava.whitfield@email.com · Member since 2026</p>
+      </div>
+      <a href="#" class="btn btn-secondary">Edit profile</a>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 class="heading-s">Style preferences</h2><a href="#" class="body-s text-accent" style="font-weight:500;">Edit</a></div>
+      <div class="pref-tags">
+        <span class="pill-category">Minimalist</span>
+        <span class="pill-category">Old Money</span>
+        <span class="pill-category">Feminine</span>
+        <span class="pill-category">Warm tones</span>
+        <span class="pill-category">Tailored</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2 class="heading-s">Saved outfits</h2><a href="#" class="body-s text-accent" style="font-weight:500;">View all</a></div>
+      <div class="outfits-row">
+        <div class="outfit-thumb"><div class="thumb t1"></div><p class="caption text-secondary">Rooftop dinner</p></div>
+        <div class="outfit-thumb"><div class="thumb t2"></div><p class="caption text-secondary">Gallery opening</p></div>
+        <div class="outfit-thumb"><div class="thumb t3"></div><p class="caption text-secondary">Sunday brunch</p></div>
+        <div class="outfit-thumb"><div class="thumb t4"></div><p class="caption text-secondary">First date</p></div>
+      </div>
+    </div>
+
+    <div class="panel settings-list">
+      <h2 class="heading-s" style="margin-bottom:20px;">Settings</h2>
+      <div class="setting-row"><span class="body-m">Notifications</span><span class="chevron">›</span></div>
+      <div class="setting-row"><span class="body-m">Privacy</span><span class="chevron">›</span></div>
+      <div class="setting-row"><span class="body-m">Subscription</span><span class="chevron">›</span></div>
+      <div class="setting-row danger"><span class="body-m">Log out</span><span class="chevron">›</span></div>
+    </div>
+  </div>
+
+</body>
+</html>

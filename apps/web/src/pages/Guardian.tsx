@@ -376,7 +376,7 @@ function EvidenceCard({ sessionId }: { sessionId: string }) {
       {savedId && (
         <p className="small" style={{ marginTop: "var(--s-3)" }}>
           Saved as <span className="mono">{savedId}</span> —{" "}
-          <Link to="/cases">open the case book</Link>.
+          <Link to="/reports">open My Reports</Link>.
         </p>
       )}
     </div>

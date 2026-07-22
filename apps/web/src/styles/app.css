@@ -771,6 +771,7 @@ html[data-theme="light"] .btn2--primary { color: #fff; }
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin 0.9s linear infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

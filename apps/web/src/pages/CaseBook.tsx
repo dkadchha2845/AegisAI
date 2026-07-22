@@ -21,13 +21,11 @@ export function CaseBook() {
 
   return (
     <div className="page">
-      <p className="eyebrow">Platform</p>
-      <h1 className="page__title">Case book</h1>
+      <h1 className="page__title">My Reports</h1>
       <p className="page__lede">
-        Saved evidence packages, the append-only activity log, and user
-        management — all scoped to your organisation. An analyst can save and
-        read cases; the audit log and user list are admin-only; managing
-        organisations is reserved for the platform owner.
+        Every investigation you've saved — ready to reopen, download as a
+        complaint, or take to the police. Reports you preserve from a check are
+        kept here so you always have the evidence when you need it.
       </p>
 
       <IdentityCard />

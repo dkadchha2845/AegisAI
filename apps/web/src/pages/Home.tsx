@@ -39,7 +39,7 @@ const MODULES = [
     n: "01",
     verb: "Detect",
     name: "RSSIE",
-    to: "/console",
+    to: "/live",
     icon: Activity,
     color: "var(--high)",
     body:
@@ -51,7 +51,7 @@ const MODULES = [
     n: "02",
     verb: "Connect",
     name: "FIGAE",
-    to: "/intel",
+    to: "/analyze",
     icon: Network,
     color: "var(--elevated)",
     body:
@@ -63,7 +63,7 @@ const MODULES = [
     n: "03",
     verb: "Protect",
     name: "CFSRP",
-    to: "/shield",
+    to: "/analyze",
     icon: LifeBuoy,
     color: "var(--calm)",
     body:
@@ -129,16 +129,16 @@ export function Home() {
           <span className="lhead__name">KAVACH</span>
         </Link>
         <nav className="lhead__nav">
-          <a href="#pipeline">Pipeline</a>
+          <a href="#pipeline">How it works</a>
           <a href="#arc">The scam arc</a>
-          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/learn">Learn</Link>
         </nav>
         <div className="lhead__right">
           <button className="iconbtn" onClick={toggle} aria-label="Toggle theme">
             {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
           </button>
-          <Link className="btn2 btn2--primary lhead__enter" to="/dashboard">
-            Enter console <ArrowRight size={14} />
+          <Link className="btn2 btn2--primary lhead__enter" to="/home">
+            Open KAVACH <ArrowRight size={14} />
           </Link>
         </div>
       </header>
@@ -160,11 +160,11 @@ export function Home() {
             reactive case investigation to predictive threat neutralisation.
           </p>
           <div className="hero__cta" data-hero-reveal data-reveal>
-            <Link ref={primaryCta} className="btn2 btn2--primary btn2--lg" to="/console">
-              <Activity size={16} /> Watch a live call
-            </Link>
-            <Link className="btn2 btn2--lg" to="/shield">
+            <Link ref={primaryCta} className="btn2 btn2--primary btn2--lg" to="/analyze">
               <ScanLine size={16} /> Check something suspicious
+            </Link>
+            <Link className="btn2 btn2--lg" to="/live">
+              <Activity size={16} /> Get live call protection
             </Link>
           </div>
           <div className="hero__pills" data-hero-reveal data-reveal>
@@ -271,10 +271,10 @@ export function Home() {
           ))}
         </div>
         <div className="row landing__cta" data-scroll-reveal>
-          <Link className="btn2 btn2--primary btn2--lg" to="/dashboard">
-            Enter the console <ArrowRight size={15} />
+          <Link className="btn2 btn2--primary btn2--lg" to="/home">
+            Open KAVACH <ArrowRight size={15} />
           </Link>
-          <Link className="btn2 btn2--lg" to="/model">Read the model card</Link>
+          <Link className="btn2 btn2--lg" to="/learn">Learn about these scams</Link>
         </div>
         <p className="landing__foot small faint" data-scroll-reveal>
           KAVACH / PRESAGE · Not a substitute for reporting fraud on 1930 or at cybercrime.gov.in.

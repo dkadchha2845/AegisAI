@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presage — Profile (Mobile)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system.css">
+<style>
+  body { background: #F0E4DD; }
+  .m-page { padding: 8px 20px 20px; flex: 1; }
+  .profile-head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; margin: 12px 0 32px; }
+  .profile-head .avatar-lg { width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, var(--champagne-500), var(--mauve-500)); box-shadow: var(--shadow-elevated); }
+  .profile-head h1 { margin-bottom: 2px; }
+
+  .panel { background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-soft); padding: 22px; margin-bottom: 18px; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .pref-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .outfits-row { display: flex; gap: 12px; overflow-x: auto; }
+  .outfit-thumb { width: 110px; flex-shrink: 0; }
+  .outfit-thumb .thumb { aspect-ratio: 4/5; border-radius: var(--radius-md); }
+  .outfit-thumb p { margin-top: 6px; }
+  .t1 { background: linear-gradient(155deg, var(--blush-200), var(--ivory-100)); }
+  .t2 { background: linear-gradient(155deg, var(--champagne-500), var(--ivory-100)); }
+  .t3 { background: linear-gradient(155deg, var(--mauve-500), var(--blush-200)); }
+  .t4 { background: linear-gradient(155deg, var(--blush-100), var(--bg-surface-alt)); }
+
+  .settings-list .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border-subtle); }
+  .settings-list .setting-row:last-child { border-bottom: none; }
+  .setting-row.danger span { color: var(--mauve-600); }
+</style>
+</head>
+<body>
+<div class="phone-shell">
+  <div class="phone-screen">
+    <div class="status-bar"></div>
+    <div class="m-page">
+      <div class="profile-head">
+        <div class="avatar-lg"></div>
+        <h1 class="heading-m">Ava Whitfield</h1>
+        <p class="caption text-secondary">ava.whitfield@email.com</p>
+        <a href="#" class="btn btn-secondary" style="margin-top:8px;">Edit profile</a>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2 class="heading-s">Style preferences</h2><a href="#" class="body-s text-accent" style="font-weight:500;">Edit</a></div>
+        <div class="pref-tags">
+          <span class="pill-category">Minimalist</span>
+          <span class="pill-category">Old Money</span>
+          <span class="pill-category">Feminine</span>
+          <span class="pill-category">Warm tones</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2 class="heading-s">Saved outfits</h2><a href="#" class="body-s text-accent" style="font-weight:500;">All</a></div>
+        <div class="outfits-row">
+          <div class="outfit-thumb"><div class="thumb t1"></div><p class="caption text-secondary">Rooftop dinner</p></div>
+          <div class="outfit-thumb"><div class="thumb t2"></div><p class="caption text-secondary">Gallery opening</p></div>
+          <div class="outfit-thumb"><div class="thumb t3"></div><p class="caption text-secondary">Sunday brunch</p></div>
+        </div>
+      </div>
+
+      <div class="panel settings-list">
+        <h2 class="heading-s" style="margin-bottom:16px;">Settings</h2>
+        <div class="setting-row"><span class="body-m">Notifications</span><span>›</span></div>
+        <div class="setting-row"><span class="body-m">Privacy</span><span>›</span></div>
+        <div class="setting-row"><span class="body-m">Subscription</span><span>›</span></div>
+        <div class="setting-row danger"><span class="body-m">Log out</span><span>›</span></div>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab-item"><div class="dot"></div><span class="lbl">Home</span></div>
+      <div class="tab-item"><div class="dot"></div><span class="lbl">Wardrobe</span></div>
+      <div class="tab-item center"><div class="fab"></div><span class="lbl">Stylist</span></div>
+      <div class="tab-item"><div class="dot"></div><span class="lbl">Saved</span></div>
+      <div class="tab-item active"><div class="dot"></div><span class="lbl">Profile</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -26,12 +26,10 @@ export function CommandPalette({ open, onClose }: Props) {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return NAV;
-    // Match on the blurb too, so "upi" finds the Analyzer even though the
+    // Match on the blurb/detail too, so "upi" finds Analyze even though the
     // word does not appear in its label.
     return NAV.filter((item) =>
-      `${item.label} ${item.blurb} ${item.detail} ${item.group}`
-        .toLowerCase()
-        .includes(q),
+      `${item.label} ${item.blurb} ${item.detail}`.toLowerCase().includes(q),
     );
   }, [query]);
 
@@ -103,7 +101,6 @@ export function CommandPalette({ open, onClose }: Props) {
                   <span className="palette__label">{item.label}</span>
                   <span className="palette__blurb">{item.blurb}</span>
                 </span>
-                <span className="palette__group label">{item.group}</span>
                 {i === active && <CornerDownLeft size={13} className="palette__enter" />}
               </button>
             </li>

@@ -161,6 +161,24 @@ export const analyzeFile = (file: File) => {
   return request<AnalysisResult>("/api/analyze/file", { method: "POST", body: form });
 };
 
+/** Transcribe an audio recording (voice note, call recording) and score the
+ *  transcript. Degrades honestly if no speech-to-text backend is installed. */
+export const analyzeAudio = (
+  file: File,
+  opts: { claimedIdentity?: string | null; callerNumber?: string | null } = {},
+) => {
+  const form = new FormData();
+  form.append("file", file);
+  const qs = new URLSearchParams();
+  if (opts.claimedIdentity) qs.set("claimed_identity", opts.claimedIdentity);
+  if (opts.callerNumber) qs.set("caller_number", opts.callerNumber);
+  const q = qs.toString();
+  return request<AnalysisResult & { asr?: { backend: string; ok: boolean; text: string; reason: string | null } }>(
+    `/api/analyze/audio${q ? `?${q}` : ""}`,
+    { method: "POST", body: form },
+  );
+};
+
 /** OCR a screenshot (fake notice, payment screenshot, QR) and score the text. */
 export const analyzeImage = (
   file: File,
@@ -333,6 +351,14 @@ export const approvePayment = (sessionId: string) =>
 
 export const endSession = (sessionId: string) =>
   request<SessionActionResult>(`/api/session/${sessionId}`, { method: "DELETE" });
+
+/** Turn a live call into the same fused VerifyResult the Analyze page shows —
+ *  Module 1 + 2 + 3 — so both journeys end in the identical investigation report. */
+export const investigateSession = (sessionId: string, city?: string | null) =>
+  request<VerifyResult>(
+    `/api/session/${sessionId}/investigate${city ? `?city=${encodeURIComponent(city)}` : ""}`,
+    { method: "POST" },
+  );
 
 export const socketUrl = (sessionId: string) =>
   `${API_BASE.replace(/^http/, "ws")}/api/session/ws/${sessionId}`;
@@ -653,7 +679,19 @@ export interface VerifyResult {
   guidance: Guidance;
   emergency: EmergencyResponse;
   nearby_hotspots: Hotspot[];
+  /** Everything KAVACH pulled out of the evidence itself, so the citizen never
+   *  has to type a number/UPI/email the message already contained. */
+  extracted_entities?: ExtractedEntities;
   degraded: string[];
+}
+
+export interface ExtractedEntities {
+  phones: string[];
+  upi_ids: string[];
+  emails: string[];
+  websites: string[];
+  authorities: string[];
+  amounts: string[];
 }
 
 export interface VerifyRequestBody {

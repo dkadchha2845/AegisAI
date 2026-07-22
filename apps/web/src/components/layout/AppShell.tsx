@@ -28,7 +28,7 @@ import {
   Sun,
   X,
 } from "lucide-react";
-import { GROUPS, byGroup } from "./nav";
+import { NAV } from "./nav";
 import { CommandPalette } from "./CommandPalette";
 import { RouteBoundary } from "./RouteBoundary";
 import { useTheme } from "@/context/ThemeContext";
@@ -36,7 +36,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useHealth } from "@/hooks/useHealth";
 import { armFailsafe } from "@/lib/gsap";
 
-const FIXED_ROUTES = ["/console"];
+const FIXED_ROUTES = ["/analyst/console", "/console"];
 
 export function AppShell() {
   const location = useLocation();
@@ -122,8 +122,8 @@ export function AppShell() {
 
         <NavLink to="/" className="brand2">
           <span className="brand2__mark" aria-hidden="true" />
-          <span className="brand2__name">PRESAGE</span>
-          <span className="brand2__tag">It knows what the scammer will say next</span>
+          <span className="brand2__name">KAVACH</span>
+          <span className="brand2__tag">Your shield against scam calls</span>
         </NavLink>
 
         <div className="topbar2__right">
@@ -158,27 +158,22 @@ export function AppShell() {
 
       <aside className="sidebar" data-open={mobileOpen || undefined}>
         <nav aria-label="Sections">
-          {GROUPS.map((group) => (
-            <div className="sidebar__group" key={group}>
-              <p className="label sidebar__grouplabel">{group}</p>
-              {byGroup(group).map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `sidenav ${isActive ? "sidenav--active" : ""}`
-                  }
-                  title={collapsed ? `${item.label} — ${item.blurb}` : undefined}
-                >
-                  <item.icon size={17} className="sidenav__icon" />
-                  <span className="sidenav__text">
-                    <span className="sidenav__label">{item.label}</span>
-                    <span className="sidenav__blurb">{item.blurb}</span>
-                  </span>
-                </NavLink>
-              ))}
-            </div>
-          ))}
+          <div className="sidebar__group">
+            {NAV.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) => `sidenav ${isActive ? "sidenav--active" : ""}`}
+                title={collapsed ? `${item.label} — ${item.blurb}` : undefined}
+              >
+                <item.icon size={17} className="sidenav__icon" />
+                <span className="sidenav__text">
+                  <span className="sidenav__label">{item.label}</span>
+                  <span className="sidenav__blurb">{item.blurb}</span>
+                </span>
+              </NavLink>
+            ))}
+          </div>
         </nav>
 
         <div className="sidebar__foot">

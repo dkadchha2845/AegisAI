@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presage — My Wardrobe (Desktop)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design-system.css">
+<style>
+  .page { max-width: 1120px; margin: 0 auto; padding: 56px 0 96px; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 32px; }
+  .page-head h1 { margin-bottom: 8px; }
+  .toolbar { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+  .toolbar .input-box { flex: 1; }
+  .toolbar .input-box svg { flex-shrink: 0; }
+  .categories { display: flex; align-items: center; gap: 10px; margin-bottom: 36px; flex-wrap: wrap; }
+  .grid-wardrobe { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  .card-wardrobe .meta p.title { font-weight: 500; margin-bottom: 3px; }
+  .thumb-1 { background: linear-gradient(155deg, var(--blush-200), var(--ivory-100)); }
+  .thumb-2 { background: linear-gradient(155deg, var(--champagne-500), var(--ivory-100)); }
+  .thumb-3 { background: linear-gradient(155deg, var(--mauve-500), var(--blush-200)); }
+  .thumb-4 { background: linear-gradient(155deg, var(--blush-100), var(--bg-surface-alt)); }
+</style>
+</head>
+<body>
+
+  <nav class="nav-desktop">
+    <span class="logotype">presage</span>
+    <div class="nav-links">
+      <a href="03-home-desktop.html">Home</a>
+      <a href="04-stylist-chat-desktop.html">AI Stylist</a>
+      <a class="active" href="05-wardrobe-desktop.html">Wardrobe</a>
+    </div>
+    <a href="06-profile-desktop.html"><div class="nav-avatar"></div></a>
+  </nav>
+
+  <div class="page">
+    <div class="page-head">
+      <div>
+        <h1 class="display-l">My Wardrobe</h1>
+        <p class="body-m text-secondary">142 pieces, catalogued and ready to style.</p>
+      </div>
+      <a href="#" class="btn btn-primary">+ Add clothing</a>
+    </div>
+
+    <div class="toolbar">
+      <div class="input-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#6B5C5F" stroke-width="1.6"/><path d="m21 21-4.3-4.3" stroke="#6B5C5F" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input placeholder="Search your wardrobe">
+      </div>
+      <a href="#" class="btn btn-secondary">Filters</a>
+    </div>
+
+    <div class="categories">
+      <span class="pill-category">All</span>
+      <span class="pill-category inactive">Tops</span>
+      <span class="pill-category inactive">Bottoms</span>
+      <span class="pill-category inactive">Dresses</span>
+      <span class="pill-category inactive">Outerwear</span>
+      <span class="pill-category inactive">Shoes</span>
+      <span class="pill-category inactive">Accessories</span>
+    </div>
+
+    <div class="grid-wardrobe">
+      <div class="card-wardrobe"><div class="thumb thumb-1"></div><div class="meta"><p class="title body-s">Silk Slip Dress</p><p class="caption text-secondary">Dresses</p></div></div>
+      <div class="card-wardrobe"><div class="thumb thumb-2"></div><div class="meta"><p class="title body-s">Tailored Blazer</p><p class="caption text-secondary">Outerwear</p></div></div>
+      <div class="card-wardrobe"><div class="thumb thumb-3"></div><div class="meta"><p class="title body-s">Emerald Wrap Dress</p><p class="caption text-secondary">Dresses</p></div></div>
+      <div class="card-wardrobe"><div class="thumb thumb-4"></div><div class="meta"><p class="title body-s">Ivory Kitten Heels</p><p class="caption text-secondary">Shoes</p></div></div>
+      <div class="card-wardrobe"><div class="thumb thumb-4"></div><div class="meta"><p class="title body-s">Linen Trousers</p><p class="caption text-secondary">Bottoms</p></div></div>
+      <div class="card-wardrobe"><div class="thumb thumb-1"></div><div class="meta"><p class="title body-s">Cashmere Sweater</p><p class="caption text-secondary">Tops</p></div></div>
+      <div class="card-wardrobe"><div class="thumb thumb-2"></div><div class="meta"><p class="title body-s">Gold Hoop Earrings</p><p class="caption text-secondary">Accessories</p></div></div>
+      <div class="card-wardrobe"><div class="thumb thumb-3"></div><div class="meta"><p class="title body-s">Camel Trench Coat</p><p class="caption text-secondary">Outerwear</p></div></div>
+    </div>
+  </div>
+
+</body>
+</html>
