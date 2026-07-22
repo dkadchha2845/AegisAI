@@ -13,6 +13,14 @@ httpx>=0.27
 # password hashing + HS256 tokens) uses the standard library, no extra dep.
 SQLAlchemy>=2.0
 
+# Module 2 (FIGAE) fraud-intelligence graph. Pure-Python, no system libs, no
+# server (the PDF named Neo4j; NetworkX runs in-process behind the same
+# interface). REQUIRED, not optional: services.api.main imports the intel
+# service at startup, so a clean install without this fails to boot — which is
+# exactly what CI caught. Pinned <3.3 to keep one version across the py3.9/3.12
+# matrix (3.3 dropped Python 3.9).
+networkx>=3.1,<3.3
+
 # Test runner. Not optional in practice: the README asks you to run the
 # verdict regressions before every push, and a fresh clone that cannot run
 # them is a fresh clone whose checks get skipped.
