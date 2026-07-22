@@ -288,6 +288,21 @@
 }
 .login__content { position: relative; }
 
+/* Entrance: a browser-driven keyframe (kvRise lives in app.css), staggered by
+   DOM position. Chosen over a JS tween precisely because a keyframe always runs
+   to completion — the sign-in card can never be left frozen at opacity 0. */
+@media (prefers-reduced-motion: no-preference) {
+  .login__content > [data-reveal] { animation: kvRise 0.5s var(--ease-out) both; }
+  .login__content > [data-reveal]:nth-child(1) { animation-delay: 0.02s; }
+  .login__content > [data-reveal]:nth-child(2) { animation-delay: 0.06s; }
+  .login__content > [data-reveal]:nth-child(3) { animation-delay: 0.10s; }
+  .login__content > [data-reveal]:nth-child(4) { animation-delay: 0.14s; }
+  .login__content > [data-reveal]:nth-child(5) { animation-delay: 0.18s; }
+  .login__content > [data-reveal]:nth-child(6) { animation-delay: 0.22s; }
+  .login__content > [data-reveal]:nth-child(7) { animation-delay: 0.26s; }
+  .login__content > [data-reveal]:nth-child(n+8) { animation-delay: 0.30s; }
+}
+
 /* Role quick-sign-in — the RBAC workflow, one tap each. */
 .login__roles {
   display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2);
@@ -320,8 +335,19 @@
 }
 .login__note svg { color: var(--calm); flex: none; margin-top: 2px; }
 .login__pwd { position: relative; display: flex; align-items: center; }
-.login__pwd svg { position: absolute; left: var(--s-3); color: var(--ink-faint); pointer-events: none; }
-.login__pwd .field { padding-left: 34px; }
+/* Direct-child only: the lock is decorative on the left; the toggle button's
+   own icon must NOT be pulled to the left or made click-through. */
+.login__pwd > .login__pwd-lock { position: absolute; left: var(--s-3); color: var(--ink-faint); pointer-events: none; }
+.login__pwd .field { padding-left: 34px; padding-right: 42px; }
+.login__pwd-toggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  display: inline-grid; place-items: center; width: 30px; height: 30px;
+  border: none; background: transparent; color: var(--ink-faint);
+  cursor: pointer; border-radius: var(--r-sm);
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.login__pwd-toggle:hover { color: var(--ink); background: var(--panel-hover); }
+.login__pwd-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .login__submit { width: 100%; justify-content: center; margin-top: var(--s-4); }
 .login__skip { width: 100%; justify-content: center; margin-top: var(--s-2); }
 .login__foot { margin: var(--s-4) 0 0; text-align: center; }

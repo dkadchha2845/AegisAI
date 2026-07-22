@@ -14,13 +14,12 @@
  * screen rather than a login bolted onto an app.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowRight, Lock, ShieldCheck, User } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Lock, ShieldCheck, User } from "lucide-react";
 import { ThreatField } from "@/components/three/ThreatField";
 import { useAuth } from "@/context/AuthContext";
 import { useTilt } from "@/hooks/useTilt";
-import { gsap, prefersReducedMotion } from "@/lib/gsap";
 
 /** The seeded demo roster — one per role, so a judge can watch access change. */
 const DEMO_ACCOUNTS: { role: string; email: string; blurb: string }[] = [
@@ -39,30 +38,22 @@ export function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const panelRef = useTilt<HTMLDivElement>({ max: 5, lift: 4 });
-  const contentRef = useRef<HTMLDivElement>(null);
 
   // Already signed in and somehow back on /login → skip straight in.
   useEffect(() => {
     if (auth.authed && !auth.loading) navigate(from, { replace: true });
   }, [auth.authed, auth.loading, from, navigate]);
 
-  useEffect(() => {
-    if (prefersReducedMotion || !contentRef.current) return;
-    const ctx = gsap.context(() => {
-      gsap.from("[data-login-reveal]", {
-        opacity: 0,
-        y: 18,
-        duration: 0.7,
-        ease: "power3.out",
-        stagger: 0.06,
-      });
-    }, contentRef);
-    return () => ctx.revert();
-  }, []);
+  // Entrance motion is a pure CSS keyframe (see .login__content [data-reveal]),
+  // not a GSAP tween. That is deliberate for the one screen you cannot afford to
+  // leave half-rendered: the browser's animation engine always drives a keyframe
+  // to completion, so — unlike a JS tween whose ticker sleeps when the tab is
+  // backgrounded — the fields can never freeze at opacity 0 with no way in.
 
   const go = (res: { ok: boolean; error?: string }) => {
     setBusy(false);
@@ -94,18 +85,18 @@ export function Login() {
         <ThreatField />
       </div>
       <div className="login__panel" ref={panelRef}>
-        <div ref={contentRef} className="login__content">
-          <div className="login__brand" data-login-reveal>
+        <div className="login__content">
+          <div className="login__brand" data-reveal>
             <span className="brand2__mark" aria-hidden="true" />
             <span className="login__brandname">KAVACH</span>
           </div>
-          <h1 className="login__title" data-login-reveal>Sign in to the console</h1>
-          <p className="login__sub" data-login-reveal>
+          <h1 className="login__title" data-reveal>Sign in to the console</h1>
+          <p className="login__sub" data-reveal>
             Access the analyst tools, fraud intelligence, and case book.
           </p>
 
           {!auth.enforced && (
-            <div className="login__note" data-login-reveal>
+            <div className="login__note" data-reveal>
               <ShieldCheck size={15} />
               <div>
                 <strong>Open demo mode.</strong> Pick a role below to see access
@@ -117,7 +108,7 @@ export function Login() {
           )}
 
           {!auth.enforced && (
-            <div className="login__roles" data-login-reveal>
+            <div className="login__roles" data-reveal>
               {DEMO_ACCOUNTS.map((a) => (
                 <button
                   key={a.email}
@@ -134,10 +125,10 @@ export function Login() {
             </div>
           )}
 
-          <label className="fieldlabel" data-login-reveal>Email</label>
+          <label className="fieldlabel" data-reveal>Email</label>
           <input
             className="field"
-            data-login-reveal
+            data-reveal
             type="email"
             autoComplete="username"
             placeholder="you@agency.gov.in"
@@ -145,20 +136,30 @@ export function Login() {
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submit()}
           />
-          <label className="fieldlabel" data-login-reveal style={{ marginTop: "var(--s-3)" }}>
+          <label className="fieldlabel" data-reveal style={{ marginTop: "var(--s-3)" }}>
             Password
           </label>
-          <div className="login__pwd" data-login-reveal>
-            <Lock size={14} />
+          <div className="login__pwd" data-reveal>
+            <Lock size={14} className="login__pwd-lock" />
             <input
               className="field"
-              type="password"
+              type={showPw ? "text" : "password"}
               autoComplete="current-password"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submit()}
             />
+            <button
+              type="button"
+              className="login__pwd-toggle"
+              onClick={() => setShowPw((v) => !v)}
+              aria-label={showPw ? "Hide password" : "Show password"}
+              aria-pressed={showPw}
+              tabIndex={-1}
+            >
+              {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
           </div>
 
           {error && (
@@ -169,7 +170,7 @@ export function Login() {
 
           <button
             className="btn2 btn2--primary login__submit"
-            data-login-reveal
+            data-reveal
             onClick={submit}
             disabled={busy}
           >
@@ -179,7 +180,7 @@ export function Login() {
           {!auth.enforced && (
             <button
               className="btn2 btn2--ghost login__skip"
-              data-login-reveal
+              data-reveal
               onClick={async () => {
                 setBusy(true);
                 setError(null);
@@ -191,7 +192,7 @@ export function Login() {
             </button>
           )}
 
-          <p className="login__foot small faint" data-login-reveal>
+          <p className="login__foot small faint" data-reveal>
             Citizens don't need an account — the{" "}
             <a href="/shield">fraud shield</a> is open to everyone.
           </p>
