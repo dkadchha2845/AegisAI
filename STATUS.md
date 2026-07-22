@@ -27,6 +27,20 @@ explanations working** (retired-model default fixed, `.env` finally loaded),
 and dense script-matching **measured and rejected** on false-positive
 discipline. See [`docs/IMPLEMENTATION-REPORT.md` §11](docs/IMPLEMENTATION-REPORT.md).
 
+**Session 4 (22 Jul):** the "3 degraded" badge went to **all systems live**, honestly:
+`DATABASE_URL` now defaults to a persistent SQLite file (clears `db:ephemeral`),
+and the classifier no longer cries `clf:lexical_fallback` when the lexical model
+is serving *because it won the measured comparison* — that is the promotion gate
+working, not a fault, so it is reported as `lexical · best` (a real absent/failed
+checkpoint, e.g. on CI, still degrades honestly). A **client-side login gate** now
+fronts the console (load → landing; Enter → `/login`; the citizen shield stays
+public), open mode **honours a presented token** so the seeded **role roster**
+(owner/admin/analyst/viewer across two orgs) makes RBAC visibly real, and a
+**retrieval-grounded knowledge assistant** (`/api/analyze/knowledge/ask`) answers
+from cited corpus chunks only. Plus UI polish: entrance motion on every screen, a
+3D tilt on the landing/login, and a styled tooltip replacing the overlapping
+native one. Tests **84 pass**, contract consistent, frontend typecheck + build clean.
+
 What's left is the **outer ring**: real audio in, real notifications out, real
 payment rails, and the ~2-hour full-corpus MuRIL retrain. All additive.
 

@@ -17,9 +17,10 @@ import { useHealth } from "@/hooks/useHealth";
  *  are for logs; this is for people. */
 const DEGRADED_COPY: Record<string, string> = {
   "clf:lexical_fallback":
-    "The fine-tuned MuRIL classifier is not loaded — stage labels come from the "
-    + "lexical fallback, which is measurably worse. Run the training notebook and "
-    + "restart the API.",
+    "No fine-tuned checkpoint is present on this machine, so stage labels come "
+    + "from the lexical model. (When the checkpoint *is* present it is measured "
+    + "against the baseline and only promoted if it wins — so this tag means "
+    + "‘not exported here’, not ‘the good model failed’.)",
   "rag:lexical":
     "Retrieval is using BM25 rather than dense embeddings. Citations are still "
     + "exact; ranking on paraphrased queries is weaker.",
@@ -92,12 +93,15 @@ export function Dashboard() {
                 <dl className="kv">
                   <dt>backend</dt>
                   <dd>
-                    <span className="chip" data-tone={data.classifier.loaded ? "ok" : "warn"}>
+                    <span className="chip" data-tone={data.classifier.serving_best ? "ok" : "warn"}>
                       {data.classifier.backend}
+                      {data.classifier.serving_best && data.classifier.backend !== "muril"
+                        ? " · best"
+                        : ""}
                     </span>
                   </dd>
-                  <dt>checkpoint</dt>
-                  <dd className="faint">{data.classifier.checkpoint}</dd>
+                  <dt>why</dt>
+                  <dd className="faint">{data.classifier.reason}</dd>
                 </dl>
               </div>
 

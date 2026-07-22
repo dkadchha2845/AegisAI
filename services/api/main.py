@@ -109,7 +109,10 @@ def health() -> Dict[str, Any]:
     kb = get_kb()
     twin = DigitalTwin()
     degraded = list(kb.degraded) + list(twin.degraded) + db_mod.degraded()
-    if classifier.backend != "muril":
+    # Only a *genuine* fallback is a degradation. When the lexical model is
+    # serving because it measurably beat the checkpoint, the promotion gate did
+    # its job and there is nothing to warn about — see classifier.serving_is_fallback.
+    if classifier_mod.serving_is_fallback:
         degraded.append("clf:lexical_fallback")
 
     return {
@@ -132,6 +135,11 @@ def health() -> Dict[str, Any]:
             "backend": classifier.backend,
             "checkpoint": str(settings.classifier_dir),
             "loaded": classifier.backend == "muril",
+            # True when the active model is the best available one — either the
+            # fine-tuned checkpoint, or the lexical model *because it won the
+            # measured comparison*. False only for a genuine fallback (no
+            # checkpoint / failed load), which is also the one degraded case.
+            "serving_best": not classifier_mod.serving_is_fallback,
             # Why *this* backend is serving. A checkpoint can be present and
             # still not promoted — see _checkpoint_is_better().
             "reason": classifier_mod.selection_reason,

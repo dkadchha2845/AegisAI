@@ -13,11 +13,11 @@
  * `StateFrame`, animating off discrete events rather than diffing frames.
  */
 
-import { lazy, Suspense, useEffect } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { ThemeProvider } from "@/context/ThemeContext";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { Home } from "@/pages/Home";
 import "@/styles/global.css";
 import "@/styles/console.css";
@@ -67,6 +67,27 @@ function Loading() {
   );
 }
 
+/**
+ * Route gate. The console (analyst tools) is reachable only after a deliberate
+ * sign-in in this browser — even though the demo server runs open — so loading
+ * the site lands on the public landing, and "Enter console" routes through
+ * /login first. The citizen shield stays outside this gate: citizens have no
+ * account, which the login screen says out loud.
+ *
+ * `authed` is a client fact (a token is held), not the server's open-mode
+ * identity, so this never traps a real deployment either: enforce auth and the
+ * same gate applies unchanged.
+ */
+function RequireAuth({ children }: { children?: ReactNode }) {
+  const { authed, loading } = useAuth();
+  const location = useLocation();
+  if (loading) return <Loading />;
+  if (!authed) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+  return <>{children ?? <Outlet />}</>;
+}
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -78,15 +99,20 @@ export default function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route element={<AppShell />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/console" element={<LiveConsole />} />
-                <Route path="/guardian" element={<Guardian />} />
-                <Route path="/analyzer" element={<Analyzer />} />
-                <Route path="/intel" element={<Intel />} />
+                {/* Public inside the shell — the citizen fraud shield needs no
+                    account. */}
                 <Route path="/shield" element={<Shield />} />
-                <Route path="/cases" element={<CaseBook />} />
-                <Route path="/knowledge" element={<Knowledge />} />
-                <Route path="/model" element={<ModelCard />} />
+                {/* Gated — the analyst console requires a sign-in. */}
+                <Route element={<RequireAuth />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/console" element={<LiveConsole />} />
+                  <Route path="/guardian" element={<Guardian />} />
+                  <Route path="/analyzer" element={<Analyzer />} />
+                  <Route path="/intel" element={<Intel />} />
+                  <Route path="/cases" element={<CaseBook />} />
+                  <Route path="/knowledge" element={<Knowledge />} />
+                  <Route path="/model" element={<ModelCard />} />
+                </Route>
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
             </Routes>

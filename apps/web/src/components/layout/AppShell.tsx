@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   CircleDot,
   Command,
+  LogOut,
   Menu,
   Moon,
   PanelLeftClose,
@@ -31,6 +32,7 @@ import { GROUPS, byGroup } from "./nav";
 import { CommandPalette } from "./CommandPalette";
 import { RouteBoundary } from "./RouteBoundary";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 import { useHealth } from "@/hooks/useHealth";
 import { armFailsafe } from "@/lib/gsap";
 
@@ -40,6 +42,7 @@ export function AppShell() {
   const location = useLocation();
   const { theme, toggle } = useTheme();
   const health = useHealth();
+  const auth = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -131,6 +134,21 @@ export function AppShell() {
           </button>
 
           <StatusPill loading={health.loading} online={!!health.data} degraded={degraded} />
+
+          {auth.authed && auth.user && (
+            <span className="userchip" title={`${auth.user.email} · ${auth.org?.name ?? ""}`}>
+              <span className="userchip__role">{auth.user.role}</span>
+              <span className="userchip__email">{auth.user.email}</span>
+              <button
+                className="userchip__out"
+                onClick={auth.logout}
+                aria-label="Sign out"
+                title="Sign out"
+              >
+                <LogOut size={13} />
+              </button>
+            </span>
+          )}
 
           <button className="iconbtn" onClick={toggle} aria-label="Toggle theme">
             {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}

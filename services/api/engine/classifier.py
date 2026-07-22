@@ -291,10 +291,18 @@ def _checkpoint_is_better() -> tuple[bool, str]:
 #: is serving, and why" is a question with a checkable answer.
 selection_reason = "not yet loaded"
 
+#: True only when the lexical model is serving because the *better* model is
+#: genuinely unavailable — no checkpoint was ever exported, or the exported one
+#: failed to load. It is deliberately *False* when lexical serves because it won
+#: the measured comparison or was forced: that is the promotion gate working as
+#: designed, not a fault, and calling it "degraded" would be crying wolf. The
+#: health check keys `clf:lexical_fallback` off this, not off `backend`.
+serving_is_fallback = False
+
 
 def load_classifier() -> StageClassifier:
     """Best available classifier. Cached — loading MuRIL twice costs seconds."""
-    global _cached, selection_reason
+    global _cached, selection_reason, serving_is_fallback
     if _cached is not None:
         return _cached
 
@@ -305,15 +313,23 @@ def load_classifier() -> StageClassifier:
             try:
                 _cached = MuRILStageClassifier(model_dir)
                 selection_reason = f"fine-tuned checkpoint: {reason}"
+                serving_is_fallback = False
                 return _cached
             except Exception as exc:  # transformers/torch missing, bad export
                 print(f"[presage] MuRIL unavailable ({exc}); using lexical classifier")
                 selection_reason = f"checkpoint failed to load: {exc}"
+                serving_is_fallback = True
         else:
+            # Lexical is serving because it measurably beat the checkpoint (or was
+            # forced). It is the best available model, so this is *not* degraded.
             print(f"[presage] checkpoint not promoted — {reason}")
             selection_reason = f"checkpoint present but {reason}"
+            serving_is_fallback = False
     else:
+        # The fine-tuned model was never produced on this machine (the clean-clone
+        # / CI path). Lexical is genuinely a fallback here — flag it.
         selection_reason = "no checkpoint exported"
+        serving_is_fallback = True
 
     _cached = LexicalStageClassifier()
     return _cached

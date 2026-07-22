@@ -1,21 +1,19 @@
 /**
- * Knowledge base — the corpus every verdict cites.
+ * Knowledge base — the corpus every verdict cites, plus a grounded assistant.
  *
- * Exposed as a browsable screen because a citation the user cannot follow is
- * not really a citation. Every `source` string that appears anywhere in the
- * app — on a finding, a passport check, a coach line — resolves to a section
- * on this page.
- *
- * The retrieval backend is shown rather than hidden: BM25 and dense
- * embeddings return the same citations but rank paraphrased queries
- * differently, and a user comparing two searches deserves to know which one
- * they got.
+ * Two ways in, one source of truth. The assistant answers a plain-language
+ * question, but only from passages it actually retrieved from this corpus — the
+ * same passages are shown beneath the answer as citations, so nothing the model
+ * says is un-checkable. When no LLM backend is configured it degrades to the
+ * passages alone (extractive), never to a made-up answer. Below that, the whole
+ * corpus is browsable, because a citation the user cannot follow is not really
+ * a citation.
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { BookOpen, Search } from "lucide-react";
+import { BookOpen, Search, Sparkles } from "lucide-react";
 import * as api from "@/lib/api";
-import type { KnowledgeHit } from "@/lib/api";
+import type { KnowledgeAnswer } from "@/lib/api";
 
 /** Chunks carry their own heading as the first line so retrieval can match on
  *  it. The citation above the body already shows that heading, so printing it
@@ -36,8 +34,7 @@ const EXAMPLES = [
 
 export function Knowledge() {
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<KnowledgeHit[] | null>(null);
-  const [backend, setBackend] = useState<string>("");
+  const [result, setResult] = useState<KnowledgeAnswer | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [docs, setDocs] = useState<
@@ -54,21 +51,19 @@ export function Knowledge() {
     else setError(res.error);
   }
 
-  const search = useCallback(async (q: string) => {
+  const ask = useCallback(async (q: string) => {
     if (!q.trim()) {
-      setHits(null);
+      setResult(null);
       return;
     }
     setBusy(true);
     setError(null);
-    const res = await api.searchKnowledge(q, 6);
+    const res = await api.askKnowledge(q, 6);
     setBusy(false);
-    if (res.ok) {
-      setHits(res.data.results);
-      setBackend(res.data.backend);
-    } else {
+    if (res.ok) setResult(res.data);
+    else {
       setError(res.error);
-      setHits(null);
+      setResult(null);
     }
   }, []);
 
@@ -76,11 +71,11 @@ export function Knowledge() {
     <div className="page">
       <header className="page__head">
         <p className="label">Understand</p>
-        <h1 className="page__title">Knowledge base</h1>
+        <h1 className="page__title">Knowledge assistant</h1>
         <p className="page__lede">
-          The curated corpus behind every verdict. Each entry is a checkable
-          fact about how Indian institutions actually operate, which is what
-          makes it usable as evidence rather than as advice.
+          Ask anything about how Indian institutions actually operate. The answer
+          is drawn only from the curated corpus below and cites the exact sections
+          it used — grounded, so it is usable as evidence rather than as advice.
         </p>
       </header>
 
@@ -95,12 +90,12 @@ export function Knowledge() {
               className="field"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && search(query)}
+              onKeyDown={(e) => e.key === "Enter" && ask(query)}
               placeholder="Ask something — “is a PIN needed to receive money?”"
             />
           </div>
-          <button className="btn2 btn2--primary" onClick={() => search(query)} disabled={busy}>
-            {busy ? <span className="spinner" /> : <Search size={15} />} Search
+          <button className="btn2 btn2--primary" onClick={() => ask(query)} disabled={busy}>
+            {busy ? <span className="spinner" /> : <Sparkles size={15} />} Ask
           </button>
         </div>
 
@@ -111,21 +106,13 @@ export function Knowledge() {
               className="btn2 btn2--ghost small"
               onClick={() => {
                 setQuery(example);
-                search(example);
+                ask(example);
               }}
             >
               {example}
             </button>
           ))}
         </div>
-
-        {backend && hits && (
-          <p className="small faint" style={{ marginTop: "var(--s-3)", marginBottom: 0 }}>
-            Ranked by <span className="mono">{backend}</span>
-            {backend === "bm25" &&
-              " — dense embeddings are not installed, so paraphrased queries rank worse. Citations are exact either way."}
-          </p>
-        )}
       </div>
 
       {error && (
@@ -134,29 +121,63 @@ export function Knowledge() {
         </div>
       )}
 
-      {hits && (
-        <section style={{ marginTop: "var(--s-6)" }}>
-          <p className="label" style={{ marginBottom: "var(--s-3)" }}>
-            {hits.length} result{hits.length === 1 ? "" : "s"}
+      {result && (
+        <section style={{ marginTop: "var(--s-5)" }}>
+          {/* The synthesized answer, when an LLM is available. */}
+          {result.answer && (
+            <div className="assistant" data-grounded={result.grounded || undefined}>
+              <div className="assistant__head">
+                <Sparkles size={15} />
+                <span>Answer</span>
+                <span className="assistant__src mono">
+                  {result.answer_source === "extractive"
+                    ? "extractive"
+                    : result.answer_source.replace("llm:", "")}{" "}
+                  · {result.retrieval_backend}
+                </span>
+              </div>
+              <p className="assistant__body">{result.answer}</p>
+              <p className="assistant__foot small faint">
+                Grounded in the cited sections below. The assistant phrases; it
+                never scores and never adds facts outside this corpus.
+              </p>
+            </div>
+          )}
+
+          {/* Extractive fallback note when no LLM is configured. */}
+          {!result.answer && result.grounded && (
+            <div className="banner" style={{ marginBottom: "var(--s-4)" }}>
+              <Sparkles size={16} />
+              <div className="small">
+                No language model is configured, so here are the exact corpus
+                sections that match — read from the top. Set{" "}
+                <span className="mono">PRESAGE_LLM</span> to get a synthesized
+                answer.
+              </div>
+            </div>
+          )}
+
+          <p className="label" style={{ margin: "var(--s-4) 0 var(--s-3)" }}>
+            {result.citations.length} cited section{result.citations.length === 1 ? "" : "s"}
           </p>
           <div className="stack">
-            {hits.map((hit) => (
+            {result.citations.map((hit) => (
               <article className="kbhit" key={hit.source}>
                 <div className="kbhit__src">{hit.source}</div>
                 <p className="kbhit__text">{stripHeading(hit.text, hit.source)}</p>
               </article>
             ))}
-            {!hits.length && (
+            {!result.citations.length && (
               <p className="muted small">
-                Nothing matched. The corpus is small and deliberately so — every
-                section is human-reviewed, which does not scale to everything.
+                Nothing in the corpus matched. It is small and deliberately so —
+                every section is human-reviewed. For a live fraud, call 1930.
               </p>
             )}
           </div>
         </section>
       )}
 
-      {!hits && docs.length > 0 && (
+      {!result && docs.length > 0 && (
         <section style={{ marginTop: "var(--s-6)" }}>
           {docs.map((doc) => (
             <div key={doc.name} style={{ marginBottom: "var(--s-6)" }}>

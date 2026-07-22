@@ -27,6 +27,7 @@ import {
   Sun,
 } from "lucide-react";
 import { ThreatField } from "@/components/three/ThreatField";
+import { Tilt } from "@/components/Tilt";
 import { STAGE_BLURB, STAGE_ORDER, pretty, stageColor } from "@/lib/stages";
 import { gsap, ScrollTrigger, prefersReducedMotion, armFailsafe } from "@/lib/gsap";
 import { useMagnetic } from "@/hooks/useMagnetic";
@@ -187,17 +188,20 @@ export function Home() {
 
         <div className="pipeline">
           {MODULES.map((m, i) => (
-            <div key={m.name} className="pipestep" data-scroll-reveal style={{ ["--m-color" as string]: m.color }}>
-              <div className="pipestep__n mono">{m.n}</div>
-              <div className="pipestep__icon"><m.icon size={20} /></div>
-              <div className="pipestep__verb">{m.verb}</div>
-              <div className="pipestep__name mono">{m.name}</div>
-              <p className="pipestep__body">{m.body}</p>
-              <Link className="pipestep__link" to={m.to}>
-                Open <ArrowRight size={13} />
-              </Link>
+            <Tilt key={m.name} className="pipestep" max={6} lift={4}
+                  style={{ ["--m-color" as string]: m.color }}>
+              <div data-scroll-reveal className="pipestep__inner">
+                <div className="pipestep__n mono">{m.n}</div>
+                <div className="pipestep__icon"><m.icon size={20} /></div>
+                <div className="pipestep__verb">{m.verb}</div>
+                <div className="pipestep__name mono">{m.name}</div>
+                <p className="pipestep__body">{m.body}</p>
+                <Link className="pipestep__link" to={m.to}>
+                  Open <ArrowRight size={13} />
+                </Link>
+              </div>
               {i < MODULES.length - 1 && <span className="pipestep__arrow" aria-hidden="true">→</span>}
-            </div>
+            </Tilt>
           ))}
         </div>
       </section>

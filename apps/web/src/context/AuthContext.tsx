@@ -20,12 +20,21 @@ import {
 import * as api from "@/lib/api";
 import type { AuthUser, Organization } from "@/lib/api";
 
+/** The seeded demo owner — the "continue as admin" shortcut in open mode. */
+export const DEMO_OWNER = { email: "admin@kavach.local", password: "changeme" };
+
 interface AuthState {
   user: AuthUser | null;
   org: Organization | null;
   enforced: boolean;
   loading: boolean;
+  /** Whether the visitor has actually authenticated in *this* browser (a token
+   *  is held). Distinct from `user`, which the open-mode server populates even
+   *  with no token — the route gate keys off this, so the console is reached
+   *  only after a deliberate sign-in. */
+  authed: boolean;
   login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  continueAsDemo: () => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
   refresh: () => Promise<void>;
 }
@@ -37,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [org, setOrg] = useState<Organization | null>(null);
   const [enforced, setEnforced] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [authed, setAuthed] = useState<boolean>(() => !!api.getToken());
 
   const refresh = useCallback(async () => {
     const res = await api.getMe();
@@ -48,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setOrg(null);
     }
+    setAuthed(!!api.getToken());
     setLoading(false);
   }, []);
 
@@ -61,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         api.setToken(res.data.token);
         setUser(res.data.user);
+        setAuthed(true);
         await refresh();
         return { ok: true };
       }
@@ -69,13 +81,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [refresh],
   );
 
+  const continueAsDemo = useCallback(
+    () => login(DEMO_OWNER.email, DEMO_OWNER.password),
+    [login],
+  );
+
   const logout = useCallback(() => {
     api.setToken(null);
+    setAuthed(false);
     void refresh();
   }, [refresh]);
 
   return (
-    <AuthContext.Provider value={{ user, org, enforced, loading, login, logout, refresh }}>
+    <AuthContext.Provider
+      value={{ user, org, enforced, loading, authed, login, continueAsDemo, logout, refresh }}
+    >
       {children}
     </AuthContext.Provider>
   );

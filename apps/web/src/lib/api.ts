@@ -207,15 +207,53 @@ export const listDocuments = () =>
 export interface Health {
   ok: boolean;
   contract_version: number;
-  classifier: { backend: string; checkpoint: string; loaded: boolean };
+  classifier: {
+    backend: string;
+    checkpoint: string;
+    loaded: boolean;
+    /** True when the active model is the best available (fine-tuned, or lexical
+     *  because it won the measured comparison). False only for a real fallback. */
+    serving_best: boolean;
+    reason: string;
+  };
   retrieval: { backend: string; chunks: number; documents: string[] };
   twin: { fitted: boolean; stages: string[]; support: Record<string, number> };
   coach: { lines: number };
   llm: { backend: string; model: string | null; configured: boolean };
+  database?: { backend: string; persistent: boolean; url_configured: boolean };
   degraded: string[];
 }
 
 export const getHealth = () => request<Health>("/api/health");
+
+// ---------------------------------------------------------------------------
+// Knowledge assistant (retrieval-grounded Q&A)
+// ---------------------------------------------------------------------------
+
+export interface KnowledgeCitation {
+  source: string;
+  text: string;
+  doc: string;
+  score: number;
+}
+
+export interface KnowledgeAnswer {
+  question: string;
+  /** Prose answer when an LLM is configured; null => show the passages only. */
+  answer: string | null;
+  answer_source: string;
+  grounded: boolean;
+  retrieval_backend: string;
+  llm_configured: boolean;
+  citations: KnowledgeCitation[];
+  degraded: string[];
+}
+
+export const askKnowledge = (question: string, k = 5) =>
+  request<KnowledgeAnswer>("/api/analyze/knowledge/ask", {
+    method: "POST",
+    body: JSON.stringify({ question, k }),
+  });
 
 export interface BackendScore {
   macro_f1: number;

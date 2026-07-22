@@ -175,6 +175,67 @@ html[data-layout="fixed"] .sidebar { height: calc(100vh - var(--topbar-h)); }
 .statuspill[data-state="offline"] { color: var(--high); border-color: color-mix(in srgb, var(--high) 40%, transparent); }
 @media (max-width: 620px) { .statuspill { display: none; } }
 
+/* Signed-in identity, top-bar right. Compact — role always visible, email
+   hidden on narrow viewports, sign-out always reachable. */
+.userchip {
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  height: 28px; padding: 0 4px 0 var(--s-2);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  font-size: var(--t-2xs);
+  max-width: 240px;
+}
+.userchip__role {
+  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+  color: var(--accent);
+}
+.userchip__email {
+  color: var(--ink-faint); font-family: var(--font-mono); font-size: 10px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px;
+}
+.userchip__out {
+  display: inline-grid; place-items: center; width: 22px; height: 22px;
+  border: none; border-radius: 50%; background: transparent; color: var(--ink-faint);
+  cursor: pointer; transition: background var(--t-fast), color var(--t-fast);
+}
+.userchip__out:hover { background: var(--critical-dim); color: var(--critical); }
+@media (max-width: 780px) { .userchip__email { display: none; } }
+@media (max-width: 620px) { .userchip { display: none; } }
+
+/* --- Styled tooltip (replaces overlapping native title=) ------------------
+   Opt in with class "tt" + a data-tooltip attribute. Appears above the target,
+   never under the cursor, so it can't sit on top of the label it describes. */
+.tt { position: relative; }
+.tt::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  width: max-content;
+  max-width: 260px;
+  transform: translateX(-50%) translateY(4px);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  box-shadow: var(--shadow-md);
+  color: var(--ink-muted);
+  font-size: var(--t-2xs);
+  line-height: 1.5;
+  white-space: normal;
+  text-align: left;
+  letter-spacing: normal;
+  text-transform: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-fast), transform var(--t-fast);
+  z-index: var(--z-overlay);
+}
+.tt:hover::after,
+.tt:focus-within::after { opacity: 1; transform: translateX(-50%) translateY(0); }
+@media (max-width: 620px) { .tt::after { display: none; } }
+
 /* --- Sidebar -------------------------------------------------------------- */
 .sidebar {
   grid-area: side;
@@ -716,6 +777,31 @@ html[data-theme="light"] .btn2--primary { color: #fff; }
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* --- Entrance motion for the document screens ----------------------------
+   Pure CSS (not the GSAP reveal system) on purpose: these run on every route
+   mount to give each screen an "arrival", and because a CSS animation always
+   reaches its final frame there is no way for one to leave content stuck
+   invisible — the failure mode the JS reveals guard against. Disabled wholesale
+   under prefers-reduced-motion. The live console (console.css, no `.page`) is
+   untouched, as is the GSAP-driven landing. */
+@media (prefers-reduced-motion: no-preference) {
+  .page__head { animation: kvRise 0.5s var(--ease-out) both; }
+  .page .card { animation: kvRise 0.5s var(--ease-out) both; }
+  .featurecard { animation: kvRise 0.55s var(--ease-out) both; }
+  .statband .stat { animation: kvRise 0.55s var(--ease-out) both; }
+
+  /* A gentle stagger for grid and band children, capped so late items don't
+     lag noticeably. */
+  .grid2 > *:nth-child(2), .statband > *:nth-child(2) { animation-delay: 0.05s; }
+  .grid2 > *:nth-child(3), .statband > *:nth-child(3) { animation-delay: 0.10s; }
+  .grid2 > *:nth-child(4), .statband > *:nth-child(4) { animation-delay: 0.15s; }
+  .grid2 > *:nth-child(n+5) { animation-delay: 0.18s; }
+}
+@keyframes kvRise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
 }
 
 /* ------------------------------------------------------------------ *

@@ -70,13 +70,14 @@ function IdentityCard() {
             {auth.org && (
               <span className="chip" style={{ marginLeft: 6 }}>{auth.org.name}</span>
             )}
+            <span className="chip mono" style={{ marginLeft: 6 }}>uid #{auth.user.id}</span>
             <p className="small muted" style={{ margin: "4px 0 0" }}>
               {auth.enforced
                 ? `Authentication is enforced. Tenant: ${auth.org?.name ?? "—"}.`
-                : "Open mode — no login required for the demo; you are acting as the seeded platform owner."}
+                : "Open demo mode. Sign out to switch roles and watch what this page exposes change."}
             </p>
           </div>
-          {auth.enforced && (
+          {auth.authed && (
             <button className="btn2 btn2--ghost" onClick={auth.logout}>
               <LogOut size={14} /> Sign out
             </button>
@@ -345,8 +346,10 @@ function Users() {
           <table className="cb-table">
             <thead>
               <tr>
+                <th>ID</th>
                 <th>Email</th>
                 <th>Role</th>
+                <th>Org</th>
                 <th>Status</th>
                 <th>Created</th>
               </tr>
@@ -354,12 +357,17 @@ function Users() {
             <tbody>
               {rows.map((u) => (
                 <tr key={u.id}>
+                  <td className="mono small">#{u.id}</td>
                   <td className="mono">{u.email}</td>
                   <td>
-                    <span className="chip" data-tone={u.role === "admin" ? "ok" : undefined}>
+                    <span
+                      className="chip"
+                      data-tone={u.role === "owner" || u.role === "admin" ? "ok" : undefined}
+                    >
                       {u.role}
                     </span>
                   </td>
+                  <td className="small muted">{u.org_id != null ? `#${u.org_id}` : "—"}</td>
                   <td className="small">{u.disabled ? "disabled" : "active"}</td>
                   <td className="small muted">{fmt(u.created_at)}</td>
                 </tr>

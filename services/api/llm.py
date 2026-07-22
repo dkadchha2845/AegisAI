@@ -44,7 +44,7 @@ class LLMUnavailable(RuntimeError):
     pass
 
 
-def _gemini(prompt: str) -> str:
+def _gemini(prompt: str, system: str = SYSTEM) -> str:
     if not settings.gemini_key:
         raise LLMUnavailable("GEMINI_API_KEY not set")
     # The rolling alias, not a pinned version: Google retires pinned Gemini
@@ -55,9 +55,9 @@ def _gemini(prompt: str) -> str:
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     )
     payload = {
-        "systemInstruction": {"parts": [{"text": SYSTEM}]},
+        "systemInstruction": {"parts": [{"text": system}]},
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 220},
+        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 320},
     }
     with httpx.Client(timeout=TIMEOUT_S) as client:
         r = client.post(url, params={"key": settings.gemini_key}, json=payload)
@@ -69,7 +69,7 @@ def _gemini(prompt: str) -> str:
         raise LLMUnavailable(f"unexpected Gemini response: {exc}") from exc
 
 
-def _ollama(prompt: str) -> str:
+def _ollama(prompt: str, system: str = SYSTEM) -> str:
     model = settings.llm_model or "qwen2.5:7b-instruct"
     with httpx.Client(timeout=TIMEOUT_S) as client:
         r = client.post(
@@ -79,7 +79,7 @@ def _ollama(prompt: str) -> str:
                 "stream": False,
                 "options": {"temperature": 0.3},
                 "messages": [
-                    {"role": "system", "content": SYSTEM},
+                    {"role": "system", "content": system},
                     {"role": "user", "content": prompt},
                 ],
             },
@@ -88,9 +88,7 @@ def _ollama(prompt: str) -> str:
         return r.json()["message"]["content"].strip()
 
 
-def _anthropic(prompt: str) -> str:
-    key = settings.gemini_key  # unused; kept explicit for symmetry
-    del key
+def _anthropic(prompt: str, system: str = SYSTEM) -> str:
     import os
 
     api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -106,8 +104,8 @@ def _anthropic(prompt: str) -> str:
             },
             json={
                 "model": settings.llm_model or "claude-haiku-4-5-20251001",
-                "max_tokens": 300,
-                "system": SYSTEM,
+                "max_tokens": 400,
+                "system": system,
                 "messages": [{"role": "user", "content": prompt}],
             },
         )
@@ -117,9 +115,61 @@ def _anthropic(prompt: str) -> str:
 
 _BACKENDS = {"gemini": _gemini, "ollama": _ollama, "anthropic": _anthropic}
 
+# A separate, tighter system prompt for the knowledge assistant. Same boundary
+# principle as the explainer: the model may *phrase* an answer, but only from the
+# retrieved advisory text it is handed — it must not add facts of its own, and it
+# must refuse when the corpus does not cover the question. This is retrieval-
+# grounded Q&A, never scoring.
+ASSISTANT_SYSTEM = (
+    "You are KAVACH's fraud-safety assistant for people in India. Answer the "
+    "user's question using ONLY the numbered CONTEXT passages provided, which "
+    "come from a curated corpus of RBI advisories and scam playbooks.\n"
+    "\n"
+    "Hard rules:\n"
+    "- Use only the CONTEXT. Do not add facts, numbers, or claims that are not "
+    "  in it.\n"
+    "- If the CONTEXT does not answer the question, say so plainly and suggest "
+    "  calling 1930 or visiting cybercrime.gov.in. Do not guess.\n"
+    "- Never tell anyone to send money, share an OTP/PIN/CVV, or install "
+    "  anything.\n"
+    "- Cite the sources you used by their bracketed labels, e.g. [1], [2].\n"
+    "- Plain, calm English or Hinglish matching the question. 2–4 short "
+    "  sentences. No preamble, no markdown headings."
+)
+
 
 def available() -> bool:
     return settings.llm_backend in _BACKENDS
+
+
+def answer_question(question: str, contexts: List[Dict[str, str]]) -> Optional[str]:
+    """A retrieval-grounded answer to a knowledge-base question, or None if no
+    LLM backend is configured / reachable.
+
+    `contexts` is the already-retrieved passages: `[{"source", "text"}, ...]`.
+    The caller has a non-LLM fallback (show the passages themselves), so this
+    returning None must never break the feature — it just makes it extractive
+    instead of conversational.
+    """
+    backend = _BACKENDS.get(settings.llm_backend)
+    if backend is None or not contexts:
+        return None
+    numbered = "\n\n".join(
+        f"[{i + 1}] {c.get('source', '')}\n{c.get('text', '')}"
+        for i, c in enumerate(contexts)
+    )
+    prompt = (
+        f"CONTEXT:\n{numbered}\n\n"
+        f"QUESTION: {question.strip()}\n\n"
+        "Answer using only the context above, and cite the passages you used."
+    )
+    try:
+        # Same transport as the explainer, but handed the assistant's own system
+        # prompt so it answers from context instead of explaining a verdict.
+        return backend(prompt, system=ASSISTANT_SYSTEM)
+    except Exception as exc:  # network, quota, malformed — all degrade to None
+        print(f"[presage] knowledge assistant unavailable: {exc}")
+        return None
 
 
 def explain(analysis: Dict[str, Any], language: str = "auto") -> Optional[str]:

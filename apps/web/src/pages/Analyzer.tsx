@@ -282,13 +282,13 @@ export function Analyzer() {
                     {busy ? "Analysing…" : "Analyse"}
                   </button>
                   <label
-                    className="small faint row"
-                    style={{ gap: 6, cursor: health.data?.llm.configured ? "pointer" : "not-allowed" }}
-                    title={
+                    className="small faint row tt"
+                    data-tooltip={
                       health.data?.llm.configured
-                        ? "Ask the configured LLM to phrase the explanation. The score is unchanged — the model only rewords a finished result."
+                        ? `Ask ${health.data.llm.backend} to phrase the explanation. The score is unchanged — the model only rewords a finished result.`
                         : "No LLM backend is configured. Set PRESAGE_LLM and restart the API."
                     }
+                    style={{ gap: 6, cursor: health.data?.llm.configured ? "pointer" : "not-allowed" }}
                   >
                     <input
                       type="checkbox"

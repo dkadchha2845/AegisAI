@@ -158,19 +158,39 @@ def create_user(
     return user
 
 
-def seed_admin(db: Session) -> None:
-    """Create the default org + admin if the user table is empty. Idempotent.
+#: Convenience accounts seeded in open (demo) mode so the role-based access
+#: workflow is demonstrable without provisioning anyone by hand. All share the
+#: demo password; none of these exist in enforced mode. Realistic of a cyber
+#: cell: a supervisor (org admin) over analysts, plus a read-only desk (viewer),
+#: and a second tenant to show cross-org isolation from the owner's seat.
+DEMO_PASSWORD = "changeme"
+DEMO_ROSTER = (
+    # (email, role, org: "default" | "mh")
+    ("supervisor@kavach.local", "admin", "default"),
+    ("analyst@kavach.local", "analyst", "default"),
+    ("viewer@kavach.local", "viewer", "default"),
+    ("mh.admin@kavach.local", "admin", "mh"),
+    ("mh.analyst@kavach.local", "analyst", "mh"),
+)
 
-    The admin is seeded as `owner` so a single-org install still has someone who
-    can create further organisations — the platform superadmin. In open (demo)
-    mode this is who every request acts as, so all the org tooling is reachable
-    without a login.
+
+def seed_admin(db: Session) -> None:
+    """Seed the default org + platform owner if the user table is empty, and — in
+    open (demo) mode only — a small multi-role, multi-tenant roster. Idempotent.
+
+    The owner (`settings.default_admin_email`) is the platform superadmin: it can
+    create organisations and see across them, and in open mode it is who every
+    *un-authenticated* request acts as. The demo roster exists purely so the login
+    screen can switch between roles and show RBAC working; it is never created
+    when `PRESAGE_AUTH` is on, so a real deployment ships no known-password
+    accounts.
     """
-    from .orgs import get_or_create_default_org
+    from .orgs import create_org, get_or_create_default_org
 
     default_org = get_or_create_default_org(db)
     if db.query(User).count() > 0:
         return
+
     create_user(
         db,
         settings.default_admin_email,
@@ -180,6 +200,18 @@ def seed_admin(db: Session) -> None:
     )
     print(f"[presage] seeded default org {default_org.slug!r} + owner "
           f"{settings.default_admin_email!r} — change the password (PRESAGE_ADMIN_PASSWORD)")
+
+    if auth_enabled():
+        return
+
+    # Demo mode: a second tenant + a role ladder in each, so signing in as each
+    # account visibly changes what the case book exposes.
+    mh_org = create_org(db, "Maharashtra Cyber Cell")
+    org_ids = {"default": default_org.id, "mh": mh_org.id}
+    for email, role, org_key in DEMO_ROSTER:
+        create_user(db, email, DEMO_PASSWORD, role=role, org_id=org_ids[org_key])
+    print(f"[presage] seeded {len(DEMO_ROSTER)} demo accounts (open mode) — "
+          f"password {DEMO_PASSWORD!r}; disabled when PRESAGE_AUTH=1")
 
 
 # --- request dependencies ---------------------------------------------------
@@ -203,18 +235,25 @@ def get_current_user(
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db),
 ) -> User:
+    # A presented, valid token always wins — even in open mode. This is what
+    # makes the demo's role switcher real: sign in as the analyst and you *are*
+    # the analyst for every subsequent call, not the open-mode owner. Without
+    # this, open mode returned the owner unconditionally and RBAC was invisible.
+    if authorization and authorization.lower().startswith("bearer "):
+        claims = decode_token(authorization.split(" ", 1)[1].strip())
+        if claims is not None:
+            user = db.query(User).filter(User.id == claims.get("uid")).first()
+            if user is not None and not user.disabled:
+                return user
+        # A malformed/expired token is an error under enforcement; in open mode
+        # it degrades to the open-mode identity rather than locking the demo out.
+        if auth_enabled():
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+
     if not auth_enabled():
         return _open_mode_user(db)
 
-    if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(status_code=401, detail="Missing bearer token")
-    claims = decode_token(authorization.split(" ", 1)[1].strip())
-    if claims is None:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    user = db.query(User).filter(User.id == claims.get("uid")).first()
-    if user is None or user.disabled:
-        raise HTTPException(status_code=401, detail="No such active user")
-    return user
+    raise HTTPException(status_code=401, detail="Missing bearer token")
 
 
 def require_role(minimum: str):

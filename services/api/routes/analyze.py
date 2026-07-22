@@ -239,6 +239,60 @@ def search_knowledge(q: str, k: int = 5) -> Dict[str, Any]:
     }
 
 
+class AskRequest(BaseModel):
+    question: str = Field(min_length=3, max_length=2_000)
+    k: int = 5
+
+
+@router.post("/knowledge/ask")
+def ask_knowledge(req: AskRequest) -> Dict[str, Any]:
+    """Grounded question-answering over the curated corpus.
+
+    Retrieval first, generation second — and only ever over what was retrieved.
+    The passages returned to the caller are exactly the ones handed to the model,
+    so the answer is auditable: every claim can be checked against a cited chunk,
+    and if no LLM backend is configured the endpoint still returns the passages
+    (extractive fallback) rather than nothing. The model phrases; it never scores
+    and never sources a fact from outside the returned context.
+    """
+    kb = get_kb()
+    hits = kb.search(req.question, k=min(max(req.k, 1), 8))
+    contexts = [{"source": h.chunk.source, "text": h.chunk.text} for h in hits]
+    citations = [
+        {"source": h.chunk.source, "text": h.chunk.text, "doc": h.chunk.doc,
+         "score": h.score}
+        for h in hits
+    ]
+
+    degraded = list(kb.degraded)
+    answer: Optional[str] = None
+    grounded = bool(contexts)
+
+    if not contexts:
+        answer = (
+            "I could not find anything about that in the knowledge base. For a "
+            "live fraud, call 1930 or file at cybercrime.gov.in."
+        )
+        grounded = False
+    elif llm.available():
+        answer = llm.answer_question(req.question, contexts)
+        if answer is None:
+            # Asked, but the backend was unreachable. Say so, then fall through
+            # to the extractive passages the UI shows either way.
+            degraded.append("llm:unavailable")
+
+    return {
+        "question": req.question,
+        "answer": answer,                     # None => UI shows passages only
+        "answer_source": ("llm:" + settings.llm_backend) if answer and llm.available() else "extractive",
+        "grounded": grounded,
+        "retrieval_backend": kb.backend,
+        "llm_configured": llm.available(),
+        "citations": citations,
+        "degraded": degraded,
+    }
+
+
 @router.get("/knowledge/docs")
 def list_documents() -> Dict[str, List[Dict[str, Any]]]:
     """Everything in the knowledge base, grouped by document."""
