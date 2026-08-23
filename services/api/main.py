@@ -151,7 +151,12 @@ def health() -> Dict[str, Any]:
         "classifier": {
             "backend": classifier.backend,
             "checkpoint": str(settings.classifier_dir),
-            "loaded": classifier.backend == "muril",
+            # "Are the fine-tuned weights actually in memory?" — asked of the
+            # classifier itself rather than by comparing `backend` to a string.
+            # The string form reported False while the fused backend was serving
+            # MuRIL, which is precisely the confident-but-wrong answer this
+            # endpoint exists to prevent.
+            "loaded": classifier.checkpoint_backed,
             # True when the active model is the best available one — either the
             # fine-tuned checkpoint, or the lexical model *because it won the
             # measured comparison*. False only for a genuine fallback (no

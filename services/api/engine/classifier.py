@@ -56,6 +56,17 @@ class StagePrediction:
 class StageClassifier:
     backend = "abstract"
 
+    #: True when this classifier's predictions are backed by the fine-tuned
+    #: checkpoint's weights being in memory.
+    #:
+    #: This is deliberately separate from `backend`. `backend` names *which*
+    #: strategy is serving and grows a new value every time one is added;
+    #: anything that asks "is the good model actually loaded?" by comparing
+    #: `backend` to a string silently starts lying the moment a new wrapper
+    #: appears. That is exactly what happened when FusedStageClassifier was
+    #: introduced and /api/health kept testing `backend == "muril"`.
+    checkpoint_backed = False
+
     def predict(
         self,
         text: str,
@@ -246,6 +257,9 @@ class MuRILStageClassifier(StageClassifier):
     """Wraps the exported checkpoint. Constructed only if it loads cleanly."""
 
     backend = "muril"
+    #: Constructed only after the weights load, so reaching an instance of this
+    #: class means the checkpoint is in memory.
+    checkpoint_backed = True
 
     def __init__(self, model_dir: Path):
         import torch  # noqa: F401  (imported for its side effect + device pick)
@@ -323,6 +337,17 @@ class FusedStageClassifier(StageClassifier):
     def __init__(self, primary: StageClassifier, secondary: StageClassifier):
         self.primary = primary
         self.secondary = secondary
+
+    @property
+    def checkpoint_backed(self) -> bool:
+        """True when either fused component carries the checkpoint's weights.
+
+        Delegating rather than hard-coding True keeps the answer honest: a
+        fusion built from two lexical models would report False, which is the
+        truth. `load_classifier` only ever builds this with MuRIL as primary,
+        but the health endpoint should not depend on that staying so.
+        """
+        return bool(self.primary.checkpoint_backed or self.secondary.checkpoint_backed)
 
     def _sharpen(self, dist: dict[str, float]) -> dict[str, float]:
         import math
