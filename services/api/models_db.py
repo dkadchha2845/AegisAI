@@ -25,6 +25,19 @@ from sqlalchemy import (
 
 from .db import Base
 
+
+def _utcnow() -> _dt.datetime:
+    """Naive UTC timestamp for column defaults.
+
+    `datetime.utcnow()` is deprecated from Python 3.12. This keeps the existing
+    column semantics exactly — naive, in UTC — so stored values and every
+    comparison against them are unchanged. Migrating the columns to
+    timezone-aware `DateTime(timezone=True)` is a real schema change and
+    belongs in its own commit, not in an interpreter upgrade.
+    """
+    return _dt.datetime.now(_dt.timezone.utc).replace(tzinfo=None)
+
+
 #: Ordered least- to most-privileged. `require_role` compares by rank.
 #: viewer < analyst < admin are *within-org* roles; `owner` is the platform
 #: superadmin that manages organisations themselves and can see across them.
@@ -54,7 +67,7 @@ class Organization(Base):
     id = Column(Integer, primary_key=True)
     slug = Column(String(64), unique=True, nullable=False, index=True)
     name = Column(String(200), nullable=False)
-    created_at = Column(DateTime, nullable=False, default=_dt.datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
 
     def as_public(self) -> dict:
         return {
@@ -77,7 +90,7 @@ class User(Base):
     #: org-less (platform-level); every normal user has one.
     org_id = Column(Integer, ForeignKey("organizations.id"), nullable=True, index=True)
     disabled = Column(Boolean, nullable=False, default=False)
-    created_at = Column(DateTime, nullable=False, default=_dt.datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
 
     def as_public(self) -> dict:
         """Safe projection — never includes the password hash."""
@@ -106,7 +119,7 @@ class CaseRecord(Base):
     session_id = Column(String(64), nullable=False, index=True)
     #: Owning tenant — the case book only shows cases from the viewer's own org.
     org_id = Column(Integer, ForeignKey("organizations.id"), nullable=True, index=True)
-    created_at = Column(DateTime, nullable=False, default=_dt.datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
     created_by = Column(String(320), nullable=True)  # actor email (null in some open-mode paths)
     caller_number = Column(String(64), nullable=True)
     incident_type = Column(String(200), nullable=True)
@@ -143,7 +156,7 @@ class CitizenReport(Base):
 
     id = Column(Integer, primary_key=True)
     token = Column(String(48), unique=True, nullable=False, index=True)
-    created_at = Column(DateTime, nullable=False, default=_dt.datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
     channel = Column(String(24), nullable=False, default="web")  # web | whatsapp | app
     city = Column(String(80), nullable=True)
     caller_number = Column(String(64), nullable=True)
@@ -179,7 +192,7 @@ class AuditEvent(Base):
     __tablename__ = "audit_events"
 
     id = Column(Integer, primary_key=True)
-    ts = Column(DateTime, nullable=False, default=_dt.datetime.utcnow, index=True)
+    ts = Column(DateTime, nullable=False, default=_utcnow, index=True)
     #: Owning tenant — an org admin sees only their own org's activity.
     org_id = Column(Integer, ForeignKey("organizations.id"), nullable=True, index=True)
     actor = Column(String(320), nullable=True)   # email, or "anonymous"/"system"

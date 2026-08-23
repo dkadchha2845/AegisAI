@@ -40,14 +40,35 @@ back-compat fallback in `config.py` so existing local `.env` files keep working;
 hackathon artefacts archived to `docs/archive/et-hackathon-2026/`.
 **Verified:** 84 tests, contract consistent, typecheck + build clean.
 
-### ⬜ 0.2 — Python 3.9 → 3.12 🔴
-**Why:** LangGraph, Pydantic v2 features, and current `transformers` need 3.11+.
-`.replit` already declares 3.12; the local venv is 3.9. Nothing in Phase 1 can start.
-**Do:** new venv on 3.12 · pin `requirements.txt` with hashes · replace deprecated
-FastAPI `@app.on_event` with a `lifespan` handler · fix `datetime.utcnow()`
-deprecations · re-run the full suite.
-**Accept:** all 84 tests pass on 3.12 · CI matrix is 3.11 + 3.12 · no deprecation
-warnings from our own code. **Effort:** 4–6 h.
+### ✅ 0.2 — Python 3.9 → 3.12
+**Done 2026-08-23.** Migrated to **Python 3.12.14** (homebrew `python@3.12`).
+
+| | 3.9 (before) | 3.12 (after) |
+|---|---|---|
+| torch | 2.2.2 | 2.13.0 |
+| transformers | 4.44.2 | 4.57.6 |
+| sentence-transformers | 5.1.2 | 5.7.0 |
+| numpy | 1.26.4 | 2.5.2 |
+| networkx | 3.2.1 (capped <3.3 for 3.9) | 3.6.1 (cap removed) |
+| scikit-learn | 1.6.1 | 1.9.0 |
+
+**Changes:** `@app.on_event("startup")` → a `lifespan` async context manager in
+`services/api/main.py` · `datetime.utcnow()` → a `_utcnow()` helper in
+`models_db.py` preserving naive-UTC column semantics exactly, and
+`datetime.now(timezone.utc)` in `intel/repository.py` · networkx cap removed ·
+CI matrix `3.9, 3.12` → `3.11, 3.12` (floor set by LangGraph) · README,
+requirements and INVENTORY updated.
+
+**Verified:** 84 tests pass on 3.12 · deprecation warnings from our own code
+went **41 → 0** (the one remaining is third-party: starlette's testclient
+wanting httpx2) · contract consistent · frontend typecheck + build clean ·
+**the fused MuRIL classifier produces bit-identical predictions on 3.9 and
+3.12** across a 6-case Hindi/English probe, so the interpreter and dependency
+jump introduced no behavioural drift.
+
+**Note:** the old `.venv39-old` is kept until the next commit lands, then
+deleted. Hash-pinning of `requirements.txt` was deferred to task 0.5, which
+owns dependency and secrets hygiene.
 
 ### ⬜ 0.3 — Repo restructure to the target layout
 **Why:** the agent layer needs a home; `ml/` needs splitting.

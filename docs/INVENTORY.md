@@ -120,7 +120,7 @@ a contract field.
 
 ### 2.5 Engineering practice already in place
 
-- 84 passing tests, CI on py3.9 + py3.12.
+- 84 passing tests, CI on py3.11 + py3.12.
 - **Explicit degradation**: every optional capability has a fallback that still
   answers and records a tag in `degraded`. No network call in the request path.
 - **False-positive discipline**: BENIGN is the broadest class by design; soft
@@ -165,7 +165,7 @@ Ordered by architectural blast radius. Each maps to a phase in `TASKS.md`.
 
 | Severity | Item | Action |
 |---|---|---|
-| 🟡 Medium | **Python 3.9** in `.venv`. LangGraph, modern Pydantic and current `transformers` want 3.11+. `.replit` already declares 3.12. | Phase 0.2 — migrate to 3.12 |
+| ✅ Resolved | ~~Python 3.9~~ — migrated to **3.12.14** on 2026-08-23 (task 0.2). torch 2.13, transformers 4.57, numpy 2.5, networkx 3.6. Classifier predictions verified bit-identical across the upgrade. | Done |
 | 🟡 Medium | **English scam scoring is borderline on short inputs** — the aggregate score rewards accumulated pressure across many turns. Hindi/Hinglish is strong. | Phase 4/8 — retrain + calibrate |
 | 🟡 Medium | **Full-corpus retrain never run** (~2 h CPU). Current checkpoint is good but trained on a subset. | Phase 8 |
 | 🟡 Medium | `ml/artifacts/` is **3.5 GB inside the repo tree**. Not viable long-term. | Phase 0 — DVC or object storage |

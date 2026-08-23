@@ -12,7 +12,8 @@ model loaded?" is a question with a checkable answer rather than a hope.
 from __future__ import annotations
 
 import json
-from typing import Any, Dict
+from contextlib import asynccontextmanager
+from typing import Any, AsyncIterator, Dict
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,11 +32,24 @@ from .rag.store import get_kb
 from .routes import analyze, auth, intel, orgs, reports, session, shield
 from .security import RateLimitMiddleware, SecurityHeadersMiddleware
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    """Startup/shutdown hook.
+
+    `@app.on_event("startup")` is deprecated in current FastAPI; a lifespan
+    context manager is the supported replacement. `warm()` is defined further
+    down the module and resolved at call time, which is after import completes.
+    """
+    warm()
+    yield
+
+
 app = FastAPI(
     title="AegisAI API",
     version="0.1.0",
     description="Real-time scam-call analysis, artifact checking, and the "
                 "Digital Twin forecast.",
+    lifespan=lifespan,
 )
 
 # Order matters: middleware added last runs first. We want security headers on
@@ -63,7 +77,6 @@ app.include_router(shield.router)
 app.include_router(orgs.router)
 
 
-@app.on_event("startup")
 def warm() -> None:
     """Load everything now, not on first request.
 

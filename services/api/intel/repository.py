@@ -24,7 +24,7 @@ from __future__ import annotations
 import json
 import random
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from .entities import extract_from_package
@@ -283,7 +283,7 @@ def case_from_package(
         threat_score=score,
         threat_level=incident.get("final_level") or _level(score),
         amount_inr=biggest_amount or 0.0,
-        reported_at=(package.get("generated_at") or "")[:10] or datetime.utcnow().strftime("%Y-%m-%d"),
+        reported_at=(package.get("generated_at") or "")[:10] or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         city=city,
         district=geo[2] if geo else None,
         state=geo[3] if geo else None,

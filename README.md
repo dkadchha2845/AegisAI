@@ -194,7 +194,7 @@ utterance (typed / ASR / OCR)
 
 ```
 ┌─ apps/web ──────────┐   WebSocket + REST   ┌─ services/api ──────────────────────┐
-│ React 18 · TypeScript│◄───────────────────►│ FastAPI · Python 3.9–3.12           │
+│ React 18 · TypeScript│◄───────────────────►│ FastAPI · Python 3.11–3.12          │
 │ home · dashboard    │                      │                                     │
 │ console · analyzer  │                      │ engine/  classifier, threat, twin,  │
 │ guardian · knowledge│                      │          coercion, passport, upi,   │
@@ -217,7 +217,7 @@ utterance (typed / ASR / OCR)
 
 ## Quick Start
 
-**Prerequisites:** Python 3.9+, Node 18+. No GPU, no API key, no network at runtime.
+**Prerequisites:** Python 3.11+, Node 18+. No GPU, no API key, no network at runtime.
 
 ```bash
 git clone https://github.com/dkadchha2845/aegis.git
@@ -362,7 +362,7 @@ aegis/
 │   ├── SUBMISSION_DOCUMENT.md  Detailed submission document
 │   └── IMPLEMENTATION-REPORT.md Full implementation report
 │
-├── .github/workflows/ci.yml    CI (py3.9 + py3.12 + frontend)
+├── .github/workflows/ci.yml    CI (py3.11 + py3.12 + frontend)
 ├── .env.example                Environment template
 └── STATUS.md                   Running build status
 ```

@@ -1,3 +1,4 @@
+# Requires Python >= 3.11 (see docs/TASKS.md task 0.2).
 # Runtime API. Everything below the first block is optional — the service
 # starts and answers without any of it, in a measurably worse mode that
 # /api/health reports honestly.
@@ -17,9 +18,9 @@ SQLAlchemy>=2.0
 # server (the PDF named Neo4j; NetworkX runs in-process behind the same
 # interface). REQUIRED, not optional: services.api.main imports the intel
 # service at startup, so a clean install without this fails to boot — which is
-# exactly what CI caught. Pinned <3.3 to keep one version across the py3.9/3.12
-# matrix (3.3 dropped Python 3.9).
-networkx>=3.1,<3.3
+# exactly what CI caught. The old <3.3 cap existed only to keep Python 3.9
+# working; the floor is now 3.11, so the cap is gone.
+networkx>=3.3
 
 # Test runner. Not optional in practice: the README asks you to run the
 # verdict regressions before every push, and a fresh clone that cannot run
@@ -27,8 +28,8 @@ networkx>=3.1,<3.3
 pytest>=8.0
 
 # Court-admissible evidence package as PDF (routes /api/session/{id}/report.pdf).
-# Pure-Python, no system libs, installs on 3.9-3.12. The JSON package works
-# without it; the PDF endpoint degrades to a clear 503 if it is absent.
+# Pure-Python, no system libs. The JSON package works without it; the PDF
+# endpoint degrades to a clear 503 if it is absent.
 reportlab>=4.0
 
 # Optional: serve the fine-tuned MuRIL checkpoint instead of the lexical
