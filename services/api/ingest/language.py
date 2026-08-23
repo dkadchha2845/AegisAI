@@ -21,17 +21,16 @@ general-purpose classifier, so it is the default rather than the fallback.
 from __future__ import annotations
 
 import re
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 from ..config import ML_DIR
 
 # Reuse the marker set that the dataset pipeline already validated against.
-sys.path.insert(0, str(ML_DIR))
+# aegis-core is an installed package, so no sys.path manipulation is needed.
 try:
-    from aegis.hinglish import HINDI_MARKERS, density  # type: ignore
-except ImportError:  # pragma: no cover - ml/ absent in a container build
+    from aegis_core.hinglish import HINDI_MARKERS, density
+except ImportError:  # pragma: no cover - aegis-core not installed
     HINDI_MARKERS = {
         "hai", "hain", "aap", "aapka", "ko", "se", "mein", "nahi", "kya",
         "main", "mera", "karo", "kar", "ji", "haan", "theek", "bhej", "paisa",

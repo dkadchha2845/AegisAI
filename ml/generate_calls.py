@@ -32,12 +32,11 @@ from pathlib import Path
 
 import httpx
 
-sys.path.insert(0, str(Path(__file__).parent))
 
-from aegis.llm import GenerationError, get_backend, parse_turns, probe  # noqa: E402
-from aegis.schema import VICTIM_STATES  # noqa: E402
-from aegis.seeds import Seed, build_seeds  # noqa: E402
-from aegis.taxonomy import LABELS, prompt_block  # noqa: E402
+from aegis_core.llm import GenerationError, get_backend, parse_turns, probe  # noqa: E402
+from aegis_core.schema import VICTIM_STATES  # noqa: E402
+from aegis_core.seeds import Seed, build_seeds  # noqa: E402
+from aegis_core.taxonomy import LABELS, prompt_block  # noqa: E402
 
 DEFAULT_OUT = Path(__file__).parent / "data" / "raw" / "calls.jsonl"
 

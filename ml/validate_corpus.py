@@ -27,9 +27,8 @@ HERE = Path(__file__).parent
 RAW = HERE / "data" / "raw" / "calls.jsonl"
 PROCESSED = HERE / "data" / "processed"
 
-sys.path.insert(0, str(HERE))
-from aegis.taxonomy import LABELS  # noqa: E402
-from aegis.schema import VICTIM_STATES  # noqa: E402
+from aegis_core.taxonomy import LABELS  # noqa: E402
+from aegis_core.schema import VICTIM_STATES  # noqa: E402
 
 _LABELS = set(LABELS)
 _STATES = set(VICTIM_STATES)

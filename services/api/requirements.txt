@@ -1,4 +1,11 @@
 # Requires Python >= 3.11 (see docs/TASKS.md task 0.2).
+# The shared domain package (scam taxonomy, victim-state schema, Hinglish
+# markers). REQUIRED: engine/classifier.py and ingest/language.py import it, and
+# their ImportError fallbacks are deliberately incomplete — an empty BY_LABEL
+# means threat weighting is silently lost. services/api/tests/test_domain_imports.py
+# asserts the real package is the one serving.
+-e ./packages/aegis_core
+
 # Runtime API. Everything below the first block is optional — the service
 # starts and answers without any of it, in a measurably worse mode that
 # /api/health reports honestly.

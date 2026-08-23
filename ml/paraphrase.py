@@ -39,11 +39,10 @@ from pathlib import Path
 
 import httpx
 
-sys.path.insert(0, str(Path(__file__).parent))
 
-from aegis.entities import substitute  # noqa: E402
-from aegis.hinglish import preserved  # noqa: E402
-from aegis.llm import GenerationError, get_backend  # noqa: E402
+from aegis_core.entities import substitute  # noqa: E402
+from aegis_core.hinglish import preserved  # noqa: E402
+from aegis_core.llm import GenerationError, get_backend  # noqa: E402
 
 HERE = Path(__file__).parent
 SEED_GLOB = str(HERE / "data" / "seed" / "*.jsonl")

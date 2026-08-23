@@ -28,7 +28,7 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from aegis.taxonomy import CRITICAL_LABELS, LABELS
+from aegis_core.taxonomy import CRITICAL_LABELS, LABELS
 
 HERE = Path(__file__).parent
 RAW = HERE / "data" / "raw" / "calls.jsonl"

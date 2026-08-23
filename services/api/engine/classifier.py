@@ -24,19 +24,23 @@ from __future__ import annotations
 import json
 import os
 import re
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..config import ML_DIR, settings
+from ..config import settings
 
-# taxonomy.py is the single source of truth for labels and threat weights;
-# it lives in the dataset pipeline, so the API imports it rather than
-# restating the eight stages and letting them drift.
-sys.path.insert(0, str(ML_DIR))
+# taxonomy.py is the single source of truth for labels and threat weights, so
+# the API imports it rather than restating the eight stages and letting them
+# drift. aegis-core is an installed package (packages/aegis_core), which is why
+# there is no sys.path manipulation here any more.
 try:
-    from aegis.taxonomy import BY_LABEL, LABELS  # type: ignore
-except ImportError:  # pragma: no cover - ml/ not on disk (container build)
+    from aegis_core.taxonomy import BY_LABEL, LABELS
+except ImportError:  # pragma: no cover - aegis-core not installed
+    # NOTE: this fallback is deliberately incomplete — BY_LABEL is empty, so
+    # threat weighting is lost. It exists so an image built without the package
+    # still starts, not so the engine can run indefinitely without it. See
+    # test_taxonomy_import_is_live, which asserts the real import is the one in
+    # use, because nothing else would notice: the label list is identical.
     LABELS = [
         "GREETING", "AUTHORITY_CLAIM", "FEAR_INDUCTION", "ISOLATION",
         "VERIFICATION_DEMAND", "PAYMENT_SETUP", "PAYMENT_EXECUTION", "BENIGN",
