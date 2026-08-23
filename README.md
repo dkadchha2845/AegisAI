@@ -220,7 +220,7 @@ utterance (typed / ASR / OCR)
 **Prerequisites:** Python 3.11+, Node 18+. No GPU, no API key, no network at runtime.
 
 ```bash
-git clone https://github.com/dkadchha2845/aegis.git
+git clone https://github.com/dkadchha2845/AegisAI.git
 cd aegis
 ```
 

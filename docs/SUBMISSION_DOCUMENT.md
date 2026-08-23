@@ -395,7 +395,7 @@ eval_backends.py    → Compare MuRIL vs lexical on measured F1
 | Detailed document | This document (`docs/SUBMISSION_DOCUMENT.md`) |
 | Additional file | `docs/PRESENTATION.html` (open in any browser — no install required) |
 | Problem statement | **PS 6** — AI for Digital Public Safety: Defeating Counterfeiting, Fraud & Digital Arrest Scams |
-| GitHub URL | https://github.com/dkadchha2845/aegis |
+| GitHub URL | https://github.com/dkadchha2845/AegisAI |
 | Demo video | 3–4 min. Script in `attached_assets/demo_script_1784735112763.md` |
 
 ### Additional Artefacts Produced
@@ -418,7 +418,7 @@ eval_backends.py    → Compare MuRIL vs lexical on measured F1
 
 ```bash
 # 1. Clone
-git clone https://github.com/dkadchha2845/aegis.git
+git clone https://github.com/dkadchha2845/AegisAI.git
 cd aegis
 
 # 2. Backend
@@ -540,6 +540,6 @@ cp .env.example .env
 
 *AegisAI — Every citizen's device is now a shield. Not a substitute for reporting fraud on 1930 or at cybercrime.gov.in.*
 
-**GitHub:** https://github.com/dkadchha2845/aegis  
+**GitHub:** https://github.com/dkadchha2845/AegisAI  
 **Problem Statement:** PS 6 — AI for Digital Public Safety  
 **Hackathon:** ET AI Hackathon 2026
