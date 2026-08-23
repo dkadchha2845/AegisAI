@@ -82,7 +82,12 @@ jobs:
       # dependencies in requirements.txt resolve against the working directory,
       # which is the repo root here.
       - name: Install
-        run: pip install -r services/api/requirements.txt
+        run: |
+          pip install -r services/api/requirements.txt
+          # Test tooling, deliberately not in the runtime requirements: the
+          # service should not ship a coverage plugin. Installed here because
+          # the coverage gate runs in this job.
+          pip install pytest-cov
 
       # No checkpoint on the runner, and that is the point: this asserts the
       # documented clean-clone path — lexical classifier, BM25 retrieval, no
