@@ -133,3 +133,60 @@ def test_health_lexical_fallback_is_flagged_degraded():
     if body["classifier"]["backend"] == "lexical" and not body["classifier"]["serving_best"]:
         assert body["classifier"]["loaded"] is False
         assert "clf:lexical_fallback" in body["degraded"]
+
+
+# --- the same defect, in the paths that actually serve users ----------------
+
+
+def test_session_does_not_falsely_report_lexical_fallback():
+    """A live session must not claim degradation while MuRIL is serving.
+
+    `engine/session.py` tagged every frame with `clf:lexical_fallback` based on
+    `backend != "muril"`, so the fused backend — which serves MuRIL's weights —
+    made the UI tell a frightened citizen the system was running in a worse mode
+    than it was. Third occurrence of the same string-comparison bug; this pins
+    the serving path, not just /api/health.
+    """
+    from services.api.engine import classifier as classifier_mod
+    from services.api.engine.session import Session
+
+    s = Session(session_id="t_degraded")
+    tagged = "clf:lexical_fallback" in s._degraded_static
+    assert tagged == classifier_mod.serving_is_fallback, (
+        f"session tagged lexical_fallback={tagged} but serving_is_fallback="
+        f"{classifier_mod.serving_is_fallback} ({classifier_mod.selection_reason})"
+    )
+
+
+def test_analyzer_does_not_falsely_report_lexical_fallback():
+    """Same guard for the one-shot text analysis path."""
+    from services.api.engine import classifier as classifier_mod
+    from services.api.engine.analyzer import analyze_text
+
+    res = analyze_text("Main CBI se bol raha hoon, aapke naam par parcel hai")
+    tagged = "clf:lexical_fallback" in res.degraded
+    assert tagged == classifier_mod.serving_is_fallback, (
+        f"analyzer tagged lexical_fallback={tagged} but serving_is_fallback="
+        f"{classifier_mod.serving_is_fallback} ({classifier_mod.selection_reason})"
+    )
+
+
+def test_degradation_is_reported_consistently_everywhere():
+    """health, session and analyzer must agree about whether we are degraded.
+
+    Three independent copies of the same judgement is how they drifted apart in
+    the first place.
+    """
+    from fastapi.testclient import TestClient
+
+    from services.api.engine.analyzer import analyze_text
+    from services.api.engine.session import Session
+    from services.api.main import app
+
+    health_says = "clf:lexical_fallback" in TestClient(app).get("/api/health").json()["degraded"]
+    session_says = "clf:lexical_fallback" in Session(session_id="t_consistent")._degraded_static
+    analyzer_says = "clf:lexical_fallback" in analyze_text("hello there").degraded
+
+    assert health_says == session_says == analyzer_says, (
+        f"disagreement — health={health_says} session={session_says} analyzer={analyzer_says}"
+    )

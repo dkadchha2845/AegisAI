@@ -55,7 +55,7 @@ def build_complaint(result: Dict[str, Any], *, submitted_text: str = "",
         entities["upi_ids"].append(upi_payload["vpa"])
 
     return {
-        "complaint_id": f"KVCH-CIT-{uuid.uuid4().hex[:10].upper()}",
+        "complaint_id": f"AGIS-CIT-{uuid.uuid4().hex[:10].upper()}",
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "generator": "AegisAI / CFSRP — Citizen Fraud Shield & Response Platform",
         "channel": channel,

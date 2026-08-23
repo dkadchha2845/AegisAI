@@ -77,7 +77,7 @@ def test_emergency_response_scales_with_severity():
 def test_complaint_extracts_entities_and_links():
     r = verify(text=DIGITAL_ARREST, number="7042118830", city="Bengaluru")
     c = build_complaint(r, submitted_text=DIGITAL_ARREST, city="Bengaluru")
-    assert c["complaint_id"].startswith("KVCH-CIT-")
+    assert c["complaint_id"].startswith("AGIS-CIT-")
     assert "cbi.verify@okaxis" in c["entities"]["upi_ids"]
     assert c["linked_intelligence"]["clusters"], "should link to a known cluster"
 

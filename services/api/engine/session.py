@@ -27,6 +27,7 @@ from typing import Any
 
 from ..rag.coach import get_coach
 from ..rag.store import get_kb
+from . import classifier as classifier_mod
 from .classifier import load_classifier
 from .coercion import CoercionTracker
 from .passport import TrustPassport
@@ -140,7 +141,12 @@ class Session:
         self._events: list[dict] = []
         self._last_tick = 0.0
         self._degraded_static: list[str] = list(get_kb().degraded)
-        if self.classifier.backend != "muril":
+        # `serving_is_fallback`, not `backend != "muril"`. The fused backend
+        # serves MuRIL's weights, so the string test tagged every frame as
+        # degraded while the good model was running — telling the citizen the
+        # system was in a worse mode than it was. classifier.py documents this
+        # predicate as the correct one; two call sites had drifted from it.
+        if classifier_mod.serving_is_fallback:
             self._degraded_static.append("clf:lexical_fallback")
         self._degraded_static += self.twin.degraded
 

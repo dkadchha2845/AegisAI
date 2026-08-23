@@ -44,7 +44,7 @@ def test_save_then_list_then_read(client):
     saved = client.post(f"/api/session/{sid}/report/save")
     assert saved.status_code == 201
     report_id = saved.json()["record"]["report_id"]
-    assert report_id.startswith("KVCH-")
+    assert report_id.startswith("AGIS-")
 
     listed = client.get("/api/reports")
     assert listed.status_code == 200
@@ -62,7 +62,7 @@ def test_save_unknown_session_is_404(client):
 
 
 def test_read_unknown_report_is_404(client):
-    assert client.get("/api/reports/KVCH-DOESNOTEXIST").status_code == 404
+    assert client.get("/api/reports/AGIS-DOESNOTEXIST").status_code == 404
 
 
 def test_export_is_audited(client):

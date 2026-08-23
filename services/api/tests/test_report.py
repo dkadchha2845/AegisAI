@@ -32,7 +32,7 @@ def _run_scam_call() -> Session:
 
 def test_package_has_the_load_bearing_fields():
     pkg = build_evidence_package(_run_scam_call())
-    assert pkg["report_id"].startswith("KVCH-")
+    assert pkg["report_id"].startswith("AGIS-")
     assert pkg["call"]["caller_number"] == "+1-838-224-7719"
     assert pkg["assessment"]["claimed_identity"]  # a claim was detected
     assert pkg["incident"]["peak_threat"] > 0

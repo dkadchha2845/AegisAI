@@ -277,7 +277,7 @@ def case_from_package(
     biggest_amount = max(ent.amounts, default=float(call.get("amount_inr") or 0.0))
 
     return FraudCase(
-        case_id=package.get("report_id", "KVCH-UNKNOWN"),
+        case_id=package.get("report_id", "AGIS-UNKNOWN"),
         source="module1",
         scam_type=scam_type,
         threat_score=score,

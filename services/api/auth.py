@@ -33,7 +33,7 @@ from sqlalchemy.orm import Session
 
 from .config import settings
 from .db import get_db
-from .models_db import ROLE_RANK, User
+from .models_db import ROLE_RANK, Organization, User
 
 # --- password hashing -------------------------------------------------------
 
@@ -163,6 +163,9 @@ def create_user(
 #: demo password; none of these exist in enforced mode. Realistic of a cyber
 #: cell: a supervisor (org admin) over analysts, plus a read-only desk (viewer),
 #: and a second tenant to show cross-org isolation from the owner's seat.
+MH_ORG_SLUG = "maharashtra-cyber-cell"
+MH_ORG_NAME = "Maharashtra Cyber Cell"
+
 DEMO_PASSWORD = "changeme"
 DEMO_ROSTER = (
     # (email, role, org: "default" | "mh")
@@ -188,30 +191,49 @@ def seed_admin(db: Session) -> None:
     from .orgs import create_org, get_or_create_default_org
 
     default_org = get_or_create_default_org(db)
-    if db.query(User).count() > 0:
-        return
 
-    create_user(
-        db,
-        settings.default_admin_email,
-        settings.default_admin_password,
-        role="owner",
-        org_id=default_org.id,
-    )
-    print(f"[aegis] seeded default org {default_org.slug!r} + owner "
-          f"{settings.default_admin_email!r} — change the password (AEGIS_ADMIN_PASSWORD)")
+    # Per-account, not all-or-nothing. This used to be
+    # `if db.query(User).count() > 0: return`, which meant that changing
+    # `AEGIS_ADMIN_EMAIL` on a database that already had users silently
+    # provisioned no owner at all.
+    #
+    # The PRESAGE -> AegisAI rename walked straight into it: the default owner
+    # became admin@aegis.local, the existing database still held
+    # admin@kavach.local, the early return fired, and the login screen
+    # advertised credentials that did not exist. No test caught it because
+    # tests seed a fresh ephemeral database, where the old branch behaved
+    # identically. Seeding what is *missing* is idempotent in both cases.
+    owner = db.query(User).filter(User.email == settings.default_admin_email).first()
+    if owner is None:
+        create_user(
+            db,
+            settings.default_admin_email,
+            settings.default_admin_password,
+            role="owner",
+            org_id=default_org.id,
+        )
+        print(f"[aegis] seeded default org {default_org.slug!r} + owner "
+              f"{settings.default_admin_email!r} — change the password (AEGIS_ADMIN_PASSWORD)")
 
     if auth_enabled():
         return
 
     # Demo mode: a second tenant + a role ladder in each, so signing in as each
-    # account visibly changes what the case book exposes.
-    mh_org = create_org(db, "Maharashtra Cyber Cell")
+    # account visibly changes what the case book exposes. Still gated on open
+    # mode, so a real deployment ships no known-password accounts.
+    mh_org = (
+        db.query(Organization).filter(Organization.slug == MH_ORG_SLUG).first()
+        or create_org(db, MH_ORG_NAME, slug=MH_ORG_SLUG)
+    )
     org_ids = {"default": default_org.id, "mh": mh_org.id}
+    created = 0
     for email, role, org_key in DEMO_ROSTER:
-        create_user(db, email, DEMO_PASSWORD, role=role, org_id=org_ids[org_key])
-    print(f"[aegis] seeded {len(DEMO_ROSTER)} demo accounts (open mode) — "
-          f"password {DEMO_PASSWORD!r}; disabled when AEGIS_AUTH=1")
+        if db.query(User).filter(User.email == email).first() is None:
+            create_user(db, email, DEMO_PASSWORD, role=role, org_id=org_ids[org_key])
+            created += 1
+    if created:
+        print(f"[aegis] seeded {created} demo account(s) (open mode) — "
+              f"password {DEMO_PASSWORD!r}; disabled when AEGIS_AUTH=1")
 
 
 # --- request dependencies ---------------------------------------------------
@@ -225,7 +247,13 @@ def _open_mode_user(db: Session) -> User:
     """In open mode every request acts as the seeded admin, so routes that
     declare `require_role(...)` still work without a login."""
     seed_admin(db)
-    user = db.query(User).order_by(User.id.asc()).first()
+    # The configured owner specifically. Taking `id == 1` meant open mode acted
+    # as whichever account happened to be created first — on a database that
+    # predates a config change, that is not necessarily an owner, and every
+    # `require_role` check would then fail for reasons no one could see.
+    user = db.query(User).filter(User.email == settings.default_admin_email).first()
+    if user is None:
+        user = db.query(User).filter(User.role == "owner").order_by(User.id.asc()).first()
     if user is None:  # pragma: no cover - seed always creates one
         raise HTTPException(status_code=500, detail="no users provisioned")
     return user

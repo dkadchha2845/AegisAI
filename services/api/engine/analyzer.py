@@ -22,6 +22,7 @@ from dataclasses import asdict, dataclass, field
 
 from ..rag.coach import get_coach
 from ..rag.store import get_kb
+from . import classifier as classifier_mod
 from .classifier import load_classifier
 from .coercion import CoercionTracker
 from .passport import TrustPassport
@@ -241,7 +242,10 @@ def analyze_text(
     classifier = load_classifier()
     kb = get_kb()
     degraded: list[str] = list(kb.degraded)
-    if classifier.backend != "muril":
+    # See session.py: the fused backend serves MuRIL, so a `backend != "muril"`
+    # test falsely reports degradation. `serving_is_fallback` is the predicate
+    # classifier.py defines for exactly this question.
+    if classifier_mod.serving_is_fallback:
         degraded.append("clf:lexical_fallback")
 
     # --- Bare UPI identifier: structural checks only, no narrative to score.

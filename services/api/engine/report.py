@@ -124,7 +124,7 @@ def build_evidence_package(session: "Session") -> Dict[str, Any]:
             })
 
     return {
-        "report_id": f"KVCH-{uuid.uuid4().hex[:12].upper()}",
+        "report_id": f"AGIS-{uuid.uuid4().hex[:12].upper()}",
         "schema_version": REPORT_SCHEMA_VERSION,
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "generator": "AegisAI — Real-Time Scam Session Intelligence Engine",
