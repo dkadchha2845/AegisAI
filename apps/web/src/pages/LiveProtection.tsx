@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import * as api from "@/lib/api";
 import type { Hotspot, VerifyResult } from "@/lib/api";
-import type { ManipulationMap, PresageEvent, StateFrame } from "@/types/contract";
+import type { ManipulationMap, AegisEvent, StateFrame } from "@/types/contract";
 import { useStreamPlayer } from "@/hooks/useStreamPlayer";
 import { useLiveSession } from "@/hooks/useLiveSession";
 import { useVoice } from "@/hooks/useVoice";
@@ -121,7 +121,7 @@ function identityVerdict(pct?: number | null): { text: string; bad: boolean } {
   return { text: "Nothing disproven yet — stay careful.", bad: false };
 }
 
-function eventLine(e: PresageEvent): string | null {
+function eventLine(e: AegisEvent): string | null {
   const p = e.payload as Record<string, unknown>;
   switch (e.kind) {
     case "STAGE_CHANGED":
@@ -151,7 +151,7 @@ const UPI_RE = /\b[\w.-]{2,}@[a-z]{2,}\b/gi;
 export function LiveProtection() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [source, setSource] = useState<Source>(null);
-  const [events, setEvents] = useState<PresageEvent[]>([]);
+  const [events, setEvents] = useState<AegisEvent[]>([]);
   const [report, setReport] = useState<VerifyResult | null>(null);
   const [reportBusy, setReportBusy] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
@@ -233,7 +233,7 @@ export function LiveProtection() {
   // Persist events into the timeline, and auto-end when the call ends.
   useEffect(() => {
     if (phase !== "live") return;
-    return onEvent((e: PresageEvent) => {
+    return onEvent((e: AegisEvent) => {
       if (e.kind === "CALL_ENDED") {
         void endCall();
         return;
@@ -378,7 +378,7 @@ export function LiveProtection() {
         <header className="page__head">
           <h1 className="page__title">Live Protection</h1>
           <p className="page__lede">
-            On a suspicious call right now? Put it on speaker and let KAVACH listen. It names the
+            On a suspicious call right now? Put it on speaker and let AegisAI listen. It names the
             danger as it unfolds, warns you the moment it turns, and tells you exactly what to say.
           </p>
         </header>
@@ -398,7 +398,7 @@ export function LiveProtection() {
             <option value="en-US">English (US)</option>
           </select>
           <span className="small faint">
-            Sets what KAVACH listens for. Hindi / Hinglish handles code-mixed calls.
+            Sets what AegisAI listens for. Hindi / Hinglish handles code-mixed calls.
           </span>
         </div>
 
@@ -411,7 +411,7 @@ export function LiveProtection() {
           </button>
         </div>
         <p className="small faint" style={{ marginTop: "var(--s-4)" }}>
-          KAVACH listens through your device microphone, so put the call on speakerphone. Nothing is
+          AegisAI listens through your device microphone, so put the call on speakerphone. Nothing is
           uploaded — the audio is transcribed on your device. Works best in Chrome. Not sure? Try the
           demo call first.
         </p>
@@ -506,7 +506,7 @@ export function LiveProtection() {
             <p className="label">What&apos;s happened so far</p>
             {events.length === 0 ? (
               <p className="small muted" style={{ margin: "var(--s-2) 0 0" }}>
-                Nothing alarming yet. KAVACH will note each turn of the call here.
+                Nothing alarming yet. AegisAI will note each turn of the call here.
               </p>
             ) : (
               <ul className="live-timeline" style={{ marginTop: "var(--s-3)" }}>
@@ -573,7 +573,7 @@ export function LiveProtection() {
               </>
             ) : (
               <p className="small muted" style={{ margin: "var(--s-2) 0 0" }}>
-                Stay on the line and don&apos;t share anything yet. KAVACH will tell you what to say.
+                Stay on the line and don&apos;t share anything yet. AegisAI will tell you what to say.
               </p>
             )}
           </section>

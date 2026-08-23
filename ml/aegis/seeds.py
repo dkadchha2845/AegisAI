@@ -1,5 +1,5 @@
 """
-PRESAGE — diversity grid for synthetic call generation.
+AegisAI — diversity grid for synthetic call generation.
 
 The failure mode of LLM-generated datasets is mode collapse: ask for 200 scam
 calls and you get 200 paraphrases of the same call. The classifier then scores

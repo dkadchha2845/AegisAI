@@ -1,4 +1,4 @@
-# PRESAGE / KAVACH — build status
+# AegisAI / AegisAI — build status
 
 **Last updated:** 22 July 2026
 **Verified against:** a clean run of the full check suite on this commit.
@@ -14,7 +14,7 @@ reverse-engineer the state from the diff.
 
 ## TL;DR
 
-**All three KAVACH modules are built and demoable end to end** — Detect (Module 1
+**All three AegisAI modules are built and demoable end to end** — Detect (Module 1
 RSSIE) → Connect (Module 2 FIGAE) → Protect (Module 3 CFSRP). There are now 10
 screens plus an awwwards landing and a dedicated login. Multi-tenant orgs, a
 security-hardening pass, and a 5× corpus expansion landed this session, along
@@ -46,7 +46,7 @@ payment rails, and the ~2-hour full-corpus MuRIL retrain. All additive.
 
 | Measure | Where it stands |
 |---|---|
-| KAVACH modules | **3 of 3** (RSSIE + FIGAE + CFSRP) |
+| AegisAI modules | **3 of 3** (RSSIE + FIGAE + CFSRP) |
 | Backend tests | **84 passing** (verdicts, intel, shield, security, orgs, auth, casebook, ocr, report, scripts, spoofing) |
 | Contract check | **passing** (8 enums + version + 24-frame mock) |
 | Frontend typecheck + build | **passing**, zero errors; main bundle 845 kB → **48 kB** (vendor split) |
@@ -120,7 +120,7 @@ tests** (`test_orgs.py`).
 | Piece | Status | Notes |
 |---|---|---|
 | DB (`db.py`, `models_db.py`) | ✅ | SQLAlchemy, in-memory by default (`db:ephemeral`), persists via `DATABASE_URL`. Clean-clone demo preserved. |
-| Auth + RBAC (`auth.py`, `routes/auth.py`) | ✅ | pbkdf2 + HS256 (stdlib only), roles viewer/analyst/admin, off by default (`PRESAGE_AUTH`), open mode = seeded admin. |
+| Auth + RBAC (`auth.py`, `routes/auth.py`) | ✅ | pbkdf2 + HS256 (stdlib only), roles viewer/analyst/admin, off by default (`AEGIS_AUTH`), open mode = seeded admin. |
 | Persistence + audit (`routes/reports.py`, `audit.py`) | ✅ | Save evidence packages as cases; append-only audit log (logins, exports, payment overrides). |
 | Frontend (`/cases`, `AuthContext`) | ✅ | Case book UI: saved cases, activity log, users, sign-in — role-scoped. Guardian "Save to case book". |
 | `session.py` | ✅ | State machine → idempotent `StateFrame` snapshots + one-shot `Event` edges |
@@ -202,7 +202,7 @@ Ordered by how much they'd improve the product per hour spent.
 ### P0 — Corpus expansion (attempted; the honest result) + 2 pipeline bugs fixed
 
 **Outcome:** the fine-tuned model still loses to the lexical baseline on a *valid*
-benchmark, and KAVACH serves the baseline. But the training pipeline now runs.
+benchmark, and AegisAI serves the baseline. But the training pipeline now runs.
 
 What happened this session (full account in
 [`docs/IMPLEMENTATION-REPORT.md` §7](docs/IMPLEMENTATION-REPORT.md)):
@@ -264,7 +264,7 @@ underperforms:
 
 Promotion is automatic once it wins: `load_classifier()` gates on
 `backend_comparison.json`, so a better model promotes itself. Force with
-`PRESAGE_CLASSIFIER=muril` to test.
+`AEGIS_CLASSIFIER=muril` to test.
 
 ### P1 — Live audio / ASR (the biggest functional gap)
 
@@ -321,7 +321,7 @@ are real prose, still never touch a score, and degrade to templates with
 `rag:lexical` cleared. Note: dense **script** matching was measured and
 rejected — MiniLM can't separate benign from scam on short Hinglish lines —
 so the script matcher stays lexical (see `scripts.py` docstring),
-gated behind `PRESAGE_DENSE_SCRIPTS=1`.
+gated behind `AEGIS_DENSE_SCRIPTS=1`.
 
 ### P3 — Smaller gaps
 

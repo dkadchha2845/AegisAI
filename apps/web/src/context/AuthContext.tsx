@@ -21,7 +21,7 @@ import * as api from "@/lib/api";
 import type { AuthUser, Organization } from "@/lib/api";
 
 /** The seeded demo owner — the "continue as admin" shortcut in open mode. */
-export const DEMO_OWNER = { email: "admin@kavach.local", password: "changeme" };
+export const DEMO_OWNER = { email: "admin@aegis.local", password: "changeme" };
 
 interface AuthState {
   user: AuthUser | null;

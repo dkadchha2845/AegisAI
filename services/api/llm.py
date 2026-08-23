@@ -49,7 +49,7 @@ def _gemini(prompt: str, system: str = SYSTEM) -> str:
         raise LLMUnavailable("GEMINI_API_KEY not set")
     # The rolling alias, not a pinned version: Google retires pinned Gemini
     # names (1.5-flash, 2.0-flash both 404/429 now) and a dead default turns
-    # every explanation into the template fallback. Pin via PRESAGE_MODEL.
+    # every explanation into the template fallback. Pin via AEGIS_MODEL.
     model = settings.llm_model or "gemini-flash-lite-latest"
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -121,7 +121,7 @@ _BACKENDS = {"gemini": _gemini, "ollama": _ollama, "anthropic": _anthropic}
 # must refuse when the corpus does not cover the question. This is retrieval-
 # grounded Q&A, never scoring.
 ASSISTANT_SYSTEM = (
-    "You are KAVACH's fraud-safety assistant for people in India. Answer the "
+    "You are AegisAI's fraud-safety assistant for people in India. Answer the "
     "user's question using ONLY the numbered CONTEXT passages provided, which "
     "come from a curated corpus of RBI advisories and scam playbooks.\n"
     "\n"
@@ -168,7 +168,7 @@ def answer_question(question: str, contexts: List[Dict[str, str]]) -> Optional[s
         # prompt so it answers from context instead of explaining a verdict.
         return backend(prompt, system=ASSISTANT_SYSTEM)
     except Exception as exc:  # network, quota, malformed — all degrade to None
-        print(f"[presage] knowledge assistant unavailable: {exc}")
+        print(f"[aegis] knowledge assistant unavailable: {exc}")
         return None
 
 
@@ -206,7 +206,7 @@ def explain(analysis: Dict[str, Any], language: str = "auto") -> Optional[str]:
     try:
         return backend(prompt)
     except Exception as exc:  # network, quota, malformed response — all equal
-        print(f"[presage] LLM explanation unavailable: {exc}")
+        print(f"[aegis] LLM explanation unavailable: {exc}")
         return None
 
 

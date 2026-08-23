@@ -150,7 +150,7 @@ export function Knowledge() {
               <div className="small">
                 No language model is configured, so here are the exact corpus
                 sections that match — read from the top. Set{" "}
-                <span className="mono">PRESAGE_LLM</span> to get a synthesized
+                <span className="mono">AEGIS_LLM</span> to get a synthesized
                 answer.
               </div>
             </div>

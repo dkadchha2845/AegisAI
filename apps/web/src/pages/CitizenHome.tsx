@@ -21,7 +21,7 @@ const TASKS = [
     to: "/live",
     icon: Activity,
     title: "Live Protection",
-    body: "On a suspicious call right now? Let KAVACH listen and guide you.",
+    body: "On a suspicious call right now? Let AegisAI listen and guide you.",
     tone: "urgent",
   },
   {
@@ -141,7 +141,7 @@ export function CitizenHome() {
       )}
 
       <p className="small faint" style={{ marginTop: "var(--s-5)" }}>
-        KAVACH gives guidance — it's not a substitute for reporting fraud on{" "}
+        AegisAI gives guidance — it's not a substitute for reporting fraud on{" "}
         <strong className="mono">1930</strong> or at{" "}
         <a href="https://cybercrime.gov.in" target="_blank" rel="noreferrer">
           cybercrime.gov.in

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-PRESAGE — expand the hand-labelled gold set into a training corpus.
+AegisAI — expand the hand-labelled gold set into a training corpus.
 
     python paraphrase.py --variants 20 --no-llm    # substitution only, instant
     python paraphrase.py --variants 20             # + local model rewrite
 
 Two stages, in order of trustworthiness:
 
-  1. Entity substitution (presage/entities.py) -- deterministic, offline,
+  1. Entity substitution (aegis/entities.py) -- deterministic, offline,
      cannot fail. Swaps names, cities, banks, apps, amounts, identifiers.
   2. Local-model paraphrase -- reworders the sentences for real phrasing
      variety. Optional; skipped with --no-llm.
@@ -41,9 +41,9 @@ import httpx
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from presage.entities import substitute  # noqa: E402
-from presage.hinglish import preserved  # noqa: E402
-from presage.llm import GenerationError, get_backend  # noqa: E402
+from aegis.entities import substitute  # noqa: E402
+from aegis.hinglish import preserved  # noqa: E402
+from aegis.llm import GenerationError, get_backend  # noqa: E402
 
 HERE = Path(__file__).parent
 SEED_GLOB = str(HERE / "data" / "seed" / "*.jsonl")

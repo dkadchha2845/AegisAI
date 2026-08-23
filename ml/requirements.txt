@@ -1,7 +1,7 @@
 # Dataset generation (offline, one-time, free backends)
 httpx>=0.27
 
-# Only needed if PRESAGE_LLM=anthropic (paid). Not required for gemini/ollama.
+# Only needed if AEGIS_LLM=anthropic (paid). Not required for gemini/ollama.
 # anthropic>=0.69
 
 # Training runs in Colab (free T4), not locally:

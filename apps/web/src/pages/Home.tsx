@@ -1,5 +1,5 @@
 /**
- * Home — the landing. The argument for KAVACH, told cinematically.
+ * Home — the landing. The argument for AegisAI, told cinematically.
  *
  * Structured as the product's own thesis: digital-arrest scams are an industrial
  * pipeline, so the defence is a pipeline too — Detect (Module 1) → Connect
@@ -126,7 +126,7 @@ export function Home() {
       <header className="lhead">
         <Link to="/" className="lhead__brand">
           <span className="brand2__mark" aria-hidden="true" />
-          <span className="lhead__name">KAVACH</span>
+          <span className="lhead__name">AegisAI</span>
         </Link>
         <nav className="lhead__nav">
           <a href="#pipeline">How it works</a>
@@ -138,7 +138,7 @@ export function Home() {
             {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
           </button>
           <Link className="btn2 btn2--primary lhead__enter" to="/home">
-            Open KAVACH <ArrowRight size={14} />
+            Open AegisAI <ArrowRight size={14} />
           </Link>
         </div>
       </header>
@@ -154,7 +154,7 @@ export function Home() {
             It knows what the scammer<br /><em>will say next.</em>
           </h1>
           <p className="hero__sub" data-hero-reveal data-reveal>
-            KAVACH is a three-stage intelligence platform against India's fastest-growing
+            AegisAI is a three-stage intelligence platform against India's fastest-growing
             cybercrime. It detects an active scam call in real time, connects it to the
             fraud network behind it, and protects the citizen on the line — shifting from
             reactive case investigation to predictive threat neutralisation.
@@ -272,12 +272,12 @@ export function Home() {
         </div>
         <div className="row landing__cta" data-scroll-reveal>
           <Link className="btn2 btn2--primary btn2--lg" to="/home">
-            Open KAVACH <ArrowRight size={15} />
+            Open AegisAI <ArrowRight size={15} />
           </Link>
           <Link className="btn2 btn2--lg" to="/learn">Learn about these scams</Link>
         </div>
         <p className="landing__foot small faint" data-scroll-reveal>
-          KAVACH / PRESAGE · Not a substitute for reporting fraud on 1930 or at cybercrime.gov.in.
+          AegisAI · Not a substitute for reporting fraud on 1930 or at cybercrime.gov.in.
         </p>
       </section>
     </div>

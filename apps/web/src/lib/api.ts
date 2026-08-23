@@ -1,5 +1,5 @@
 /**
- * Typed client for the PRESAGE API.
+ * Typed client for the AegisAI API.
  *
  * One place that knows the base URL, one place that knows how the server
  * reports failure. Every call returns a discriminated result rather than
@@ -20,7 +20,7 @@ export type ApiResult<T> =
 // --- session token ---------------------------------------------------------
 // Persisted so a reload keeps you signed in. Auth is off by default on the
 // server (open mode), so an absent token is the normal case, not an error.
-const TOKEN_KEY = "kavach.token";
+const TOKEN_KEY = "aegis.token";
 export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
 export const setToken = (token: string | null): void => {
   if (token) localStorage.setItem(TOKEN_KEY, token);
@@ -699,7 +699,7 @@ export interface VerifyResult {
   guidance: Guidance;
   emergency: EmergencyResponse;
   nearby_hotspots: Hotspot[];
-  /** Everything KAVACH pulled out of the evidence itself, so the citizen never
+  /** Everything AegisAI pulled out of the evidence itself, so the citizen never
    *  has to type a number/UPI/email the message already contained. */
   extracted_entities?: ExtractedEntities;
   degraded: string[];

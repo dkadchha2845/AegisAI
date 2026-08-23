@@ -35,7 +35,7 @@ from ..config import ML_DIR, settings
 # restating the eight stages and letting them drift.
 sys.path.insert(0, str(ML_DIR))
 try:
-    from presage.taxonomy import BY_LABEL, LABELS  # type: ignore
+    from aegis.taxonomy import BY_LABEL, LABELS  # type: ignore
 except ImportError:  # pragma: no cover - ml/ not on disk (container build)
     LABELS = [
         "GREETING", "AUTHORITY_CLAIM", "FEAR_INDUCTION", "ISOLATION",
@@ -373,15 +373,15 @@ def _checkpoint_is_better() -> tuple[bool, str]:
     in the product worse.
 
     So promotion is gated on the measured comparison. Set
-    PRESAGE_CLASSIFIER=muril to override once you have retrained on a larger
+    AEGIS_CLASSIFIER=muril to override once you have retrained on a larger
     corpus, or delete the comparison file to fall back to presence-based
     loading.
     """
-    forced = os.getenv("PRESAGE_CLASSIFIER", "").strip().lower()
+    forced = os.getenv("AEGIS_CLASSIFIER", "").strip().lower()
     if forced == "muril":
-        return True, "forced by PRESAGE_CLASSIFIER"
+        return True, "forced by AEGIS_CLASSIFIER"
     if forced == "lexical":
-        return False, "forced by PRESAGE_CLASSIFIER"
+        return False, "forced by AEGIS_CLASSIFIER"
 
     if not COMPARISON_PATH.exists():
         # Never measured. Trust the checkpoint, but say so on /api/health.
@@ -433,13 +433,13 @@ def load_classifier() -> StageClassifier:
                 serving_is_fallback = False
                 return _cached
             except Exception as exc:  # transformers/torch missing, bad export
-                print(f"[presage] MuRIL unavailable ({exc}); using lexical classifier")
+                print(f"[aegis] MuRIL unavailable ({exc}); using lexical classifier")
                 selection_reason = f"checkpoint failed to load: {exc}"
                 serving_is_fallback = True
         else:
             # Lexical is serving because it measurably beat the checkpoint (or was
             # forced). It is the best available model, so this is *not* degraded.
-            print(f"[presage] checkpoint not promoted — {reason}")
+            print(f"[aegis] checkpoint not promoted — {reason}")
             selection_reason = f"checkpoint present but {reason}"
             serving_is_fallback = False
     else:

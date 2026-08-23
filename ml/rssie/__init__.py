@@ -1,5 +1,5 @@
 """
-KAVACH Module 1 — RSSIE model package.
+AegisAI Module 1 — RSSIE model package.
 
 The spec's Section 6: a shared MuRIL encoder feeding a BiLSTM/lightweight
 transformer sequence head, with a multi-head classifier producing scam

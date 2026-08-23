@@ -52,7 +52,7 @@ STAGES = [
 
 #: Scam-type label space. Mirrors `ScamType` in schema/models.py exactly; the
 #: contract check does not cover this file, so it is asserted in
-#: tests/test_kavach.py instead.
+#: tests/test_rssie.py instead.
 SCAM_TYPES = [
     "NONE",
     "DIGITAL_ARREST",
@@ -85,7 +85,7 @@ STAGE2ID = {s: i for i, s in enumerate(STAGES)}
 SCAMTYPE2ID = {s: i for i, s in enumerate(SCAM_TYPES)}
 EMOTION2ID = {s: i for i, s in enumerate(EMOTIONS)}
 
-#: Archetype id (ml/presage/seeds.py) → scam type.
+#: Archetype id (ml/aegis/seeds.py) → scam type.
 #:
 #: Several distinct archetypes intentionally collapse onto one type. An EPFO
 #: withdrawal scam, an income-tax refund scam and a fake-RBI-circular scam all
@@ -151,7 +151,7 @@ def scam_type_of_archetype(archetype_id: str, is_scam: bool) -> str:
 #:
 #: This widening is lossy in the direction that matters and cannot be fixed by
 #: mapping alone: the corpus never distinguishes CURIOUS from CALM, or TRUSTING
-#: from CALM, because `VICTIM_STATES` in ml/presage/schema.py has no such
+#: from CALM, because `VICTIM_STATES` in ml/aegis/schema.py has no such
 #: labels. So the trained emotion head can only ever predict six of the eight
 #: classes, and the two it cannot predict are the two the rule-based extractor
 #: in engine/features/emotion.py was written specifically to catch.

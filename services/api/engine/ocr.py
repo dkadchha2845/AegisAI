@@ -7,7 +7,7 @@ the product runs on a clean clone with no network and no heavy wheels; OCR must
 not break that promise. So this follows the same discipline as the classifier
 and the PDF renderer:
 
-  * `PRESAGE_OCR` picks the backend — `tesseract` (default), `easyocr`, or `none`.
+  * `AEGIS_OCR` picks the backend — `tesseract` (default), `easyocr`, or `none`.
   * Each backend imports its dependency lazily and *probes* it (Tesseract also
     needs its system binary, which a `pip install` does not provide), falling
     back to `NullOcr` if anything is missing.
@@ -77,7 +77,7 @@ class TesseractOcr(OcrEngine):
 class EasyOcr(OcrEngine):
     """easyocr — stronger on stylised / multilingual text (the module names it),
     but heavy: it pulls torch and downloads models on first run. Opt-in via
-    PRESAGE_OCR=easyocr."""
+    AEGIS_OCR=easyocr."""
 
     name = "easyocr"
 
@@ -116,9 +116,9 @@ def load_ocr() -> OcrEngine:
     if _cached is not None:
         return _cached
 
-    requested = os.getenv("PRESAGE_OCR", "tesseract").strip().lower()
+    requested = os.getenv("AEGIS_OCR", "tesseract").strip().lower()
     if requested == "none":
-        selection_reason = "disabled by PRESAGE_OCR=none"
+        selection_reason = "disabled by AEGIS_OCR=none"
         _cached = NullOcr()
         return _cached
 
@@ -128,7 +128,7 @@ def load_ocr() -> OcrEngine:
         selection_reason = f"{cls.name} ready"
         return _cached
     except Exception as exc:  # noqa: BLE001 - any import/probe failure => degrade
-        print(f"[presage] OCR backend {requested!r} unavailable ({exc}); OCR disabled")
+        print(f"[aegis] OCR backend {requested!r} unavailable ({exc}); OCR disabled")
         selection_reason = f"{requested} unavailable: {exc}"
         _cached = NullOcr()
         return _cached

@@ -2,10 +2,10 @@
 """
 Train the RSSIE multi-head sequence classifier.
 
-    python ml/kavach/train_rssie.py                     # full run
-    python ml/kavach/train_rssie.py --epochs 2          # smoke test
-    python ml/kavach/train_rssie.py --encoder distilbert-base-multilingual-cased
-    python ml/kavach/train_rssie.py --unfreeze-encoder  # only with a big corpus
+    python ml/rssie/train_rssie.py                     # full run
+    python ml/rssie/train_rssie.py --epochs 2          # smoke test
+    python ml/rssie/train_rssie.py --encoder distilbert-base-multilingual-cased
+    python ml/rssie/train_rssie.py --unfreeze-encoder  # only with a big corpus
 
 Exports to `ml/artifacts/rssie/`, which is where `services/api/engine/rssie.py`
 looks. As with the stage classifier, the checkpoint is **not** promoted merely
@@ -41,9 +41,9 @@ HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from ml.kavach.dataset import CallExample, describe, load_calls  # noqa: E402
-from ml.kavach.labels import EMOTIONS, SCAM_TYPES, STAGES  # noqa: E402
-from ml.kavach.model import FEATURE_DIM, RSSIEConfig, RSSIEModel  # noqa: E402
+from ml.rssie.dataset import CallExample, describe, load_calls  # noqa: E402
+from ml.rssie.labels import EMOTIONS, SCAM_TYPES, STAGES  # noqa: E402
+from ml.rssie.model import FEATURE_DIM, RSSIEConfig, RSSIEModel  # noqa: E402
 
 ARTIFACTS = REPO_ROOT / "ml" / "artifacts" / "rssie"
 
@@ -337,7 +337,7 @@ def main() -> int:
         )
     )
     print(f"\nexported to {args.out}")
-    print("run ml/kavach/eval_rssie.py to score it against the rule-based baseline")
+    print("run ml/rssie/eval_rssie.py to score it against the rule-based baseline")
     return 0
 
 

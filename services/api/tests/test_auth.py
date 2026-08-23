@@ -96,7 +96,7 @@ def _login(client, email, password):
 
 
 def test_login_success_and_me(enforced):
-    r = _login(enforced, "admin@kavach.local", "changeme")
+    r = _login(enforced, "admin@aegis.local", "changeme")
     assert r.status_code == 200
     token = r.json()["token"]
     me = enforced.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
@@ -107,11 +107,11 @@ def test_login_success_and_me(enforced):
     assert body["user"]["role"] == "owner"
     # It belongs to the default tenant, and /me now carries that org.
     assert body["org"] is not None
-    assert body["org"]["slug"] == "kavach"
+    assert body["org"]["slug"] == "aegis"
 
 
 def test_login_wrong_password_is_401(enforced):
-    assert _login(enforced, "admin@kavach.local", "nope").status_code == 401
+    assert _login(enforced, "admin@aegis.local", "nope").status_code == 401
 
 
 def test_login_unknown_email_is_401(enforced):
@@ -124,14 +124,14 @@ def test_protected_route_requires_token(enforced):
 
 
 def test_viewer_cannot_reach_admin_route(enforced):
-    admin = _login(enforced, "admin@kavach.local", "changeme").json()["token"]
+    admin = _login(enforced, "admin@aegis.local", "changeme").json()["token"]
     # Admin creates a viewer.
     enforced.post(
         "/api/auth/users",
         headers={"Authorization": f"Bearer {admin}"},
-        json={"email": "viewer@kavach.local", "password": "viewerpass1", "role": "viewer"},
+        json={"email": "viewer@aegis.local", "password": "viewerpass1", "role": "viewer"},
     )
-    viewer = _login(enforced, "viewer@kavach.local", "viewerpass1").json()["token"]
+    viewer = _login(enforced, "viewer@aegis.local", "viewerpass1").json()["token"]
     resp = enforced.get("/api/auth/users", headers={"Authorization": f"Bearer {viewer}"})
     assert resp.status_code == 403
 

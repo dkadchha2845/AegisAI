@@ -37,7 +37,7 @@ export function Profile() {
     <div className="page">
       <header className="page__head">
         <h1 className="page__title">Profile</h1>
-        <p className="page__lede">Your account and the professional tools behind KAVACH.</p>
+        <p className="page__lede">Your account and the professional tools behind AegisAI.</p>
       </header>
 
       <div className="card">
@@ -76,7 +76,7 @@ export function Profile() {
       <div className="card">
         <h2 className="card__title">Analyst tools</h2>
         <p className="small muted" style={{ marginTop: 0 }}>
-          The professional side of KAVACH — the instruments an investigator uses. These
+          The professional side of AegisAI — the instruments an investigator uses. These
           need a sign-in.
         </p>
         <div className="tool-list">

@@ -9,7 +9,7 @@ lines of HMAC. The parts that are easy to get subtly wrong are handled
 explicitly: constant-time comparison everywhere (`hmac.compare_digest`),
 base64url without padding, and an expiry that is always checked.
 
-Two modes, chosen by `PRESAGE_AUTH`:
+Two modes, chosen by `AEGIS_AUTH`:
 
   * **enforced** — protected routes require a valid bearer token, and
     `require_role` gates by the role ladder.
@@ -68,13 +68,13 @@ _dev_secret: Optional[bytes] = None
 def _secret() -> bytes:
     """The signing key. A configured key is stable across restarts; without one
     a per-process key is generated so dev still works — but tokens die with the
-    process, which is why production must set PRESAGE_SECRET_KEY."""
+    process, which is why production must set AEGIS_SECRET_KEY."""
     global _dev_secret
     if settings.secret_key:
         return settings.secret_key.encode("utf-8")
     if _dev_secret is None:
         _dev_secret = secrets.token_bytes(32)
-        print("[presage] PRESAGE_SECRET_KEY unset — using an ephemeral dev key; "
+        print("[aegis] AEGIS_SECRET_KEY unset — using an ephemeral dev key; "
               "tokens will not survive a restart")
     return _dev_secret
 
@@ -166,11 +166,11 @@ def create_user(
 DEMO_PASSWORD = "changeme"
 DEMO_ROSTER = (
     # (email, role, org: "default" | "mh")
-    ("supervisor@kavach.local", "admin", "default"),
-    ("analyst@kavach.local", "analyst", "default"),
-    ("viewer@kavach.local", "viewer", "default"),
-    ("mh.admin@kavach.local", "admin", "mh"),
-    ("mh.analyst@kavach.local", "analyst", "mh"),
+    ("supervisor@aegis.local", "admin", "default"),
+    ("analyst@aegis.local", "analyst", "default"),
+    ("viewer@aegis.local", "viewer", "default"),
+    ("mh.admin@aegis.local", "admin", "mh"),
+    ("mh.analyst@aegis.local", "analyst", "mh"),
 )
 
 
@@ -182,7 +182,7 @@ def seed_admin(db: Session) -> None:
     create organisations and see across them, and in open mode it is who every
     *un-authenticated* request acts as. The demo roster exists purely so the login
     screen can switch between roles and show RBAC working; it is never created
-    when `PRESAGE_AUTH` is on, so a real deployment ships no known-password
+    when `AEGIS_AUTH` is on, so a real deployment ships no known-password
     accounts.
     """
     from .orgs import create_org, get_or_create_default_org
@@ -198,8 +198,8 @@ def seed_admin(db: Session) -> None:
         role="owner",
         org_id=default_org.id,
     )
-    print(f"[presage] seeded default org {default_org.slug!r} + owner "
-          f"{settings.default_admin_email!r} — change the password (PRESAGE_ADMIN_PASSWORD)")
+    print(f"[aegis] seeded default org {default_org.slug!r} + owner "
+          f"{settings.default_admin_email!r} — change the password (AEGIS_ADMIN_PASSWORD)")
 
     if auth_enabled():
         return
@@ -210,8 +210,8 @@ def seed_admin(db: Session) -> None:
     org_ids = {"default": default_org.id, "mh": mh_org.id}
     for email, role, org_key in DEMO_ROSTER:
         create_user(db, email, DEMO_PASSWORD, role=role, org_id=org_ids[org_key])
-    print(f"[presage] seeded {len(DEMO_ROSTER)} demo accounts (open mode) — "
-          f"password {DEMO_PASSWORD!r}; disabled when PRESAGE_AUTH=1")
+    print(f"[aegis] seeded {len(DEMO_ROSTER)} demo accounts (open mode) — "
+          f"password {DEMO_PASSWORD!r}; disabled when AEGIS_AUTH=1")
 
 
 # --- request dependencies ---------------------------------------------------

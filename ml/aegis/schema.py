@@ -1,5 +1,5 @@
 """
-PRESAGE — output schema for generated calls.
+AegisAI — output schema for generated calls.
 
 Enforced server-side via `output_config.format`, so the generator never has to
 defend against malformed JSON, markdown fences, or a chatty preamble. Note the

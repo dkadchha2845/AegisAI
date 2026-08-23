@@ -1,5 +1,5 @@
 """
-PRESAGE — Hinglish preservation check.
+AegisAI — Hinglish preservation check.
 
 Why this module exists
 ----------------------

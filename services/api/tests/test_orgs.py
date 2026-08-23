@@ -18,8 +18,8 @@ from fastapi.testclient import TestClient
 @pytest.fixture()
 def enforced(monkeypatch):
     """A client with auth enforced and rate limiting off, fresh DB per test."""
-    monkeypatch.setenv("PRESAGE_AUTH", "1")
-    monkeypatch.setenv("PRESAGE_RATELIMIT", "0")
+    monkeypatch.setenv("AEGIS_AUTH", "1")
+    monkeypatch.setenv("AEGIS_RATELIMIT", "0")
     # Re-import settings-bound modules so the env flips take effect.
     import importlib
 
@@ -46,7 +46,7 @@ def _auth(token):
 
 
 def test_owner_can_create_org_and_scope_users(enforced):
-    owner = _login(enforced, "admin@kavach.local", "changeme")
+    owner = _login(enforced, "admin@aegis.local", "changeme")
     assert owner
 
     # Owner creates a second org.
@@ -70,16 +70,16 @@ def test_owner_can_create_org_and_scope_users(enforced):
     assert r.status_code == 200
     emails = {u["email"] for u in r.json()["users"]}
     assert emails == {"delhi.admin@x.gov.in"}
-    assert "admin@kavach.local" not in emails
+    assert "admin@aegis.local" not in emails
 
     # The owner sees everyone across all orgs.
     r = enforced.get("/api/auth/users", headers=_auth(owner))
     all_emails = {u["email"] for u in r.json()["users"]}
-    assert {"admin@kavach.local", "delhi.admin@x.gov.in"} <= all_emails
+    assert {"admin@aegis.local", "delhi.admin@x.gov.in"} <= all_emails
 
 
 def test_org_admin_cannot_create_owner(enforced):
-    owner = _login(enforced, "admin@kavach.local", "changeme")
+    owner = _login(enforced, "admin@aegis.local", "changeme")
     enforced.post("/api/orgs", json={"name": "Mumbai Cell"}, headers=_auth(owner))
     # Make an org admin.
     enforced.post(
@@ -98,7 +98,7 @@ def test_org_admin_cannot_create_owner(enforced):
 
 
 def test_non_owner_cannot_list_orgs(enforced):
-    owner = _login(enforced, "admin@kavach.local", "changeme")
+    owner = _login(enforced, "admin@aegis.local", "changeme")
     enforced.post(
         "/api/auth/users",
         json={"email": "analyst@x.gov.in", "password": "password123", "role": "analyst"},

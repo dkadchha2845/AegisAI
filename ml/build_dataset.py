@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PRESAGE — turn the raw generated calls into a trainable dataset.
+AegisAI — turn the raw generated calls into a trainable dataset.
 
     python build_dataset.py
 
@@ -28,7 +28,7 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from presage.taxonomy import CRITICAL_LABELS, LABELS
+from aegis.taxonomy import CRITICAL_LABELS, LABELS
 
 HERE = Path(__file__).parent
 RAW = HERE / "data" / "raw" / "calls.jsonl"
@@ -242,7 +242,7 @@ def write_jsonl(rows: list[dict], path: Path) -> None:
 
 def report(splits: dict[str, list[dict]], calls: list[dict], trans: dict,
            held_out: list[str]) -> str:
-    lines = ["# PRESAGE corpus report", ""]
+    lines = ["# AegisAI corpus report", ""]
     lines.append(f"- Calls: **{len(calls)}** "
                  f"({sum(c['seed']['is_scam'] for c in calls)} scam / "
                  f"{sum(not c['seed']['is_scam'] for c in calls)} benign)")
@@ -310,7 +310,7 @@ def report(splits: dict[str, list[dict]], calls: list[dict], trans: dict,
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Build the PRESAGE training dataset.")
+    ap = argparse.ArgumentParser(description="Build the AegisAI training dataset.")
     ap.add_argument("--raw", type=Path, default=RAW)
     ap.add_argument("--out", type=Path, default=OUT)
     ap.add_argument("--seed", type=int, default=7)

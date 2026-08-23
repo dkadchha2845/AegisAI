@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PRESAGE — synthetic call generator.
+AegisAI — synthetic call generator.
 
 Generates a diverse corpus of labelled scam and legitimate call transcripts in
 romanised Hinglish, for training the stage classifier and fitting the Digital
@@ -11,8 +11,8 @@ Twin's transition model.
     python generate_calls.py --limit 5          # smoke test
     python generate_calls.py                    # full run (~330 calls)
 
-Backend is chosen with PRESAGE_LLM (gemini | ollama | anthropic). The default,
-gemini, runs on Google AI Studio's free tier. See presage/llm.py.
+Backend is chosen with AEGIS_LLM (gemini | ollama | anthropic). The default,
+gemini, runs on Google AI Studio's free tier. See aegis/llm.py.
 
 The run is resumable: completed calls are appended to the output JSONL as they
 finish, and re-running skips any call_id already present. Interrupt it, restart
@@ -34,10 +34,10 @@ import httpx
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from presage.llm import GenerationError, get_backend, parse_turns, probe  # noqa: E402
-from presage.schema import VICTIM_STATES  # noqa: E402
-from presage.seeds import Seed, build_seeds  # noqa: E402
-from presage.taxonomy import LABELS, prompt_block  # noqa: E402
+from aegis.llm import GenerationError, get_backend, parse_turns, probe  # noqa: E402
+from aegis.schema import VICTIM_STATES  # noqa: E402
+from aegis.seeds import Seed, build_seeds  # noqa: E402
+from aegis.taxonomy import LABELS, prompt_block  # noqa: E402
 
 DEFAULT_OUT = Path(__file__).parent / "data" / "raw" / "calls.jsonl"
 
@@ -169,7 +169,7 @@ async def generate_one(
 
 
 async def main() -> int:
-    ap = argparse.ArgumentParser(description="Generate the PRESAGE synthetic corpus.")
+    ap = argparse.ArgumentParser(description="Generate the AegisAI synthetic corpus.")
     ap.add_argument("--out", type=Path, default=DEFAULT_OUT)
     ap.add_argument("--backend", default=None, help="gemini | ollama | anthropic")
     ap.add_argument("--model", default=None, help="override the backend's default model")

@@ -29,4 +29,4 @@ import os
 # so "" collapses to the ephemeral default, and the key being present blocks the
 # .env loader from overriding it.
 os.environ["DATABASE_URL"] = ""
-os.environ["PRESAGE_LLM"] = "none"
+os.environ["AEGIS_LLM"] = "none"

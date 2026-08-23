@@ -26,7 +26,7 @@ interface ThemeValue {
 
 const Ctx = createContext<ThemeValue>({ theme: "dark", toggle: () => {} });
 
-const KEY = "presage:theme";
+const KEY = "aegis:theme";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {

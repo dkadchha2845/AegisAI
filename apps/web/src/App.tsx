@@ -43,30 +43,30 @@ const ModelCard = lazy(() => import("@/pages/ModelCard").then((m) => ({ default:
 /** Per-route document titles — the tab should say where you are, not repeat
  *  the tagline. Rendered inside BrowserRouter so useLocation is available. */
 const TITLES: Record<string, string> = {
-  "/": "KAVACH — Your shield against scam calls",
-  "/login": "Sign in · KAVACH",
+  "/": "AegisAI — Your shield against scam calls",
+  "/login": "Sign in · AegisAI",
   // Citizen destinations
-  "/home": "Home · KAVACH",
-  "/analyze": "Analyze · KAVACH",
-  "/live": "Live Protection · KAVACH",
-  "/reports": "My Reports · KAVACH",
-  "/learn": "Learn · KAVACH",
-  "/emergency": "Emergency · KAVACH",
-  "/profile": "Profile · KAVACH",
+  "/home": "Home · AegisAI",
+  "/analyze": "Analyze · AegisAI",
+  "/live": "Live Protection · AegisAI",
+  "/reports": "My Reports · AegisAI",
+  "/learn": "Learn · AegisAI",
+  "/emergency": "Emergency · AegisAI",
+  "/profile": "Profile · AegisAI",
   // Analyst tools (reachable from Profile)
-  "/admin": "Admin · KAVACH",
-  "/dashboard": "Dashboard · KAVACH",
-  "/analyst/console": "Live console (analyst) · KAVACH",
-  "/intel": "Fraud intel · KAVACH",
-  "/analyzer": "Analyzer (audit) · KAVACH",
-  "/guardian": "Guardian · KAVACH",
-  "/model": "Model card · KAVACH",
+  "/admin": "Admin · AegisAI",
+  "/dashboard": "Dashboard · AegisAI",
+  "/analyst/console": "Live console (analyst) · AegisAI",
+  "/intel": "Fraud intel · AegisAI",
+  "/analyzer": "Analyzer (audit) · AegisAI",
+  "/guardian": "Guardian · AegisAI",
+  "/model": "Model card · AegisAI",
 };
 
 function RouteTitle() {
   const { pathname } = useLocation();
   useEffect(() => {
-    document.title = TITLES[pathname] ?? "KAVACH";
+    document.title = TITLES[pathname] ?? "AegisAI";
   }, [pathname]);
   return null;
 }

@@ -1,5 +1,5 @@
 """
-PRESAGE API.
+AegisAI API.
 
     .venv/bin/uvicorn services.api.main:app --reload --port 8000
 
@@ -32,7 +32,7 @@ from .routes import analyze, auth, intel, orgs, reports, session, shield
 from .security import RateLimitMiddleware, SecurityHeadersMiddleware
 
 app = FastAPI(
-    title="PRESAGE API",
+    title="AegisAI API",
     version="0.1.0",
     description="Real-time scam-call analysis, artifact checking, and the "
                 "Digital Twin forecast.",
@@ -195,7 +195,7 @@ def model_card() -> Dict[str, Any]:
     classifier = load_classifier()
     twin = DigitalTwin()
     return {
-        "name": "PRESAGE stage classifier",
+        "name": "AegisAI stage classifier",
         "task": "8-way utterance classification over the scam-call arc",
         "base_model": "google/muril-base-cased",
         "active_backend": classifier.backend,

@@ -367,7 +367,7 @@ def _get_matcher():
             _backend_name = "dense"
             return _matcher
     except Exception as exc:  # noqa: BLE001 - no torch, no cache, offline
-        print(f"[kavach] dense script matching unavailable ({exc}); using lexical")
+        print(f"[aegis] dense script matching unavailable ({exc}); using lexical")
     _matcher = _LexicalMatcher()
     _backend_name = "lexical"
     return _matcher

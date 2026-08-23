@@ -1,4 +1,4 @@
-# PRESAGE — dataset pipeline
+# AegisAI — dataset pipeline
 
 Builds the synthetic corpus that trains the stage classifier and fits the
 Digital Twin. Runs **once, offline, before the hackathon**. Nothing here runs
@@ -18,13 +18,13 @@ whole corpus several times over.
 ```bash
 # Option A — Gemini free tier (recommended). Google account, no card.
 #   key from https://aistudio.google.com/apikey
-export PRESAGE_LLM=gemini
+export AEGIS_LLM=gemini
 export GEMINI_API_KEY=...
 
 # Option B — fully offline, no signup, no quota, unlimited
 brew install ollama && ollama serve &
 ollama pull qwen2.5:7b-instruct
-export PRESAGE_LLM=ollama
+export AEGIS_LLM=ollama
 ```
 
 ## Run
@@ -58,7 +58,7 @@ it, so you can audit quality per source afterwards.
 ## Three decisions worth knowing
 
 **Every generation is validated client-side.** Backends differ in how (and
-whether) they enforce a schema, so `presage/llm.py` parses and validates every
+whether) they enforce a schema, so `aegis/llm.py` parses and validates every
 response itself: enum casing is normalised, markdown fences and prose wrappers
 are recovered from, but an invalid stage label, an empty utterance, or a
 one-sided transcript is rejected outright. A dropped generation costs one retry;
@@ -78,8 +78,8 @@ ISOLATION. Collapsing makes it answer what comes *after* the current stage;
 
 ## Files
 
-- `presage/taxonomy.py` — the 8 stages, their linguistic markers, threat weights
-- `presage/seeds.py` — the diversity grid (archetype × victim × style × language × outcome)
-- `presage/schema.py` — server-enforced JSON output schema
+- `aegis/taxonomy.py` — the 8 stages, their linguistic markers, threat weights
+- `aegis/seeds.py` — the diversity grid (archetype × victim × style × language × outcome)
+- `aegis/schema.py` — server-enforced JSON output schema
 - `generate_calls.py` — async generator, resumable, cost-reporting
 - `build_dataset.py` — splits, de-duplication, twin fitting, corpus report

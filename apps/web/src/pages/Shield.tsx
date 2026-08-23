@@ -1,5 +1,5 @@
 /**
- * Shield — the CFSRP citizen fraud shield (KAVACH Module 3), and the primary
+ * Shield — the CFSRP citizen fraud shield (AegisAI Module 3), and the primary
  * "check something suspicious" entry point (Home's hero CTA points here).
  *
  * One continuous investigation, not three separate module pages. Every input
@@ -372,7 +372,7 @@ export function Shield() {
                 </>
               )}
 
-              {/* Number / UPI are optional here — KAVACH extracts them from the
+              {/* Number / UPI are optional here — AegisAI extracts them from the
                   message itself. Shown only for the message/upload flows. */}
               {!verifyType && (mode === "text" || text) && (
                 <div className="row" style={{ gap: "var(--s-2)", marginTop: "var(--s-3)" }}>

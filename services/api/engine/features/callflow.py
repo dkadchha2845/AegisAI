@@ -85,7 +85,7 @@ class CallFlowFeatures:
     #: explicit subject. Used as a hard gate by the alert engine.
     reached_payment_half: bool = False
     #: Fixed-width vector for the sequence model. Order is stable and is part
-    #: of the trained model's input contract — see ml/kavach/features.py.
+    #: of the trained model's input contract — see ml/rssie/features.py.
     vector: list[float] = field(default_factory=list)
 
 

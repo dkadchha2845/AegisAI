@@ -1,5 +1,5 @@
 """
-KAVACH scam feature extraction — the spec's Section 5.
+AegisAI scam feature extraction — the spec's Section 5.
 
     A. callflow.py         call-flow sequence features
     B. script_templates.py scam script template matching

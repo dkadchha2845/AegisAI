@@ -1,5 +1,5 @@
 """
-PRESAGE — the WebSocket contract. Single source of truth.
+AegisAI — the WebSocket contract. Single source of truth.
 
 Both sides build against this file: the backend emits these models, the
 frontend renders `types.ts` which mirrors them exactly. Nothing else crosses

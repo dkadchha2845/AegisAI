@@ -4,7 +4,7 @@
  * The colour ramp walks the threat scale in canonical stage order, so a
  * transcript reads as a temperature gradient down the page — you can see the
  * call escalating without reading a word of it. This is display only; the
- * authoritative threat weights live in `ml/presage/taxonomy.py` and reach the
+ * authoritative threat weights live in `ml/aegis/taxonomy.py` and reach the
  * UI through the contract.
  */
 

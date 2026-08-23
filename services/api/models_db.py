@@ -37,7 +37,7 @@ ROLE_RANK = {name: i for i, name in enumerate(ROLES)}
 #: The slug of the organisation seeded on first boot. Every user and case in a
 #: single-org install belongs to it, so "multi-tenant" degrades cleanly to
 #: "one tenant" with no special-casing.
-DEFAULT_ORG_SLUG = "kavach"
+DEFAULT_ORG_SLUG = "aegis"
 
 
 class Organization(Base):

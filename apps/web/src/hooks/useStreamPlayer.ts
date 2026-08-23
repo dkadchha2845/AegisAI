@@ -13,17 +13,17 @@
  * animation without the whole tree re-rendering on every tick.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PresageEvent, StateFrame } from "@/types/contract";
+import type { AegisEvent, StateFrame } from "@/types/contract";
 import { isEvent, isState } from "@/types/contract";
 import raw from "@/mock/stream.json";
 
 /** Only timed messages are replayable — ErrorMessage carries no `t`, so it
  *  is deliberately excluded from the recorded stream. */
-type TimedMessage = StateFrame | PresageEvent;
+type TimedMessage = StateFrame | AegisEvent;
 
 const MESSAGES = raw as unknown as TimedMessage[];
 
-export type EventListener = (e: PresageEvent) => void;
+export type EventListener = (e: AegisEvent) => void;
 
 export interface StreamPlayer {
   frame: StateFrame | null;

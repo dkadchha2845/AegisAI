@@ -1,5 +1,5 @@
 """
-CFSRP — Citizen Fraud Shield & Response Platform (KAVACH Module 3).
+CFSRP — Citizen Fraud Shield & Response Platform (AegisAI Module 3).
 
 The user-facing layer. It does not detect scams itself; it translates the
 intelligence from Module 1 (RSSIE) and Module 2 (FIGAE) into immediate,

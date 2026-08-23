@@ -122,7 +122,7 @@ export function AppShell() {
 
         <NavLink to="/" className="brand2">
           <span className="brand2__mark" aria-hidden="true" />
-          <span className="brand2__name">KAVACH</span>
+          <span className="brand2__name">AegisAI</span>
           <span className="brand2__tag">Your shield against scam calls</span>
         </NavLink>
 

@@ -27,7 +27,7 @@ import math
 import re
 from dataclasses import dataclass
 
-from ..config import settings  # noqa: F401  (kept: PRESAGE_DENSE_SCRIPTS may join Settings)
+from ..config import settings  # noqa: F401  (kept: AEGIS_DENSE_SCRIPTS may join Settings)
 
 _TOKEN = re.compile(r"[a-z0-9]+")
 
@@ -35,7 +35,7 @@ _TOKEN = re.compile(r"[a-z0-9]+")
 def _flag_dense_scripts() -> bool:
     import os
 
-    return os.getenv("PRESAGE_DENSE_SCRIPTS", "").strip().lower() in {"1", "true", "yes", "on"}
+    return os.getenv("AEGIS_DENSE_SCRIPTS", "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _tok(text: str) -> list[str]:
@@ -132,7 +132,7 @@ class ScriptMatcher:
     lijiye" scores 0.707 while a real authority-claim line scores 0.686, so no
     threshold exists that keeps the false-positive discipline. TF-cosine keeps
     clean separation on the same probes (benign < 0.2, scam templates > 0.5).
-    Dense stays available behind PRESAGE_DENSE_SCRIPTS=1 for when a multilingual
+    Dense stays available behind AEGIS_DENSE_SCRIPTS=1 for when a multilingual
     embedding model is evaluated and measured to win — same promotion-by-
     evidence rule as the MuRIL checkpoint.
     """
@@ -144,7 +144,7 @@ class ScriptMatcher:
             try:
                 self._impl = _DenseMatcher(templates)
             except Exception as exc:  # no torch / no model cache / offline
-                print(f"[presage] dense script matcher unavailable ({exc}); using lexical")
+                print(f"[aegis] dense script matcher unavailable ({exc}); using lexical")
                 self._impl = _LexicalMatcher(templates)
         else:
             self._impl = _LexicalMatcher(templates)

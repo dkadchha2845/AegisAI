@@ -199,7 +199,7 @@ class KnowledgeBase:
                 self.backend = "dense"
                 return
             except Exception as exc:  # no torch, no model cache, offline
-                print(f"[presage] dense RAG unavailable ({exc}); using BM25")
+                print(f"[aegis] dense RAG unavailable ({exc}); using BM25")
         self.index = BM25Index(self.chunks)
         self.backend = "bm25"
 

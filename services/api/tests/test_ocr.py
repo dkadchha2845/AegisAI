@@ -28,7 +28,7 @@ def _reset_ocr_cache():
 
 
 def _load(monkeypatch, backend: str) -> ocr_mod.OcrEngine:
-    monkeypatch.setenv("PRESAGE_OCR", backend)
+    monkeypatch.setenv("AEGIS_OCR", backend)
     ocr_mod._cached = None
     return ocr_mod.load_ocr()
 
@@ -58,7 +58,7 @@ def test_qr_decode_is_optional_and_safe():
 
 
 def test_image_route_degrades_without_ocr(monkeypatch):
-    monkeypatch.setenv("PRESAGE_OCR", "none")
+    monkeypatch.setenv("AEGIS_OCR", "none")
     ocr_mod._cached = None
     client = TestClient(app)
     resp = client.post(

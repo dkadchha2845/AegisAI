@@ -7,7 +7,7 @@ Language detection.
 The heuristic is not a token fallback here, and that is worth stating plainly.
 Off-the-shelf detectors are trained on monolingual documents and consistently
 label romanised Hinglish as English, Indonesian, or Malay — the two Latin-script
-languages with similar function-word shapes. `ml/presage/hinglish.py` already
+languages with similar function-word shapes. `ml/aegis/hinglish.py` already
 proved this empirically inside this project: a model asked to preserve Hinglish
 translated 76% of a corpus to English while every structural check still passed.
 
@@ -30,7 +30,7 @@ from ..config import ML_DIR
 # Reuse the marker set that the dataset pipeline already validated against.
 sys.path.insert(0, str(ML_DIR))
 try:
-    from presage.hinglish import HINDI_MARKERS, density  # type: ignore
+    from aegis.hinglish import HINDI_MARKERS, density  # type: ignore
 except ImportError:  # pragma: no cover - ml/ absent in a container build
     HINDI_MARKERS = {
         "hai", "hain", "aap", "aapka", "ko", "se", "mein", "nahi", "kya",

@@ -1,5 +1,5 @@
 """
-PRESAGE — scam-stage taxonomy.
+AegisAI — scam-stage taxonomy.
 
 The single source of truth for what the classifier predicts. Everything
 downstream (the Markov twin's transition matrix, the manipulation map, the

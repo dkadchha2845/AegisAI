@@ -143,7 +143,7 @@ def verify(
         "summary": analysis.get("summary"),
         "analysis": analysis,          # full Module 1 output, for the detail view
         "intel": intel_ctx,            # Module 2 corroboration
-        "extracted_entities": extracted,  # what KAVACH pulled out, so the citizen never types it
+        "extracted_entities": extracted,  # what AegisAI pulled out, so the citizen never types it
         "guidance": guidance.as_dict(),
         "emergency": response.as_dict(),
         "nearby_hotspots": hotspots,
@@ -152,7 +152,7 @@ def verify(
 
 
 def _extract_entities(text: str, number: Optional[str], upi: Optional[str]) -> Dict[str, List[str]]:
-    """Everything KAVACH could pull out of the evidence on its own — so the
+    """Everything AegisAI could pull out of the evidence on its own — so the
     citizen never has to type a number/UPI/email the message already contains.
     Explicitly-provided identifiers are merged in and de-duplicated."""
     from ..intel.entities import extract_from_text

@@ -11,7 +11,7 @@ score as BENIGN — an empty string is not evidence of a safe call, and scoring
 it as one is the single most harmful thing this layer could do. It returns
 `ok=False` with a reason, and the caller surfaces that instead of a verdict.
 
-Word timings matter more than they look. `engine/coercion.py` and the KAVACH
+Word timings matter more than they look. `engine/coercion.py` and the AegisAI
 behavioural extractor both read pause structure and speech rate off them, and
 both explicitly cap their output lower when the timings are absent. So the
 adapter reports whether it produced them rather than letting the consumer

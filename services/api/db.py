@@ -4,7 +4,7 @@ Database — optional, in-memory by default.
 The rest of the service still runs with no database at all: leave `DATABASE_URL`
 unset and this module gives you an ephemeral in-memory SQLite that lives for the
 process, so the clean-clone demo boots with zero setup and `db:ephemeral` is
-reported honestly. Point `DATABASE_URL` at a file (`sqlite:///kavach.db`) or a
+reported honestly. Point `DATABASE_URL` at a file (`sqlite:///aegis.db`) or a
 Postgres URL and the very same code persists — that is the whole design: one
 path, in-memory until you ask for durability.
 
@@ -53,7 +53,7 @@ else:
     # temp file sidesteps this entirely: each thread checks out its own
     # connection, sqlite serialises file access itself, and the file is deleted
     # on exit — so this is still zero-config and still ephemeral, just crash-safe.
-    _tmp = tempfile.NamedTemporaryFile(prefix="kavach-", suffix=".db", delete=False)
+    _tmp = tempfile.NamedTemporaryFile(prefix="aegis-", suffix=".db", delete=False)
     _tmp.close()
     _url = f"sqlite:///{_tmp.name}"
     _kwargs["connect_args"] = {"check_same_thread": False, "timeout": 30}

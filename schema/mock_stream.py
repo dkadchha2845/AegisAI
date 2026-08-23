@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PRESAGE — mock event stream.
+AegisAI — mock event stream.
 
     python schema/mock_stream.py                 # write mock-stream.json
     python schema/mock_stream.py --print         # human-readable timeline
@@ -63,7 +63,7 @@ OUT = Path(__file__).parent / "mock-stream.json"
 
 SECONDS_PER_TURN = 4.5
 
-# Per-stage threat contribution, mirroring presage/taxonomy.py.
+# Per-stage threat contribution, mirroring aegis/taxonomy.py.
 STAGE_THREAT = {
     Stage.GREETING: 5,
     Stage.AUTHORITY_CLAIM: 45,

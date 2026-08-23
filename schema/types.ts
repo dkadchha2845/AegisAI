@@ -1,5 +1,5 @@
 /**
- * PRESAGE — WebSocket contract, frontend view.
+ * AegisAI — WebSocket contract, frontend view.
  *
  * Mirrors schema/models.py exactly. That file is the source of truth; this one
  * must be updated in the same commit whenever it changes. `npm run check:contract`
@@ -276,7 +276,7 @@ export interface StateFrame {
 }
 
 /** A discrete edge. Animate off these. */
-export interface PresageEvent {
+export interface AegisEvent {
   v: number;
   type: "event";
   session_id: string;
@@ -295,7 +295,7 @@ export interface ErrorMessage {
   recoverable: boolean;
 }
 
-export type ServerMessage = StateFrame | PresageEvent | ErrorMessage;
+export type ServerMessage = StateFrame | AegisEvent | ErrorMessage;
 
 // ---------------------------------------------------------------------------
 // Client -> server
@@ -323,7 +323,7 @@ export interface ClientCommand {
 // ---------------------------------------------------------------------------
 
 export const isState = (m: ServerMessage): m is StateFrame => m.type === "state";
-export const isEvent = (m: ServerMessage): m is PresageEvent => m.type === "event";
+export const isEvent = (m: ServerMessage): m is AegisEvent => m.type === "event";
 export const isError = (m: ServerMessage): m is ErrorMessage => m.type === "error";
 
 /** Mirrors threat_level() in models.py. Exported for tests and the mock

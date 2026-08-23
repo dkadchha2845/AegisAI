@@ -37,7 +37,7 @@ DATA = ML_DIR / "data" / "processed"
 
 sys.path.insert(0, str(REPO_ROOT))
 
-from ml.kavach.labels import (  # noqa: E402
+from ml.rssie.labels import (  # noqa: E402
     EMOTION2ID,
     SCAMTYPE2ID,
     STAGE2ID,
@@ -170,7 +170,7 @@ def load_calls(split: str) -> list[CallExample]:
 def describe(examples: list[CallExample]) -> dict:
     from collections import Counter
 
-    from ml.kavach.labels import SCAM_TYPES, STAGES
+    from ml.rssie.labels import SCAM_TYPES, STAGES
 
     return {
         "calls": len(examples),

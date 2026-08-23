@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Start the local Ollama server if it isn't already running.
 #
-# Ollama is only needed for offline dataset/coach generation (PRESAGE_LLM=ollama).
-# Nothing at PRESAGE runtime depends on it.
+# Ollama is only needed for offline dataset/coach generation (AEGIS_LLM=ollama).
+# Nothing at AegisAI runtime depends on it.
 set -euo pipefail
 
 OLLAMA=/opt/homebrew/opt/ollama/bin/ollama

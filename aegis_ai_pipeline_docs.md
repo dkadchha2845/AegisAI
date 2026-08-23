@@ -1,6 +1,6 @@
-# PRESAGE: Complete AI, ML, and RAG Pipeline Reverse Engineering
+# AegisAI: Complete AI, ML, and RAG Pipeline Reverse Engineering
 
-This document contains a complete trace of every AI, ML, and rule-based heuristic component in the Presage repository. It maps the training pipelines, the artifact generation, the real-time inference loop, the retrieval augmented generation (RAG) system, and provides a deep code walkthrough.
+This document contains a complete trace of every AI, ML, and rule-based heuristic component in the AegisAI repository. It maps the training pipelines, the artifact generation, the real-time inference loop, the retrieval augmented generation (RAG) system, and provides a deep code walkthrough.
 
 ---
 

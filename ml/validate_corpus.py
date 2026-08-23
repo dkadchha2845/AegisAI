@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PRESAGE — corpus quality validation.
+AegisAI — corpus quality validation.
 
     python validate_corpus.py                    # validate raw/calls.jsonl
     python validate_corpus.py --processed        # validate the split dataset
@@ -28,8 +28,8 @@ RAW = HERE / "data" / "raw" / "calls.jsonl"
 PROCESSED = HERE / "data" / "processed"
 
 sys.path.insert(0, str(HERE))
-from presage.taxonomy import LABELS  # noqa: E402
-from presage.schema import VICTIM_STATES  # noqa: E402
+from aegis.taxonomy import LABELS  # noqa: E402
+from aegis.schema import VICTIM_STATES  # noqa: E402
 
 _LABELS = set(LABELS)
 _STATES = set(VICTIM_STATES)
@@ -231,13 +231,13 @@ def validate_processed(directory: Path) -> dict:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Validate the PRESAGE corpus.")
+    ap = argparse.ArgumentParser(description="Validate the AegisAI corpus.")
     ap.add_argument("--raw", type=Path, default=RAW)
     ap.add_argument("--processed", action="store_true", help="validate splits too")
     args = ap.parse_args()
 
     print("=" * 60)
-    print("PRESAGE Corpus Validation Report")
+    print("AegisAI Corpus Validation Report")
     print("=" * 60)
 
     if args.raw.exists():

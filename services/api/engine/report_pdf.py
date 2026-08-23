@@ -70,7 +70,7 @@ def render_pdf(package: Dict[str, Any]) -> bytes:
     call = package.get("call", {})
     assess = package.get("assessment", {})
 
-    story.append(Paragraph("KAVACH — Scam-Call Evidence Package", h1))
+    story.append(Paragraph("AegisAI — Scam-Call Evidence Package", h1))
     story.append(Paragraph(
         f"Report {esc(package.get('report_id'))} &nbsp;·&nbsp; "
         f"generated {esc(package.get('generated_at'))}", sub))
@@ -163,8 +163,8 @@ def render_pdf(package: Dict[str, Any]) -> bytes:
         buf, pagesize=A4,
         leftMargin=16 * mm, rightMargin=16 * mm,
         topMargin=16 * mm, bottomMargin=16 * mm,
-        title=f"KAVACH Evidence Package {package.get('report_id')}",
-        author="KAVACH / PRESAGE",
+        title=f"AegisAI Evidence Package {package.get('report_id')}",
+        author="AegisAI",
     )
     doc.build(story)
     return buf.getvalue()

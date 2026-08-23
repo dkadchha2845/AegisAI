@@ -1,4 +1,4 @@
-# KAVACH — Detailed Submission Document
+# AegisAI — Detailed Submission Document
 ## ET AI Hackathon 2026 · Problem Statement 6
 ### AI for Digital Public Safety: Defeating Counterfeiting, Fraud & Digital Arrest Scams
 
@@ -25,9 +25,9 @@
 
 ## 1. Executive Summary
 
-**KAVACH** is a production-grade, AI-powered Digital Public Safety Intelligence platform that intervenes in real time during voice fraud and digital arrest scams — **before the money moves**.
+**AegisAI** is a production-grade, AI-powered Digital Public Safety Intelligence platform that intervenes in real time during voice fraud and digital arrest scams — **before the money moves**.
 
-Unlike reactive reporting tools (1930, cybercrime.gov.in) or passive call-ID blacklists (Truecaller), KAVACH is the only system that:
+Unlike reactive reporting tools (1930, cybercrime.gov.in) or passive call-ID blacklists (Truecaller), AegisAI is the only system that:
 
 - **Analyses a phone call while it is happening** and warns the victim in real time
 - **Identifies the exact psychological stage** of the scam arc (out of 7 stages + BENIGN)
@@ -45,7 +45,7 @@ Unlike reactive reporting tools (1930, cybercrime.gov.in) or passive call-ID bla
 
 **PS 6 — AI for Digital Public Safety: Defeating Counterfeiting, Fraud & Digital Arrest Scams**
 
-| PS Requirement | KAVACH Implementation |
+| PS Requirement | AegisAI Implementation |
 |---|---|
 | Digital Arrest Scam Detection & Alerting | ✅ Module 1 (RSSIE): Real-time 8-class stage classifier, threat meter, citizen coach |
 | Fraud Network Graph Intelligence | ✅ Module 2 (FIGAE): NetworkX fraud graph, 9 clusters / 114 cases, link prediction, geospatial hotspots |
@@ -70,7 +70,7 @@ Unlike reactive reporting tools (1930, cybercrime.gov.in) or passive call-ID bla
 
 ## 3. Solution Overview
 
-KAVACH is built around a single, powerful insight:
+AegisAI is built around a single, powerful insight:
 
 > **A scam call is not a single lie. It is a seven-step psychological arc — and by the time a human notices, they are already past the point where fear is doing the work.**
 
@@ -82,7 +82,7 @@ GREETING → AUTHORITY_CLAIM → FEAR_INDUCTION → ISOLATION → VERIFICATION_D
 
 Plus `BENIGN` — a real institutional call using the same vocabulary. The `BENIGN` class is the broadest and hardest, and is treated as such by design to keep false positives near zero.
 
-**The KAVACH Intervention Window:** Steps 2–5 (typically 10–15 minutes). KAVACH fires at step 2 and escalates urgency as the arc progresses, coaching the victim before reaching step 6.
+**The AegisAI Intervention Window:** Steps 2–5 (typically 10–15 minutes). AegisAI fires at step 2 and escalates urgency as the arc progresses, coaching the victim before reaching step 6.
 
 ### Architecture Summary
 
@@ -91,7 +91,7 @@ Citizen Device / Microphone
         │ WebSocket Audio Stream
         ▼
 ┌─────────────────────────────────────────────────────┐
-│                 KAVACH Backend Engine               │
+│                 AegisAI Backend Engine               │
 │                                                     │
 │  Ingestion ──► Whisper ASR ──► Unified Transcript   │
 │     └──────► Tesseract OCR ──►        │             │
@@ -146,7 +146,7 @@ Citizen Coach UI          Investigation Report
 
 **Demo flow:**
 1. Citizen opens Live Protection
-2. Puts call on speaker → KAVACH streams via browser microphone
+2. Puts call on speaker → AegisAI streams via browser microphone
 3. Threat Meter updates every 250 ms
 4. At ISOLATION stage: Coach banner appears ("Hang up. Real police never ask for OTPs.")
 5. Call ends → Investigation Report auto-generated
@@ -298,7 +298,7 @@ All thresholds live in one screen of `session.py`:
 
 ### Evaluation Focus (from Problem Statement)
 
-| Evaluation Criterion | KAVACH Approach |
+| Evaluation Criterion | AegisAI Approach |
 |---|---|
 | Digital arrest scam detection precision/recall | 8-class stage classifier with leave-archetypes-out validation. BENIGN is intentionally the hardest class. |
 | Fraud network detection lead time before mass victimisation | Every saved case immediately ingests into the fraud graph. Cluster risk scores update dynamically. |
@@ -395,7 +395,7 @@ eval_backends.py    → Compare MuRIL vs lexical on measured F1
 | Detailed document | This document (`docs/SUBMISSION_DOCUMENT.md`) |
 | Additional file | `docs/PRESENTATION.html` (open in any browser — no install required) |
 | Problem statement | **PS 6** — AI for Digital Public Safety: Defeating Counterfeiting, Fraud & Digital Arrest Scams |
-| GitHub URL | https://github.com/dkadchha2845/presage |
+| GitHub URL | https://github.com/dkadchha2845/aegis |
 | Demo video | 3–4 min. Script in `attached_assets/demo_script_1784735112763.md` |
 
 ### Additional Artefacts Produced
@@ -418,8 +418,8 @@ eval_backends.py    → Compare MuRIL vs lexical on measured F1
 
 ```bash
 # 1. Clone
-git clone https://github.com/dkadchha2845/presage.git
-cd presage
+git clone https://github.com/dkadchha2845/aegis.git
+cd aegis
 
 # 2. Backend
 python -m venv .venv
@@ -476,7 +476,7 @@ cp .env.example .env
 
 ## 12. Competitive Landscape
 
-| Capability | KAVACH | Truecaller | 1930 Portal | Generic LLM Wrapper |
+| Capability | AegisAI | Truecaller | 1930 Portal | Generic LLM Wrapper |
 |---|---|---|---|---|
 | Real-time intervention during call | ✅ | ❌ | ❌ | ⚠️ Possible but slow |
 | Understands 7-step psychological arc | ✅ | ❌ | ❌ | ❌ |
@@ -538,8 +538,8 @@ cp .env.example .env
 
 ---
 
-*KAVACH — Every citizen's device is now a shield. Not a substitute for reporting fraud on 1930 or at cybercrime.gov.in.*
+*AegisAI — Every citizen's device is now a shield. Not a substitute for reporting fraud on 1930 or at cybercrime.gov.in.*
 
-**GitHub:** https://github.com/dkadchha2845/presage  
+**GitHub:** https://github.com/dkadchha2845/aegis  
 **Problem Statement:** PS 6 — AI for Digital Public Safety  
 **Hackathon:** ET AI Hackathon 2026

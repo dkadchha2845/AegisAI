@@ -23,10 +23,10 @@ import { useTilt } from "@/hooks/useTilt";
 
 /** The seeded demo roster — one per role, so a judge can watch access change. */
 const DEMO_ACCOUNTS: { role: string; email: string; blurb: string }[] = [
-  { role: "owner", email: "admin@kavach.local", blurb: "Platform owner — every org, user management" },
-  { role: "admin", email: "supervisor@kavach.local", blurb: "Org admin — users + audit log for their cell" },
-  { role: "analyst", email: "analyst@kavach.local", blurb: "Analyst — save & read cases, no user admin" },
-  { role: "viewer", email: "viewer@kavach.local", blurb: "Viewer — read-only" },
+  { role: "owner", email: "admin@aegis.local", blurb: "Platform owner — every org, user management" },
+  { role: "admin", email: "supervisor@aegis.local", blurb: "Org admin — users + audit log for their cell" },
+  { role: "analyst", email: "analyst@aegis.local", blurb: "Analyst — save & read cases, no user admin" },
+  { role: "viewer", email: "viewer@aegis.local", blurb: "Viewer — read-only" },
 ];
 const DEMO_PASSWORD = "changeme";
 
@@ -88,7 +88,7 @@ export function Login() {
         <div className="login__content">
           <div className="login__brand" data-reveal>
             <span className="brand2__mark" aria-hidden="true" />
-            <span className="login__brandname">KAVACH</span>
+            <span className="login__brandname">AegisAI</span>
           </div>
           <h1 className="login__title" data-reveal>Sign in to the console</h1>
           <p className="login__sub" data-reveal>
@@ -101,7 +101,7 @@ export function Login() {
               <div>
                 <strong>Open demo mode.</strong> Pick a role below to see access
                 control in action, or sign in with{" "}
-                <span className="mono">admin@kavach.local</span> /{" "}
+                <span className="mono">admin@aegis.local</span> /{" "}
                 <span className="mono">changeme</span>.
               </div>
             </div>
@@ -194,7 +194,7 @@ export function Login() {
 
           <p className="login__foot small faint" data-reveal>
             Citizens don't need an account —{" "}
-            <a href="/home">KAVACH</a> is open to everyone.
+            <a href="/home">AegisAI</a> is open to everyone.
           </p>
         </div>
       </div>

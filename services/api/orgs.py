@@ -32,7 +32,7 @@ def get_or_create_default_org(db: Session) -> Organization:
     """The tenant every single-org install lives in. Idempotent."""
     org = db.query(Organization).filter(Organization.slug == DEFAULT_ORG_SLUG).first()
     if org is None:
-        org = Organization(slug=DEFAULT_ORG_SLUG, name="KAVACH (default)")
+        org = Organization(slug=DEFAULT_ORG_SLUG, name="AegisAI (default)")
         db.add(org)
         db.commit()
         db.refresh(org)

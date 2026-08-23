@@ -34,7 +34,7 @@ def code(text: str) -> dict:
 
 CELLS = [
     md(r"""
-# PRESAGE — stage classifier fine-tuning
+# AegisAI — stage classifier fine-tuning
 
 Fine-tunes **MuRIL** into the 8-way utterance classifier the live engine
 serves, and exports it where `services/api` expects to find it.
@@ -517,7 +517,7 @@ Two consequences:
    it cannot tell you whether the model is worth serving.
 2. **The API gates promotion on that comparison**, not on the checkpoint
    existing, so a "successful" training run cannot silently make the product
-   worse. Override with `PRESAGE_CLASSIFIER=muril` once the numbers justify it.
+   worse. Override with `AEGIS_CLASSIFIER=muril` once the numbers justify it.
 
 ### Where to go next, in order of payoff
 

@@ -13,7 +13,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PresageEvent, StateFrame } from "@/types/contract";
+import type { AegisEvent, StateFrame } from "@/types/contract";
 import { isEvent, isState } from "@/types/contract";
 import * as api from "@/lib/api";
 
@@ -31,7 +31,7 @@ export interface LiveSession {
   tryPayment: (amount: number, payee?: string) => Promise<void>;
   cancelPayment: () => Promise<void>;
   approvePayment: () => Promise<void>;
-  onEvent: (fn: (e: PresageEvent) => void) => () => void;
+  onEvent: (fn: (e: AegisEvent) => void) => () => void;
 }
 
 export function useLiveSession(): LiveSession {
@@ -41,7 +41,7 @@ export function useLiveSession(): LiveSession {
   const [error, setError] = useState<string | null>(null);
 
   const socket = useRef<WebSocket | null>(null);
-  const listeners = useRef(new Set<(e: PresageEvent) => void>());
+  const listeners = useRef(new Set<(e: AegisEvent) => void>());
   // Guards against a socket opened by an unmounted component writing state.
   const alive = useRef(true);
 
@@ -54,7 +54,7 @@ export function useLiveSession(): LiveSession {
     };
   }, []);
 
-  const onEvent = useCallback((fn: (e: PresageEvent) => void) => {
+  const onEvent = useCallback((fn: (e: AegisEvent) => void) => {
     listeners.current.add(fn);
     return () => {
       listeners.current.delete(fn);
@@ -108,7 +108,7 @@ export function useLiveSession(): LiveSession {
     }
     setFrame(res.data.frame);
     res.data.events.forEach((e) =>
-      listeners.current.forEach((fn) => fn(e as unknown as PresageEvent)),
+      listeners.current.forEach((fn) => fn(e as unknown as AegisEvent)),
     );
   }, []);
 

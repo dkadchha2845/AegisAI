@@ -1,37 +1,84 @@
-# KAVACH — AI for Digital Public Safety
+# AegisAI
 
-[![CI](https://github.com/dkadchha2845/presage/actions/workflows/ci.yml/badge.svg)](https://github.com/dkadchha2845/presage/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-84%20passing-22C55E)](https://github.com/dkadchha2845/presage/actions)
-[![PS6](https://img.shields.io/badge/ET%20AI%20Hackathon%202026-PS%206-1A6BFF)](./docs/SUBMISSION_DOCUMENT.md)
+### An Agentic Digital Public Safety Platform for Autonomous Multi-Modal Fraud Investigation
+
+[![Tests](https://img.shields.io/badge/tests-84%20passing-22C55E)](#tests)
+[![Contract](https://img.shields.io/badge/contract-Pydantic%20↔%20TypeScript-1A6BFF)](./schema)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-> **Real-time AI shield against Digital Arrest Scams and Voice Fraud.**  
-> KAVACH intervenes *before* the money moves — coaching citizens, detecting the 7-step scam arc, and generating court-admissible intelligence for law enforcement.
+> **Upload anything → investigate automatically → collect evidence → correlate →
+> reason → score → explain → recommend.**
 
-> Not a substitute for reporting fraud on **1930** or at **cybercrime.gov.in**.
+AegisAI is an AI-powered **digital investigator**, not a scam classifier. You give
+it evidence — an email, an SMS, a WhatsApp screenshot, a QR code, a URL, a PDF, an
+APK, an audio recording, a phone number, a UPI ID, or a live call — and a graph of
+specialised agents investigates it, correlates the findings against a persistent
+fraud-intelligence graph, scores the risk with a calibrated model, and explains
+**why**, with a source for every claim.
+
+The core loop is deliberately never `INPUT → LLM → SCAM/NOT SCAM`:
+
+```
+INPUT → EXTRACT → INVESTIGATE → CORRELATE → REASON → SCORE → EXPLAIN → ACT
+```
+
+> AegisAI is a **decision-support and investigation system, not a legal
+> authority**. It reports high-risk indicators and evidence; it never asserts that
+> a person is a criminal. It is not a substitute for reporting fraud on **1930**
+> or at **cybercrime.gov.in**.
 
 ---
 
-## 📋 Hackathon Submission — ET AI Hackathon 2026
+## Status
 
-| Field | Value |
+**Final-year B.Tech CSE capstone + research project.** AegisAI evolves from
+**KAVACH/PRESAGE**, a real-time digital-arrest scam-call detection engine built
+for the ET AI Hackathon 2026 (PS-6). That engine — ~30,000 lines, 84 passing
+tests, a fine-tuned MuRIL stage classifier at macro-F1 **0.767** on a zero-leak
+held-out-archetype split — is inherited intact and becomes AegisAI's
+conversation-analysis agent.
+
+| | |
 |---|---|
-| **Problem Statement** | PS 6 — AI for Digital Public Safety: Defeating Counterfeiting, Fraud & Digital Arrest Scams |
-| **Presentation** | [`docs/PRESENTATION.html`](./docs/PRESENTATION.html) — open in any browser |
-| **Detailed Document** | [`docs/SUBMISSION_DOCUMENT.md`](./docs/SUBMISSION_DOCUMENT.md) |
-| **Demo Script** | [`attached_assets/demo_script_1784735112763.md`](./attached_assets/demo_script_1784735112763.md) |
-| **GitHub** | https://github.com/dkadchha2845/presage |
-| **Status** | 84 tests passing · CI green · Ships on clean clone (no GPU, no key, no network) |
+| **Working today** | Live call analysis, 8-stage scam-arc classifier, coercion index, Digital Twin forecast, identity passport, number-spoofing intel, OCR + QR, fraud graph (NetworkX), RAG with citations, evidence PDF, multi-tenant RBAC + audit, 17-route React SPA |
+| **In progress** | Agent architecture + LangGraph orchestration (Phase 1) |
+| **Planned** | URL/APK/email/image agents · Neo4j + Qdrant + Postgres · calibrated ML risk engine · WebRTC live calls · AIFC dataset · research evaluation |
 
-### Judging Criteria
+📍 **Full honest gap analysis:** [`docs/INVENTORY.md`](./docs/INVENTORY.md)
 
-| Criterion | Weight | KAVACH |
-|---|---|---|
-| Innovation | 25% | First real-time 7-stage psychological arc classifier. Deterministic + LLM hybrid. Digital Twin forecasts time-to-payment. |
-| Business Impact | 25% | Directly addresses ₹1,776 crore / 9-month loss. Scales to 1.2B citizens via telecom integration. |
-| Technical Excellence | 20% | 84 tests. Schema-first contract. Reproducible ML. SIGSEGV fix. CI on py3.9 + py3.12. |
-| Scalability | 15% | SQLite → Postgres in one env var. NetworkX → Neo4j (same interface). Multi-tenant RBAC ready. |
-| User Experience | 15% | GSAP + WebGL landing. Command palette. ARIA-compliant maps. Mock stream replay. Light + dark. |
+---
+
+## Documentation
+
+| Document | What's in it |
+|---|---|
+| 📊 [`docs/INVENTORY.md`](./docs/INVENTORY.md) | What exists (verified), what doesn't, known defects and risks |
+| 🏗️ [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Agent graph, `InvestigationState` contract, scoring architecture, security design |
+| ✅ [`docs/TASKS.md`](./docs/TASKS.md) | The phased task backlog with acceptance criteria, timeline and critical path |
+| 📚 [`docs/DATASETS.md`](./docs/DATASETS.md) | AIFC corpus strategy, splits, annotation, ethics |
+| 🔬 [`docs/RESEARCH.md`](./docs/RESEARCH.md) | Contributions, experiments, ablations, paper plan |
+| 📐 [`docs/adr/`](./docs/adr/) | Architecture decision records — every deviation, justified |
+
+---
+
+## Principles this codebase holds to
+
+These are inherited invariants. They apply to every new agent, without exception.
+
+1. **`schema/` is the single source of truth.** Pydantic and TypeScript change in
+   the same commit; `check_contract.py` proves it.
+2. **The frontend is a pure renderer.** No thresholds or scoring maths in React —
+   every number on screen is a contract field.
+3. **Degradation is explicit.** Every optional capability has a fallback that
+   still answers and records a tag in `degraded`. The UI shows degradation rather
+   than a confident number built on nothing.
+4. **False positives are a first-class failure.** For a citizen-facing safety
+   tool, a false accusation is worse than a miss. BENIGN is the broadest class by
+   design.
+5. **The LLM explains and extracts; it never scores.** The risk number comes from
+   a calibrated model, deterministic rules, and graph evidence.
+6. **No claim without a measurement.** If latency isn't measured, we don't say
+   "real-time". If a model isn't evaluated, we don't advertise the capability.
 
 ---
 
@@ -53,11 +100,16 @@ A digital arrest scam is not a single lie you can catch with a keyword. It is a 
 
 Plus `BENIGN` — a real bank calling about a real transaction, using **the same vocabulary**. The eighth class is the hardest, and is the broadest class in the taxonomy by design (false positive discipline).
 
-By the time a human notices something is wrong, they are usually at step 5 or 6 — well past the point where the fear is doing the work. **The KAVACH intervention window is steps 2–5 — approximately 10–15 minutes to act.**
+By the time a human notices something is wrong, they are usually at step 5 or 6 — well past the point where the fear is doing the work. **The AegisAI intervention window is steps 2–5 — approximately 10–15 minutes to act.**
 
 ---
 
-## Three Modules
+## The Inherited Engine — Three Modules
+
+These three modules are **built, tested and working today**. Under the AegisAI
+architecture they become agents inside the investigation graph rather than the
+whole system — see [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) and
+[ADR-0003](./docs/adr/0003-adapt-not-rewrite-the-engine.md).
 
 ### Module 1 — RSSIE: Real-time Scam Session Intelligence Engine
 
@@ -168,8 +220,8 @@ utterance (typed / ASR / OCR)
 **Prerequisites:** Python 3.9+, Node 18+. No GPU, no API key, no network at runtime.
 
 ```bash
-git clone https://github.com/dkadchha2845/presage.git
-cd presage
+git clone https://github.com/dkadchha2845/aegis.git
+cd aegis
 ```
 
 ### 1. Backend — port 8000
@@ -211,9 +263,14 @@ The web app renders from a mock stream if the API is down. The API answers witho
 | Artefact | How to use |
 |---|---|
 | **Presentation** (`docs/PRESENTATION.html`) | Open in any browser. Arrow keys or buttons to navigate. Press `F` for fullscreen. 11 slides. |
-| **Detailed document** (`docs/SUBMISSION_DOCUMENT.md`) | Full technical write-up, metrics, deliverables checklist |
-| **Demo script** (`attached_assets/demo_script_1784735112763.md`) | 3–4 minute judge demo walkthrough |
-| **Architecture diagrams** (`attached_assets/architecture_1784735112762.md`) | Mermaid source for all diagrams |
+| **Technical write-up** (`docs/SUBMISSION_DOCUMENT.md`) | Full technical detail, metrics, deliverables |
+| **Demo script** (`attached_assets/demo_script_1784735112763.md`) | 3–4 minute demo walkthrough |
+| **Architecture diagrams** (`attached_assets/architecture_1784735112762.md`) | Mermaid source for the inherited diagrams |
+
+> These describe the inherited KAVACH engine. The original ET AI Hackathon 2026
+> submission PDFs are preserved unmodified in
+> [`docs/archive/et-hackathon-2026/`](./docs/archive/et-hackathon-2026/).
+> For AegisAI's own architecture, start at [`docs/`](#documentation).
 
 ---
 
@@ -261,7 +318,7 @@ The web app renders from a mock stream if the API is down. The API answers witho
 ## Project Layout
 
 ```
-presage/
+aegis/
 ├── apps/web/              React 18 + TypeScript frontend
 │   └── src/
 │       ├── pages/         Route-level page components
@@ -456,7 +513,7 @@ Update `STATUS.md` when you finish something. It is the running record — the n
 | `Address already in use` on 8000 | Older uvicorn still running | `lsof -ti:8000 \| xargs kill` |
 | Training loss stuck at 2.079 (`ln 8`) | Apple MPS backend | Train on CPU — it's the default for this reason |
 | `npm run dev` — Vite can't resolve `@/…` | Ran npm from repo root | Use `--prefix apps/web`, or `cd apps/web` first |
-| Gemini explanations not working | Retired model default | Set `GEMINI_API_KEY` in `.env` and ensure `PRESAGE_LLM=gemini` |
+| Gemini explanations not working | Retired model default | Set `GEMINI_API_KEY` in `.env` and ensure `AEGIS_LLM=gemini` |
 
 ---
 
@@ -472,5 +529,5 @@ Update `STATUS.md` when you finish something. It is the running record — the n
 
 ---
 
-*KAVACH — Every citizen's device is now a shield.*  
+*AegisAI — Every citizen's device is now a shield.*  
 *Not a substitute for reporting fraud on 1930 or at cybercrime.gov.in.*

@@ -1,5 +1,5 @@
 """
-FIGAE — Fraud Intelligence & Geospatial Analytics Engine (KAVACH Module 2).
+FIGAE — Fraud Intelligence & Geospatial Analytics Engine (AegisAI Module 2).
 
 Correlates individual Module 1 scam detections into large-scale cybercrime
 intelligence: a fraud knowledge graph, community/campaign detection, geospatial

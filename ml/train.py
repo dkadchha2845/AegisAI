@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PRESAGE — headless fine-tune of the MuRIL stage classifier.
+AegisAI — headless fine-tune of the MuRIL stage classifier.
 
     .venv/bin/python ml/train.py                  # full run
     .venv/bin/python ml/train.py --epochs 1       # smoke test

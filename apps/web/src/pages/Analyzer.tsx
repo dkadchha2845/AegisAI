@@ -286,7 +286,7 @@ export function Analyzer() {
                     data-tooltip={
                       health.data?.llm.configured
                         ? `Ask ${health.data.llm.backend} to phrase the explanation. The score is unchanged — the model only rewords a finished result.`
-                        : "No LLM backend is configured. Set PRESAGE_LLM and restart the API."
+                        : "No LLM backend is configured. Set AEGIS_LLM and restart the API."
                     }
                     style={{ gap: 6, cursor: health.data?.llm.configured ? "pointer" : "not-allowed" }}
                   >

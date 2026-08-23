@@ -46,13 +46,14 @@ ml/artifacts/stage-classifier/*
 *.tsbuildinfo
 
 # Generated status report — regenerate from STATUS.md, do not commit
-PRESAGE-status-report.pdf
+AegisAI-status-report.pdf
 
 # Temporary subsampled training splits (regenerated on demand)
 ml/data/processed/*_fast.jsonl
 
 # Runtime SQLite database (persistent store; regenerated + reseeded on boot)
-kavach.db
-kavach.db-journal
-kavach.db-wal
-kavach.db-shm
+aegis.db
+aegis.db-journal
+aegis.db-wal
+aegis.db-shm
+.preview/

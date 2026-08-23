@@ -1,9 +1,9 @@
 /**
- * InvestigatingLoader — the honest "KAVACH is investigating…" checklist.
+ * InvestigatingLoader — the honest "AegisAI is investigating…" checklist.
  *
  * Shared by both journeys (Analyze and end-of-call Live Protection) so the
  * moment before the report looks identical everywhere. The wording describes
- * what KAVACH is doing *for the user*, never which model is running. The steps
+ * what AegisAI is doing *for the user*, never which model is running. The steps
  * are paced client-side over the single real request; the caller drives
  * `stepIndex` and never marks a step done before the response can back it up.
  */
@@ -25,7 +25,7 @@ export function InvestigatingLoader({ stepIndex }: { stepIndex: number }) {
   return (
     <div className="card">
       <h2 className="card__title">
-        <Loader2 size={16} className="spin" /> KAVACH is investigating…
+        <Loader2 size={16} className="spin" /> AegisAI is investigating…
       </h2>
       <ul className="investigate-steps">
         {INVESTIGATION_STEPS.map((label, i) => {

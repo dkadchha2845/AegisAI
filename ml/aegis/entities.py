@@ -1,5 +1,5 @@
 """
-PRESAGE — deterministic entity substitution for corpus expansion.
+AegisAI — deterministic entity substitution for corpus expansion.
 
 The first half of the paraphrase pipeline, and the half that cannot fail. It
 swaps every name, city, bank, app, amount, and identifier in a gold call for a

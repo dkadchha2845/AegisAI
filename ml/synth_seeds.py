@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PRESAGE — deterministic synthetic seed generator (Track 3, corpus expansion).
+AegisAI — deterministic synthetic seed generator (Track 3, corpus expansion).
 
 The STATUS P0: the fine-tuned MuRIL memorises call *archetypes* instead of
 learning *stages*, because 16 archetypes with 8 held out for test is too few for

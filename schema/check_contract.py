@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PRESAGE — contract drift guard.
+AegisAI — contract drift guard.
 
     python schema/check_contract.py
 

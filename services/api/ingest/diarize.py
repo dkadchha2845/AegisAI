@@ -189,7 +189,7 @@ def diarize_audio(audio_path: str, segments: list) -> DiarizationResult | None:
             )
         return DiarizationResult(turns=turns, backend="pyannote", degraded=[], confidence=0.9)
     except Exception as exc:  # noqa: BLE001 - pyannote raises broadly
-        print(f"[kavach] pyannote diarization failed ({exc}); using lexical roles")
+        print(f"[aegis] pyannote diarization failed ({exc}); using lexical roles")
         return None
 
 

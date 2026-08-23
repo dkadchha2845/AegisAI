@@ -69,12 +69,12 @@ export function InvestigationReport({
   const em = result.emergency;
   const confidence = computeConfidence(result);
   const primaryHelpline = em.helplines.find((h) => h.value === "1930") ?? em.helplines.find((h) => h.priority === "primary");
-  const shareText = `KAVACH check: ${VERDICT_COPY[result.verdict] ?? result.verdict} (${Math.round(result.score)}/100). ${result.summary}`;
+  const shareText = `AegisAI check: ${VERDICT_COPY[result.verdict] ?? result.verdict} (${Math.round(result.score)}/100). ${result.summary}`;
 
   const share = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: "KAVACH fraud check", text: shareText });
+        await navigator.share({ title: "AegisAI fraud check", text: shareText });
         return;
       } catch {
         // user cancelled the native share sheet — fall through to nothing
@@ -138,7 +138,7 @@ export function InvestigationReport({
         </div>
       </section>
 
-      {/* What KAVACH pulled out on its own — so the citizen sees it never had
+      {/* What AegisAI pulled out on its own — so the citizen sees it never had
           to be typed in. */}
       <DetectedEntities entities={result.extracted_entities} />
 
@@ -358,7 +358,7 @@ export function InvestigationReport({
               <Info size={14} /> How do I block this number?
             </summary>
             <p className="small muted">
-              KAVACH runs in your browser and can't block calls on your phone directly. On Android, open the Phone
+              AegisAI runs in your browser and can't block calls on your phone directly. On Android, open the Phone
               app, find this number in Recents, and choose "Block/report spam." On iPhone, open the number's contact
               card and choose "Block this Caller." Reporting it on 1930 also helps flag it for other citizens.
             </p>
@@ -395,7 +395,7 @@ function DetectedEntities({ entities }: { entities?: VerifyResult["extracted_ent
           <Search size={16} /> What we found in your evidence
         </h2>
         <p className="small muted" style={{ marginTop: 0 }}>
-          KAVACH pulled these out automatically — you didn't have to type them.
+          AegisAI pulled these out automatically — you didn't have to type them.
         </p>
         <div className="row" style={{ gap: 6 }}>
           {chips.map((c, i) => (

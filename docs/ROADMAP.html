@@ -1,0 +1,759 @@
+<title>AegisAI Build Dossier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+  /* ---------- LIGHT (bare :root = complete palette) ---------- */
+  :root {
+    --ground:      #EFF1F4;
+    --surface:     #FFFFFF;
+    --surface-2:   #F7F8FA;
+    --sunk:        #E4E7EC;
+
+    --ink:         #131920;
+    --ink-2:       #4C5663;
+    --ink-3:       #626C79;
+
+    --line:        #D7DCE3;
+    --line-soft:   #E6EAEF;
+
+    --prussian:    #0B2B45;
+    --prussian-2:  #16466B;
+    --accent:      #8A6204;   /* phosphor amber, darkened for AA on light */
+    --accent-bg:   #FBF1D8;
+    --accent-line: #E3C575;
+
+    --ok:          #0E6B58;
+    --ok-bg:       #DEF0EA;
+    --work:        #9C4A16;
+    --work-bg:     #FBE8DA;
+    --stop:        #99202F;
+    --stop-bg:     #FADFE3;
+    --idle-bg:     #E4E7EC;
+
+    --on-bar:      #FFFFFF;
+    --next-bg:     #0B2B45;
+    --next-fg:     #EAF1F7;
+    --next-line:   #0B2B45;
+    --next-accent: #E5B84A;
+
+    --shadow:      0 1px 2px rgba(11,43,69,.06), 0 8px 24px -12px rgba(11,43,69,.18);
+
+    --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --f-body:    "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --f-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  /* ---------- DARK via system default (un-stamped) ---------- */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #080D13;
+      --surface:     #0F161E;
+      --surface-2:   #141C26;
+      --sunk:        #1B2632;
+
+      --ink:         #E9EDF2;
+      --ink-2:       #A3AEBC;
+      --ink-3:       #8B96A5;
+
+      --line:        #253141;
+      --line-soft:   #1B2532;
+
+      --prussian:    #8FB6D6;
+      --prussian-2:  #6E9BC0;
+      --accent:      #E5B84A;
+      --accent-bg:   #2A2109;
+      --accent-line: #6B551A;
+
+      --ok:          #4FC0A4;
+      --ok-bg:       #0C2A24;
+      --work:        #E08A4E;
+      --work-bg:     #2E1B0D;
+      --stop:        #EF7183;
+      --stop-bg:     #33121A;
+      --idle-bg:     #1B2632;
+
+      --on-bar:      #08111A;
+      --next-bg:     #141C26;
+      --next-fg:     #E9EDF2;
+      --next-line:   #253141;
+      --next-accent: #E5B84A;
+
+      --shadow:      0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+    }
+  }
+
+  /* ---------- DARK via explicit toggle ---------- */
+  :root[data-theme="dark"] {
+    --ground:      #080D13;
+    --surface:     #0F161E;
+    --surface-2:   #141C26;
+    --sunk:        #1B2632;
+
+    --ink:         #E9EDF2;
+    --ink-2:       #A3AEBC;
+    --ink-3:       #8B96A5;
+
+    --line:        #253141;
+    --line-soft:   #1B2532;
+
+    --prussian:    #8FB6D6;
+    --prussian-2:  #6E9BC0;
+    --accent:      #E5B84A;
+    --accent-bg:   #2A2109;
+    --accent-line: #6B551A;
+
+    --ok:          #4FC0A4;
+    --ok-bg:       #0C2A24;
+    --work:        #E08A4E;
+    --work-bg:     #2E1B0D;
+    --stop:        #EF7183;
+    --stop-bg:     #33121A;
+    --idle-bg:     #1B2632;
+
+    --on-bar:      #08111A;
+    --next-bg:     #141C26;
+    --next-fg:     #E9EDF2;
+    --next-line:   #253141;
+    --next-accent: #E5B84A;
+
+    --shadow:      0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16.5px;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0 20px 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  /* ---------- type ---------- */
+  h1, h2, h3, h4 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); font-weight: 700; letter-spacing: -.03em; line-height: 1.02; }
+  h2 { font-size: clamp(1.35rem, 3vw, 1.7rem); font-weight: 700; letter-spacing: -.018em; }
+  h3 { font-size: 1.06rem; font-weight: 600; letter-spacing: -.008em; }
+  p  { margin: 0; }
+  a  { color: inherit; }
+
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+  .lede { font-size: 1.12rem; color: var(--ink-2); max-width: 64ch; }
+
+  /* ---------- cover sheet ---------- */
+  .cover {
+    border-top: 3px solid var(--prussian);
+    padding-top: 26px;
+    margin-top: 52px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .cover-meta { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: baseline; }
+  .titleline { display: flex; flex-direction: column; gap: 10px; }
+  .subtitle {
+    font-family: var(--f-display);
+    font-size: clamp(1rem, 2.3vw, 1.28rem);
+    font-weight: 500;
+    color: var(--prussian);
+    letter-spacing: -.012em;
+    max-width: 40ch;
+    line-height: 1.28;
+  }
+
+  .loop {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+    font-family: var(--f-mono); font-size: .74rem; font-weight: 600;
+    letter-spacing: .04em;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 3px;
+  }
+  .loop span { color: var(--ink); }
+  .loop i { color: var(--accent); font-style: normal; }
+
+  /* ---------- stat strip ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .stat { background: var(--surface); padding: 14px 16px; display: flex; flex-direction: column; gap: 3px; }
+  .stat b { font-family: var(--f-display); font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+  .stat small { font-size: .72rem; color: var(--ink-3); letter-spacing: .04em; text-transform: uppercase; font-family: var(--f-mono); }
+
+  /* ---------- sections ---------- */
+  section { margin-top: 68px; }
+  .sec-head { display: flex; flex-direction: column; gap: 7px; margin-bottom: 26px; }
+  .rule { height: 1px; background: var(--line); border: 0; margin: 0; }
+
+  /* ---------- pivot table ---------- */
+  .scroller { overflow-x: auto; border: 1px solid var(--line); border-radius: 3px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: .93rem; min-width: 520px; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  thead th {
+    font-family: var(--f-mono); font-size: .68rem; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3);
+    background: var(--surface-2); border-bottom: 1px solid var(--line);
+    position: sticky; top: 0;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.was { color: var(--ink-3); }
+  td.now { color: var(--ink); font-weight: 600; }
+  th.rowlab { font-family: var(--f-mono); font-size: .74rem; color: var(--ink-2); font-weight: 600; white-space: nowrap; }
+
+  /* ---------- phases ---------- */
+  .phases { display: flex; flex-direction: column; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+  .phase {
+    background: var(--surface);
+    display: grid;
+    grid-template-columns: 58px 1fr;
+    gap: 0 18px;
+    padding: 17px 18px;
+    align-items: start;
+  }
+  .phase:hover { background: var(--surface-2); }
+  .pnum {
+    font-family: var(--f-mono); font-size: 1.28rem; font-weight: 600;
+    color: var(--prussian); line-height: 1.15; letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .pnum small { display: block; font-size: .6rem; letter-spacing: .1em; color: var(--ink-3); font-weight: 400; margin-top: 3px; }
+  .pbody { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .ptop { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; }
+  .pdesc { color: var(--ink-2); font-size: .94rem; max-width: 72ch; }
+  .milestone {
+    font-family: var(--f-mono); font-size: .74rem; font-weight: 600;
+    color: var(--accent); background: var(--accent-bg);
+    border: 1px solid var(--accent-line);
+    padding: 3px 9px; border-radius: 2px; display: inline-block;
+  }
+
+  /* ---------- chips ---------- */
+  .chip {
+    font-family: var(--f-mono); font-size: .67rem; font-weight: 600;
+    letter-spacing: .07em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 2px; white-space: nowrap;
+  }
+  .chip.done { color: var(--ok);   background: var(--ok-bg); }
+  .chip.now  { color: var(--work); background: var(--work-bg); }
+  .chip.next { color: var(--stop); background: var(--stop-bg); }
+  .chip.idle { color: var(--ink-2); background: var(--idle-bg); }
+  .chip.hrs  { color: var(--ink-2); background: var(--sunk); }
+
+  /* ---------- gantt ---------- */
+  .gantt { border: 1px solid var(--line); border-radius: 3px; background: var(--surface); overflow: hidden; }
+  .gantt-scroll { overflow-x: auto; }
+  .gantt-inner { min-width: 640px; }
+  .grow {
+    display: grid;
+    grid-template-columns: 158px 1fr;
+    align-items: center;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .grow:last-child { border-bottom: 0; }
+  .glabel {
+    font-family: var(--f-mono); font-size: .74rem; color: var(--ink-2);
+    padding: 0 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .gtrack { display: grid; grid-template-columns: repeat(24, 1fr); padding: 7px 12px 7px 0; }
+  .gbar {
+    height: 19px; border-radius: 2px;
+    display: flex; align-items: center; padding-left: 7px;
+    font-family: var(--f-mono); font-size: .63rem; font-weight: 600;
+    color: var(--on-bar); overflow: hidden; white-space: nowrap;
+  }
+  .gbar.core  { background: var(--prussian); }
+  .gbar.par   { background: var(--prussian-2); opacity: .62; }
+  .gbar.res   { background: var(--accent); }
+  .gscale {
+    display: grid; grid-template-columns: 158px 1fr;
+    border-bottom: 1px solid var(--line); background: var(--surface-2);
+  }
+  .gscale-ticks { display: grid; grid-template-columns: repeat(6, 1fr); padding: 7px 12px 7px 0; }
+  .gscale-ticks span {
+    font-family: var(--f-mono); font-size: .64rem; color: var(--ink-3);
+    letter-spacing: .07em; text-transform: uppercase;
+  }
+
+  /* ---------- two-col ---------- */
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media (max-width: 760px) { .duo { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 3px; padding: 20px; display: flex; flex-direction: column; gap: 13px;
+  }
+  .card.warn { border-left: 3px solid var(--stop); }
+  .card.keep { border-left: 3px solid var(--ok); }
+
+  ol.ladder, ul.plain { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  ol.ladder li, ul.plain li {
+    display: grid; grid-template-columns: 22px 1fr; gap: 10px;
+    font-size: .93rem; color: var(--ink-2); align-items: baseline;
+  }
+  ol.ladder li b, ul.plain li b { font-family: var(--f-mono); font-size: .74rem; color: var(--ink-3); font-weight: 600; }
+  ul.plain li b { color: var(--ok); }
+  .keeps { display: flex; flex-wrap: wrap; gap: 6px; }
+  .keeps code {
+    font-family: var(--f-mono); font-size: .74rem; font-weight: 600;
+    background: var(--ok-bg); color: var(--ok);
+    padding: 3px 8px; border-radius: 2px;
+  }
+
+  /* ---------- contributions ---------- */
+  .contrib { display: grid; grid-template-columns: repeat(auto-fit, minmax(228px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+  .cbox { background: var(--surface); padding: 18px; display: flex; flex-direction: column; gap: 9px; }
+  .ctag { font-family: var(--f-mono); font-size: .8rem; font-weight: 600; color: var(--accent); }
+  .cbox p { font-size: .9rem; color: var(--ink-2); }
+
+  /* ---------- gates ---------- */
+  pre.gates {
+    font-family: var(--f-mono); font-size: .8rem; line-height: 1.85;
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 3px solid var(--ok);
+    border-radius: 3px; padding: 16px 18px; margin: 0;
+    overflow-x: auto; color: var(--ink-2);
+  }
+  pre.gates b { color: var(--ink); font-weight: 400; }
+  pre.gates i { color: var(--ink-3); font-style: normal; }
+
+  /* ---------- next ---------- */
+  .nextup {
+    background: var(--next-bg); color: var(--next-fg);
+    border: 1px solid var(--next-line);
+    border-radius: 3px; padding: 26px 24px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .nextup .eyebrow { color: var(--next-accent); }
+  .nextup h2 { color: inherit; }
+  .nextup p { color: inherit; opacity: .84; max-width: 64ch; }
+
+  footer {
+    margin-top: 68px; padding-top: 20px; border-top: 1px solid var(--line);
+    font-family: var(--f-mono); font-size: .72rem; color: var(--ink-3);
+    display: flex; flex-wrap: wrap; gap: 6px 20px;
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+
+  <!-- ============ COVER SHEET ============ -->
+  <header class="cover">
+    <div class="cover-meta">
+      <span class="eyebrow">Build Dossier</span>
+      <span class="eyebrow">23 Aug 2026</span>
+      <span class="eyebrow">B.Tech CSE Capstone &middot; Research</span>
+    </div>
+
+    <div class="titleline">
+      <h1>AegisAI</h1>
+      <p class="subtitle">An Agentic Digital Public Safety Platform for Autonomous Multi-Modal Fraud Investigation</p>
+    </div>
+
+    <p class="lede">
+      Not a scam classifier &mdash; a digital <em>investigator</em>. Give it an email, an SMS, a
+      WhatsApp screenshot, a QR code, a URL, a PDF, an APK, a recording, a phone number,
+      a UPI ID, or a live call. A graph of specialised agents investigates it, correlates
+      the findings against a persistent fraud-intelligence graph, scores the risk with a
+      calibrated model, and explains <strong>why</strong> &mdash; with a source for every claim.
+    </p>
+
+    <div class="loop">
+      <span>INPUT</span><i>&rarr;</i><span>EXTRACT</span><i>&rarr;</i><span>INVESTIGATE</span><i>&rarr;</i><span>CORRELATE</span><i>&rarr;</i><span>REASON</span><i>&rarr;</i><span>SCORE</span><i>&rarr;</i><span>EXPLAIN</span><i>&rarr;</i><span>ACT</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b class="mono">30k</b><small>LOC inherited</small></div>
+      <div class="stat"><b class="mono">84</b><small>tests green</small></div>
+      <div class="stat"><b class="mono">0.767</b><small>macro-F1, zero-leak</small></div>
+      <div class="stat"><b class="mono">11</b><small>phases</small></div>
+      <div class="stat"><b class="mono">24</b><small>weeks</small></div>
+      <div class="stat"><b class="mono">~1060</b><small>hours</small></div>
+    </div>
+  </header>
+
+  <!-- ============ THE PIVOT ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">01 &mdash; Provenance</span>
+      <h2>What changed, and what didn't</h2>
+      <p class="lede">AegisAI is not greenfield. It inherits a working, tested scam-call engine
+      built for the ET AI Hackathon 2026 and widens it into an investigation platform. The pivot
+      is <strong>breadth and architecture</strong> &mdash; never a restart.</p>
+    </div>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th style="width:112px"></th><th style="width:38%">KAVACH &mdash; inherited</th><th>AegisAI &mdash; target</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th class="rowlab">Input</th>
+            <td class="was">Voice call, text, image, UPI ID</td>
+            <td class="now">Any digital evidence &mdash; email, SMS, screenshot, QR, URL, PDF, APK, audio, video, phone, UPI, live call</td>
+          </tr>
+          <tr>
+            <th class="rowlab">Shape</th>
+            <td class="was">Linear pipeline, one domain</td>
+            <td class="now">LangGraph agent graph, conditional routing, parallel fan-out</td>
+          </tr>
+          <tr>
+            <th class="rowlab">Output</th>
+            <td class="was">Threat score, coach line, evidence PDF</td>
+            <td class="now">Investigation report: risk, evidence chain, relationship graph, recommended actions</td>
+          </tr>
+          <tr>
+            <th class="rowlab">Scoring</th>
+            <td class="was">Hand-weighted signal fusion</td>
+            <td class="now">Calibrated ML model + rules + graph + LLM, with disagreement measured</td>
+          </tr>
+          <tr>
+            <th class="rowlab">Memory</th>
+            <td class="was">Per-session only</td>
+            <td class="now">Cross-case, persistent, graph-linked &mdash; &ldquo;seen in 3 prior investigations&rdquo;</td>
+          </tr>
+          <tr>
+            <th class="rowlab">Purpose</th>
+            <td class="was">Hackathon demo</td>
+            <td class="now">Capstone &middot; research paper &middot; deployable product</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ PHASES ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">02 &mdash; Roadmap</span>
+      <h2>Eleven phases</h2>
+      <p class="lede">Ordered by dependency, not preference. Each phase has an exit criterion;
+      nothing is marked done until it passes.</p>
+    </div>
+
+    <div class="phases">
+
+      <div class="phase">
+        <div class="pnum">00<small>W1&ndash;2</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Foundation</h3><span class="chip done">Rename done</span><span class="chip hrs">~30h</span></div>
+          <p class="pdesc">Python 3.9&nbsp;&rarr;&nbsp;3.12 &middot; repo restructure &middot; Docker Compose stack
+          (Postgres, Neo4j, Qdrant, Redis) &middot; secrets hygiene &middot; CI gates.</p>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">01<small>W3&ndash;5</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Agent architecture &amp; orchestration</h3><span class="chip next">Critical path</span><span class="chip hrs">~75h</span></div>
+          <p class="pdesc"><code class="mono">InvestigationState</code> contract &middot; agent protocol &amp; registry &middot;
+          LangGraph orchestrator &middot; input classifier &middot; evidence store &middot; the inherited engine
+          adapted into agents without rewriting it.</p>
+          <span class="milestone">M1 &mdash; end-to-end investigation through the graph</span>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">02<small>W6&ndash;10</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Evidence agents</h3><span class="chip hrs">~130h</span></div>
+          <p class="pdesc">URL/domain (SSRF-hardened) &middot; email headers &middot; QR &middot; financial &middot;
+          social engineering &middot; APK static analysis &middot; image forensics &middot; threat intelligence
+          with provenance.</p>
+          <span class="milestone">M2 &mdash; the defensible MVP: upload anything, get a real report</span>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">03<small>W11&ndash;13</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Intelligence layer</h3><span class="chip hrs">~85h</span></div>
+          <p class="pdesc">Neo4j behind the existing repository interface &middot; entity resolution &middot;
+          Qdrant &middot; RAG corpus to 1,500+ chunks &middot; graph-derived risk features, leak-guarded.</p>
+          <span class="milestone">M3 &mdash; cross-case memory works</span>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">04<small>W14&ndash;16</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>ML risk engine &amp; fusion</h3><span class="chip next">Critical path</span><span class="chip hrs">~90h</span></div>
+          <p class="pdesc">Feature registry &middot; XGBoost / LightGBM baselines &middot; probability
+          calibration &middot; SHAP&nbsp;&rarr;&nbsp;evidence &middot; the false-positive harness that gates
+          every promotion.</p>
+          <span class="milestone">M4 &mdash; calibrated, explainable scoring</span>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">05<small>W17&ndash;18</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Multimodal depth</h3><span class="chip hrs">~65h</span></div>
+          <p class="pdesc">faster-whisper &middot; conversation dynamics generalised beyond calls &middot;
+          video &middot; documents. Voice-authenticity stays gated until a dataset exists.</p>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">06<small>W19&ndash;21</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Real-time</h3><span class="chip hrs">~110h</span></div>
+          <p class="pdesc">WebRTC protected calls with explicit consent &middot; streaming STT &middot;
+          a pruned agent subgraph at p95&nbsp;&lt;&nbsp;400&nbsp;ms &middot; SMS channel &middot; retention controls.</p>
+          <span class="milestone">M5 &mdash; live protected call</span>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">07<small>W6&ndash;22</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Frontend &amp; dashboards</h3><span class="chip idle">Parallel</span><span class="chip hrs">~115h</span></div>
+          <p class="pdesc">Investigation workspace &middot; live agent trace (React Flow) &middot; knowledge-graph
+          explorer (Cytoscape) &middot; analyst dashboard &middot; evaluation dashboard &middot; Hindi UI &amp; WCAG AA.</p>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">08<small>W6&ndash;20</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Datasets &amp; model training</h3><span class="chip idle">Parallel</span><span class="chip hrs">~150h</span></div>
+          <p class="pdesc"><strong>AIFC</strong> &mdash; 10,000+ multimodal, multilingual items across 12 fraud
+          categories with a deliberately hard benign class &middot; synthetic screenshot pipeline &middot;
+          annotator agreement &middot; the full-corpus retrain that has never been run.</p>
+          <span class="milestone">M6 &mdash; released multimodal corpus</span>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">09<small>W20&ndash;24</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Research evaluation</h3><span class="chip next">Critical path</span><span class="chip hrs">~150h</span></div>
+          <p class="pdesc">Eight experiments &middot; nine-configuration ablation &middot; latency &amp; cost
+          benchmark &middot; human evaluation of explanations &middot; adversarial &amp; prompt-injection robustness.</p>
+          <span class="milestone">M7 &mdash; paper draft + reproduction package</span>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">10<small>W22&ndash;24</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Hardening &amp; deployment</h3><span class="chip hrs">~60h</span></div>
+          <p class="pdesc">Full security review &middot; observability &middot; containerised deploy &middot;
+          dependency-failure drills &middot; seeded demo and defence deck.</p>
+          <span class="milestone">M8 &mdash; deployed, secured, demoable</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ GANTT ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">03 &mdash; Schedule</span>
+      <h2>Twenty-four weeks</h2>
+      <p class="lede">At ~18 focused hours a week, Aug 2026 &rarr; Feb 2027. Adjust to your academic
+      calendar &mdash; the <em>sequence</em> matters more than the dates.</p>
+    </div>
+
+    <div class="gantt">
+      <div class="gantt-scroll"><div class="gantt-inner">
+        <div class="gscale">
+          <div class="glabel" style="padding-top:7px;padding-bottom:7px">week &rarr;</div>
+          <div class="gscale-ticks">
+            <span>Aug</span><span>Sep</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span>
+          </div>
+        </div>
+
+        <div class="grow"><div class="glabel">00 Foundation</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:1/span 2">30h</div></div></div>
+
+        <div class="grow"><div class="glabel">01 Agent architecture</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:3/span 3">75h &middot; M1</div></div></div>
+
+        <div class="grow"><div class="glabel">02 Evidence agents</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:6/span 5">130h &middot; M2</div></div></div>
+
+        <div class="grow"><div class="glabel">03 Intelligence layer</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:11/span 3">85h &middot; M3</div></div></div>
+
+        <div class="grow"><div class="glabel">04 ML risk engine</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:14/span 3">90h &middot; M4</div></div></div>
+
+        <div class="grow"><div class="glabel">05 Multimodal depth</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:17/span 2">65h</div></div></div>
+
+        <div class="grow"><div class="glabel">06 Real-time</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:19/span 3">110h &middot; M5</div></div></div>
+
+        <div class="grow"><div class="glabel">07 Frontend</div><div class="gtrack">
+          <div class="gbar par" style="grid-column:6/span 17">115h &middot; parallel</div></div></div>
+
+        <div class="grow"><div class="glabel">08 Datasets &amp; training</div><div class="gtrack">
+          <div class="gbar par" style="grid-column:6/span 15">150h &middot; M6</div></div></div>
+
+        <div class="grow"><div class="glabel">09 Research evaluation</div><div class="gtrack">
+          <div class="gbar res" style="grid-column:20/span 5">150h &middot; M7</div></div></div>
+
+        <div class="grow"><div class="glabel">10 Hardening &amp; deploy</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:22/span 3">60h &middot; M8</div></div></div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- ============ RISK / DESCOPE ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">04 &mdash; Contingency</span>
+      <h2>What to cut, and what never to cut</h2>
+      <p class="lede">Descoping is planned, not improvised. Every cut below is defensible in a viva
+      <em>provided it is stated honestly</em>.</p>
+    </div>
+
+    <div class="duo">
+      <div class="card warn">
+        <div class="ptop"><h3>Cut from the bottom</h3></div>
+        <ol class="ladder">
+          <li><b>1</b><span>SIP/VoIP integration &middot; voice authenticity &mdash; both already conditional</span></li>
+          <li><b>2</b><span>Video agent &middot; SMS channel</span></li>
+          <li><b>3</b><span>APK agent &mdash; the highest effort-to-marks ratio in the plan</span></li>
+          <li><b>4</b><span>Anomaly detection</span></li>
+          <li><b>5</b><span>Neo4j GDS analytics &mdash; NetworkX already works</span></li>
+        </ol>
+      </div>
+
+      <div class="card keep">
+        <div class="ptop"><h3>Never cut</h3></div>
+        <p class="pdesc">These are the difference between a research project and a demo.</p>
+        <div class="keeps">
+          <code>1.1 state contract</code><code>1.3 orchestrator</code><code>2.3 URL agent</code>
+          <code>2.7 social engineering</code><code>4.4 calibration</code><code>4.8 FP harness</code>
+          <code>8.6 annotator agreement</code><code>9.1 eval harness</code><code>9.3 ablation</code>
+          <code>9.4 latency</code><code>10.1 security review</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESEARCH ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">05 &mdash; Research</span>
+      <h2>Four contributions, not ten</h2>
+      <p class="lede">Multi-agent fraud detection is <em>not</em> novel, and claiming it is would be the
+      fastest route to a desk reject. These four are defensible with experiments.</p>
+    </div>
+
+    <div class="contrib">
+      <div class="cbox">
+        <span class="ctag">C1</span>
+        <h3>Conversational-arc detection</h3>
+        <p>Fraud modelled as a staged psychological process across calls, chats and threads &mdash;
+        not an artefact classified in isolation.</p>
+      </div>
+      <div class="cbox">
+        <span class="ctag">C2</span>
+        <h3>Measured agent disagreement</h3>
+        <p>Typed results with calibrated confidence, and disagreement between scoring paths
+        reported rather than hidden.</p>
+      </div>
+      <div class="cbox">
+        <span class="ctag">C3</span>
+        <h3>The AIFC corpus</h3>
+        <p>Multimodal, multilingual Indian fraud evidence with a deliberately hard benign class
+        and published annotator agreement.</p>
+      </div>
+      <div class="cbox">
+        <span class="ctag">C4</span>
+        <h3>False-positive-first evaluation</h3>
+        <p>Showing that several choices which improve accuracy make FPR <em>worse</em> &mdash; the
+        binding constraint for citizen-facing safety systems.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GATES ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">06 &mdash; Definition of done</span>
+      <h2>Four gates, every time</h2>
+      <p class="lede">A task is not done because the code exists. One task at a time, verified,
+      before the next.</p>
+    </div>
+
+<pre class="gates"><b>.venv/bin/python -m pytest services/api/tests -q</b>   <i># 84 passing</i>
+<b>.venv/bin/python schema/check_contract.py</b>          <i># Pydantic &harr; TypeScript</i>
+<b>npm run typecheck --prefix apps/web</b>                <i># clean</i>
+<b>npm run build --prefix apps/web</b>                    <i># succeeds</i></pre>
+
+    <div class="duo" style="margin-top:22px">
+      <div class="card">
+        <h3>Standing invariants</h3>
+        <ul class="plain">
+          <li><b>&check;</b><span><code class="mono">schema/</code> is the single source of truth &mdash; Pydantic and TypeScript change together</span></li>
+          <li><b>&check;</b><span>The frontend is a pure renderer &mdash; no scoring maths in React</span></li>
+          <li><b>&check;</b><span>Degradation is explicit &mdash; every path has a fallback that still answers</span></li>
+          <li><b>&check;</b><span>False positives are a first-class failure &mdash; every agent ships a benign test</span></li>
+          <li><b>&check;</b><span>The LLM explains, extracts and ranks. It never scores.</span></li>
+          <li><b>&check;</b><span>No claim without a measurement</span></li>
+          <li><b>&check;</b><span>Evidence is data, never instructions</span></li>
+        </ul>
+      </div>
+
+      <div class="card warn">
+        <h3>Security, non-negotiable</h3>
+        <ul class="plain">
+          <li><b>!</b><span><strong>SSRF</strong> &mdash; the URL agent fetches attacker-supplied URLs. Block private ranges and cloud metadata, re-resolve DNS after <em>every</em> redirect.</span></li>
+          <li><b>!</b><span><strong>Malware</strong> &mdash; APKs are analysed statically in a network-less container. Never executed.</span></li>
+          <li><b>!</b><span><strong>Consent</strong> &mdash; live audio requires an explicit gate and a visible indicator. Never designed around covert recording.</span></li>
+          <li><b>!</b><span><strong>Tenancy</strong> &mdash; org isolation enforced in the repository layer, not the route.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NEXT ============ -->
+  <section>
+    <div class="nextup">
+      <span class="eyebrow">Next action</span>
+      <h2>Task 0.2 &mdash; Python 3.9 &rarr; 3.12</h2>
+      <p>LangGraph, Pydantic v2 and current <span class="mono">transformers</span> all need 3.11+.
+      Nothing in Phase 1 can start until this lands, which makes it the one true blocker on the
+      board. Estimated 4&ndash;6 hours: new virtualenv, pinned requirements, replace the deprecated
+      FastAPI <span class="mono">on_event</span> hooks with a lifespan handler, then re-run all
+      four gates.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>AegisAI &middot; build dossier</span>
+    <span>Generated 23 Aug 2026</span>
+    <span>Full detail in docs/TASKS.md &middot; docs/ARCHITECTURE.md &middot; docs/RESEARCH.md</span>
+  </footer>
+
+</div>

@@ -1,5 +1,5 @@
 """
-KAVACH Module 1 — Input Processing Layer.
+AegisAI Module 1 — Input Processing Layer.
 
 Turns every supported input format (audio, text, image, video metadata) into
 one structured, machine-readable shape the feature extractors can consume.
@@ -9,7 +9,7 @@ The organising rule for this whole package
 Every adapter here wraps a heavy optional dependency — Whisper, PaddleOCR,
 pyannote, fastText, spaCy — and every one of them has a working fallback that
 requires nothing but the standard library. That is not hedging: the rest of
-PRESAGE already guarantees that the request path makes no network call and
+AegisAI already guarantees that the request path makes no network call and
 needs no GPU, and an input layer that breaks that guarantee would break it for
 the entire product, not just for itself.
 

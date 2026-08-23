@@ -1,5 +1,5 @@
 /**
- * Intel — the FIGAE investigator dashboard (KAVACH Module 2).
+ * Intel — the FIGAE investigator dashboard (AegisAI Module 2).
  *
  * Correlates individual Module 1 detections into organised-crime intelligence:
  * live stats, an interactive fraud-network graph, an India hotspot map, campaign

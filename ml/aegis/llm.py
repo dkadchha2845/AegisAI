@@ -1,7 +1,7 @@
 """
-PRESAGE — pluggable LLM backend for offline data generation.
+AegisAI — pluggable LLM backend for offline data generation.
 
-Three backends, selected by the PRESAGE_LLM environment variable:
+Three backends, selected by the AEGIS_LLM environment variable:
 
     gemini     Google AI Studio free tier. No card, ~1500 requests/day.
                Genuinely good at romanised Hinglish. The default.
@@ -56,7 +56,7 @@ class GeminiBackend:
     Google AI Studio free tier.
 
     Get a key at https://aistudio.google.com/apikey -- Google account, no card.
-    Free-tier model names change; override with PRESAGE_MODEL if the default
+    Free-tier model names change; override with AEGIS_MODEL if the default
     has moved on. AI Studio's model list is the authority, not this file.
     """
 
@@ -71,7 +71,7 @@ class GeminiBackend:
     suggested_concurrency = 2
 
     def __init__(self, model: str | None = None):
-        self.model = model or os.environ.get("PRESAGE_MODEL", self.default_model)
+        self.model = model or os.environ.get("AEGIS_MODEL", self.default_model)
         self.key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         if not self.key:
             raise GenerationError(
@@ -138,7 +138,7 @@ class OllamaBackend:
         ollama pull qwen2.5:7b-instruct
 
     qwen2.5 is the best 7B option for code-mixed Indic text and fits
-    comfortably in 16GB. Set PRESAGE_MODEL to try another.
+    comfortably in 16GB. Set AEGIS_MODEL to try another.
     """
 
     name = "ollama"
@@ -147,7 +147,7 @@ class OllamaBackend:
     suggested_concurrency = 2
 
     def __init__(self, model: str | None = None):
-        self.model = model or os.environ.get("PRESAGE_MODEL", self.default_model)
+        self.model = model or os.environ.get("AEGIS_MODEL", self.default_model)
         self.host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 
     async def generate(self, client: httpx.AsyncClient, system: str, prompt: str) -> Result:
@@ -186,7 +186,7 @@ class AnthropicBackend:
     suggested_concurrency = 6
 
     def __init__(self, model: str | None = None):
-        self.model = model or os.environ.get("PRESAGE_MODEL", self.default_model)
+        self.model = model or os.environ.get("AEGIS_MODEL", self.default_model)
         if not (
             os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")
         ):
@@ -221,7 +221,7 @@ BACKENDS = {
 
 
 def get_backend(name: str | None = None, model: str | None = None):
-    name = (name or os.environ.get("PRESAGE_LLM", "gemini")).lower()
+    name = (name or os.environ.get("AEGIS_LLM", "gemini")).lower()
     if name not in BACKENDS:
         raise GenerationError(
             f"Unknown backend {name!r}. Choose from: {', '.join(BACKENDS)}"

@@ -35,7 +35,7 @@ import {
 import { TranscriptPane } from "@/components/TranscriptPane";
 import { NarrationPanel } from "@/components/NarrationPanel";
 import { NumberIntelPanel } from "@/components/NumberIntelPanel";
-import type { PresageEvent, StateFrame } from "@/types/contract";
+import type { AegisEvent, StateFrame } from "@/types/contract";
 
 /** Demo beats, for the rehearsal scrubber. Timings come from mock-stream.json. */
 const BEATS = [
@@ -102,7 +102,7 @@ export function LiveConsole() {
 
   // Edge-driven animation. Subscribed once; never re-renders on events.
   useEffect(() => {
-    return onEvent((e: PresageEvent) => {
+    return onEvent((e: AegisEvent) => {
       switch (e.kind) {
         case "THRESHOLD_CROSSED": {
           const level = e.payload.level as string;
