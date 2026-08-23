@@ -1,10 +1,48 @@
 # AegisAI — Master Task List
 
-**Working agreement:** one task at a time, completed and verified, before the
-next. A task is not done because the code exists — it is done when its
-acceptance criteria pass and the four gates below are green.
+> **Status: Phase 0 complete and verified end-to-end. Phase 1 not started —
+> awaiting your go-ahead.**
+> Last updated 2026-08-24 · `main` @ `df9f09a` · 132 tests · CI green
+
+---
+
+## Working agreement
+
+Set by the project owner on 2026-08-24, and binding on every iteration:
+
+1. **A complete task-list file** (this file) is produced after each iteration.
+2. **End-to-end verification** that the thing actually works — the running
+   application, not just unit tests.
+3. **Only then** is a task ticked.
+4. **No further phase or step begins without an explicit instruction.**
+
+### Why 3 is not ceremony
+
+Phase 0 was ticked on 129 passing unit tests. Running the actual application
+afterwards found **three defects those tests could not see**:
+
+| Defect | Why tests missed it |
+|---|---|
+| Every live frame and every analysis falsely tagged `clf:lexical_fallback` — the UI told citizens the system was degraded while the good model was serving | Two call sites compared `backend != "muril"`; the fused backend serves MuRIL under another name. Unit tests asserted verdicts, not degradation tags |
+| Evidence packages and police complaints still issued as `KVCH-…` (KAVACH) | No test asserted the brand of a user-facing identifier |
+| **Demo login was broken on any existing database** — the screen advertised `admin@aegis.local`, the DB held `admin@kavach.local`, and seeding returned early because the user table was non-empty | Tests seed a *fresh ephemeral* database, where the buggy branch behaves identically |
+
+All three are fixed and pinned by regression tests. The third was a genuine
+data-migration bug in the rename that would have hit a real deployment.
+
+---
+
+**Definition of done:** a task is not done because the code exists — it is done
+when its acceptance criteria pass, the four gates below are green, **and the
+behaviour has been exercised in the running system.**
 
 ### The four gates (run before every task is marked ✅)
+
+```bash
+make gates
+```
+
+Or individually:
 
 ```bash
 .venv/bin/python -m pytest services/api/tests -q
@@ -12,6 +50,53 @@ acceptance criteria pass and the four gates below are green.
 npm run typecheck --prefix apps/web
 npm run build --prefix apps/web
 ```
+
+`make check` adds lint and types. `make up` starts the dev stack; `make status`
+shows what the API can actually reach.
+
+### The end-to-end check (run before every task is ticked)
+
+```bash
+colima start && make up     # backing stores
+make api                    # :8000
+make web                    # :5173
+```
+
+Then exercise the real path the task touched — submit an analysis, run a live
+session, sign in, open the intel console — and read `/api/health` and the
+browser console. A green suite plus an unexercised feature is not a done task.
+
+---
+
+## Phase 0 — verified end-to-end 2026-08-24
+
+Evidence from the running system, not from the test suite:
+
+| Check | Result |
+|---|---|
+| Dev stack | 4/4 healthy in ~7 s; verified by real Cypher query, `psql` version, `redis-cli PONG`, Qdrant version — not TCP handshakes |
+| API boot | lifespan `warm()` runs; `classifier: fused`, `loaded: true`, `retrieval: dense` (31 chunks), twin fitted, 14 coach lines, `degraded: []` |
+| Landing + Analyze UI | Renders as AegisAI; **no console errors** |
+| Real scam analysis | Score **91**, CRITICAL, stage `verification demand`, known-fraud-infrastructure match; entities auto-extracted (UPI, CBI, narcotics, Aadhaar, RBI, Delhi) |
+| **False-positive discipline** | Bank debit **17.2**, delivery **7.5**, KYC reminder **36.6** — all CALM/WATCH, all `LIKELY_LEGITIMATE` |
+| Live session arc | `AUTHORITY_CLAIM → FEAR_INDUCTION → ISOLATION → VERIFICATION_DEMAND`, threat 33.9 → 61.8, Digital Twin forecasting time-to-payment |
+| Auth + RBAC | All 4 demo roles authenticate; wrong password rejected; browser login lands on intel console as ANALYST |
+| Intel console | 9 clusters, 9 campaigns, 114 cases, 47 linked entities, force graph renders |
+| Evidence report | `200`, id `AGIS-F0F8F8CB942A` |
+| Stack **down** | API still boots and answers; all four stores report unreachable; service still `ok` |
+| CI | Green on GitHub (run `32659645342`) |
+
+**Known accuracy gap observed, not a regression:** on the final turn
+("RBI supervised account mein 50000 transfer kariye") the classifier returned
+`AUTHORITY_CLAIM` rather than `PAYMENT_SETUP` — a miss on the most decisive
+turn. Consistent with the known English/short-input weakness and with BENIGN
+scoring F1 0.340. Belongs to Phase 4 (calibration) and Phase 8 (corpus).
+
+**Left in the dev database:** the pre-rename `@kavach.local` accounts and a
+stale `kavach` org still exist alongside the new ones. Harmless — nothing
+references them, no cases are attached — but they are yours to delete if you
+want a clean slate:
+`rm aegis.db` (it reseeds on next boot; there are 0 case records).
 
 ### Legend
 

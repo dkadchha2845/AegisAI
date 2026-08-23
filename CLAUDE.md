@@ -9,6 +9,19 @@ and [`docs/TASKS.md`](docs/TASKS.md) before starting work.
 
 ---
 
+## Working agreement (set by the project owner, 2026-08-24)
+
+1. Produce a **complete task-list file** (`docs/TASKS.md`) after each iteration.
+2. **Verify end-to-end** that it works — the running application, not just tests.
+3. **Only then** tick the task.
+4. **Do not start a further phase or step without an explicit instruction.**
+
+Point 2 is not ceremony. Phase 0 was ticked on 129 green unit tests; running the
+real application immediately found three defects the suite could not see —
+including a broken demo login on any pre-existing database, because tests seed a
+fresh ephemeral DB where the buggy code path behaves identically. See the
+"Working agreement" section of `docs/TASKS.md`.
+
 ## The four gates — run before calling anything done
 
 ```bash
