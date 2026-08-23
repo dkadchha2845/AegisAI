@@ -15,6 +15,7 @@ architecture the PDF argues for.
 
 from __future__ import annotations
 
+from itertools import islice
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -164,10 +165,8 @@ def full_graph(
     g = get_intel().graph()
     nodes = []
     edges = []
-    count = 0
-    for n, d in g.G.nodes(data=True):
-        if count >= limit:
-            break
+    # islice states the cap directly, instead of a counter plus a break.
+    for n, d in islice(g.G.nodes(data=True), limit):
         kind = d.get("kind")
         nodes.append({
             "id": n,
@@ -177,7 +176,6 @@ def full_graph(
             "threat": d.get("threat"),
             "cluster": g._cluster_of.get(d.get("case_id")) if kind == "case" else None,
         })
-        count += 1
     node_ids = {n["id"] for n in nodes}
     for u, v in g.G.edges():
         if u in node_ids and v in node_ids:

@@ -146,7 +146,6 @@ def verify(model_dir: Path, manifest: Dict[str, Any]) -> tuple[bool, str]:
 
 def main() -> int:
     """`make verify-checkpoint` — check the on-disk model against the manifest."""
-    import sys
 
     ml_dir = Path(__file__).resolve().parents[1]
     artifacts = ml_dir / "artifacts"

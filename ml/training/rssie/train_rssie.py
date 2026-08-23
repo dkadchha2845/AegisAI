@@ -44,9 +44,9 @@ HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from ml.training.rssie.dataset import CallExample, describe, load_calls  # noqa: E402
-from ml.training.rssie.labels import EMOTIONS, SCAM_TYPES, STAGES  # noqa: E402
-from ml.training.rssie.model import FEATURE_DIM, RSSIEConfig, RSSIEModel  # noqa: E402
+from ml.training.rssie.dataset import CallExample, describe, load_calls
+from ml.training.rssie.labels import EMOTIONS, SCAM_TYPES, STAGES
+from ml.training.rssie.model import FEATURE_DIM, RSSIEConfig, RSSIEModel
 
 ARTIFACTS = REPO_ROOT / "ml" / "artifacts" / "rssie"
 
@@ -266,7 +266,7 @@ def main() -> int:
                 tensors["input_ids"], tensors["attention_mask"],
                 tensors["turn_mask"], tensors["features"],
             )
-            loss, parts = model.loss(out, tensors)
+            loss, _parts = model.loss(out, tensors)
             optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(trainable, 1.0)

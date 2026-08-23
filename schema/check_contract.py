@@ -24,7 +24,7 @@ from pathlib import Path
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
 
-from models import (  # noqa: E402
+from models import (
     Event,
     EventKind,
     GuardianState,
@@ -101,7 +101,7 @@ def main() -> int:
                 elif msg["type"] == "event":
                     Event.model_validate(msg)
                     events += 1
-            except Exception as e:  # noqa: BLE001 - report and keep going
+            except Exception as e:
                 failures.append(f"mock-stream.json[{i}]: {str(e)[:140]}")
         print(f"  ok  mock-stream.json validates ({states} state, {events} event)")
 

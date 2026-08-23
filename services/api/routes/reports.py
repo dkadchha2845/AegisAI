@@ -20,7 +20,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from .. import audit
-from ..auth import get_current_user, require_role
+from ..auth import require_role
 from ..db import get_db
 from ..engine.report import build_evidence_package
 from ..engine.session import registry
@@ -74,7 +74,7 @@ def save_report(
         from ..intel import get_intel
 
         get_intel().ingest_package(package)
-    except Exception:  # noqa: BLE001 - intel ingest is additive, never blocking
+    except Exception:
         pass
 
     return {"record": record.as_summary(), "package": package}

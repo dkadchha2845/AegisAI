@@ -15,4 +15,4 @@ from .guidance import build_guidance
 from .response import build_response
 from .verify import verify
 
-__all__ = ["verify", "build_guidance", "build_response", "build_complaint"]
+__all__ = ["build_complaint", "build_guidance", "build_response", "verify"]

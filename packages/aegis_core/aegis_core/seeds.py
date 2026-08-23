@@ -23,7 +23,6 @@ import itertools
 import random
 from dataclasses import asdict, dataclass
 
-
 # --- Axis 1: scam archetype -------------------------------------------------
 # The dominant axis. Each archetype has its own vocabulary, its own pretext,
 # and its own natural stage ordering, so this is what buys real diversity.

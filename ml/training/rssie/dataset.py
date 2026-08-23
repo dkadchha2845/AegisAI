@@ -40,7 +40,7 @@ DATA = ML_DIR / "data" / "processed"
 
 sys.path.insert(0, str(REPO_ROOT))
 
-from ml.training.rssie.labels import (  # noqa: E402
+from ml.training.rssie.labels import (
     EMOTION2ID,
     SCAMTYPE2ID,
     STAGE2ID,
@@ -48,10 +48,10 @@ from ml.training.rssie.labels import (  # noqa: E402
     scam_type_of_archetype,
     transfer_risk_of_stage,
 )
-from services.api.engine.features.behaviour import BehaviourTracker  # noqa: E402
-from services.api.engine.features.callflow import CallFlowTracker  # noqa: E402
-from services.api.engine.features.emotion import EmotionTracker  # noqa: E402
-from services.api.engine.features.linguistic import extract_linguistic  # noqa: E402
+from services.api.engine.features.behaviour import BehaviourTracker
+from services.api.engine.features.callflow import CallFlowTracker
+from services.api.engine.features.emotion import EmotionTracker
+from services.api.engine.features.linguistic import extract_linguistic
 
 
 @dataclass

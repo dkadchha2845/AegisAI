@@ -108,7 +108,7 @@ def preserve_route(req: PreserveRequest, db: Session = Depends(get_db)) -> Dict[
 
         complaint = _bc(result, submitted_text=req.text, channel=req.channel, city=req.city)
         get_intel().ingest_package(complaint_to_evidence_package(complaint), city=req.city)
-    except Exception:  # noqa: BLE001
+    except Exception:
         pass
 
     return {"token": token, "summary": record.as_summary(), "result": result}

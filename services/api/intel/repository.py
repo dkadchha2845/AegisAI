@@ -192,7 +192,7 @@ def _level(score: float) -> str:
 def seed_cases(seed: int = 20260721) -> List[FraudCase]:
     """The deterministic historical repository. Same output every call."""
     rng = random.Random(seed)
-    base = datetime(2026, 1, 1)
+    base = datetime(2026, 1, 1, tzinfo=timezone.utc)
     cases: List[FraudCase] = []
     n = 0
 

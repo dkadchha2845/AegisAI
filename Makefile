@@ -11,7 +11,7 @@ PY        := .venv/bin/python
 WEB       := --prefix apps/web
 
 .DEFAULT_GOAL := help
-.PHONY: help gates test contract typecheck build up down reset status logs api web install verify-checkpoint eval
+.PHONY: help gates check lint types cov audit test contract typecheck build up down reset status logs api web install verify-checkpoint eval
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -21,6 +21,22 @@ help:
 
 gates: test contract typecheck build ## Run all four gates
 	@echo "\n✓ all four gates green"
+
+check: lint types gates ## Everything CI runs
+	@echo "\n✓ lint + types + all four gates green"
+
+lint: ## Ruff (curated toward defects; see pyproject.toml)
+	.venv/bin/ruff check .
+
+types: ## mypy on the agent layer
+	.venv/bin/mypy
+
+cov: ## Tests with the coverage gate
+	$(PY) -m pytest services/api/tests --cov --cov-report=term
+
+audit: ## Dependency vulnerability scan
+	.venv/bin/pip-audit -r services/api/requirements.txt || true
+	npm audit --audit-level=high $(WEB) || true
 
 test: ## Backend test suite
 	$(PY) -m pytest services/api/tests -q

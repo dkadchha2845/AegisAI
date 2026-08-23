@@ -19,6 +19,7 @@ properties matter more than the exact numbers:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import ClassVar
 
 from .classifier import threat_weight
 
@@ -68,7 +69,7 @@ class ManipulationAccumulator:
     compliance: float = 0.0
 
     #: Stage -> which tactic bar it charges, and by how much per utterance.
-    _CHARGE = {
+    _CHARGE: ClassVar[dict[str, tuple[str, float]]] = {
         "AUTHORITY_CLAIM": ("authority", 0.34),
         "FEAR_INDUCTION": ("fear", 0.30),
         "ISOLATION": ("isolation", 0.38),

@@ -34,9 +34,9 @@ from sklearn.metrics import classification_report, f1_score
 ML_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ML_DIR.parent))
 
-from ml.evaluation import manifest as manifest_mod  # noqa: E402
-from ml.training.train import LABELS, load_split  # noqa: E402
-from services.api.engine.classifier import (  # noqa: E402
+from ml.evaluation import manifest as manifest_mod
+from ml.training.train import LABELS, load_split
+from services.api.engine.classifier import (
     LexicalStageClassifier,
     MuRILStageClassifier,
 )

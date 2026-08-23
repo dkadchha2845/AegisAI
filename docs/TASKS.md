@@ -183,12 +183,46 @@ from the serving checkpoint. It is only needed to resume that training run.
 Deleting it reclaims 2.7 GB — your call, not mine:
 `rm -rf ml/artifacts/_train`.
 
-### ⬜ 0.6 — CI/CD hardening
-**Do:** GitHub Actions: lint (`ruff`), format (`black`), types (`mypy` on
-`agents/` + `orchestration/`), pytest with coverage gate, contract check,
-frontend typecheck + build, `pip-audit`/`npm audit`.
-**Accept:** CI green on a clean clone · coverage gate at 70% and rising · a PR
-that breaks the contract fails. **Effort:** 4 h.
+### ✅ 0.6 — CI/CD hardening
+**Done 2026-08-24.** Four CI jobs: `lint + types` (fails in seconds, before
+anything installs torch), `backend` (3.11 + 3.12 matrix), `frontend`, and an
+advisory `audit`. `make check` runs the same locally.
+
+**Ruff is curated toward defects, not opinions.** The default set produced 625
+findings, of which ~390 were pyupgrade style and **65 were `B008` flagging
+FastAPI's own `Depends()` idiom on every route** — enabling that wholesale would
+bury the handful that were real. The curated set found 127; auto-fix cleared 76;
+the genuinely defective remainder was fixed by hand:
+- dead code in `validate_corpus.py` (an unfinished stage-ordering check),
+- three more naive-datetime sites (the class of bug 0.2 fixed elsewhere) — one
+  of which was left naive **on purpose**, with a `noqa` explaining that EXIF and
+  call-log timestamps carry no zone and inventing one would fabricate data,
+- two mutable class defaults, annotated `ClassVar` to say they are constants,
+- a mid-file import, and a counter-plus-break replaced with `islice`.
+
+Every remaining ignore carries its justification in `pyproject.toml`. The gate
+sits at **zero findings**, so a new violation is visible.
+
+**mypy is scoped to `agents/`, `orchestration/`, `stores/`** — strict there, where
+every agent implements one protocol and returns one shape. Retrofitting
+annotations across the inherited engine is a large change with no defect-finding
+payoff today.
+
+**Coverage gate: 65%, and the 70% target was NOT met.** Stating the reason
+rather than hiding it: `services/api/engine/features/` is **601 statements at
+0%**. It is research-track code imported only by `ml/training/rssie/dataset.py`
+and never by the serving path, so the API suite legitimately never touches it.
+Omitting it from the report would show ~76% and tell you less, so it stays
+visible. The gate is a ratchet — raise it as the real number climbs, never lower
+it.
+
+CI also now asserts the **degradation invariant** directly: with no compose
+stack on the runner, all four stores must report unreachable *and* the service
+must still report `ok`.
+
+**Verified:** ruff clean · mypy clean · 129 tests · coverage 66.32% vs the 65%
+gate · `pip-audit`: no known vulnerabilities · the CI health block passes
+locally with the stack down.
 
 ### ⬜ 0.7 — `CLAUDE.md` + contributor docs
 **Why:** the invariants in INVENTORY.md §5 must be enforceable by anyone (human
@@ -265,6 +299,18 @@ being rewritten** — a rewrite would lose the 84 tests that make it trustworthy
 **Do:** thin adapters wrapping `engine/classifier.py`, `coercion.py`, `threat.py`,
 `twin.py`, `passport.py`, `spoofing.py`, `scripts.py` as registered agents
 emitting `AgentResult`. Internals untouched.
+
+> **Scope correction from 0.6:** `services/api/engine/features/` (601
+> statements — behaviour, callflow, emotion, linguistic, script_templates,
+> spoofing, video) is **not on the serving path**. Coverage measurement showed
+> it at 0%, and it turns out to be imported only by
+> `ml/training/rssie/dataset.py`, for the multi-head research model that is not
+> served. So it is *not* part of what 1.7 wraps. It also duplicates concerns
+> that the served engine implements separately — `engine/spoofing.py` vs
+> `engine/features/spoofing.py`, `engine/scripts.py` vs
+> `engine/features/script_templates.py`. Decide deliberately in Phase 1 whether
+> these become agents, stay research-only, or are consolidated; do not wrap them
+> by reflex.
 **Accept:** all 84 existing tests still pass unmodified · each adapter emits a
 valid `AgentResult` · the existing live-call flow works through the new
 orchestrator and through the old path. **Effort:** 10 h. **Depends:** 1.3.

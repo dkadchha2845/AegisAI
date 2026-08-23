@@ -32,7 +32,7 @@ def record(
         db.add(AuditEvent(actor=actor or "anonymous", action=action,
                           target=target, detail=detail, org_id=org_id))
         db.commit()
-    except Exception:  # noqa: BLE001 - logging must never break the caller
+    except Exception:
         db.rollback()
 
 

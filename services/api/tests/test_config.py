@@ -17,9 +17,9 @@ Three properties, each of which has cost this project time when absent:
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from services.api.config import REPO_ROOT, Settings, settings
 
@@ -104,14 +104,14 @@ def test_new_prefix_wins_when_both_are_set(monkeypatch):
 def test_invalid_value_fails_at_startup(monkeypatch):
     """Bad config must fail loudly, naming the field, not surface later elsewhere."""
     monkeypatch.setenv("AEGIS_PG_PORT", "not-a-number")
-    with pytest.raises(Exception) as exc:
+    with pytest.raises(ValidationError) as exc:
         Settings()
     assert "PG_PORT" in str(exc.value)
 
 
 def test_settings_are_immutable():
     """Nothing may reconfigure the app mid-request."""
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         settings.llm_backend = "something-else"  # type: ignore[misc]
 
 

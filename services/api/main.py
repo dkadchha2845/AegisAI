@@ -33,6 +33,7 @@ from .routes import analyze, auth, intel, orgs, reports, session, shield
 from .security import RateLimitMiddleware, SecurityHeadersMiddleware
 from .stores import probe as store_probe
 
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """Startup/shutdown hook.
@@ -204,7 +205,7 @@ def _intel_status() -> Dict[str, Any]:
             "campaigns": s["campaigns"],
             "entities": s["linked_entities"],
         }
-    except Exception as exc:  # noqa: BLE001 - health must never 500
+    except Exception as exc:
         return {"backend": "networkx", "error": str(exc)[:120]}
 
 

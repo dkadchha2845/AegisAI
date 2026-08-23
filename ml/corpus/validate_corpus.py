@@ -19,7 +19,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -30,8 +29,8 @@ ML_DIR = Path(__file__).resolve().parents[1]
 RAW = ML_DIR / "data" / "raw" / "calls.jsonl"
 PROCESSED = ML_DIR / "data" / "processed"
 
-from aegis_core.taxonomy import LABELS  # noqa: E402
-from aegis_core.schema import VICTIM_STATES  # noqa: E402
+from aegis_core.schema import VICTIM_STATES
+from aegis_core.taxonomy import LABELS
 
 _LABELS = set(LABELS)
 _STATES = set(VICTIM_STATES)
@@ -139,13 +138,6 @@ def validate_calls(calls: list[dict]) -> dict:
         if not has_victim:
             issues.append(f"{cid}: no VICTIM turns")
 
-        # Check stage ordering for scam calls
-        if is_scam and seen_stages:
-            stage_order = {
-                "GREETING": 0, "AUTHORITY_CLAIM": 1, "FEAR_INDUCTION": 2,
-                "ISOLATION": 3, "VERIFICATION_DEMAND": 4,
-                "PAYMENT_SETUP": 5, "PAYMENT_EXECUTION": 6, "BENIGN": -1,
-            }
             # Check if PAYMENT_EXECUTION appears before FEAR_INDUCTION
             pay_idx = next(
                 (i for i, s in enumerate(seen_stages) if s == "PAYMENT_EXECUTION"), None
@@ -167,7 +159,7 @@ def validate_calls(calls: list[dict]) -> dict:
         text_to_ids[text].append(cid)
     exact_dups = {k: v for k, v in text_to_ids.items() if len(v) > 1}
     if exact_dups:
-        for text, ids in list(exact_dups.items())[:5]:
+        for _text, ids in list(exact_dups.items())[:5]:
             issues.append(f"EXACT DUPLICATE: {', '.join(ids[:3])} ({len(ids)} copies)")
 
     # Near-duplicate detection (sample-based for performance)
@@ -292,7 +284,7 @@ def main() -> int:
                 for w in presult["warnings"]:
                     print(f"    [!] {w}")
         else:
-            print(f"  [!] Directory not found")
+            print("  [!] Directory not found")
 
     print("\n" + "=" * 60)
     return 0

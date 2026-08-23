@@ -23,7 +23,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import asdict, dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 from ..rag.coach import get_coach
 from ..rag.store import get_kb

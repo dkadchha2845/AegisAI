@@ -266,7 +266,7 @@ class MuRILStageClassifier(StageClassifier):
     checkpoint_backed = True
 
     def __init__(self, model_dir: Path):
-        import torch  # noqa: F401  (imported for its side effect + device pick)
+        import torch
         from transformers import (  # type: ignore
             AutoModelForSequenceClassification,
             AutoTokenizer,

@@ -60,3 +60,9 @@ reportlab>=4.0
 # Pillow>=10.0
 # pyzbar>=0.1.9          # optional QR/barcode decode
 # easyocr>=1.7           # alternative backend (AEGIS_OCR=easyocr); pulls torch
+
+# ── Dev tooling (CI installs these separately; listed so `make check` works) ──
+# ruff>=0.6          lint, curated toward defects — see pyproject.toml
+# mypy>=1.11         types, scoped to the agent layer
+# pytest-cov>=5.0    coverage gate (ratchet, currently 65%)
+# pip-audit>=2.7     dependency vulnerability scan

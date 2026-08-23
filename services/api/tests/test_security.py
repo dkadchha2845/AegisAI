@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from starlette.responses import JSONResponse
 
 from services.api.main import app
 from services.api.security import (

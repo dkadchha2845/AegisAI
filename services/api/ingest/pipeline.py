@@ -24,7 +24,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from ..engine import ocr
-from . import asr, diarize, language, metadata as metadata_mod, normalize
+from . import asr, diarize, language, normalize
+from . import metadata as metadata_mod
 from .types import Modality, RawInput, Turn
 
 

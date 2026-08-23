@@ -173,6 +173,7 @@ Ordered by architectural blast radius. Each maps to a phase in `TASKS.md`.
 | 🟢 Low | `on_event` startup hooks are deprecated in current FastAPI. | Phase 0.2 |
 | 🟢 Low | Dense *script* matching measured **worse** than lexical on Hinglish false-positive discipline; kept behind `AEGIS_DENSE_SCRIPTS`. | Keep flagged; revisit with more data |
 | 🟢 Low | No frontend tests. | Phase 7 |
+| 🟡 Medium | **`engine/features/` (601 statements) is at 0% coverage and not on the serving path** — imported only by `ml/training/rssie/dataset.py`. It also duplicates served concerns (`engine/spoofing.py` vs `features/spoofing.py`, `engine/scripts.py` vs `features/script_templates.py`). Discovered during 0.6. | Phase 1.7 — decide: agents, research-only, or consolidate |
 
 ### New risks introduced by the AegisAI scope
 

@@ -1,15 +1,16 @@
-# The three checks from the README, run automatically.
+# The checks that must pass before anything lands on main.
 #
 # The point of running them here is the contract. Python and TypeScript can
-# drift apart in a commit that passes review and imports cleanly on both
-# sides — the failure only surfaces later as a blank panel in the UI. Catching
-# that on push means the other person never pulls a broken main and spends an
-# hour assuming they broke it themselves.
+# drift apart in a commit that passes review and imports cleanly on both sides —
+# the failure only surfaces later as a blank panel in the UI. Catching that on
+# push means the other person never pulls a broken main and spends an hour
+# assuming they broke it themselves.
 #
-# Locally the same three are:
+# Locally, `make gates` runs the same four:
 #   .venv/bin/python -m pytest services/api/tests -q
 #   .venv/bin/python schema/check_contract.py
 #   npm run typecheck --prefix apps/web
+#   npm run build --prefix apps/web
 
 name: CI
 
@@ -25,16 +26,47 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
+  # Fast feedback: style and types fail in seconds, before anything installs torch.
+  lint:
+    name: lint + types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: services/api/requirements.txt
+
+      - name: Install tooling
+        run: pip install ruff mypy
+
+      # Curated toward defects rather than opinions — see pyproject.toml for
+      # why each ignored rule is ignored. The gate is kept at zero findings so
+      # a new violation is visible.
+      - name: Lint
+        run: ruff check .
+
+      # Scoped to the agent layer, where typed contracts actually buy
+      # something: every agent implements one protocol and returns one shape.
+      - name: Types
+        run: |
+          pip install -r services/api/requirements.txt
+          mypy
+
   backend:
     name: backend (py${{ matrix.python }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        # Both ends of the range the README claims. Claiming 3.11+ and only
-        # ever running 3.12 is how the floor quietly rots. The floor moved from
-        # 3.9 to 3.11 because LangGraph (the Phase-1 orchestrator) requires it.
+        # Both ends of the range the README claims. Claiming 3.11+ and only ever
+        # running 3.12 is how the floor quietly rots. The floor is 3.11 because
+        # LangGraph (the Phase-1 orchestrator) requires it.
         python: ["3.11", "3.12"]
 
     steps:
@@ -46,14 +78,17 @@ jobs:
           cache: pip
           cache-dependency-path: services/api/requirements.txt
 
+      # Installs the editable aegis-core alongside the runtime deps. Path
+      # dependencies in requirements.txt resolve against the working directory,
+      # which is the repo root here.
       - name: Install
         run: pip install -r services/api/requirements.txt
 
       # No checkpoint on the runner, and that is the point: this asserts the
-      # documented clean-clone path — lexical classifier, BM25 retrieval, and
-      # a service that still answers.
-      - name: Verdict regressions
-        run: python -m pytest services/api/tests -q
+      # documented clean-clone path — lexical classifier, BM25 retrieval, no
+      # Docker stack, and a service that still answers.
+      - name: Verdict regressions + coverage gate
+        run: pytest services/api/tests --cov --cov-report=term
 
       - name: Contract drift (Python <-> TypeScript)
         run: python schema/check_contract.py
@@ -73,6 +108,12 @@ jobs:
           assert h["twin"]["fitted"], "twin did not fit - is transitions.json committed?"
           assert h["coach"]["lines"] > 0, "coach library is empty"
           assert h["retrieval"]["chunks"] > 0, "knowledge base loaded nothing"
+          # No compose stack on the runner: every store must report unreachable
+          # and the service must still be ok. This is the degradation invariant,
+          # asserted rather than assumed.
+          infra = h["infrastructure"]
+          assert set(infra) == {"postgres", "neo4j", "qdrant", "redis"}, infra
+          assert not any(s["reachable"] for s in infra.values()), infra
           print("health ok:", h["classifier"]["backend"], "|", h["classifier"]["reason"])
           print("degraded:", h["degraded"])
           '
@@ -80,7 +121,6 @@ jobs:
   frontend:
     name: frontend
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -98,8 +138,33 @@ jobs:
         run: npm run typecheck
         working-directory: apps/web
 
-      # Typecheck passing does not mean it bundles. Vite resolves the `@/`
-      # alias and the three/GSAP imports at build time, not at tsc time.
+      # Typecheck passing does not mean it bundles. Vite resolves the `@/` alias
+      # and the three/GSAP imports at build time, not at tsc time.
       - name: Build
         run: npm run build
+        working-directory: apps/web
+
+  # Advisory, not blocking. A transitive CVE with no patch available should
+  # inform a decision, not stop an unrelated PR from merging — but it must be
+  # visible, because "nobody looked" is how a known hole ships.
+  audit:
+    name: dependency audit
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: pip-audit
+        run: |
+          pip install pip-audit
+          pip-audit -r services/api/requirements.txt --strict || true
+
+      - name: npm audit
+        run: npm audit --audit-level=high || true
         working-directory: apps/web

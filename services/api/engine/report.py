@@ -93,7 +93,6 @@ def _citations(session: "Session", number_intel: Dict[str, Any]) -> list[str]:
 
 def build_evidence_package(session: "Session") -> Dict[str, Any]:
     """Assemble the full, JSON-serialisable evidence package for a session."""
-    from dataclasses import asdict
 
     frame = session.frame()  # single source for the live-state fields
     passport = frame.get("trust_passport") or {}

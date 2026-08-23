@@ -27,22 +27,7 @@ import re
 # the right signal: they survive paraphrase (a reworded Hindi sentence still
 # needs "hai", "ko", "aap") but disappear entirely under translation.
 HINDI_MARKERS: set[str] = set(
-    """
-    hai hain tha thi the hoon ho raha rahi rahe rakhiye
-    kar karo karna karne kariye kijiye dijiye jaiye bataiye batao suniye dekhiye
-    aap aapka aapke aapki aapko main mera meri mere mujhe hum humara
-    ka ke ki ko se mein par tak liye
-    nahi nahin kya kyun kaise kaun kab kahan
-    ye yeh wo voh is us isse usse
-    haan han achha acha theek bilkul bas abhi phir bhi hi to
-    bhai sahab sahib ji madam beta beti
-    kuch koi sab sabhi lekin agar warna isliye kyunki
-    padega padegi padta gaya gayi gaye hua hui hue jayega jayegi
-    samajh samjha pata chalega milega dena lena
-    paisa paise rupaye rupay hazaar lakh crore
-    ruk ruko rukiye ghabraiye chahiye zaroori jaldi turant
-    baat baate call phone number account bank
-    """.split()
+    ["hai", "hain", "tha", "thi", "the", "hoon", "ho", "raha", "rahi", "rahe", "rakhiye", "kar", "karo", "karna", "karne", "kariye", "kijiye", "dijiye", "jaiye", "bataiye", "batao", "suniye", "dekhiye", "aap", "aapka", "aapke", "aapki", "aapko", "main", "mera", "meri", "mere", "mujhe", "hum", "humara", "ka", "ke", "ki", "ko", "se", "mein", "par", "tak", "liye", "nahi", "nahin", "kya", "kyun", "kaise", "kaun", "kab", "kahan", "ye", "yeh", "wo", "voh", "is", "us", "isse", "usse", "haan", "han", "achha", "acha", "theek", "bilkul", "bas", "abhi", "phir", "bhi", "hi", "to", "bhai", "sahab", "sahib", "ji", "madam", "beta", "beti", "kuch", "koi", "sab", "sabhi", "lekin", "agar", "warna", "isliye", "kyunki", "padega", "padegi", "padta", "gaya", "gayi", "gaye", "hua", "hui", "hue", "jayega", "jayegi", "samajh", "samjha", "pata", "chalega", "milega", "dena", "lena", "paisa", "paise", "rupaye", "rupay", "hazaar", "lakh", "crore", "ruk", "ruko", "rukiye", "ghabraiye", "chahiye", "zaroori", "jaldi", "turant", "baat", "baate", "call", "phone", "number", "account", "bank"]
 )
 
 _WORD = re.compile(r"[a-z]+")

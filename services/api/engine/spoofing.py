@@ -100,7 +100,7 @@ def _cite(query: str) -> str | None:
     """Best-effort knowledge-base citation, same as passport.py."""
     try:
         hits = get_kb().search(query, k=1)
-    except Exception:  # noqa: BLE001 - retrieval is optional here
+    except Exception:
         return None
     return hits[0].chunk.source if hits else None
 

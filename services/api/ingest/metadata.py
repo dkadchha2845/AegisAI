@@ -15,9 +15,8 @@ duplicating its logic.
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
-from datetime import datetime, time
+from datetime import datetime, time, timezone
 from typing import Optional
 
 #: Outside these hours an unsolicited call claiming to be an institution is
@@ -57,7 +56,7 @@ def _parse_timestamp(value: object) -> Optional[datetime]:
         return value
     if isinstance(value, (int, float)):
         try:
-            return datetime.fromtimestamp(float(value))
+            return datetime.fromtimestamp(float(value), tz=timezone.utc)
         except (OSError, OverflowError, ValueError):
             return None
     if isinstance(value, str):
@@ -67,7 +66,10 @@ def _parse_timestamp(value: object) -> Optional[datetime]:
         except ValueError:
             for fmt in ("%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M", "%Y-%m-%dT%H:%M:%S"):
                 try:
-                    return datetime.strptime(text, fmt)
+                    # Deliberately naive: these formats carry no zone, and
+                    # assuming one would invent information the source
+                    # does not have. Callers treat it as local wall time.
+                    return datetime.strptime(text, fmt)  # noqa: DTZ007
                 except ValueError:
                     continue
     return None

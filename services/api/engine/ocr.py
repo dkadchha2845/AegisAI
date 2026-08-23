@@ -21,6 +21,7 @@ pipeline as a pasted message, so a screenshot and a paste reach one verdict.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from ..config import settings
@@ -59,8 +60,8 @@ class TesseractOcr(OcrEngine):
     name = "tesseract"
 
     def __init__(self) -> None:
-        import pytesseract  # noqa: F401
-        from PIL import Image  # noqa: F401
+        import pytesseract
+        from PIL import Image
 
         self._pt = pytesseract
         self._Image = Image
@@ -83,17 +84,17 @@ class EasyOcr(OcrEngine):
     name = "easyocr"
 
     def __init__(self) -> None:
-        import easyocr  # noqa: F401
+        import easyocr
 
         # English + Hindi covers the digital-arrest corpus. Constructed once and
         # cached by load_ocr; the first construction is slow (model download).
         self._reader = easyocr.Reader(["en", "hi"], gpu=False)
 
     def extract(self, image_bytes: bytes) -> str:
-        import numpy as np  # noqa: F401
-        from PIL import Image
-
         import io
+
+        import numpy as np
+        from PIL import Image
 
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         lines = self._reader.readtext(np.array(img), detail=0)
@@ -131,7 +132,7 @@ def load_ocr() -> OcrEngine:
         _cached = cls()
         selection_reason = f"{cls.name} ready"
         return _cached
-    except Exception as exc:  # noqa: BLE001 - any import/probe failure => degrade
+    except Exception as exc:
         print(f"[aegis] OCR backend {requested!r} unavailable ({exc}); OCR disabled")
         selection_reason = f"{requested} unavailable: {exc}"
         _cached = NullOcr()
@@ -147,12 +148,12 @@ def _decode_qr(image_bytes: bytes) -> list[str]:
 
         from PIL import Image
         from pyzbar.pyzbar import decode  # type: ignore
-    except Exception:  # noqa: BLE001 - decoder absent
+    except Exception:
         return []
     try:
         img = Image.open(io.BytesIO(image_bytes))
         return [d.data.decode("utf-8", "replace") for d in decode(img)]
-    except Exception:  # noqa: BLE001 - unreadable image
+    except Exception:
         return []
 
 
@@ -170,7 +171,7 @@ def extract_text(image_bytes: bytes) -> OcrResult:
 
     try:
         text = (engine.extract(image_bytes) or "").strip()
-    except Exception as exc:  # noqa: BLE001 - runtime OCR failure
+    except Exception as exc:
         return OcrResult(
             text="", engine=engine.name,
             degraded=[f"ocr:failed:{type(exc).__name__}"], qr_payloads=qr,
@@ -181,8 +182,6 @@ def extract_text(image_bytes: bytes) -> OcrResult:
         degraded.append("ocr:empty")
     return OcrResult(text=text, engine=engine.name, degraded=degraded, qr_payloads=qr)
 
-
-import re
 
 #: Text that appears on a genuine payment-app confirmation screen. Used to tell
 #: "the victim sent us proof they already paid" apart from "the scammer sent a

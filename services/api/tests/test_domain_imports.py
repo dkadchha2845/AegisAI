@@ -51,7 +51,6 @@ def test_taxonomy_import_is_live():
 def test_taxonomy_labels_match_the_package():
     """The API's labels are the package's labels, not a drifted copy."""
     from aegis_core.taxonomy import LABELS as PACKAGE_LABELS
-
     from services.api.engine.classifier import LABELS as SERVED_LABELS
 
     assert list(SERVED_LABELS) == list(PACKAGE_LABELS)
@@ -84,7 +83,6 @@ def test_hinglish_markers_are_the_real_set():
     that would break every time the corpus grows.
     """
     from aegis_core.hinglish import HINDI_MARKERS as PACKAGE_MARKERS
-
     from services.api.ingest.language import HINDI_MARKERS as SERVED_MARKERS
 
     assert SERVED_MARKERS is PACKAGE_MARKERS or set(SERVED_MARKERS) == set(PACKAGE_MARKERS)

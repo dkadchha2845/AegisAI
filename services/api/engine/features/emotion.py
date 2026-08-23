@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from typing import ClassVar
 
 # --- Per-state lexical evidence --------------------------------------------
 # Weighted because these are not equally diagnostic: "arrest ho jayega?" is a
@@ -149,7 +150,7 @@ def _softmax(scores: dict[str, float], temperature: float = 0.5) -> dict[str, fl
 class EmotionTracker:
     """Tracks victim emotional state across a call."""
 
-    STATES = list(_ACCEPTANCE)
+    STATES: ClassVar[list[str]] = list(_ACCEPTANCE)
 
     def __init__(self, history_len: int = 40):
         self.history: list[float] = []

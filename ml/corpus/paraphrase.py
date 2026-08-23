@@ -39,10 +39,9 @@ from pathlib import Path
 
 import httpx
 
-
-from aegis_core.entities import substitute  # noqa: E402
-from aegis_core.hinglish import preserved  # noqa: E402
-from aegis_core.llm import GenerationError, get_backend  # noqa: E402
+from aegis_core.entities import substitute
+from aegis_core.hinglish import preserved
+from aegis_core.llm import GenerationError, get_backend
 
 # ML_DIR, not Path(__file__).parent: this script moved into a subdirectory of
 # ml/, so data and artifacts are one level up. Deriving them from a named

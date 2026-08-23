@@ -12,7 +12,6 @@ Bands: LOW / MEDIUM / HIGH / CRITICAL, exactly as the PDF specifies.
 
 from __future__ import annotations
 
-import math
 from typing import Tuple
 
 # Each factor is squashed to 0-1 then weighted; the weights sum to 1.0. Loss and

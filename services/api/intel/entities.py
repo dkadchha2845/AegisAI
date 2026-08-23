@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List
 
 # --- patterns ---------------------------------------------------------------
 # Deliberately conservative. A false entity is a false edge, and a false edge is
@@ -226,7 +226,7 @@ def extract_from_text(text: str) -> ExtractedEntities:
         for city in CITIES:
             if re.search(r"\b" + re.escape(city.lower()) + r"\b", low) and city not in out.locations:
                 out.locations.append(city)
-    except Exception:  # noqa: BLE001 - geo optional; locations are display-only
+    except Exception:
         pass
 
     return out

@@ -30,7 +30,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from models import (  # noqa: E402
+from models import (
     CallInfo,
     CoachSuggestion,
     CoercionState,

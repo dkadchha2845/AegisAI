@@ -26,7 +26,6 @@ from services.api.db import SessionLocal, init_db
 from services.api.main import app
 from services.api.models_db import User
 
-
 # --- password hashing -------------------------------------------------------
 
 def test_password_hash_round_trips_and_rejects_wrong():

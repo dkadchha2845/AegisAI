@@ -37,7 +37,7 @@ def _suggested_actions(cluster: ClusterSummary) -> list[str]:
         )
     if cluster.shared_wallets:
         actions.append(
-            f"Flag the shared wallet address(es) with the exchange and FIU-IND."
+            "Flag the shared wallet address(es) with the exchange and FIU-IND."
         )
     if cluster.shared_phones:
         actions.append(
@@ -165,5 +165,5 @@ def enhance_narrative(report: Dict[str, Any]) -> Optional[str]:
         # Reuse the same guarded backend the analyzer uses; it enforces the
         # no-new-facts system prompt.
         return llm._BACKENDS[llm.settings.llm_backend](prompt)  # type: ignore[attr-defined]
-    except Exception:  # noqa: BLE001 — prose is a nice-to-have, never a 500
+    except Exception:
         return None

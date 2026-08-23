@@ -1,5 +1,5 @@
 """AegisAI — synthetic scam-call corpus tooling."""
 
-from .taxonomy import LABELS, SCAM_LABELS, CRITICAL_LABELS, THREAT_WEIGHTS, BY_LABEL
+from .taxonomy import BY_LABEL, CRITICAL_LABELS, LABELS, SCAM_LABELS, THREAT_WEIGHTS
 
-__all__ = ["LABELS", "SCAM_LABELS", "CRITICAL_LABELS", "THREAT_WEIGHTS", "BY_LABEL"]
+__all__ = ["BY_LABEL", "CRITICAL_LABELS", "LABELS", "SCAM_LABELS", "THREAT_WEIGHTS"]
