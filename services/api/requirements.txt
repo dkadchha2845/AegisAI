@@ -12,6 +12,9 @@
 fastapi>=0.115
 uvicorn[standard]>=0.30
 pydantic>=2.8
+# Typed, validated settings with declarative PRESAGE_* -> AEGIS_* aliases.
+# Config errors then fail at startup naming the field, not later and elsewhere.
+pydantic-settings>=2.4
 python-multipart>=0.0.9
 httpx>=0.27
 

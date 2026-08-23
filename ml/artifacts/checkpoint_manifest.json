@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "measured_at": "2026-08-23T18:34:16+00:00",
+  "checkpoint_dir": "stage-classifier",
+  "fingerprint": {
+    "files": {
+      "pytorch_model.bin": {
+        "sha256": "c0f1f2a5c5d0c7cfed41b0f91a264022751d817cb108edb4c7ac883081951c66",
+        "bytes": 950315502
+      },
+      "config.json": {
+        "sha256": "ec35c2502aa40954134cc5a40941e93a9a2b7de218554ac539a181c62dc4f16d",
+        "bytes": 1109
+      },
+      "tokenizer.json": {
+        "sha256": "9513c0917e9c1673c3af00a3bd1f6e6f0239afdae7fbee68ba24b5d7786193ed",
+        "bytes": 6408647
+      },
+      "vocab.txt": {
+        "sha256": "b96cc938b4009d063a605930cb82aef2c91ee52a94e94e6fcb78510d4ee5310b",
+        "bytes": 3162999
+      }
+    },
+    "combined_sha256": "ef6d2ebc4a109cb588aa8f3ba9d72067bf67066286d9742cd5ea52abe67be1f3"
+  },
+  "evaluation": {
+    "split": "test",
+    "n_examples": 423,
+    "results": {
+      "lexical": {
+        "macro_f1": 0.3748427636783711,
+        "weighted_f1": 0.3812231246754251
+      },
+      "muril": {
+        "macro_f1": 0.7671653641306211,
+        "weighted_f1": 0.806693451767051
+      }
+    },
+    "produced_by": "ml/evaluation/eval_backends.py"
+  },
+  "environment": {
+    "python": "3.12.14",
+    "platform": "macOS-26.5.2-arm64-arm-64bit"
+  }
+}

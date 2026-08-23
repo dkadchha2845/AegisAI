@@ -27,9 +27,23 @@ def _reset_ocr_cache():
     ocr_mod._cached = None
 
 
-def _load(monkeypatch, backend: str) -> ocr_mod.OcrEngine:
-    monkeypatch.setenv("AEGIS_OCR", backend)
+def _use_backend(monkeypatch, backend: str) -> None:
+    """Point the OCR module at a backend.
+
+    Config is now read from `settings`, which is built once at import and
+    frozen, so setting AEGIS_OCR here would have no effect — that is the
+    intended production property (configuration is fixed at boot, not mutable
+    mid-process). Tests therefore swap the module's settings reference for a
+    copy, which exercises the same code path the app uses.
+    """
+    monkeypatch.setattr(
+        ocr_mod, "settings", ocr_mod.settings.model_copy(update={"ocr_backend": backend})
+    )
     ocr_mod._cached = None
+
+
+def _load(monkeypatch, backend: str) -> ocr_mod.OcrEngine:
+    _use_backend(monkeypatch, backend)
     return ocr_mod.load_ocr()
 
 
@@ -58,8 +72,7 @@ def test_qr_decode_is_optional_and_safe():
 
 
 def test_image_route_degrades_without_ocr(monkeypatch):
-    monkeypatch.setenv("AEGIS_OCR", "none")
-    ocr_mod._cached = None
+    _use_backend(monkeypatch, "none")
     client = TestClient(app)
     resp = client.post(
         "/api/analyze/image",

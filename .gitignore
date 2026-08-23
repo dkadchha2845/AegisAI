@@ -25,12 +25,13 @@ dist/
 
 # ── ML artifacts ───────────────────────────────────────────────────────────
 # The MuRIL checkpoint is ~950MB of weights plus ~2.6GB of optimiser state.
-# It is NOT committed, and nothing breaks without it: load_classifier() reports
-# "no checkpoint exported" and serves the lexical classifier, which currently
-# scores *better* on held-out archetypes anyway (see README).
+# It is NOT committed, and nothing *breaks* without it: load_classifier()
+# reports "no checkpoint exported" and serves the lexical classifier — but that
+# is a measurably worse mode, not an equivalent one (macro-F1 0.375 vs 0.767 on
+# held-out archetypes), and /api/health says so.
 #
-# Reproduce it with `.venv/bin/python ml/train.py` — the corpus that produces
-# it IS committed, so the checkpoint is regenerable rather than lost.
+# Reproduce it with `.venv/bin/python ml/training/train.py` — the corpus that
+# produces it IS committed, so the checkpoint is regenerable rather than lost.
 ml/artifacts/*
 ml/artifacts/_train/
 ml/models/
@@ -38,9 +39,14 @@ ml/models/
 # The measurement record is small and load-bearing: backend_comparison.json is
 # what gates promotion of the checkpoint, and /api/health reads it.
 !ml/artifacts/backend_comparison.json
-!ml/artifacts/stage-classifier/
-ml/artifacts/stage-classifier/*
-!ml/artifacts/stage-classifier/metrics.json
+# The promotion record: measured scores bound to a SHA256 fingerprint of the
+# exact weights they describe. Tracked because it is the answer to "are these
+# numbers about the model I have?" — see ml/evaluation/manifest.py.
+!ml/artifacts/checkpoint_manifest.json
+# stage-classifier/metrics.json is deliberately NOT tracked. train.py writes it
+# and nothing ever reads it, so it silently went stale: it still claims macro-F1
+# 0.269 for a checkpoint that measures 0.767. A write-only number with nothing
+# tying it to a model is exactly the trap the manifest exists to close.
 
 # tsc -b incremental build cache
 *.tsbuildinfo

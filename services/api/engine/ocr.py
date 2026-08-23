@@ -21,8 +21,9 @@ pipeline as a pasted message, so a screenshot and a paste reach one verdict.
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass, field
+
+from ..config import settings
 
 
 @dataclass
@@ -116,7 +117,10 @@ def load_ocr() -> OcrEngine:
     if _cached is not None:
         return _cached
 
-    requested = os.getenv("AEGIS_OCR", "tesseract").strip().lower()
+    # Via settings, not os.getenv: reading the environment directly here
+    # bypassed the PRESAGE_* back-compat alias, so an un-migrated .env
+    # silently fell back to tesseract instead of the configured backend.
+    requested = settings.ocr_backend.strip().lower()
     if requested == "none":
         selection_reason = "disabled by AEGIS_OCR=none"
         _cached = NullOcr()

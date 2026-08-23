@@ -129,12 +129,59 @@ Phase 3 routes work to these stores, a clean clone with no Docker is the
 documented default, and crying wolf there trains people to ignore the field.
 `degraded_tags()` grows a case per store as each migrates.
 
-### ⬜ 0.5 — Config & secrets hygiene 🛡️
-**Do:** migrate `config.py` to `pydantic-settings` · move `ml/artifacts/` (3.5 GB)
-out of the git tree to DVC or local object storage · rotate the Gemini key ·
-`.env.example` covering every new service · document every variable.
-**Accept:** no secret in git (verified: history is already clean) · repo clone
-under 200 MB · every setting has a default that boots offline. **Effort:** 4 h.
+### ✅ 0.5 — Config & secrets hygiene 🛡️
+**Done 2026-08-24.** One acceptance criterion was **based on a false premise and
+is corrected here**: "repo clone under 200 MB · move `ml/artifacts/` out of the
+git tree to DVC". Measured, the clone is **3.4 MiB packed**. The 3.5 GB is
+entirely gitignored working-tree data and was never in history. DVC would have
+added a remote, a lockfile and a workflow to solve a problem that does not
+exist, so it was not adopted.
+
+The real artifact problem turned out to be different, and worse. Investigating
+the 3.5 GB surfaced that **`stage-classifier/metrics.json` claims macro-F1
+0.269 for a checkpoint that actually measures 0.767** — and it is one of only
+two artifact files committed to git. Re-running the promotion gate confirmed
+0.7672 reproduces exactly, so the committed file was stale. This is the *second*
+time a metric file has drifted from its model here (a stale
+`backend_comparison.json` at 0.221 once pinned serving to the lexical fallback
+for weeks).
+
+Fixed structurally rather than by editing a number:
+- **`ml/evaluation/manifest.py`** — records measured scores bound to a **SHA256
+  fingerprint of the exact weights, config and tokenizer**. A metrics file
+  cannot go stale unnoticed once it carries the identity of what it measured.
+- `eval_backends.py` writes it; `make verify-checkpoint` checks it. Verified it
+  detects a **single appended byte** in `config.json`.
+- `metrics.json` is now untracked — it is write-only (nothing reads it) and was
+  pure stale documentation in git. The manifest is the tracked record.
+- A stale claim in `.gitignore`'s own comments ("the lexical classifier scores
+  *better* on held-out archetypes") was corrected: it is 0.375 vs 0.767.
+
+**Config migrated to pydantic-settings**, which bought validation
+(`AEGIS_PG_PORT=abc` now fails at startup naming the field) and, more usefully,
+**declarative `PRESAGE_*` back-compat via `AliasChoices`**. That immediately
+exposed a live bug: `engine/ocr.py` read `os.getenv("AEGIS_OCR")` directly,
+bypassing the alias, so an un-migrated `.env` using `PRESAGE_OCR` silently fell
+back to tesseract. Now routed through `settings`.
+
+`.env.example` completed — 11 undocumented settings added, and a dead
+`SARVAM_API_KEY` entry removed (no code has ever read it; documenting a
+credential nothing uses only invites someone to paste a real one).
+
+**Verified:** 129 tests pass · 11 new in `test_config.py` assert every setting
+has a default, `.env.example` documents all of them and nothing dead, every
+`AEGIS_*` alias carries its `PRESAGE_*` fallback, and bad config fails loudly ·
+5 new in `test_checkpoint_manifest.py` catch the two-files-disagree case cheaply.
+
+**⚠️ Left for you:** the Gemini key in the local `.env` still wants rotating
+before any public demo. It has never been committed (verified again), so this is
+prudence, not remediation — and it is not something I can do on your behalf.
+
+**Also noted for later:** `ml/artifacts/_train/checkpoint-330/` is **2.7 GB of
+training intermediates** (a 1.9 GB optimiser state), with weights *different*
+from the serving checkpoint. It is only needed to resume that training run.
+Deleting it reclaims 2.7 GB — your call, not mine:
+`rm -rf ml/artifacts/_train`.
 
 ### ⬜ 0.6 — CI/CD hardening
 **Do:** GitHub Actions: lint (`ruff`), format (`black`), types (`mypy` on

@@ -11,7 +11,7 @@ PY        := .venv/bin/python
 WEB       := --prefix apps/web
 
 .DEFAULT_GOAL := help
-.PHONY: help gates test contract typecheck build up down reset status logs api web install
+.PHONY: help gates test contract typecheck build up down reset status logs api web install verify-checkpoint eval
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -33,6 +33,12 @@ typecheck: ## Frontend typecheck
 
 build: ## Frontend production build
 	npm run build $(WEB)
+
+verify-checkpoint: ## Check the on-disk model against the recorded metrics
+	$(PY) -m ml.evaluation.manifest
+
+eval: ## Re-run the promotion gate and refresh the manifest (~1 min, needs the checkpoint)
+	$(PY) ml/evaluation/eval_backends.py
 
 # ------------------------------------------------------------------- infra --
 

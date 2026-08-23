@@ -34,6 +34,7 @@ from sklearn.metrics import classification_report, f1_score
 ML_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ML_DIR.parent))
 
+from ml.evaluation import manifest as manifest_mod  # noqa: E402
 from ml.training.train import LABELS, load_split  # noqa: E402
 from services.api.engine.classifier import (  # noqa: E402
     LexicalStageClassifier,
@@ -122,6 +123,22 @@ def main() -> int:
 
     (ARTIFACTS.parent / "backend_comparison.json").write_text(json.dumps(results, indent=2))
     print(f"\nwrote {ARTIFACTS.parent / 'backend_comparison.json'}")
+
+    # Bind these numbers to the exact weights they were measured against.
+    # A metrics file with nothing tying it to a model is how this project ended
+    # up serving a lexical fallback for weeks on a stale 0.221, and how
+    # stage-classifier/metrics.json still claims 0.269 for a 0.767 checkpoint.
+    if "muril" in results:
+        manifest = manifest_mod.build(
+            model_dir=ARTIFACTS,
+            results=results,
+            split="test",
+            n_examples=len(pairs),
+        )
+        path = manifest_mod.write(manifest, ARTIFACTS.parent)
+        print(f"wrote {path}")
+        print(f"checkpoint fingerprint: "
+              f"{manifest['fingerprint']['combined_sha256'][:16]}…")
     return 0
 
 
