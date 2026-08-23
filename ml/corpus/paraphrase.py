@@ -44,9 +44,12 @@ from aegis_core.entities import substitute  # noqa: E402
 from aegis_core.hinglish import preserved  # noqa: E402
 from aegis_core.llm import GenerationError, get_backend  # noqa: E402
 
-HERE = Path(__file__).parent
-SEED_GLOB = str(HERE / "data" / "seed" / "*.jsonl")
-DEFAULT_OUT = HERE / "data" / "raw" / "calls.jsonl"
+# ML_DIR, not Path(__file__).parent: this script moved into a subdirectory of
+# ml/, so data and artifacts are one level up. Deriving them from a named
+# anchor keeps a future move from silently pointing at the wrong corpus.
+ML_DIR = Path(__file__).resolve().parents[1]
+SEED_GLOB = str(ML_DIR / "data" / "seed" / "*.jsonl")
+DEFAULT_OUT = ML_DIR / "data" / "raw" / "calls.jsonl"
 
 def load_gold() -> list[dict]:
     """Load every hand-labelled call from data/seed/*.jsonl."""

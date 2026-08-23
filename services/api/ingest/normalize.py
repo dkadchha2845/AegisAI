@@ -8,7 +8,7 @@ two is not where a general-purpose NLP cleaner would put it.
 
 Four things are deliberately NOT normalised away
 ------------------------------------------------
-**Digits.** `ml/build_dataset.py` already learned this the hard way: stripping
+**Digits.** `ml/corpus/build_dataset.py` already learned this the hard way: stripping
 numbers collapses "amount daaliye 450000" and "amount daaliye 250000" into one
 key and deletes most of PAYMENT_EXECUTION from the corpus. Amounts, case IDs
 and account numbers are the most scam-specific tokens in the entire input.

@@ -23,9 +23,12 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-HERE = Path(__file__).parent
-RAW = HERE / "data" / "raw" / "calls.jsonl"
-PROCESSED = HERE / "data" / "processed"
+# ML_DIR, not Path(__file__).parent: this script moved into a subdirectory of
+# ml/, so data and artifacts are one level up. Deriving them from a named
+# anchor keeps a future move from silently pointing at the wrong corpus.
+ML_DIR = Path(__file__).resolve().parents[1]
+RAW = ML_DIR / "data" / "raw" / "calls.jsonl"
+PROCESSED = ML_DIR / "data" / "processed"
 
 from aegis_core.taxonomy import LABELS  # noqa: E402
 from aegis_core.schema import VICTIM_STATES  # noqa: E402

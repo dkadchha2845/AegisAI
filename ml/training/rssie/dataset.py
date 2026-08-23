@@ -2,13 +2,13 @@
 Call-level dataset for the RSSIE sequence model.
 
 The unit of training here is a **whole call**, not an utterance. That is the
-substantive difference from `ml/train.py` and the reason this model exists: a
+substantive difference from `ml/training/train.py` and the reason this model exists: a
 sequence classifier that never sees a sequence is just a slower per-utterance
 classifier.
 
 Splits are reused verbatim, not recomputed
 ------------------------------------------
-`ml/build_dataset.py` already produced a leave-archetypes-out split by call
+`ml/corpus/build_dataset.py` already produced a leave-archetypes-out split by call
 skeleton, and that split is what the existing published numbers are measured
 against. Re-deriving it here with a different seed would silently make the two
 models incomparable and would invite exactly the leak the original split was
@@ -30,14 +30,17 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
+# The package moved from ml/rssie to ml/training/rssie, so it now sits two
+# levels below ml/. Anchors are named and derived once rather than counted
+# inline, so the next move is a one-line change instead of a silent bug.
 HERE = Path(__file__).resolve().parent
-ML_DIR = HERE.parent
+ML_DIR = HERE.parents[1]
 REPO_ROOT = ML_DIR.parent
 DATA = ML_DIR / "data" / "processed"
 
 sys.path.insert(0, str(REPO_ROOT))
 
-from ml.rssie.labels import (  # noqa: E402
+from ml.training.rssie.labels import (  # noqa: E402
     EMOTION2ID,
     SCAMTYPE2ID,
     STAGE2ID,
@@ -77,7 +80,7 @@ def load_split(split: str) -> list[dict]:
     path = DATA / f"{split}.jsonl"
     if not path.exists():
         raise SystemExit(
-            f"No {path}. Run `python ml/build_dataset.py` first — the RSSIE "
+            f"No {path}. Run `python ml/corpus/build_dataset.py` first — the RSSIE "
             "model reuses that split rather than making its own."
         )
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
@@ -89,7 +92,7 @@ def build_features(turns: list[dict]) -> list[float]:
     Importing the live extractors rather than reimplementing them is the whole
     point: a training/serving skew in these 34 numbers would be invisible in
     every metric and fatal in production. This is the same class of invariant
-    that `ml/train.py` documents for its `previous [SEP] current` join.
+    that `ml/training/train.py` documents for its `previous [SEP] current` join.
     """
     flow = CallFlowTracker()
     behaviour = BehaviourTracker()
@@ -170,7 +173,7 @@ def load_calls(split: str) -> list[CallExample]:
 def describe(examples: list[CallExample]) -> dict:
     from collections import Counter
 
-    from ml.rssie.labels import SCAM_TYPES, STAGES
+    from ml.training.rssie.labels import SCAM_TYPES, STAGES
 
     return {
         "calls": len(examples),

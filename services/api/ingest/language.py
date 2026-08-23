@@ -7,7 +7,7 @@ Language detection.
 The heuristic is not a token fallback here, and that is worth stating plainly.
 Off-the-shelf detectors are trained on monolingual documents and consistently
 label romanised Hinglish as English, Indonesian, or Malay — the two Latin-script
-languages with similar function-word shapes. `ml/aegis/hinglish.py` already
+languages with similar function-word shapes. `packages/aegis_core/aegis_core/hinglish.py` already
 proved this empirically inside this project: a model asked to preserve Hinglish
 translated 76% of a corpus to English while every structural check still passed.
 

@@ -207,7 +207,7 @@ benchmark, and AegisAI serves the baseline. But the training pipeline now runs.
 What happened this session (full account in
 [`docs/IMPLEMENTATION-REPORT.md` §7](docs/IMPLEMENTATION-REPORT.md)):
 
-- Built `ml/synth_seeds.py`, a deterministic **no-LLM** generator (Gemini quota is
+- Built `ml/corpus/synth_seeds.py`, a deterministic **no-LLM** generator (Gemini quota is
   exhausted). Expanding 5× improved class balance but the shared phrase banks
   **leak across the leave-archetypes-out split** — the held-out score inflated to
   a meaningless **0.9986**. So the expansion was **reverted**; the committed
@@ -252,7 +252,7 @@ this; the split is telling the truth.
 
 Two invariants must stay in lockstep or the served model silently
 underperforms:
-1. the speaker-tagged `previous [SEP] current` join — `ml/train.py::render`
+1. the speaker-tagged `previous [SEP] current` join — `ml/training/train.py::render`
    **and** `MuRILStageClassifier.predict`;
 2. label ordering, which travels inside the checkpoint config and is asserted
    on export.

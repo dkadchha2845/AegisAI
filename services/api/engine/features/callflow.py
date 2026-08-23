@@ -9,7 +9,7 @@ The canonical arc, and why the observed one is collapsed
 --------------------------------------------------------
 A scammer spends several consecutive turns inside one stage. A raw turn-by-turn
 sequence is therefore ~85% self-transitions (measured in this project's own
-corpus — see `ml/build_dataset.py::fit_transitions`), and any pattern learned
+corpus — see `ml/corpus/build_dataset.py::fit_transitions`), and any pattern learned
 over it is dominated by "the stage stayed the same". Collapsing consecutive
 repeats turns the sequence into what it actually needs to be: an ordered record
 of *transitions*, which is where the scam structure lives.
@@ -85,7 +85,7 @@ class CallFlowFeatures:
     #: explicit subject. Used as a hard gate by the alert engine.
     reached_payment_half: bool = False
     #: Fixed-width vector for the sequence model. Order is stable and is part
-    #: of the trained model's input contract — see ml/rssie/features.py.
+    #: of the trained model's input contract — see ml/training/rssie/features.py.
     vector: list[float] = field(default_factory=list)
 
 

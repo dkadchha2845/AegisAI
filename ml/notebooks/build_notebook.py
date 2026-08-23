@@ -481,7 +481,7 @@ print(f"\n{ok}/{len(probes)} probes correct")
     md(r"""
 ## Refitting the Digital Twin
 
-The transition matrix and dwell times are fitted by `ml/build_dataset.py`, not
+The transition matrix and dwell times are fitted by `ml/corpus/build_dataset.py`, not
 here — they come from the labelled corpus, not from the model, so retraining
 the classifier does not invalidate them. Rerun that script only when the
 corpus changes:
@@ -513,7 +513,7 @@ utterance-level split would have reported ~0.9 and been wrong.
 
 Two consequences:
 
-1. **Always run `ml/eval_backends.py`.** A test score with no baseline beside
+1. **Always run `ml/evaluation/eval_backends.py`.** A test score with no baseline beside
    it cannot tell you whether the model is worth serving.
 2. **The API gates promotion on that comparison**, not on the checkpoint
    existing, so a "successful" training run cannot silently make the product

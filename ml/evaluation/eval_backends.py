@@ -3,7 +3,7 @@
 Compare the fine-tuned classifier against the lexical fallback, on the same
 held-out test set, through the same serving interface.
 
-    .venv/bin/python ml/eval_backends.py
+    .venv/bin/python ml/evaluation/eval_backends.py
 
 Why this exists
 ---------------
@@ -28,16 +28,19 @@ from pathlib import Path
 
 from sklearn.metrics import classification_report, f1_score
 
-HERE = Path(__file__).parent
-sys.path.insert(0, str(HERE.parent))
+# ML_DIR, not Path(__file__).parent: this script moved into a subdirectory of
+# ml/, so data and artifacts are one level up. Deriving them from a named
+# anchor keeps a future move from silently pointing at the wrong corpus.
+ML_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ML_DIR.parent))
 
-from ml.train import LABELS, load_split  # noqa: E402
+from ml.training.train import LABELS, load_split  # noqa: E402
 from services.api.engine.classifier import (  # noqa: E402
     LexicalStageClassifier,
     MuRILStageClassifier,
 )
 
-ARTIFACTS = HERE / "artifacts" / "stage-classifier"
+ARTIFACTS = ML_DIR / "artifacts" / "stage-classifier"
 
 
 def build_pairs(rows: list[dict]) -> list[tuple[str, str, str, str, str]]:
@@ -101,7 +104,7 @@ def main() -> int:
         y_true, y_pred = evaluate(MuRILStageClassifier(ARTIFACTS), pairs)
         results["muril"] = report("fine-tuned MuRIL", y_true, y_pred)
     else:
-        print(f"\nno checkpoint at {ARTIFACTS} — run ml/train.py first")
+        print(f"\nno checkpoint at {ARTIFACTS} — run ml/training/train.py first")
 
     if len(results) == 2:
         best = max(results, key=lambda k: results[k]["macro_f1"])

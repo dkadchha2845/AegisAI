@@ -2,9 +2,9 @@
 """
 AegisAI — headless fine-tune of the MuRIL stage classifier.
 
-    .venv/bin/python ml/train.py                  # full run
-    .venv/bin/python ml/train.py --epochs 1       # smoke test
-    .venv/bin/python ml/train.py --model distilbert-base-multilingual-cased
+    .venv/bin/python ml/training/train.py                  # full run
+    .venv/bin/python ml/training/train.py --epochs 1       # smoke test
+    .venv/bin/python ml/training/train.py --model distilbert-base-multilingual-cased
 
 Same pipeline as `ml/notebooks/train_stage_classifier.ipynb`, in a form that
 runs unattended, on CI, or over SSH. The notebook is for reading and for
@@ -38,9 +38,12 @@ from transformers import (
     TrainingArguments,
 )
 
-HERE = Path(__file__).parent
-DATA = HERE / "data" / "processed"
-ARTIFACTS = HERE / "artifacts" / "stage-classifier"
+# ML_DIR, not Path(__file__).parent: this script moved into a subdirectory of
+# ml/, so data and artifacts are one level up. Deriving them from a named
+# anchor keeps a future move from silently pointing at the wrong corpus.
+ML_DIR = Path(__file__).resolve().parents[1]
+DATA = ML_DIR / "data" / "processed"
+ARTIFACTS = ML_DIR / "artifacts" / "stage-classifier"
 
 LABELS = [
     "GREETING", "AUTHORITY_CLAIM", "FEAR_INDUCTION", "ISOLATION",
@@ -231,7 +234,7 @@ def main() -> int:
             return (loss, outputs) if return_outputs else loss
 
     targs = TrainingArguments(
-        output_dir=str(HERE / "artifacts" / "_train"),
+        output_dir=str(ML_DIR / "artifacts" / "_train"),
         num_train_epochs=args.epochs,
         per_device_train_batch_size=args.batch_size,
         per_device_eval_batch_size=32,

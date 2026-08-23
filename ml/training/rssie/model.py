@@ -10,7 +10,7 @@ RSSIE model — the spec's Section 6.
 Three architectural decisions worth defending
 ---------------------------------------------
 
-**Why a sequence model at all.** `ml/train.py` classifies one utterance with
+**Why a sequence model at all.** `ml/training/train.py` classifies one utterance with
 one turn of context and reached 0.98 validation / 0.22 held-out macro-F1 — it
 memorised archetypes. A per-utterance model cannot do otherwise, because the
 thing that distinguishes a scam from a legitimate call is not any single

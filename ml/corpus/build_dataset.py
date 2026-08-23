@@ -30,9 +30,12 @@ from pathlib import Path
 
 from aegis_core.taxonomy import CRITICAL_LABELS, LABELS
 
-HERE = Path(__file__).parent
-RAW = HERE / "data" / "raw" / "calls.jsonl"
-OUT = HERE / "data" / "processed"
+# ML_DIR, not Path(__file__).parent: this script moved into a subdirectory of
+# ml/, so data and artifacts are one level up. Deriving them from a named
+# anchor keeps a future move from silently pointing at the wrong corpus.
+ML_DIR = Path(__file__).resolve().parents[1]
+RAW = ML_DIR / "data" / "raw" / "calls.jsonl"
+OUT = ML_DIR / "data" / "processed"
 
 
 def normalise(text: str) -> str:

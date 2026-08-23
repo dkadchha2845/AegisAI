@@ -2,10 +2,10 @@
 """
 Train the RSSIE multi-head sequence classifier.
 
-    python ml/rssie/train_rssie.py                     # full run
-    python ml/rssie/train_rssie.py --epochs 2          # smoke test
-    python ml/rssie/train_rssie.py --encoder distilbert-base-multilingual-cased
-    python ml/rssie/train_rssie.py --unfreeze-encoder  # only with a big corpus
+    python ml/training/rssie/train_rssie.py                     # full run
+    python ml/training/rssie/train_rssie.py --epochs 2          # smoke test
+    python ml/training/rssie/train_rssie.py --encoder distilbert-base-multilingual-cased
+    python ml/training/rssie/train_rssie.py --unfreeze-encoder  # only with a big corpus
 
 Exports to `ml/artifacts/rssie/`, which is where `services/api/engine/rssie.py`
 looks. As with the stage classifier, the checkpoint is **not** promoted merely
@@ -37,13 +37,16 @@ from pathlib import Path
 
 import numpy as np
 
+# The package moved from ml/rssie to ml/training/rssie, so it now sits two
+# levels below ml/. Anchors are named and derived once rather than counted
+# inline, so the next move is a one-line change instead of a silent bug.
 HERE = Path(__file__).resolve().parent
-REPO_ROOT = HERE.parent.parent
+REPO_ROOT = HERE.parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from ml.rssie.dataset import CallExample, describe, load_calls  # noqa: E402
-from ml.rssie.labels import EMOTIONS, SCAM_TYPES, STAGES  # noqa: E402
-from ml.rssie.model import FEATURE_DIM, RSSIEConfig, RSSIEModel  # noqa: E402
+from ml.training.rssie.dataset import CallExample, describe, load_calls  # noqa: E402
+from ml.training.rssie.labels import EMOTIONS, SCAM_TYPES, STAGES  # noqa: E402
+from ml.training.rssie.model import FEATURE_DIM, RSSIEConfig, RSSIEModel  # noqa: E402
 
 ARTIFACTS = REPO_ROOT / "ml" / "artifacts" / "rssie"
 
@@ -337,7 +340,7 @@ def main() -> int:
         )
     )
     print(f"\nexported to {args.out}")
-    print("run ml/rssie/eval_rssie.py to score it against the rule-based baseline")
+    print("run ml/training/rssie/eval_rssie.py to score it against the rule-based baseline")
     return 0
 
 

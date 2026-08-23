@@ -32,8 +32,11 @@ import json
 import random
 from pathlib import Path
 
-HERE = Path(__file__).parent
-OUT = HERE / "data" / "seed" / "exemplars_synth.jsonl"
+# ML_DIR, not Path(__file__).parent: this script moved into a subdirectory of
+# ml/, so data and artifacts are one level up. Deriving them from a named
+# anchor keeps a future move from silently pointing at the wrong corpus.
+ML_DIR = Path(__file__).resolve().parents[1]
+OUT = ML_DIR / "data" / "seed" / "exemplars_synth.jsonl"
 
 # --- Phrase banks, per stage. Each entry is caller-side Hinglish; victim
 #     reactions are drawn from a shared bank. Real names/cities/amounts are used

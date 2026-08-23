@@ -1,3 +1,26 @@
+# ml/ — corpus, training, evaluation
+
+Split by lifecycle stage so it is obvious which step a file belongs to:
+
+| Directory | What it does | Entry points |
+|---|---|---|
+| `corpus/` | Generate, augment, validate and split the training corpus | `generate_calls.py` -> `paraphrase.py` -> `build_dataset.py`, `validate_corpus.py`, `synth_seeds.py` |
+| `training/` | Fine-tuning | `train.py` (served stage classifier), `rssie/` (multi-head research model) |
+| `evaluation/` | Measurement and the promotion gate | `eval_backends.py` |
+| `data/` | Corpus: `seed/` -> `raw/` -> `processed/` | committed |
+| `artifacts/` | Checkpoints + `backend_comparison.json` | mostly gitignored |
+| `notebooks/` | Colab training notebook | |
+
+The shared domain vocabulary (taxonomy, victim-state schema, entity
+substitution, Hinglish) is **not** here — it moved to `packages/aegis_core`,
+because the API imports it too. Import it as `aegis_core.taxonomy`.
+
+Scripts derive their paths from a named `ML_DIR` anchor rather than
+`Path(__file__).parent`, so they run correctly from any working directory and
+survive being moved again.
+
+---
+
 # AegisAI — dataset pipeline
 
 Builds the synthetic corpus that trains the stage classifier and fits the

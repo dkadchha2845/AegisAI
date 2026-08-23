@@ -36,7 +36,7 @@ carry citations rather than confidence scores.
 
 from __future__ import annotations
 
-#: Stage label space. Identical to ml/train.py's, and it must stay identical:
+#: Stage label space. Identical to ml/training/train.py's, and it must stay identical:
 #: the two models share a serving interface and a corpus, and a reordering here
 #: would silently mis-decode there.
 STAGES = [
@@ -85,7 +85,7 @@ STAGE2ID = {s: i for i, s in enumerate(STAGES)}
 SCAMTYPE2ID = {s: i for i, s in enumerate(SCAM_TYPES)}
 EMOTION2ID = {s: i for i, s in enumerate(EMOTIONS)}
 
-#: Archetype id (ml/aegis/seeds.py) → scam type.
+#: Archetype id (packages/aegis_core/aegis_core/seeds.py) → scam type.
 #:
 #: Several distinct archetypes intentionally collapse onto one type. An EPFO
 #: withdrawal scam, an income-tax refund scam and a fake-RBI-circular scam all
@@ -151,7 +151,7 @@ def scam_type_of_archetype(archetype_id: str, is_scam: bool) -> str:
 #:
 #: This widening is lossy in the direction that matters and cannot be fixed by
 #: mapping alone: the corpus never distinguishes CURIOUS from CALM, or TRUSTING
-#: from CALM, because `VICTIM_STATES` in ml/aegis/schema.py has no such
+#: from CALM, because `VICTIM_STATES` in packages/aegis_core/aegis_core/schema.py has no such
 #: labels. So the trained emotion head can only ever predict six of the eight
 #: classes, and the two it cannot predict are the two the rule-based extractor
 #: in engine/features/emotion.py was written specifically to catch.

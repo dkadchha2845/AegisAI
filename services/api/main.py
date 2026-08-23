@@ -110,7 +110,7 @@ def warm() -> None:
 
 def _comparison() -> Dict[str, Any]:
     """Measured macro-F1 of both backends on the held-out archetypes, if
-    ml/eval_backends.py has been run. This is what gates promotion."""
+    ml/evaluation/eval_backends.py has been run. This is what gates promotion."""
     path = classifier_mod.COMPARISON_PATH
     if not path.exists():
         return {}
@@ -227,7 +227,7 @@ def model_card() -> Dict[str, Any]:
         "evaluation": {
             "protocol": "macro-F1 on four whole held-out call archetypes, both "
                         "backends scored through the same serving interface "
-                        "(ml/eval_backends.py)",
+                        "(ml/evaluation/eval_backends.py)",
             "scores": _comparison(),
             "selection": classifier_mod.selection_reason,
         },

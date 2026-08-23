@@ -428,19 +428,19 @@ Full offline chain, all steps reproducible:
 
 ```bash
 # 1. Generate synthetic scam call corpus
-.venv/bin/python ml/generate_calls.py
+.venv/bin/python ml/corpus/generate_calls.py
 
 # 2. Augment with paraphrases
-.venv/bin/python ml/paraphrase.py
+.venv/bin/python ml/corpus/paraphrase.py
 
 # 3. Build dataset + Digital Twin transition matrix
-.venv/bin/python ml/build_dataset.py
+.venv/bin/python ml/corpus/build_dataset.py
 
 # 4. Fine-tune MuRIL
-.venv/bin/python ml/train.py
+.venv/bin/python ml/training/train.py
 
 # 5. Compare backends — promotion gate on measured F1
-.venv/bin/python ml/eval_backends.py
+.venv/bin/python ml/evaluation/eval_backends.py
 ```
 
 Corpus (338 calls) is committed. Checkpoint is regenerable, not lost.

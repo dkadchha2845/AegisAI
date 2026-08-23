@@ -46,7 +46,7 @@ first-class agent, not diluted.
 - `classifier.py` — 8-class scam-stage classifier. Fine-tuned **MuRIL** checkpoint
   (macro-F1 **0.767** on a zero-leak, 7/8-held-out-archetype split) wrapped as a
   `FusedStageClassifier` (MuRIL sharpened + lexical max-fused). Promotion gated
-  on measured F1 via `ml/eval_backends.py`; degrades to lexical and tags
+  on measured F1 via `ml/evaluation/eval_backends.py`; degrades to lexical and tags
   `clf:lexical_fallback`.
 - `threat.py` — weighted multi-signal fusion producing score + ranked drivers.
 - `coercion.py` — coercion index computed on **victim** utterances only,

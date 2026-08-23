@@ -38,7 +38,11 @@ from aegis_core.schema import VICTIM_STATES  # noqa: E402
 from aegis_core.seeds import Seed, build_seeds  # noqa: E402
 from aegis_core.taxonomy import LABELS, prompt_block  # noqa: E402
 
-DEFAULT_OUT = Path(__file__).parent / "data" / "raw" / "calls.jsonl"
+# ML_DIR, not Path(__file__).parent: this script moved into a subdirectory of
+# ml/, so data and artifacts are one level up. Deriving them from a named
+# anchor keeps a future move from silently pointing at the wrong corpus.
+ML_DIR = Path(__file__).resolve().parents[1]
+DEFAULT_OUT = ML_DIR / "data" / "raw" / "calls.jsonl"
 
 
 SYSTEM = f"""You generate realistic training data for an Indian scam-call \

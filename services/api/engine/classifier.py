@@ -290,7 +290,7 @@ class MuRILStageClassifier(StageClassifier):
         previous_speaker: str = "VICTIM",
     ) -> StagePrediction:
         torch = self._torch
-        # One turn of context, speaker-tagged. `ml/train.py::render` builds
+        # One turn of context, speaker-tagged. `ml/training/train.py::render` builds
         # exactly this string — if the format diverges the model still returns
         # a confident label, it is just a worse one, which is the failure mode
         # this comment exists to prevent.
@@ -386,7 +386,7 @@ class FusedStageClassifier(StageClassifier):
 
 _cached: StageClassifier | None = None
 
-#: Written by ml/eval_backends.py — both backends scored on the same held-out
+#: Written by ml/evaluation/eval_backends.py — both backends scored on the same held-out
 #: archetypes, through this same serving interface.
 COMPARISON_PATH = settings.classifier_dir.parent / "backend_comparison.json"
 

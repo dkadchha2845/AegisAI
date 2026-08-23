@@ -1,7 +1,7 @@
 """
 The Digital Twin — forecasting the next stage and the time to money.
 
-Loads the transition matrix and dwell statistics that `ml/build_dataset.py`
+Loads the transition matrix and dwell statistics that `ml/corpus/build_dataset.py`
 fits from the corpus, and answers two questions on every frame:
 
     "what will the scammer do next, and how sure are we?"
