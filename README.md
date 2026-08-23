@@ -218,6 +218,14 @@ utterance (typed / ASR / OCR)
 ## Quick Start
 
 **Prerequisites:** Python 3.11+, Node 18+. No GPU, no API key, no network at runtime.
+Docker is **optional** — see [Dev stack](#dev-stack-optional).
+
+```bash
+make gates    # the four checks that must pass before anything is "done"
+make api      # backend on :8000
+make web      # frontend on :5173
+make up       # optional: Postgres + Neo4j + Qdrant + Redis
+```
 
 ```bash
 git clone https://github.com/dkadchha2845/AegisAI.git
@@ -419,6 +427,35 @@ Thresholds (all in `engine/session.py`, one screen):
 | WARNING | 51–70 | Coach panel |
 | CRITICAL | 71–100 | Full guardian mode |
 | Payment Hold | 55+ | Block payment flow |
+
+---
+
+## Dev stack (optional)
+
+`infra/compose/dev.yml` brings up the four backing stores Phase 3 will use:
+
+```bash
+make up       # start, wait for every service to report healthy
+make status   # container health + what the API can actually reach
+make down     # stop, keep data
+make reset    # stop and DESTROY all data (asks first)
+```
+
+| Service | Port | For | Fallback when absent |
+|---|---|---|---|
+| PostgreSQL 16.6 | 5432 | cases, evidence, agent results | SQLite |
+| Neo4j 5.26 | 7474 / 7687 | fraud entity graph | in-process NetworkX |
+| Qdrant 1.12.5 | 6333 / 6334 | semantic memory, RAG | in-house vector store |
+| Redis 7.4 | 6379 | cache, Celery broker | in-process cache |
+
+**None of it is required.** With the stack down the API boots and answers
+normally; `/api/health` reports each store's reachability under
+`infrastructure`, and names what is serving in its place. Image tags are pinned
+— `latest` on a database is how a machine that worked yesterday stops working
+today with no commit to blame.
+
+No Docker Desktop? `brew install colima docker docker-compose && colima start`
+gives you a working daemon without admin rights.
 
 ---
 

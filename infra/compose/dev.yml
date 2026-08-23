@@ -1,0 +1,114 @@
+# AegisAI development stack.
+#
+#   make up      start everything, wait for healthy
+#   make down    stop, keep data
+#   make reset   stop and DESTROY volumes
+#
+# Every image tag is pinned. "latest" on a database is how a machine that
+# worked yesterday stops working today with no commit to blame.
+#
+# Nothing here is required to run AegisAI. The API boots and answers with the
+# whole stack down, using SQLite, in-process NetworkX and the in-house vector
+# store, and reports exactly which of those fallbacks are live on /api/health.
+# That is the inherited "degradation is explicit" invariant, and 0.4's
+# acceptance criteria test it in both directions.
+#
+# Ports are overridable so this can coexist with a Postgres you already run:
+#   AEGIS_PG_PORT=55432 make up
+
+name: aegisai-dev
+
+services:
+  postgres:
+    image: postgres:16.6-alpine
+    container_name: aegis-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${AEGIS_PG_USER:-aegis}
+      POSTGRES_PASSWORD: ${AEGIS_PG_PASSWORD:-aegis_dev_only}
+      POSTGRES_DB: ${AEGIS_PG_DB:-aegis}
+      # Deterministic collation, so ORDER BY does not differ between a
+      # developer's machine and CI.
+      LANG: C.UTF-8
+    ports:
+      - "${AEGIS_PG_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AEGIS_PG_USER:-aegis} -d ${AEGIS_PG_DB:-aegis}"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  neo4j:
+    image: neo4j:5.26.0-community
+    container_name: aegis-neo4j
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: ${AEGIS_NEO4J_USER:-neo4j}/${AEGIS_NEO4J_PASSWORD:-aegis_dev_only}
+      # APOC only. GDS is deliberately NOT enabled here: its licence needs
+      # checking before the project depends on it, and ADR-0002 says NetworkX
+      # stays primary for analytics until that happens.
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_server_memory_heap_max__size: 1G
+      NEO4J_server_memory_pagecache_size: 512M
+    ports:
+      - "${AEGIS_NEO4J_HTTP_PORT:-7474}:7474"   # browser + HTTP API
+      - "${AEGIS_NEO4J_BOLT_PORT:-7687}:7687"   # bolt driver
+    volumes:
+      - neo4jdata:/data
+      - neo4jlogs:/logs
+    healthcheck:
+      # cypher-shell, not a port check: Neo4j opens 7687 well before it will
+      # answer a query, so a TCP probe reports healthy while writes still fail.
+      test: ["CMD-SHELL", "cypher-shell -u ${AEGIS_NEO4J_USER:-neo4j} -p ${AEGIS_NEO4J_PASSWORD:-aegis_dev_only} 'RETURN 1' || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.5
+    container_name: aegis-qdrant
+    restart: unless-stopped
+    ports:
+      - "${AEGIS_QDRANT_PORT:-6333}:6333"       # REST
+      - "${AEGIS_QDRANT_GRPC_PORT:-6334}:6334"  # gRPC
+    volumes:
+      - qdrantdata:/qdrant/storage
+    healthcheck:
+      # The image is distroless — no curl, no wget, no shell utilities. Qdrant
+      # ships its own binary, which can do the check.
+      test: ["CMD", "/qdrant/qdrant", "--version"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: aegis-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "${AEGIS_REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 3s
+
+volumes:
+  pgdata:
+  neo4jdata:
+  neo4jlogs:
+  qdrantdata:
+  redisdata:

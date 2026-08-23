@@ -157,7 +157,7 @@ Ordered by architectural blast radius. Each maps to a phase in `TASKS.md`.
 | 20 | **Agent trace UI + graph explorer** — no React Flow, no Cytoscape | Master §22; makes the architecture legible to examiners | 7 |
 | 21 | **Multimodal dataset** — corpus is call-transcripts only | Master §26; the paper's novelty depends on it | 8 |
 | 22 | **Research harness** — no baselines, no ablations, no latency benchmark | Master §28/29; without it there is no paper | 9 |
-| 23 | **Docker / deployment** | No Docker on this machine yet; nothing containerised | 0/10 |
+| ~~23~~ | ~~Docker / deployment~~ — ✅ dev stack done 2026-08-23 (colima + `infra/compose/dev.yml`). Production images remain | 10.3 |
 
 ---
 
@@ -168,7 +168,7 @@ Ordered by architectural blast radius. Each maps to a phase in `TASKS.md`.
 | ✅ Resolved | ~~Python 3.9~~ — migrated to **3.12.14** on 2026-08-23 (task 0.2). torch 2.13, transformers 4.57, numpy 2.5, networkx 3.6. Classifier predictions verified bit-identical across the upgrade. | Done |
 | 🟡 Medium | **English scam scoring is borderline on short inputs** — the aggregate score rewards accumulated pressure across many turns. Hindi/Hinglish is strong. | Phase 4/8 — retrain + calibrate |
 | 🟡 Medium | **Full-corpus retrain never run** (~2 h CPU). Current checkpoint is good but trained on a subset. | Phase 8 |
-| 🟡 Medium | `ml/artifacts/` is **3.5 GB inside the repo tree**. Not viable long-term. | Phase 0 — DVC or object storage |
+| 🟡 Medium | `ml/artifacts/` is **3.5 GB inside the repo tree**. Not viable long-term. | Phase 0.5 — DVC or object storage |
 | 🟢 Low | **Gemini API key in local `.env`** — verified **never committed**; `.env` is untracked and gitignored, and `git log --all -- .env` plus a history grep for `AIza` are both empty. Still rotate before any public demo. | Phase 0.5 |
 | 🟢 Low | `on_event` startup hooks are deprecated in current FastAPI. | Phase 0.2 |
 | 🟢 Low | Dense *script* matching measured **worse** than lexical on Hinglish false-positive discipline; kept behind `AEGIS_DENSE_SCRIPTS`. | Keep flagged; revisit with more data |

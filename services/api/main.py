@@ -31,6 +31,7 @@ from .rag.coach import get_coach
 from .rag.store import get_kb
 from .routes import analyze, auth, intel, orgs, reports, session, shield
 from .security import RateLimitMiddleware, SecurityHeadersMiddleware
+from .stores import probe as store_probe
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
@@ -125,7 +126,8 @@ def health() -> Dict[str, Any]:
     classifier = load_classifier()
     kb = get_kb()
     twin = DigitalTwin()
-    degraded = list(kb.degraded) + list(twin.degraded) + db_mod.degraded()
+    degraded = (list(kb.degraded) + list(twin.degraded) + db_mod.degraded()
+                + store_probe.degraded_tags())
     # Only a *genuine* fallback is a degradation. When the lexical model is
     # serving because it measurably beat the checkpoint, the promotion gate did
     # its job and there is nothing to warn about — see classifier.serving_is_fallback.
@@ -148,6 +150,11 @@ def health() -> Dict[str, Any]:
             "persistent": not db_mod.EPHEMERAL,
             "url_configured": settings.database_url is not None,
         },
+        # Which of the compose-stack services are actually reachable. Cached,
+        # bounded, and never raising — see stores/probe.py. `in_use` is tracked
+        # separately from `reachable` on purpose: Postgres being up does not
+        # mean the API writes to it yet.
+        "infrastructure": store_probe.probe_all(),
         "classifier": {
             "backend": classifier.backend,
             "checkpoint": str(settings.classifier_dir),

@@ -70,24 +70,64 @@ jump introduced no behavioural drift.
 deleted. Hash-pinning of `requirements.txt` was deferred to task 0.5, which
 owns dependency and secrets hygiene.
 
-### ⬜ 0.3 — Repo restructure to the target layout
-**Why:** the agent layer needs a home; `ml/` needs splitting.
-**Do:** `git mv` only (history matters for the defence). Create
-`services/api/agents/`, `services/api/orchestration/`, `services/api/stores/`,
-`packages/aegis_core/`, `research/`, `infra/`. Split `ml/` into
-`corpus/ training/ evaluation/`. One commit per move.
-**Accept:** structure matches ARCHITECTURE.md §6 · gates green after **each**
-move · `git log --follow` still traces every moved file. **Effort:** 4 h.
+### ✅ 0.3 — Repo restructure to the target layout
+**Done 2026-08-23**, in two commits.
 
-### ⬜ 0.4 — Docker Compose dev stack 🔴
-**Why:** Postgres, Neo4j, Qdrant and Redis are all Phase-3 dependencies, and
-Docker is not installed on this machine yet.
-**Do:** install Docker Desktop · `infra/compose/dev.yml` with pinned image tags,
-named volumes, healthchecks · `make up` / `make down` / `make reset` · seed script.
-**Accept:** one command brings all four up healthy · API connects to each and
-reports it on `/api/health` · **with the stack down, the API still boots and
-serves** using SQLite + NetworkX + the in-house vector store, tagging `degraded`.
-**Effort:** 6–8 h.
+**0.3a — `ml/aegis/` → `packages/aegis_core/`, now an installed package.** It
+held the single source of truth for the eight stages and was reached through
+four copies of `sys.path.insert(0, ml/)`. Both API import sites wrap it in
+`try/except ImportError` with a fallback that defines the *same eight labels*
+but an **empty `BY_LABEL`** — so a broken path silently lost every threat weight
+while the classifier kept returning plausible labels. Now `-e ./packages/aegis_core`
+in requirements; the four aegis-only path hacks are gone.
+
+**0.3b — `ml/` split into `corpus/ training/ evaluation/`.** The hazard was
+paths, not imports: every script derived data locations from
+`Path(__file__).parent` assuming that was `ml/`. Each now anchors on a named
+`ML_DIR` and runs from any working directory.
+
+Also scaffolded `services/api/{agents,orchestration,stores}`, `services/worker`,
+`research/`, `infra/` — each with a contract, not a placeholder.
+
+**Verified:** `git log --follow` traces moved files back to their original
+commits · every computed data path asserted to resolve to a real file (this
+caught `eval_backends.py` still importing `ml.train`) · 11 new tests in
+`test_domain_imports.py` assert the real package serves, not the fallback.
+
+### ✅ 0.4 — Docker Compose dev stack
+**Done 2026-08-23.** Runtime is **colima + docker CLI** (brew formulae), not
+Docker Desktop — it needs no admin rights, which matters because installing the
+cask requires a password. `infra/compose/dev.yml` + a root `Makefile`.
+
+| Service | Pinned | Healthcheck |
+|---|---|---|
+| PostgreSQL | 16.6-alpine | `pg_isready` |
+| Neo4j | 5.26.0-community | `cypher-shell 'RETURN 1'` — a TCP probe reports healthy while writes still fail |
+| Qdrant | v1.12.5 | its own binary; the image is distroless, so no curl/wget exists |
+| Redis | 7.4-alpine | `redis-cli ping` |
+
+`services/api/stores/probe.py` reports each store on `/api/health` under
+`infrastructure`, cached (10 s TTL) and bounded (0.35 s timeout) so four dead
+stores cannot slow the request path. `reachable` and `in_use` are tracked
+**separately**: Postgres being up does not mean the API writes to it yet, and
+claiming otherwise would overstate the system.
+
+**Verified — both directions:**
+- `make up` → all four healthy in ~7 s; confirmed independently, not by TCP
+  handshake alone (real Cypher query, `psql` version, `redis-cli PONG`,
+  Qdrant `/`).
+- Stack **down** → API boots and answers, `classifier: fused`,
+  `retrieval: dense`, `degraded: []`.
+- **113 tests pass in both states.** 9 new in `test_stores.py`, written to be
+  meaningful whether or not a stack exists, since CI has none.
+- Volume persistence proven by writing markers, `make down`, `make up`, reading
+  them back.
+- `/api/health` measured at 1.1 ms per call with the cache warm.
+
+**Note:** absence of the stack is deliberately **not** a `degraded` tag — until
+Phase 3 routes work to these stores, a clean clone with no Docker is the
+documented default, and crying wolf there trains people to ignore the field.
+`degraded_tags()` grows a case per store as each migrates.
 
 ### ⬜ 0.5 — Config & secrets hygiene 🛡️
 **Do:** migrate `config.py` to `pydantic-settings` · move `ml/artifacts/` (3.5 GB)

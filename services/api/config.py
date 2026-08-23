@@ -115,6 +115,21 @@ class Settings:
     default_admin_email: str = _env("AEGIS_ADMIN_EMAIL", "admin@aegis.local")
     default_admin_password: str = _env("AEGIS_ADMIN_PASSWORD", "changeme")
 
+    # --- Backing stores (infra/compose/dev.yml) ----------------------------
+    # Host/port only: these are liveness-probe targets for /api/health, not
+    # connection strings. Credentials arrive with the real adapters in Phase 3,
+    # so nothing here can leak one. Defaults match the compose file, and the
+    # whole block is inert when the stack is down — that is the documented
+    # zero-setup path, not a degradation.
+    pg_host: str = _env("AEGIS_PG_HOST", "127.0.0.1")
+    pg_port: int = int(_env("AEGIS_PG_PORT", "5432"))
+    neo4j_host: str = _env("AEGIS_NEO4J_HOST", "127.0.0.1")
+    neo4j_bolt_port: int = int(_env("AEGIS_NEO4J_BOLT_PORT", "7687"))
+    qdrant_host: str = _env("AEGIS_QDRANT_HOST", "127.0.0.1")
+    qdrant_port: int = int(_env("AEGIS_QDRANT_PORT", "6333"))
+    redis_host: str = _env("AEGIS_REDIS_HOST", "127.0.0.1")
+    redis_port: int = int(_env("AEGIS_REDIS_PORT", "6379"))
+
     # --- Transport & hardening --------------------------------------------
     cors_origins: tuple[str, ...] = ("http://localhost:5173", "http://127.0.0.1:5173")
     # In-process rate limiting + security headers. On by default; flip off with
