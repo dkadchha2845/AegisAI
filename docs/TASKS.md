@@ -3,7 +3,7 @@
 > **Status: Phase 0 complete — all seven tasks. Phase 1 — 1.1, 1.2, 1.3 and
 > 1.4 done and verified end-to-end. Awaiting your go-ahead for 1.5.**
 > Last updated 2026-08-24 · branch `codex/phase-0.7-contributor-docs`
-> · 298 tests · all four gates green · ruff + mypy clean
+> · 300 tests · all four gates green · ruff + mypy clean
 
 ---
 
@@ -384,28 +384,41 @@ the gap.
 MIT, `Copyright (c) 2026 Dhrumil Kadchha` — which implements the claim the
 README badge was already making rather than choosing anything new.
 
-**The file is not bare MIT, and that is the point.** A licence file at the root
-of a repository is normally read as covering everything in it. `docs/DATASETS.md`
-§7 already commits the corpus to **CC-BY-4.0**, so a bare MIT file would have
-silently overwritten that — trading one documentation contradiction for a worse,
-legal one. The file therefore carries an explicit scope section:
+**One licence for the whole project, by the owner's decision.** The first draft
+carved the corpus out to CC-BY-4.0 to match `docs/DATASETS.md` §9. Asked, the
+owner chose MIT throughout, so `DATASETS.md` was corrected in the same change —
+two files naming different licences is precisely the drift 0.7 exists to prevent,
+and leaving the old promise in place would have been worse than the missing file
+it replaced.
 
-| Covered by MIT | Licensed separately |
+**What MIT does not reach, because it cannot.** A licence grants only what the
+grantor holds, so the file states two facts rather than reserving anything:
+real-world artefacts ingested under `DATASETS.md` §6 keep their own terms and
+are excluded from release when those terms forbid it, and checkpoints under
+`ml/artifacts/` inherit their base model's obligations — MuRIL is Apache-2.0 and
+requires attribution.
+
+**Named in five places, now checked in all five.** `LICENSE`, the README badge,
+`DATASETS.md` §9, `apps/web/package.json` and `packages/aegis_core/pyproject.toml`.
+The last two were added so npm and GitHub's detection agree with the root file;
+both manifests were re-validated (`npm pkg get license`, a clean editable
+reinstall of `aegis-core`).
+
+**Verified, each guard fired on purpose:**
+
+| Injected fault | Caught with |
 |---|---|
-| Source, config, build tooling, documentation | **AIFC corpus → CC-BY-4.0** (DATASETS.md §7), with the exclusion list for third-party items |
-| | **Per-item licences** — an item sourced from a third party keeps that third party's terms |
-| | **Checkpoints under `ml/artifacts/`** inherit their base model's restrictions; MuRIL is Apache-2.0. Check the manifest from `ml/evaluation/manifest.py` before redistributing one |
+| `LICENSE` added while still exempted | `these are no longer missing and should leave KNOWN_MISSING: ['LICENSE']` |
+| `LICENSE` moved away after the exemption was removed | `README.md points at paths that do not exist: ['LICENSE']` |
+| CC-BY-4.0 restored in `DATASETS.md` | `these no longer say MIT while LICENSE does: ['docs/DATASETS.md']` |
 
-**Verified:** the exemption guard fired on cue — `these are no longer missing and
-should leave KNOWN_MISSING: ['LICENSE']` — and once removed, a negative control
-confirmed the badge is now genuinely checked rather than merely present: moving
-the file away produces `README.md points at paths that do not exist: ['LICENSE']`.
-298 tests, four gates green, ruff + mypy clean.
+`KNOWN_MISSING` is now empty — the exemption held for exactly one task, which is
+the intended lifecycle: a note with an expiry, not a permanent excuse.
+300 tests, four gates green, ruff + mypy clean.
 
-**Still open, and a question for you rather than a defect:** whether the two
-remaining `package.json` files should declare `"license": "MIT"` so npm and
-GitHub's language detection agree with the root file. Left alone because a
-package manifest is also a publishing decision.
+**⚠️ Left for you:** the copyright line names one holder. You said there is a
+co-author; tell me the name and I will amend it. Until then the line understates
+who owns the work, which is a defect in a licence rather than a formality.
 
 ---
 

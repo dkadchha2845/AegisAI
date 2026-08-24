@@ -78,7 +78,7 @@ cheaper than starting over.
   "annotator_ids": ["a1", "a2"],
   "agreement": 1.0,
   "created_at": "2026-10-04",
-  "license": "CC-BY-4.0",
+  "license": "MIT",
   "pii_status": "synthetic_identifiers_only"
 }
 ```
@@ -196,8 +196,12 @@ Three splits, reported separately, because each answers a different question:
 
 - Default synthetic. Real data only when public-and-licensed or explicitly consented.
 - PII redaction before any item enters the corpus; verified by an automated scan.
-- Released under CC-BY-4.0 (data) with a documented exclusion list for
-  third-party items whose licence forbids redistribution.
+- Released under **MIT**, matching the root `LICENSE`, with a documented
+  exclusion list for third-party items whose licence forbids redistribution.
+  (Changed from CC-BY-4.0 on 2026-08-24 when the licence was added: one licence
+  for the whole project was the owner's call, and two files naming different
+  ones is the drift task 0.7 exists to prevent.) Items this project does not own
+  keep their own terms — a licence grants only what the grantor holds.
 - **Dual-use acknowledged:** a corpus of convincing scam messages could be
   misused. Mitigation: release the *labelled evaluation* set and the *generation
   recipe*, with high-fidelity generated attack text gated behind a research

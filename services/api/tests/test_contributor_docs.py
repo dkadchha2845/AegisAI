@@ -243,3 +243,51 @@ def test_pyproject_does_not_promise_a_gate_that_does_not_exist() -> None:
             "pyproject.toml mentions `format-check`; either add the make target "
             "or stop naming it"
         )
+
+
+# --------------------------------------------------------------------------
+# One licence, named the same way everywhere
+# --------------------------------------------------------------------------
+
+
+def test_every_file_that_names_a_licence_names_the_same_one() -> None:
+    """The licence is asserted in five places. They have already disagreed once.
+
+    When `LICENSE` was added it said MIT while `docs/DATASETS.md` §9 still
+    promised CC-BY-4.0 for the corpus — a contradiction that is worse than the
+    missing-file problem it replaced, because the two documents would each look
+    authoritative to a reader who found only one of them.
+
+    A licence is a claim like any other, and this project's rule is that a claim
+    with nothing behind it is a defect. So the claim is checked.
+    """
+    licence_text = read("LICENSE")
+    assert licence_text.startswith("MIT License"), "LICENSE is no longer MIT"
+
+    sources = {
+        "README badge": "badge/license-MIT-blue" in read("README.md"),
+        "docs/DATASETS.md": "Released under **MIT**" in read("docs/DATASETS.md"),
+        "apps/web/package.json": '"license": "MIT"' in read("apps/web/package.json"),
+        "packages/aegis_core/pyproject.toml": (
+            'license = "MIT"' in read("packages/aegis_core/pyproject.toml")
+        ),
+    }
+    disagreeing = sorted(name for name, agrees in sources.items() if not agrees)
+    assert not disagreeing, (
+        f"these no longer say MIT while LICENSE does: {disagreeing}. "
+        "Change all of them together or none of them."
+    )
+
+
+def test_the_licence_does_not_claim_to_cover_what_it_cannot() -> None:
+    """A licence grants only what the grantor holds.
+
+    The corpus is MIT by the owner's decision, but `docs/DATASETS.md` §6 plans to
+    ingest real-world artefacts from public sources, and the checkpoints under
+    `ml/artifacts/` are fine-tuned from third-party base models — MuRIL is
+    Apache-2.0. Neither can be relicensed by us. The LICENSE says so, and this
+    keeps it saying so.
+    """
+    licence_text = read("LICENSE")
+    assert "THIRD-PARTY MATERIAL" in licence_text
+    assert "Apache-2.0" in licence_text, "the MuRIL obligation is no longer stated"
