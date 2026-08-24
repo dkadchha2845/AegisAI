@@ -12,6 +12,8 @@ documentation that quietly stopped being true:
   * `pyproject.toml` pointed at a `make format-check` target that never existed.
   * `AGENTS.md` was created as a copy of `CLAUDE.md` and disagreed with it
     within the hour.
+  * The README carried an MIT badge linking to a `LICENSE` file that did not
+    exist — found by the path check below, and fixed by the owner adding one.
 
 String-matching a document catches the first kind and misses the other two. So
 the interesting tests here do not check that the docs *say* the right thing —
@@ -117,13 +119,16 @@ PATH_ROOTS = (Path("."), Path("services/api"))
 #: requiring them to exist would invert the sentence.
 IGNORED_IN_A_CLONE = ("node_modules", ".venv", "ml/artifacts", "dist", "__pycache__")
 
-#: Known-missing, with a reason and an owner. `LICENSE` is referenced by the
-#: MIT badge at the top of the README, and no such file is in the repository.
-#: That is a real inconsistency and it is recorded against task 0.7 in
-#: docs/TASKS.md — but choosing and applying a licence is the project owner's
-#: decision, not something a contributor should quietly materialise. The entry
-#: stays here, visible, until they make it.
-KNOWN_MISSING = {"LICENSE"}
+#: Documented exemptions: a path the docs reference that is deliberately absent,
+#: each with a reason and an owner. Empty is the healthy state.
+#:
+#: It held `LICENSE` for exactly one task. The README's MIT badge pointed at a
+#: file that was not in the repository, which is a claim with nothing behind it;
+#: the entry recorded that rather than letting a contributor quietly invent a
+#: licence, and `test_the_known_missing_list_stays_honest` took it out the moment
+#: the owner added one. That is the intended lifecycle — an exemption is a note
+#: with an expiry, not a permanent excuse.
+KNOWN_MISSING: set[str] = set()
 
 
 @pytest.mark.parametrize("doc", CONTRIBUTOR_DOCS)

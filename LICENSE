@@ -1,0 +1,50 @@
+MIT License
+
+Copyright (c) 2026 Dhrumil Kadchha
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+
+SCOPE — WHAT THIS LICENSE DOES AND DOES NOT COVER
+
+The MIT terms above cover the *software* in this repository: source code,
+configuration, build tooling and documentation.
+
+They do NOT cover the datasets and model artefacts, which are licensed
+separately:
+
+  * The AegisAI Fraud Corpus (AIFC) and any other corpus produced under
+    docs/DATASETS.md is released under CC-BY-4.0, with a documented exclusion
+    list for third-party items whose own licence forbids redistribution.
+    See docs/DATASETS.md §7.
+
+  * Individual corpus items carry their own `license` field and provenance
+    record. An item sourced from a third party keeps that third party's terms;
+    this file does not relicense it.
+
+  * Trained model checkpoints under ml/artifacts/ inherit any restrictions of
+    the base models they were fine-tuned from. MuRIL is Apache-2.0; check the
+    manifest recorded by ml/evaluation/manifest.py before redistributing a
+    checkpoint.
+
+This split is deliberate and predates the file. It is written down here because
+a bare MIT license at the root of a repository is normally read as covering
+everything in it, which would have silently contradicted the CC-BY-4.0 commitment
+in docs/DATASETS.md.

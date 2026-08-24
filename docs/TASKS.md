@@ -348,12 +348,13 @@ test fails if anyone starts copying the invariants back into it.
 
 **Two findings from actually running what the docs tell you to run:**
 
-1. **The README's MIT badge links to a `LICENSE` file that does not exist.** The
-   badge is a claim and the link 404s on GitHub. Choosing and applying a licence
-   is not a contributor's call to make quietly, so it is recorded rather than
-   invented — see "Left for you" below. It sits in a `KNOWN_MISSING` set with
-   its reason, and a second test fails the moment the file appears, so the
-   exemption cannot rot into a permanent excuse.
+1. **The README's MIT badge linked to a `LICENSE` file that did not exist.** The
+   badge is a claim and the link 404s on GitHub. It was recorded rather than
+   invented — choosing a licence is the owner's call — and **resolved the same
+   day on their instruction**. The `KNOWN_MISSING` exemption held it for exactly
+   one task before `test_the_known_missing_list_stays_honest` demanded its
+   removal, which is the intended lifecycle: an exemption is a note with an
+   expiry, not a permanent excuse. See 0.7a below.
 2. **The 1.4 commit claimed "ruff clean" and the committed tree had one ruff
    finding** — an unsorted import block in `test_input_classifier.py`. Confirmed
    by stashing and re-running ruff against HEAD. Fixed here. Worth noting the
@@ -374,13 +375,37 @@ delivery **7.5 CALM** — unchanged, as a docs task should leave them.
 | Also | ruff clean · mypy clean |
 | Docs guards | 15 tests, all four negative controls fire |
 
-**⚠️ Left for you:** the repository has **no `LICENSE` file** while the README
-advertises MIT. Either add the MIT text (and remove `LICENSE` from
-`KNOWN_MISSING` in `test_contributor_docs.py` — a test will tell you to), or
-change the badge. It matters beyond tidiness: task 8.8 plans a *licensed*
-dataset release, and 8.1 requires a licence per corpus item.
-
 **Effort:** 2 h estimated, ~2 h actual. ✅
+
+### ✅ 0.7a — `LICENSE`, with the code/data split written down
+**Done 2026-08-24**, on the owner's instruction, immediately after 0.7 recorded
+the gap.
+
+MIT, `Copyright (c) 2026 Dhrumil Kadchha` — which implements the claim the
+README badge was already making rather than choosing anything new.
+
+**The file is not bare MIT, and that is the point.** A licence file at the root
+of a repository is normally read as covering everything in it. `docs/DATASETS.md`
+§7 already commits the corpus to **CC-BY-4.0**, so a bare MIT file would have
+silently overwritten that — trading one documentation contradiction for a worse,
+legal one. The file therefore carries an explicit scope section:
+
+| Covered by MIT | Licensed separately |
+|---|---|
+| Source, config, build tooling, documentation | **AIFC corpus → CC-BY-4.0** (DATASETS.md §7), with the exclusion list for third-party items |
+| | **Per-item licences** — an item sourced from a third party keeps that third party's terms |
+| | **Checkpoints under `ml/artifacts/`** inherit their base model's restrictions; MuRIL is Apache-2.0. Check the manifest from `ml/evaluation/manifest.py` before redistributing one |
+
+**Verified:** the exemption guard fired on cue — `these are no longer missing and
+should leave KNOWN_MISSING: ['LICENSE']` — and once removed, a negative control
+confirmed the badge is now genuinely checked rather than merely present: moving
+the file away produces `README.md points at paths that do not exist: ['LICENSE']`.
+298 tests, four gates green, ruff + mypy clean.
+
+**Still open, and a question for you rather than a defect:** whether the two
+remaining `package.json` files should declare `"license": "MIT"` so npm and
+GitHub's language detection agree with the root file. Left alone because a
+package manifest is also a publishing decision.
 
 ---
 
