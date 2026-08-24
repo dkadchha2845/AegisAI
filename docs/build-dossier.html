@@ -1,0 +1,1117 @@
+<title>AegisAI Build Dossier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+  /* ---------- LIGHT (bare :root = complete palette) ---------- */
+  :root {
+    --ground:      #EFF1F4;
+    --surface:     #FFFFFF;
+    --surface-2:   #F7F8FA;
+    --sunk:        #E4E7EC;
+
+    --ink:         #131920;
+    --ink-2:       #4C5663;
+    --ink-3:       #626C79;
+
+    --line:        #D7DCE3;
+    --line-soft:   #E6EAEF;
+
+    --prussian:    #0B2B45;
+    --prussian-2:  #16466B;
+    --accent:      #8A6204;   /* phosphor amber, darkened for AA on light */
+    --accent-bg:   #FBF1D8;
+    --accent-line: #E3C575;
+
+    --ok:          #0E6B58;
+    --ok-bg:       #DEF0EA;
+    --work:        #9C4A16;
+    --work-bg:     #FBE8DA;
+    --stop:        #99202F;
+    --stop-bg:     #FADFE3;
+    --idle-bg:     #E4E7EC;
+
+    --on-bar:      #FFFFFF;
+    --next-bg:     #0B2B45;
+    --next-fg:     #EAF1F7;
+    --next-line:   #0B2B45;
+    --next-accent: #E5B84A;
+
+    --shadow:      0 1px 2px rgba(11,43,69,.06), 0 8px 24px -12px rgba(11,43,69,.18);
+
+    --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --f-body:    "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --f-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  /* ---------- DARK via system default (un-stamped) ---------- */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #080D13;
+      --surface:     #0F161E;
+      --surface-2:   #141C26;
+      --sunk:        #1B2632;
+
+      --ink:         #E9EDF2;
+      --ink-2:       #A3AEBC;
+      --ink-3:       #8B96A5;
+
+      --line:        #253141;
+      --line-soft:   #1B2532;
+
+      --prussian:    #8FB6D6;
+      --prussian-2:  #6E9BC0;
+      --accent:      #E5B84A;
+      --accent-bg:   #2A2109;
+      --accent-line: #6B551A;
+
+      --ok:          #4FC0A4;
+      --ok-bg:       #0C2A24;
+      --work:        #E08A4E;
+      --work-bg:     #2E1B0D;
+      --stop:        #EF7183;
+      --stop-bg:     #33121A;
+      --idle-bg:     #1B2632;
+
+      --on-bar:      #08111A;
+      --next-bg:     #141C26;
+      --next-fg:     #E9EDF2;
+      --next-line:   #253141;
+      --next-accent: #E5B84A;
+
+      --shadow:      0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+    }
+  }
+
+  /* ---------- DARK via explicit toggle ---------- */
+  :root[data-theme="dark"] {
+    --ground:      #080D13;
+    --surface:     #0F161E;
+    --surface-2:   #141C26;
+    --sunk:        #1B2632;
+
+    --ink:         #E9EDF2;
+    --ink-2:       #A3AEBC;
+    --ink-3:       #8B96A5;
+
+    --line:        #253141;
+    --line-soft:   #1B2532;
+
+    --prussian:    #8FB6D6;
+    --prussian-2:  #6E9BC0;
+    --accent:      #E5B84A;
+    --accent-bg:   #2A2109;
+    --accent-line: #6B551A;
+
+    --ok:          #4FC0A4;
+    --ok-bg:       #0C2A24;
+    --work:        #E08A4E;
+    --work-bg:     #2E1B0D;
+    --stop:        #EF7183;
+    --stop-bg:     #33121A;
+    --idle-bg:     #1B2632;
+
+    --on-bar:      #08111A;
+    --next-bg:     #141C26;
+    --next-fg:     #E9EDF2;
+    --next-line:   #253141;
+    --next-accent: #E5B84A;
+
+    --shadow:      0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16.5px;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0 20px 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  /* ---------- type ---------- */
+  h1, h2, h3, h4 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); font-weight: 700; letter-spacing: -.03em; line-height: 1.02; }
+  h2 { font-size: clamp(1.35rem, 3vw, 1.7rem); font-weight: 700; letter-spacing: -.018em; }
+  h3 { font-size: 1.06rem; font-weight: 600; letter-spacing: -.008em; }
+  p  { margin: 0; }
+  a  { color: inherit; }
+
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+  .lede { font-size: 1.12rem; color: var(--ink-2); max-width: 64ch; }
+
+  /* ---------- cover sheet ---------- */
+  .cover {
+    border-top: 3px solid var(--prussian);
+    padding-top: 26px;
+    margin-top: 52px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .cover-meta { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: baseline; }
+  .titleline { display: flex; flex-direction: column; gap: 10px; }
+  .subtitle {
+    font-family: var(--f-display);
+    font-size: clamp(1rem, 2.3vw, 1.28rem);
+    font-weight: 500;
+    color: var(--prussian);
+    letter-spacing: -.012em;
+    max-width: 40ch;
+    line-height: 1.28;
+  }
+
+  .loop {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+    font-family: var(--f-mono); font-size: .74rem; font-weight: 600;
+    letter-spacing: .04em;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 3px;
+  }
+  .loop span { color: var(--ink); }
+  .loop i { color: var(--accent); font-style: normal; }
+
+  /* ---------- stat strip ---------- */
+  /* Six stats, and column counts that all divide six — auto-fit orphans a
+     lone cell at intermediate widths, which reads as an empty stat. */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  @media (min-width: 560px) { .stats { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 880px) { .stats { grid-template-columns: repeat(6, 1fr); } }
+  .stat { background: var(--surface); padding: 14px 16px; display: flex; flex-direction: column; gap: 3px; }
+  .stat b { font-family: var(--f-display); font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+  .stat small { font-size: .72rem; color: var(--ink-3); letter-spacing: .04em; text-transform: uppercase; font-family: var(--f-mono); }
+
+  /* ---------- position banner ---------- */
+  .position {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--ok);
+    border-radius: 3px;
+    padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 7px;
+  }
+  .position .row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; }
+  .position p { font-size: .94rem; color: var(--ink-2); max-width: 78ch; }
+
+  /* ---------- sections ---------- */
+  section { margin-top: 68px; }
+  .sec-head { display: flex; flex-direction: column; gap: 7px; margin-bottom: 26px; }
+  .rule { height: 1px; background: var(--line); border: 0; margin: 0; }
+
+  /* ---------- pivot table ---------- */
+  .scroller { overflow-x: auto; border: 1px solid var(--line); border-radius: 3px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: .93rem; min-width: 520px; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  thead th {
+    font-family: var(--f-mono); font-size: .68rem; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3);
+    background: var(--surface-2); border-bottom: 1px solid var(--line);
+    position: sticky; top: 0;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.was { color: var(--ink-3); }
+  td.now { color: var(--ink); font-weight: 600; }
+  th.rowlab { font-family: var(--f-mono); font-size: .74rem; color: var(--ink-2); font-weight: 600; white-space: nowrap; }
+
+  /* ---------- phases ---------- */
+  .phases { display: flex; flex-direction: column; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+  .phase {
+    background: var(--surface);
+    display: grid;
+    grid-template-columns: 58px 1fr;
+    gap: 0 18px;
+    padding: 17px 18px;
+    align-items: start;
+  }
+  .phase:hover { background: var(--surface-2); }
+  .pnum {
+    font-family: var(--f-mono); font-size: 1.28rem; font-weight: 600;
+    color: var(--prussian); line-height: 1.15; letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .pnum small { display: block; font-size: .6rem; letter-spacing: .1em; color: var(--ink-3); font-weight: 400; margin-top: 3px; }
+  .pbody { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .ptop { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; }
+  .pdesc { color: var(--ink-2); font-size: .94rem; max-width: 72ch; }
+  .milestone {
+    font-family: var(--f-mono); font-size: .74rem; font-weight: 600;
+    color: var(--accent); background: var(--accent-bg);
+    border: 1px solid var(--accent-line);
+    padding: 3px 9px; border-radius: 2px; display: inline-block;
+  }
+
+  /* ---------- chips ---------- */
+  .chip {
+    font-family: var(--f-mono); font-size: .67rem; font-weight: 600;
+    letter-spacing: .07em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 2px; white-space: nowrap;
+  }
+  .chip.done { color: var(--ok);   background: var(--ok-bg); }
+  .chip.now  { color: var(--work); background: var(--work-bg); }
+  .chip.next { color: var(--stop); background: var(--stop-bg); }
+  .chip.idle { color: var(--ink-2); background: var(--idle-bg); }
+  .chip.hrs  { color: var(--ink-2); background: var(--sunk); }
+
+  /* ---------- checklist ---------- */
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 16px; }
+  .legend span.k { font-family: var(--f-mono); font-size: .72rem; color: var(--ink-3); }
+
+  .cl { border: 1px solid var(--line); border-radius: 3px; overflow: hidden; background: var(--line); display: flex; flex-direction: column; gap: 1px; }
+
+  .cl-phase {
+    background: var(--surface-2);
+    display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline;
+    padding: 12px 18px;
+    border-left: 3px solid var(--prussian);
+  }
+  .cl-phase h3 { font-size: .96rem; }
+  .cl-phase .pcount {
+    font-family: var(--f-mono); font-size: .72rem; font-weight: 600;
+    color: var(--ink-2); font-variant-numeric: tabular-nums;
+  }
+  .meter { flex: 1 1 120px; max-width: 220px; height: 5px; background: var(--sunk); border-radius: 2px; overflow: hidden; min-width: 90px; }
+  .meter i { display: block; height: 100%; background: var(--ok); border-radius: 2px; }
+
+  .task {
+    background: var(--surface);
+    display: grid;
+    grid-template-columns: 46px 1fr auto;
+    gap: 4px 14px;
+    padding: 10px 18px;
+    align-items: baseline;
+  }
+  .task:hover { background: var(--surface-2); }
+  .task .tid {
+    font-family: var(--f-mono); font-size: .8rem; font-weight: 600;
+    color: var(--ink-3); font-variant-numeric: tabular-nums;
+  }
+  .task.is-done .tid { color: var(--ok); }
+  .task.is-now  .tid { color: var(--work); }
+  .task .tname { font-size: .93rem; color: var(--ink); min-width: 0; }
+  .task.is-todo .tname { color: var(--ink-2); }
+  .task .tmeta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; justify-content: flex-end; }
+  .tag {
+    font-family: var(--f-mono); font-size: .62rem; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase; font-style: normal;
+    padding: 2px 6px; border-radius: 2px; white-space: nowrap;
+    border: 1px solid var(--line);
+    color: var(--ink-3); background: var(--surface-2);
+  }
+  .tag.crit { color: var(--stop); background: var(--stop-bg); border-color: transparent; }
+  .tag.res  { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-line); }
+  .tag.sec  { color: var(--prussian); background: var(--sunk); border-color: transparent; }
+  .box {
+    font-family: var(--f-mono); font-size: .8rem; font-weight: 600;
+    color: var(--ink-3); width: 2.2em; text-align: right;
+  }
+  .task.is-done .box { color: var(--ok); }
+  .task.is-now  .box { color: var(--work); }
+  @media (max-width: 620px) {
+    .task { grid-template-columns: 46px 1fr; }
+    .task .tmeta { grid-column: 2; justify-content: flex-start; }
+  }
+
+  /* ---------- gantt ---------- */
+  .gantt { border: 1px solid var(--line); border-radius: 3px; background: var(--surface); overflow: hidden; }
+  .gantt-scroll { overflow-x: auto; }
+  .gantt-inner { min-width: 640px; }
+  .grow {
+    display: grid;
+    grid-template-columns: 158px 1fr;
+    align-items: center;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .grow:last-child { border-bottom: 0; }
+  .glabel {
+    font-family: var(--f-mono); font-size: .74rem; color: var(--ink-2);
+    padding: 0 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .gtrack { display: grid; grid-template-columns: repeat(24, 1fr); padding: 7px 12px 7px 0; }
+  .gbar {
+    height: 19px; border-radius: 2px;
+    display: flex; align-items: center; padding-left: 7px;
+    font-family: var(--f-mono); font-size: .63rem; font-weight: 600;
+    color: var(--on-bar); overflow: hidden; white-space: nowrap;
+  }
+  .gbar.core  { background: var(--prussian); }
+  .gbar.par   { background: var(--prussian-2); opacity: .62; }
+  .gbar.res   { background: var(--accent); }
+  .gbar.dn    { background: var(--ok); }
+  .gscale {
+    display: grid; grid-template-columns: 158px 1fr;
+    border-bottom: 1px solid var(--line); background: var(--surface-2);
+  }
+  .gscale-ticks { display: grid; grid-template-columns: repeat(6, 1fr); padding: 7px 12px 7px 0; }
+  .gscale-ticks span {
+    font-family: var(--f-mono); font-size: .64rem; color: var(--ink-3);
+    letter-spacing: .07em; text-transform: uppercase;
+  }
+
+  /* ---------- two-col ---------- */
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media (max-width: 760px) { .duo { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 3px; padding: 20px; display: flex; flex-direction: column; gap: 13px;
+  }
+  .card.warn { border-left: 3px solid var(--stop); }
+  .card.keep { border-left: 3px solid var(--ok); }
+
+  ol.ladder, ul.plain { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  ol.ladder li, ul.plain li {
+    display: grid; grid-template-columns: 22px 1fr; gap: 10px;
+    font-size: .93rem; color: var(--ink-2); align-items: baseline;
+  }
+  ol.ladder li b, ul.plain li b { font-family: var(--f-mono); font-size: .74rem; color: var(--ink-3); font-weight: 600; }
+  ul.plain li b { color: var(--ok); }
+  .keeps { display: flex; flex-wrap: wrap; gap: 6px; }
+  .keeps code {
+    font-family: var(--f-mono); font-size: .74rem; font-weight: 600;
+    background: var(--ok-bg); color: var(--ok);
+    padding: 3px 8px; border-radius: 2px;
+  }
+
+  /* ---------- contributions ---------- */
+  .contrib { display: grid; grid-template-columns: repeat(auto-fit, minmax(228px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+  .cbox { background: var(--surface); padding: 18px; display: flex; flex-direction: column; gap: 9px; }
+  .ctag { font-family: var(--f-mono); font-size: .8rem; font-weight: 600; color: var(--accent); }
+  .cbox p { font-size: .9rem; color: var(--ink-2); }
+
+  /* ---------- gates ---------- */
+  pre.gates {
+    font-family: var(--f-mono); font-size: .8rem; line-height: 1.85;
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 3px solid var(--ok);
+    border-radius: 3px; padding: 16px 18px; margin: 0;
+    overflow-x: auto; color: var(--ink-2);
+  }
+  pre.gates b { color: var(--ink); font-weight: 400; }
+  pre.gates i { color: var(--ink-3); font-style: normal; }
+
+  /* ---------- next ---------- */
+  .nextup {
+    background: var(--next-bg); color: var(--next-fg);
+    border: 1px solid var(--next-line);
+    border-radius: 3px; padding: 26px 24px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .nextup .eyebrow { color: var(--next-accent); }
+  .nextup h2 { color: inherit; }
+  .nextup p { color: inherit; opacity: .84; max-width: 64ch; }
+  .nextup code { font-family: var(--f-mono); font-size: .86em; }
+
+  footer {
+    margin-top: 68px; padding-top: 20px; border-top: 1px solid var(--line);
+    font-family: var(--f-mono); font-size: .72rem; color: var(--ink-3);
+    display: flex; flex-wrap: wrap; gap: 6px 20px;
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+
+  <!-- ============ COVER SHEET ============ -->
+  <header class="cover">
+    <div class="cover-meta">
+      <span class="eyebrow">Build Dossier</span>
+      <span class="eyebrow">Updated 25 Aug 2026 &middot; after task 1.5 &mdash; merged to <span class="mono">main</span></span>
+      <span class="eyebrow">B.Tech CSE Capstone &middot; Research</span>
+    </div>
+
+    <div class="titleline">
+      <h1>AegisAI</h1>
+      <p class="subtitle">An Agentic Digital Public Safety Platform for Autonomous Multi-Modal Fraud Investigation</p>
+    </div>
+
+    <p class="lede">
+      Not a scam classifier &mdash; a digital <em>investigator</em>. Give it an email, an SMS, a
+      WhatsApp screenshot, a QR code, a URL, a PDF, an APK, a recording, a phone number,
+      a UPI ID, or a live call. A graph of specialised agents investigates it, correlates
+      the findings against a persistent fraud-intelligence graph, scores the risk with a
+      calibrated model, and explains <strong>why</strong> &mdash; with a source for every claim.
+    </p>
+
+    <div class="loop">
+      <span>INPUT</span><i>&rarr;</i><span>EXTRACT</span><i>&rarr;</i><span>INVESTIGATE</span><i>&rarr;</i><span>CORRELATE</span><i>&rarr;</i><span>REASON</span><i>&rarr;</i><span>SCORE</span><i>&rarr;</i><span>EXPLAIN</span><i>&rarr;</i><span>ACT</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b class="mono">15/87</b><small>tasks done</small></div>
+      <div class="stat"><b class="mono">340</b><small>tests green</small></div>
+      <div class="stat"><b class="mono">72.3%</b><small>backend coverage</small></div>
+      <div class="stat"><b class="mono">0.767</b><small>macro-F1, zero-leak</small></div>
+      <div class="stat"><b class="mono">11</b><small>phases</small></div>
+      <div class="stat"><b class="mono">994</b><small>hours remaining</small></div>
+    </div>
+
+    <div class="position">
+      <div class="row">
+        <span class="eyebrow">Current position</span>
+        <span class="chip done">Phase 0 complete &middot; 8 of 8</span>
+        <span class="chip now">Phase 1 &middot; 5 of 9</span>
+        <span class="chip next">Next: 1.6</span>
+      </div>
+      <p>
+        Phase 0 shipped and was verified against the running application, which found three
+        defects 129 green unit tests could not see. Task 1.1 &mdash; the
+        <span class="mono">InvestigationState</span> contract every later agent reads and writes
+        &mdash; the agent protocol and registry of 1.2, the LangGraph orchestrator of 1.3, the
+        input classifier of 1.4, and now the evidence store of 1.5 are done, gated and verified the
+        same way, and Phase 0 is closed. Each iteration, run for real, found something the tests
+        could not: a cold-start problem, a silent evidence-extraction bug, a per-agent timeout that
+        was quietly doing nothing, a licence badge pointing at a file that does not exist, and this
+        time a declarative base that put 23 type errors into a gate kept at zero. An investigation
+        now outlives the request that created it &mdash; but <strong>no HTTP route runs the graph
+        yet</strong>, so this page still does not claim an investigation flows through the API.
+        That sentence belongs to 1.6 and is not written before then.
+      </p>
+    </div>
+  </header>
+
+  <!-- ============ THE PIVOT ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">01 &mdash; Provenance</span>
+      <h2>What changed, and what didn't</h2>
+      <p class="lede">AegisAI is not greenfield. It inherits a working, tested scam-call engine
+      built for the ET AI Hackathon 2026 and widens it into an investigation platform. The pivot
+      is <strong>breadth and architecture</strong> &mdash; never a restart.</p>
+    </div>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th style="width:112px"></th><th style="width:38%">KAVACH &mdash; inherited</th><th>AegisAI &mdash; target</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th class="rowlab">Input</th>
+            <td class="was">Voice call, text, image, UPI ID</td>
+            <td class="now">Any digital evidence &mdash; email, SMS, screenshot, QR, URL, PDF, APK, audio, video, phone, UPI, live call</td>
+          </tr>
+          <tr>
+            <th class="rowlab">Shape</th>
+            <td class="was">Linear pipeline, one domain</td>
+            <td class="now">LangGraph agent graph, conditional routing, parallel fan-out</td>
+          </tr>
+          <tr>
+            <th class="rowlab">Output</th>
+            <td class="was">Threat score, coach line, evidence PDF</td>
+            <td class="now">Investigation report: risk, evidence chain, relationship graph, recommended actions</td>
+          </tr>
+          <tr>
+            <th class="rowlab">Scoring</th>
+            <td class="was">Hand-weighted signal fusion</td>
+            <td class="now">Calibrated ML model + rules + graph + LLM, with disagreement measured</td>
+          </tr>
+          <tr>
+            <th class="rowlab">Memory</th>
+            <td class="was">Per-session only</td>
+            <td class="now">Cross-case, persistent, graph-linked &mdash; &ldquo;seen in 3 prior investigations&rdquo;</td>
+          </tr>
+          <tr>
+            <th class="rowlab">Purpose</th>
+            <td class="was">Hackathon demo</td>
+            <td class="now">Capstone &middot; research paper &middot; deployable product</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ PHASES ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">02 &mdash; Roadmap</span>
+      <h2>Eleven phases</h2>
+      <p class="lede">Ordered by dependency, not preference. Each phase has an exit criterion;
+      nothing is marked done until it passes.</p>
+    </div>
+
+    <div class="phases">
+
+      <div class="phase">
+        <div class="pnum">00<small>W1&ndash;2</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Foundation</h3><span class="chip done">8 of 8 &middot; complete</span><span class="chip hrs">~30h</span></div>
+          <p class="pdesc">Python 3.9&nbsp;&rarr;&nbsp;3.12 &middot; repo restructure &middot; Docker Compose stack
+          (Postgres, Neo4j, Qdrant, Redis) &middot; secrets hygiene &middot; CI gates &middot;
+          contributor rules that a test keeps true.</p>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">01<small>W3&ndash;5</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Agent architecture &amp; orchestration</h3><span class="chip now">In progress &middot; 5 of 9</span><span class="chip hrs">38h left</span></div>
+          <p class="pdesc"><code class="mono">InvestigationState</code> contract &middot; agent protocol &amp; registry &middot;
+          LangGraph orchestrator &middot; input classifier &middot; evidence store &middot; the inherited engine
+          adapted into agents without rewriting it.</p>
+          <span class="milestone">M1 &mdash; end-to-end investigation through the graph</span>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">02<small>W6&ndash;10</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Evidence agents</h3><span class="chip idle">Not started</span><span class="chip hrs">~130h</span></div>
+          <p class="pdesc">URL/domain (SSRF-hardened) &middot; email headers &middot; QR &middot; financial &middot;
+          social engineering &middot; APK static analysis &middot; image forensics &middot; threat intelligence
+          with provenance.</p>
+          <span class="milestone">M2 &mdash; the defensible MVP: upload anything, get a real report</span>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">03<small>W11&ndash;13</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Intelligence layer</h3><span class="chip idle">Not started</span><span class="chip hrs">~85h</span></div>
+          <p class="pdesc">Neo4j behind the existing repository interface &middot; entity resolution &middot;
+          Qdrant &middot; RAG corpus to 1,500+ chunks &middot; graph-derived risk features, leak-guarded.</p>
+          <span class="milestone">M3 &mdash; cross-case memory works</span>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">04<small>W14&ndash;16</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>ML risk engine &amp; fusion</h3><span class="chip next">Critical path</span><span class="chip hrs">~90h</span></div>
+          <p class="pdesc">Feature registry &middot; XGBoost / LightGBM baselines &middot; probability
+          calibration &middot; SHAP&nbsp;&rarr;&nbsp;evidence &middot; the false-positive harness that gates
+          every promotion.</p>
+          <span class="milestone">M4 &mdash; calibrated, explainable scoring</span>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">05<small>W17&ndash;18</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Multimodal depth</h3><span class="chip idle">Not started</span><span class="chip hrs">~65h</span></div>
+          <p class="pdesc">faster-whisper &middot; conversation dynamics generalised beyond calls &middot;
+          video &middot; documents. Voice-authenticity stays gated until a dataset exists.</p>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">06<small>W19&ndash;21</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Real-time</h3><span class="chip idle">Not started</span><span class="chip hrs">~110h</span></div>
+          <p class="pdesc">WebRTC protected calls with explicit consent &middot; streaming STT &middot;
+          a pruned agent subgraph at p95&nbsp;&lt;&nbsp;400&nbsp;ms &middot; SMS channel &middot; retention controls.</p>
+          <span class="milestone">M5 &mdash; live protected call</span>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">07<small>W6&ndash;22</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Frontend &amp; dashboards</h3><span class="chip idle">Parallel</span><span class="chip hrs">~115h</span></div>
+          <p class="pdesc">Investigation workspace &middot; live agent trace (React Flow) &middot; knowledge-graph
+          explorer (Cytoscape) &middot; analyst dashboard &middot; evaluation dashboard &middot; Hindi UI &amp; WCAG AA.</p>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">08<small>W6&ndash;20</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Datasets &amp; model training</h3><span class="chip idle">Parallel</span><span class="chip hrs">~150h</span></div>
+          <p class="pdesc"><strong>AIFC</strong> &mdash; 10,000+ multimodal, multilingual items across 12 fraud
+          categories with a deliberately hard benign class &middot; synthetic screenshot pipeline &middot;
+          annotator agreement &middot; the full-corpus retrain that has never been run.</p>
+          <span class="milestone">M6 &mdash; released multimodal corpus</span>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">09<small>W20&ndash;24</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Research evaluation</h3><span class="chip next">Critical path</span><span class="chip hrs">~150h</span></div>
+          <p class="pdesc">Eight experiments &middot; nine-configuration ablation &middot; latency &amp; cost
+          benchmark &middot; human evaluation of explanations &middot; adversarial &amp; prompt-injection robustness.</p>
+          <span class="milestone">M7 &mdash; paper draft + reproduction package</span>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="pnum">10<small>W22&ndash;24</small></div>
+        <div class="pbody">
+          <div class="ptop"><h3>Hardening &amp; deployment</h3><span class="chip idle">Not started</span><span class="chip hrs">~60h</span></div>
+          <p class="pdesc">Full security review &middot; observability &middot; containerised deploy &middot;
+          dependency-failure drills &middot; seeded demo and defence deck.</p>
+          <span class="milestone">M8 &mdash; deployed, secured, demoable</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ CHECKLIST ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">03 &mdash; Checklist</span>
+      <h2>Every task, and where it stands</h2>
+      <p class="lede">Eighty-seven tasks. A box is ticked only when its acceptance criteria pass,
+      all four gates are green, <strong>and</strong> the behaviour has been exercised in the running
+      application &mdash; not when the code exists.</p>
+    </div>
+
+    <div class="legend">
+      <span class="k">&#10003;&nbsp; done &amp; verified</span>
+      <span class="k">&#9679;&nbsp; in progress</span>
+      <span class="k">&#9633;&nbsp; not started</span>
+      <i class="tag crit">crit</i><span class="k">blocker &mdash; nothing downstream starts</span>
+      <i class="tag res">res</i><span class="k">the paper depends on it</span>
+      <i class="tag sec">sec</i><span class="k">security-critical</span>
+    </div>
+
+    <div class="cl">
+
+      <!-- PHASE 0 -->
+      <div class="cl-phase">
+        <h3>Phase 0 &mdash; Foundation</h3>
+        <span class="pcount">8 / 8</span>
+        <span class="meter"><i style="width:100%"></i></span>
+      </div>
+      <div class="task is-done"><span class="tid">0.1</span><span class="tname">Rename KAVACH/PRESAGE &rarr; AegisAI &mdash; 105 files, env prefix, back-compat fallback</span><span class="tmeta"><span class="box">&#10003;</span></span></div>
+      <div class="task is-done"><span class="tid">0.2</span><span class="tname">Python 3.9 &rarr; 3.12 &mdash; bit-identical classifier output across the jump</span><span class="tmeta"><i class="tag crit">crit</i><span class="box">&#10003;</span></span></div>
+      <div class="task is-done"><span class="tid">0.3</span><span class="tname">Repo restructure &mdash; <span class="mono">aegis_core</span> installed as a package, four path hacks removed</span><span class="tmeta"><span class="box">&#10003;</span></span></div>
+      <div class="task is-done"><span class="tid">0.4</span><span class="tname">Docker Compose dev stack &mdash; Postgres, Neo4j, Qdrant, Redis, all health-probed</span><span class="tmeta"><span class="box">&#10003;</span></span></div>
+      <div class="task is-done"><span class="tid">0.5</span><span class="tname">Config &amp; secrets hygiene &mdash; pydantic-settings, checkpoint fingerprint manifest</span><span class="tmeta"><i class="tag sec">sec</i><span class="box">&#10003;</span></span></div>
+      <div class="task is-done"><span class="tid">0.6</span><span class="tname">CI/CD hardening &mdash; ruff, mypy, coverage ratchet, dependency audit</span><span class="tmeta"><span class="box">&#10003;</span></span></div>
+      <div class="task is-done"><span class="tid">0.7</span><span class="tname">Contributor docs &mdash; invariants, gates and a definition of done, with tests that check the commands the docs name actually exist</span><span class="tmeta"><span class="box">&#10003;</span></span></div>
+      <div class="task is-done"><span class="tid">0.7a</span><span class="tname">MIT <span class="mono">LICENSE</span> with the code/data split written down &mdash; named identically in five files, and a test that fails if one drifts</span><span class="tmeta"><span class="box">&#10003;</span></span></div>
+
+      <!-- PHASE 1 -->
+      <div class="cl-phase">
+        <h3>Phase 1 &mdash; Agent architecture &amp; orchestration</h3>
+        <span class="pcount">5 / 9</span>
+        <span class="meter"><i style="width:56%"></i></span>
+      </div>
+      <div class="task is-done"><span class="tid">1.1</span><span class="tname"><span class="mono">InvestigationState</span> + <span class="mono">AgentResult</span> in <span class="mono">schema/</span> &mdash; 13 models, 6 enums, drift-guarded in both languages</span><span class="tmeta"><i class="tag crit">crit</i><i class="tag res">res</i><span class="box">&#10003;</span></span></div>
+      <div class="task is-done"><span class="tid">1.2</span><span class="tname">Agent base protocol + registry &mdash; a raising, hanging or cancelled agent yields a valid result and never propagates</span><span class="tmeta"><i class="tag crit">crit</i><span class="box">&#10003;</span></span></div>
+      <div class="task is-done"><span class="tid">1.2a</span><span class="tname">Fix &mdash; a UPI ID at the end of a message was silently discarded</span><span class="tmeta"><span class="box">&#10003;</span></span></div>
+      <div class="task is-done"><span class="tid">1.2b</span><span class="tname">One module identity for the contract &mdash; everything imports <span class="mono">schema.models</span></span><span class="tmeta"><span class="box">&#10003;</span></span></div>
+      <div class="task is-done"><span class="tid">1.3</span><span class="tname">LangGraph orchestrator &mdash; tiered routing, parallel fan-out, per-node policy, checkpoint resume, and a fingerprint that makes determinism checkable</span><span class="tmeta"><i class="tag crit">crit</i><i class="tag res">res</i><span class="box">&#10003;</span></span></div>
+      <div class="task is-done"><span class="tid">1.4</span><span class="tname">Input classification agent &mdash; magic bytes first, never the uploader's MIME; ambiguous evidence returns several types rather than guessing one</span><span class="tmeta"><i class="tag crit">crit</i><span class="box">&#10003;</span></span></div>
+      <div class="task is-done"><span class="tid">1.5</span><span class="tname">Evidence store (Postgres) &mdash; six tables, two Alembic revisions, and a repository in which an unscoped query is not expressible</span><span class="tmeta"><i class="tag crit">crit</i><span class="box">&#10003;</span></span></div>
+      <div class="task is-todo"><span class="tid">1.6</span><span class="tname">Investigation lifecycle API &mdash; submit, SSE progress, report, trace, erasure</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">1.7</span><span class="tname">Adapt the inherited engine into agents &mdash; thin adapters, internals untouched</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">1.8</span><span class="tname">Async job system &mdash; Redis + Celery, queues by cost class</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">1.9</span><span class="tname">Frontend launcher + live agent progress driven by real node completion</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+
+      <!-- PHASE 2 -->
+      <div class="cl-phase">
+        <h3>Phase 2 &mdash; Evidence agents</h3>
+        <span class="pcount">0 / 10</span>
+        <span class="meter"><i style="width:0%"></i></span>
+      </div>
+      <div class="task is-todo"><span class="tid">2.1</span><span class="tname">Text / message agent &mdash; WhatsApp exports, SMS, Hinglish detection</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">2.2</span><span class="tname">OCR upgrade to PaddleOCR &mdash; must beat Tesseract on a measured CER/WER benchmark</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">2.3</span><span class="tname">URL / domain agent &mdash; SSRF guard first, features second</span><span class="tmeta"><i class="tag sec">sec</i><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">2.4</span><span class="tname">Email header agent &mdash; SPF/DKIM/DMARC, hop analysis, attachments never opened</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">2.5</span><span class="tname">QR agent &mdash; payload routed back into the graph, recursion bounded</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">2.6</span><span class="tname">Financial fraud agent &mdash; VPA validation; a legitimate merchant VPA must not flag</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">2.7</span><span class="tname">Social engineering agent &mdash; 14 labels, two independent implementations, disagreement logged</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">2.8</span><span class="tname">APK static analysis &mdash; network-less container, read-only mount, never executed</span><span class="tmeta"><i class="tag sec">sec</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">2.9</span><span class="tname">Image forensics &mdash; EXIF, ELA, perceptual hashing; no deepfake claim without a model</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">2.10</span><span class="tname">Threat intelligence &mdash; cache-first, provenance on every record, never a fabricated hit</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+
+      <!-- PHASE 3 -->
+      <div class="cl-phase">
+        <h3>Phase 3 &mdash; Intelligence layer</h3>
+        <span class="pcount">0 / 7</span>
+        <span class="meter"><i style="width:0%"></i></span>
+      </div>
+      <div class="task is-todo"><span class="tid">3.1</span><span class="tname">Neo4j behind the repository interface &mdash; NetworkX retained as the offline fallback</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">3.2</span><span class="tname">Entity resolution &mdash; three spellings of one phone number must be one node</span><span class="tmeta"><i class="tag crit">crit</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">3.3</span><span class="tname">Cross-case memory &mdash; &ldquo;seen in N prior investigations&rdquo;, org isolation proven</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">3.4</span><span class="tname">Qdrant + hybrid retrieval &mdash; must beat the incumbent on Recall@5 and MRR, or we keep it</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">3.5</span><span class="tname">RAG corpus 31 &rarr; 1,500+ chunks &mdash; every citation must resolve</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">3.6</span><span class="tname">Graph analytics on Neo4j GDS &mdash; results must match the NetworkX implementation</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">3.7</span><span class="tname">Graph-derived risk features &mdash; leak-free, guarded by a temporal split test</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+
+      <!-- PHASE 4 -->
+      <div class="cl-phase">
+        <h3>Phase 4 &mdash; ML risk engine &amp; evidence fusion</h3>
+        <span class="pcount">0 / 9</span>
+        <span class="meter"><i style="width:0%"></i></span>
+      </div>
+      <div class="task is-todo"><span class="tid">4.1</span><span class="tname">Feature assembly contract &mdash; a skipped agent must not read as &ldquo;clean&rdquo;</span><span class="tmeta"><i class="tag crit">crit</i><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">4.2</span><span class="tname">Labelled training set &mdash; temporal + held-out-family splits, zero leakage proven</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">4.3</span><span class="tname">Baseline models &mdash; LR, RF, XGBoost, LightGBM, plus rules-only and LLM-only</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">4.4</span><span class="tname">Probability calibration &mdash; ECE &lt; 0.05; the UI number is the calibrated one</span><span class="tmeta"><i class="tag crit">crit</i><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">4.5</span><span class="tname">Anomaly detection &mdash; surfaced separately, never folded into the main score</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">4.6</span><span class="tname">Evidence fusion / final judge &mdash; four scoring paths, disagreement recorded</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">4.7</span><span class="tname">Explainability agent &mdash; every sentence traces to a finding id or is refused</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">4.8</span><span class="tname">False-positive harness &mdash; FPR measured, published, and gated in CI</span><span class="tmeta"><i class="tag crit">crit</i><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">4.9</span><span class="tname">Model registry + promotion gate &mdash; a worse model is refused, by test</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+
+      <!-- PHASE 5 -->
+      <div class="cl-phase">
+        <h3>Phase 5 &mdash; Multimodal depth</h3>
+        <span class="pcount">0 / 5</span>
+        <span class="meter"><i style="width:0%"></i></span>
+      </div>
+      <div class="task is-todo"><span class="tid">5.1</span><span class="tname">ASR upgrade to faster-whisper &mdash; WER reported per language</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">5.2</span><span class="tname">Conversation dynamics agent &mdash; the arc generalised beyond phone calls</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">5.3</span><span class="tname">Voice authenticity &mdash; conditional; no claim until a dataset and an evaluation exist</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">5.4</span><span class="tname">Video agent &mdash; keyframes to image forensics, audio track to ASR</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">5.5</span><span class="tname">Document agent &mdash; fake FIR, court summons and customs notice templates</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+
+      <!-- PHASE 6 -->
+      <div class="cl-phase">
+        <h3>Phase 6 &mdash; Real-time</h3>
+        <span class="pcount">0 / 7</span>
+        <span class="meter"><i style="width:0%"></i></span>
+      </div>
+      <div class="task is-todo"><span class="tid">6.1</span><span class="tname">WebRTC protected call &mdash; consent gate that cannot be bypassed, visible indicator</span><span class="tmeta"><i class="tag sec">sec</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">6.2</span><span class="tname">Streaming STT &mdash; partials &lt; 500 ms, finals &lt; 1.5 s, measured</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">6.3</span><span class="tname">Real-time agent subgraph &mdash; p95 &lt; 400 ms under load, or the claim is not made</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">6.4</span><span class="tname">Live intervention UI &mdash; coach lines verbatim from the library, never generated</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">6.5</span><span class="tname">SMS ingestion &mdash; opt-in per message or sender; no bulk inbox read</span><span class="tmeta"><i class="tag sec">sec</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">6.6</span><span class="tname">SIP/VoIP integration &mdash; stretch, conditional on legal review</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">6.7</span><span class="tname">Privacy &amp; retention &mdash; purge verified across all four stores</span><span class="tmeta"><i class="tag sec">sec</i><span class="box">&#9633;</span></span></div>
+
+      <!-- PHASE 7 -->
+      <div class="cl-phase">
+        <h3>Phase 7 &mdash; Frontend, dashboards &amp; UX</h3>
+        <span class="pcount">0 / 10</span>
+        <span class="meter"><i style="width:0%"></i></span>
+      </div>
+      <div class="task is-todo"><span class="tid">7.1</span><span class="tname">Design system consolidation &mdash; tokens, light + dark, WCAG AA throughout</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">7.2</span><span class="tname">Investigation workspace &mdash; every number on screen is a contract field</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">7.3</span><span class="tname">Agent trace view &mdash; what makes the architecture legible to an examiner in 30 seconds</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">7.4</span><span class="tname">Knowledge graph explorer &mdash; expand on click, path highlighting, jump to cases</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">7.5</span><span class="tname">Evidence timeline &mdash; what was found when, with source attribution</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">7.6</span><span class="tname">Analyst / LEA dashboard &mdash; case queue, clusters, hotspot map, triage</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">7.7</span><span class="tname">Model &amp; evaluation dashboard &mdash; doubles as a paper figure source</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">7.8</span><span class="tname">Admin, RBAC &amp; append-only audit log viewer</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">7.9</span><span class="tname">Accessibility, responsive, Hindi UI &mdash; the users who need this most are not English-first</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">7.10</span><span class="tname">Frontend test suite &mdash; Vitest plus Playwright on the three critical flows</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+
+      <!-- PHASE 8 -->
+      <div class="cl-phase">
+        <h3>Phase 8 &mdash; Datasets &amp; model training</h3>
+        <span class="pcount">0 / 8</span>
+        <span class="meter"><i style="width:0%"></i></span>
+      </div>
+      <div class="task is-todo"><span class="tid">8.1</span><span class="tname">Dataset schema + published data card &mdash; licence, PII policy, provenance per item</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">8.2</span><span class="tname">Multimodal fraud corpus &mdash; &ge;10,000 items, 12 categories. The headline contribution</span><span class="tmeta"><i class="tag crit">crit</i><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">8.3</span><span class="tname">Synthetic screenshot pipeline &mdash; scale training data with perfect labels</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">8.4</span><span class="tname">URL/domain dataset &mdash; temporal split; phishing is non-stationary</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">8.5</span><span class="tname">Conversation corpus 1,692 &rarr; 8,000+ and the full retrain never yet executed</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">8.6</span><span class="tname">Annotation guidelines + inter-annotator agreement &mdash; Cohen's &kappa; reported</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">8.7</span><span class="tname">Fine-tuning runs &mdash; LoRA only if it beats prompting, measured</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">8.8</span><span class="tname">Dataset release package &mdash; anonymised, licensed, versioned, reproducible</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+
+      <!-- PHASE 9 -->
+      <div class="cl-phase">
+        <h3>Phase 9 &mdash; Research evaluation</h3>
+        <span class="pcount">0 / 7</span>
+        <span class="meter"><i style="width:0%"></i></span>
+      </div>
+      <div class="task is-todo"><span class="tid">9.1</span><span class="tname">Evaluation harness &mdash; one command reproduces every number in the paper</span><span class="tmeta"><i class="tag crit">crit</i><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">9.2</span><span class="tname">Experiments 1&ndash;8 &mdash; the eight comparisons</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">9.3</span><span class="tname">Ablation study &mdash; remove KG, RAG, ML, social-eng, fusion, one at a time</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">9.4</span><span class="tname">Latency &amp; cost benchmark &mdash; no real-time claim without measured latency</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">9.5</span><span class="tname">Explanation quality &mdash; human evaluation, &ge;3 evaluators, agreement reported</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">9.6</span><span class="tname">Robustness &mdash; prompt injection inside the evidence treated as data, demonstrably</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">9.7</span><span class="tname">Paper draft, figures, reproduction package &mdash; figures generated, never drawn</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
+
+      <!-- PHASE 10 -->
+      <div class="cl-phase">
+        <h3>Phase 10 &mdash; Hardening &amp; deployment</h3>
+        <span class="pcount">0 / 5</span>
+        <span class="meter"><i style="width:0%"></i></span>
+      </div>
+      <div class="task is-todo"><span class="tid">10.1</span><span class="tname">Security review &mdash; the gate before any public deployment</span><span class="tmeta"><i class="tag crit">crit</i><i class="tag sec">sec</i><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">10.2</span><span class="tname">Observability &mdash; correlation ids, OpenTelemetry spans over the agent graph</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">10.3</span><span class="tname">Containerisation &amp; deploy &mdash; one-command deploy, backup/restore runbook</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">10.4</span><span class="tname">Load &amp; resilience &mdash; kill Neo4j mid-run; the investigation must still complete</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-todo"><span class="tid">10.5</span><span class="tname">Demo, seed data, documentation and the defence deck</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+
+    </div>
+  </section>
+
+  <!-- ============ VERIFICATION LOG ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">04 &mdash; Verification log</span>
+      <h2>What running it actually proved</h2>
+      <p class="lede">A green suite plus an unexercised feature is not a done task. Every entry
+      below records what was exercised in the <em>running</em> application, and what that
+      caught &mdash; because so far, every time, it has caught something.</p>
+    </div>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th style="width:88px">Task</th><th style="width:30%">Exercised</th><th>What it found that the tests could not</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th class="rowlab">Phase 0</th>
+            <td class="was">Dev stack, API boot, analysis, live session arc, all four demo logins, intel console, evidence report, and the whole stack torn down</td>
+            <td class="now">Three defects. Every frame falsely tagged <span class="mono">clf:lexical_fallback</span> &middot; evidence packages still branded <span class="mono">KVCH-</span> &middot; and a demo login broken on <em>any pre-existing database</em>, because tests seed a fresh one where the buggy branch behaves identically</td>
+          </tr>
+          <tr>
+            <th class="rowlab">1.1</th>
+            <td class="was">Four gates, three deliberately injected contract faults, a real scam analysis, three benign inputs, a full demo call in the browser, sign-in, dashboard, intel console, analyze page</td>
+            <td class="now">The <span class="mono">RecommendedAction</span> vocabulary was incomplete. The UI was printing <strong>&ldquo;Hang up. There is no legal consequence for ending a call.&rdquo;</strong> on screen at CRITICAL while the enum had no member for it. Three members added, and a test now enumerates every line the engine can say and fails if one has no home</td>
+          </tr>
+          <tr>
+            <th class="rowlab">1.2</th>
+            <td class="was">A real fan-out: the MuRIL classifier, the entity extractor and a dead threat-intel feed, concurrently, over one state &mdash; then the API, the citizen evidence path, and the browser</td>
+            <td class="now">Two defects. The classifier costs <strong>7.66 s on its first call and 22&ndash;34 ms after</strong>, so an agent loading lazily blows the 8 s budget on the first investigation after every restart &mdash; my own docstring had advised exactly that, and a warm-up hook replaced it. And a <strong>UPI ID at the end of a message was silently discarded</strong>, because <span class="mono">"" in "-."</span> is <span class="mono">True</span> in Python &mdash; the police complaint and the fraud graph were losing the payment address, with no error</td>
+          </tr>
+          <tr>
+            <th class="rowlab">1.3</th>
+            <td class="was">The real graph over five agents in three tiers &mdash; one wrapping the MuRIL classifier, one failing transiently, one never answering &mdash; then a deliberate crash and resume, then the API and the browser</td>
+            <td class="now">A defect a unit test could not see. <strong>Every per-agent timeout in <span class="mono">policy.py</span> was a silent no-op</strong> &mdash; the graph computed the policy and never applied it, so threat intel's 3 s and the APK agent's 120 s both quietly became the 8 s default. Nothing failed; the investigation completed on the wrong clock. The existing test passed because it asserted a timeout <em>tag</em>, not a duration. A feed with a 2 s budget timing out at 8002 ms is what gave it away</td>
+          </tr>
+          <tr>
+            <th class="rowlab">1.4</th>
+            <td class="was">A 200-item corpus built from real file structures, 20 of them adversarial &mdash; an APK renamed <span class="mono">.jpg</span>, HTML renamed <span class="mono">.pdf</span> &mdash; then the graph CLI and the API</td>
+            <td class="now">Confirmed what the classifier is for: the existing <span class="mono">/api/analyze/file</span> route types uploads <em>by extension alone</em>, which is the exact hole the invariant names. The classifier decides from the bytes and records the disagreement as a finding, so a file that lies about itself is evidence rather than an accident</td>
+          </tr>
+          <tr>
+            <th class="rowlab">0.7</th>
+            <td class="was">Every <span class="mono">make</span> target the docs name, run rather than read &mdash; then the app, <span class="mono">/api/health</span>, and four deliberately injected documentation faults</td>
+            <td class="now">Two. <strong>The README's MIT badge linked to a <span class="mono">LICENSE</span> file that was not in the repository</strong> &mdash; recorded, not invented, then added on the owner's instruction the same day. And <strong>the 1.4 commit claimed "ruff clean" while the committed tree had a ruff finding</strong>, confirmed by stashing and re-running against HEAD. The claim had been made from a run that happened before the last file was written</td>
+          </tr>
+          <tr>
+            <th class="rowlab">0.7a</th>
+            <td class="was">The exemption guard, then a negative control: move the new <span class="mono">LICENSE</span> away and confirm the README badge is genuinely checked</td>
+            <td class="now">The guard fired on cue and demanded its own removal &mdash; an exemption with an expiry rather than a permanent excuse. Adding the file then created a <em>second</em> contradiction: <span class="mono">DATASETS.md</span> §9 still promised CC-BY-4.0 for the corpus. The owner chose MIT throughout, so both were changed together, and the licence is now named in five files with a test that fails if any one of them drifts</td>
+          </tr>
+          <tr>
+            <th class="rowlab">1.5</th>
+            <td class="was">The migrations up, down and up again on SQLite <em>and</em> on the compose PostgreSQL 16.6 &middot; a copy of the real <span class="mono">aegis.db</span> &middot; three investigations through the real graph, persisted and read back &middot; the API on both databases &middot; the container stopped mid-flight &middot; the browser</td>
+            <td class="now">Two things only the real stores could show. <strong>The SQLite suite cannot tell <span class="mono">JSONB</span> from JSON text</strong> &mdash; it passes identically either way, so the whole §7 reason for choosing PostgreSQL was unproven until the same revisions ran against the real server and the columns came back <span class="mono">JSONB(astext_type=Text())</span>. And the <em>pre-existing</em> database again: a copy of the live <span class="mono">aegis.db</span> &mdash; 12 users, 3 orgs, 38 audit rows &mdash; correctly <strong>refused</strong> an un-stamped upgrade, then took <span class="mono">stamp 0001</span> + <span class="mono">upgrade head</span> with every row intact. Separately, the typed store layer reaching <span class="mono">db.py</span> for the first time exposed <span class="mono">declarative_base()</span> putting <strong>23 &ldquo;invalid base class&rdquo; errors</strong> into a gate kept at zero &mdash; fixed at the source rather than silenced</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ GANTT ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">05 &mdash; Schedule</span>
+      <h2>Twenty-four weeks</h2>
+      <p class="lede">At ~18 focused hours a week, Aug 2026 &rarr; Feb 2027. Adjust to your academic
+      calendar &mdash; the <em>sequence</em> matters more than the dates.</p>
+    </div>
+
+    <div class="gantt">
+      <div class="gantt-scroll"><div class="gantt-inner">
+        <div class="gscale">
+          <div class="glabel" style="padding-top:7px;padding-bottom:7px">week &rarr;</div>
+          <div class="gscale-ticks">
+            <span>Aug</span><span>Sep</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span>
+          </div>
+        </div>
+
+        <div class="grow"><div class="glabel">00 Foundation</div><div class="gtrack">
+          <div class="gbar dn" style="grid-column:1/span 2">30h &middot; done</div></div></div>
+
+        <div class="grow"><div class="glabel">01 Agent architecture</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:3/span 3">75h &middot; M1 &middot; in progress</div></div></div>
+
+        <div class="grow"><div class="glabel">02 Evidence agents</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:6/span 5">130h &middot; M2</div></div></div>
+
+        <div class="grow"><div class="glabel">03 Intelligence layer</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:11/span 3">85h &middot; M3</div></div></div>
+
+        <div class="grow"><div class="glabel">04 ML risk engine</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:14/span 3">90h &middot; M4</div></div></div>
+
+        <div class="grow"><div class="glabel">05 Multimodal depth</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:17/span 2">65h</div></div></div>
+
+        <div class="grow"><div class="glabel">06 Real-time</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:19/span 3">110h &middot; M5</div></div></div>
+
+        <div class="grow"><div class="glabel">07 Frontend</div><div class="gtrack">
+          <div class="gbar par" style="grid-column:6/span 17">115h &middot; parallel</div></div></div>
+
+        <div class="grow"><div class="glabel">08 Datasets &amp; training</div><div class="gtrack">
+          <div class="gbar par" style="grid-column:6/span 15">150h &middot; M6</div></div></div>
+
+        <div class="grow"><div class="glabel">09 Research evaluation</div><div class="gtrack">
+          <div class="gbar res" style="grid-column:20/span 5">150h &middot; M7</div></div></div>
+
+        <div class="grow"><div class="glabel">10 Hardening &amp; deploy</div><div class="gtrack">
+          <div class="gbar core" style="grid-column:22/span 3">60h &middot; M8</div></div></div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- ============ RISK / DESCOPE ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">06 &mdash; Contingency</span>
+      <h2>What to cut, and what never to cut</h2>
+      <p class="lede">Descoping is planned, not improvised. Every cut below is defensible in a viva
+      <em>provided it is stated honestly</em>.</p>
+    </div>
+
+    <div class="duo">
+      <div class="card warn">
+        <div class="ptop"><h3>Cut from the bottom</h3></div>
+        <ol class="ladder">
+          <li><b>1</b><span>SIP/VoIP integration &middot; voice authenticity &mdash; both already conditional</span></li>
+          <li><b>2</b><span>Video agent &middot; SMS channel</span></li>
+          <li><b>3</b><span>APK agent &mdash; the highest effort-to-marks ratio in the plan</span></li>
+          <li><b>4</b><span>Anomaly detection</span></li>
+          <li><b>5</b><span>Neo4j GDS analytics &mdash; NetworkX already works</span></li>
+        </ol>
+      </div>
+
+      <div class="card keep">
+        <div class="ptop"><h3>Never cut</h3></div>
+        <p class="pdesc">These are the difference between a research project and a demo.</p>
+        <div class="keeps">
+          <code>1.1 state contract &#10003;</code><code>1.3 orchestrator &#10003;</code><code>2.3 URL agent</code>
+          <code>2.7 social engineering</code><code>4.4 calibration</code><code>4.8 FP harness</code>
+          <code>8.6 annotator agreement</code><code>9.1 eval harness</code><code>9.3 ablation</code>
+          <code>9.4 latency</code><code>10.1 security review</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESEARCH ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">07 &mdash; Research</span>
+      <h2>Four contributions, not ten</h2>
+      <p class="lede">Multi-agent fraud detection is <em>not</em> novel, and claiming it is would be the
+      fastest route to a desk reject. These four are defensible with experiments.</p>
+    </div>
+
+    <div class="contrib">
+      <div class="cbox">
+        <span class="ctag">C1</span>
+        <h3>Conversational-arc detection</h3>
+        <p>Fraud modelled as a staged psychological process across calls, chats and threads &mdash;
+        not an artefact classified in isolation.</p>
+      </div>
+      <div class="cbox">
+        <span class="ctag">C2</span>
+        <h3>Measured agent disagreement</h3>
+        <p>Typed results with calibrated confidence, and disagreement between scoring paths
+        reported rather than hidden.</p>
+      </div>
+      <div class="cbox">
+        <span class="ctag">C3</span>
+        <h3>The AIFC corpus</h3>
+        <p>Multimodal, multilingual Indian fraud evidence with a deliberately hard benign class
+        and published annotator agreement.</p>
+      </div>
+      <div class="cbox">
+        <span class="ctag">C4</span>
+        <h3>False-positive-first evaluation</h3>
+        <p>Showing that several choices which improve accuracy make FPR <em>worse</em> &mdash; the
+        binding constraint for citizen-facing safety systems.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GATES ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">08 &mdash; Definition of done</span>
+      <h2>Four gates, then the running application</h2>
+      <p class="lede">A task is not done because the code exists. One task at a time, verified,
+      before the next.</p>
+    </div>
+
+<pre class="gates"><b>make gates</b>   <i># the canonical command: tests, contract, typecheck, build</i>
+<b>make check</b>   <i># the gates plus ruff and mypy</i>
+<i>&mdash; then start the stack, run the real path, and read the browser console.</i>
+<i>The docs no longer name a test count. A test forbids it: the suite grows</i>
+<i>with every task, and a number written into prose is stale on arrival.</i></pre>
+
+    <div class="duo" style="margin-top:22px">
+      <div class="card">
+        <h3>Standing invariants</h3>
+        <ul class="plain">
+          <li><b>&check;</b><span><code class="mono">schema/</code> is the single source of truth &mdash; Pydantic and TypeScript change together</span></li>
+          <li><b>&check;</b><span>The frontend is a pure renderer &mdash; no scoring maths in React</span></li>
+          <li><b>&check;</b><span>Degradation is explicit &mdash; every path has a fallback that still answers</span></li>
+          <li><b>&check;</b><span>False positives are a first-class failure &mdash; every agent ships a benign test</span></li>
+          <li><b>&check;</b><span>The LLM explains, extracts and ranks. It never scores.</span></li>
+          <li><b>&check;</b><span>No claim without a measurement</span></li>
+          <li><b>&check;</b><span>Evidence is data, never instructions</span></li>
+        </ul>
+      </div>
+
+      <div class="card warn">
+        <h3>Security, non-negotiable</h3>
+        <ul class="plain">
+          <li><b>!</b><span><strong>SSRF</strong> &mdash; the URL agent fetches attacker-supplied URLs. Block private ranges and cloud metadata, re-resolve DNS after <em>every</em> redirect.</span></li>
+          <li><b>!</b><span><strong>Malware</strong> &mdash; APKs are analysed statically in a network-less container. Never executed.</span></li>
+          <li><b>!</b><span><strong>Consent</strong> &mdash; live audio requires an explicit gate and a visible indicator. Never designed around covert recording.</span></li>
+          <li><b>!</b><span><strong>Tenancy</strong> &mdash; org isolation enforced in the repository layer, not the route.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NEXT ============ -->
+  <section>
+    <div class="nextup">
+      <span class="eyebrow">Next action</span>
+      <h2>Task 1.6 &mdash; Investigation lifecycle API</h2>
+      <p><span class="mono">POST /api/investigations</span> for multipart and JSON, <span class="mono">GET /{id}</span>,
+      an SSE progress stream, <span class="mono">/report</span> and <span class="mono">/report.pdf</span>,
+      <span class="mono">/trace</span>, and <span class="mono">DELETE</span> for GDPR-style erasure. This is the
+      task that finally connects the three pieces already built: the graph runs an investigation, the
+      evidence store keeps it, and the API is what lets anyone ask for either.</p>
+      <p>It is also the task that earns the sentence this page has refused to write for five
+      iterations &mdash; <strong>an investigation flows through the API</strong>. Until a route
+      submits evidence, streams real per-node progress and returns a report, the orchestrator hands
+      its state back to its caller and nothing else happens. The criteria that carry the weight are
+      the honest ones: SSE reconnect must resume <em>without duplicate events</em>, the 4&nbsp;MB
+      upload cap must be enforced rather than documented, and progress must reflect real node
+      completion rather than a plausible timer.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>AegisAI &middot; build dossier</span>
+    <span>Updated 25 Aug 2026, after task 1.5 &middot; commit 3a95a1e on main</span>
+    <span>Full detail in docs/TASKS.md &middot; docs/ARCHITECTURE.md &middot; docs/RESEARCH.md</span>
+  </footer>
+
+</div>
