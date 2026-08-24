@@ -1,0 +1,362 @@
+{
+  "v": 1,
+  "type": "investigation",
+  "case_id": "AGIS-2026-000117",
+  "org_id": "aegis",
+  "created_by": "analyst@aegis.local",
+  "created_at": "2026-08-24T09:14:02Z",
+  "mode": "batch",
+  "status": "COMPLETE",
+  "completed_at": "2026-08-24T09:14:11Z",
+  "inputs": [
+    {
+      "id": "ev-1",
+      "kind": "SCREENSHOT",
+      "filename": "sms-screenshot.png",
+      "declared_type": "image/png",
+      "media_type": "image/png",
+      "size_bytes": 184320,
+      "sha256": "9f2c000000000000000000000000000000000000000000000000000000000000",
+      "uri": "s3://aegis-evidence/aegis/AGIS-2026-000117/ev-1.png",
+      "text": null,
+      "received_at": "2026-08-24T09:14:02Z"
+    },
+    {
+      "id": "ev-2",
+      "kind": "TEXT",
+      "filename": null,
+      "declared_type": null,
+      "media_type": "text/plain",
+      "size_bytes": 118,
+      "sha256": "4b71000000000000000000000000000000000000000000000000000000000000",
+      "uri": null,
+      "text": "SBI KYC suspended. Update within 2 hours at http://sbi-secure-login.xyz/verify or pay Rs 10 to verify@ybl to reactivate.",
+      "received_at": "2026-08-24T09:14:02Z"
+    }
+  ],
+  "input_types": [
+    "SCREENSHOT",
+    "IMAGE",
+    "TEXT",
+    "URL"
+  ],
+  "extracted_text": [
+    {
+      "source_ref": "ev-1",
+      "text": "SBI KYC suspended. Update within 2 hours at sbi-secure-login.xyz",
+      "language": "en",
+      "confidence": 0.83,
+      "extractor": "ocr:tesseract"
+    },
+    {
+      "source_ref": "ev-2",
+      "text": "SBI KYC suspended. Update within 2 hours at http://sbi-secure-login.xyz/verify or pay Rs 10 to verify@ybl to reactivate.",
+      "language": "en",
+      "confidence": 1.0,
+      "extractor": "verbatim"
+    }
+  ],
+  "entities": {
+    "phones": [
+      "9876543210"
+    ],
+    "upi_ids": [
+      "verify@ybl"
+    ],
+    "emails": [
+      "kyc-support@sbi-secure-login.xyz"
+    ],
+    "wallets": [
+      "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+    ],
+    "bank_accounts": [
+      "50100234567890"
+    ],
+    "domains": [
+      "sbi-secure-login.xyz"
+    ],
+    "urls": [
+      "http://sbi-secure-login.xyz/verify"
+    ],
+    "ips": [
+      "203.0.113.44"
+    ],
+    "apps": [
+      "com.fake.sbi.kyc"
+    ],
+    "orgs": [
+      "State Bank of India"
+    ],
+    "amounts": [
+      10.0
+    ],
+    "authorities": [
+      "RBI"
+    ],
+    "banks": [
+      "SBI"
+    ],
+    "locations": [
+      "Mumbai"
+    ],
+    "scam_keywords": [
+      "kyc",
+      "otp"
+    ]
+  },
+  "transcript": {
+    "final": [
+      {
+        "id": "u-1",
+        "speaker": "CALLER",
+        "text": "Sir aapka KYC suspend ho gaya hai, abhi update karna hoga.",
+        "t0": 0.0,
+        "t1": 4.2,
+        "stage": "FEAR_INDUCTION",
+        "confidence": 0.91,
+        "victim_state": "ANXIOUS"
+      }
+    ],
+    "partial": "Aap link kholiye",
+    "partial_speaker": "CALLER"
+  },
+  "agent_results": [
+    {
+      "agent": "url_investigation",
+      "version": "0.1.0",
+      "status": "ok",
+      "confidence": 0.94,
+      "findings": [
+        {
+          "label": "domain_age_days",
+          "value": "3",
+          "confidence": 1.0,
+          "source": "whois",
+          "detail": "Registered 2026-08-21 via a privacy proxy."
+        },
+        {
+          "label": "login_form_present",
+          "value": "true",
+          "confidence": 0.88,
+          "source": "html_features",
+          "detail": "Password field posting to a third-party origin."
+        }
+      ],
+      "features": {
+        "domain_age_days": 3.0,
+        "has_login_form": 1.0
+      },
+      "latency_ms": 412,
+      "provenance": [
+        "whois",
+        "dns",
+        "http_fetch"
+      ],
+      "error": null
+    },
+    {
+      "agent": "threat_intel",
+      "version": "0.1.0",
+      "status": "degraded",
+      "confidence": 0.4,
+      "findings": [
+        {
+          "label": "feed_snapshot_used",
+          "value": "urlhaus",
+          "confidence": 1.0,
+          "source": "cache",
+          "detail": "Live feed unreachable; served a 6-hour-old snapshot."
+        }
+      ],
+      "features": {
+        "ti_hits": 1.0
+      },
+      "latency_ms": 3004,
+      "provenance": [
+        "urlhaus:snapshot"
+      ],
+      "error": null
+    },
+    {
+      "agent": "apk_static",
+      "version": "0.1.0",
+      "status": "skipped",
+      "confidence": 0.0,
+      "findings": [],
+      "features": {},
+      "latency_ms": 0,
+      "provenance": [],
+      "error": null
+    },
+    {
+      "agent": "image_forensics",
+      "version": "0.1.0",
+      "status": "error",
+      "confidence": 0.0,
+      "findings": [],
+      "features": {},
+      "latency_ms": 87,
+      "provenance": [],
+      "error": "PIL.UnidentifiedImageError: truncated PNG"
+    }
+  ],
+  "threat_intel": [
+    {
+      "indicator": "sbi-secure-login.xyz",
+      "indicator_type": "domain",
+      "source": "urlhaus",
+      "malicious": true,
+      "confidence": 0.9,
+      "observed_at": "2026-08-23T22:10:00Z",
+      "retrieved_at": "2026-08-24T09:14:11Z",
+      "reference": "https://urlhaus.abuse.ch/host/sbi-secure-login.xyz/",
+      "cached": true
+    },
+    {
+      "indicator": "verify@ybl",
+      "indicator_type": "upi",
+      "source": "internal_reports",
+      "malicious": null,
+      "confidence": 0.0,
+      "observed_at": null,
+      "retrieved_at": "2026-08-24T09:14:11Z",
+      "reference": null,
+      "cached": false
+    }
+  ],
+  "graph_context": {
+    "prior_observations": 4,
+    "prior_case_ids": [
+      "AGIS-2026-000042",
+      "AGIS-2026-000088"
+    ],
+    "neighbours": [
+      {
+        "key": "upi:verify@ybl",
+        "kind": "upi",
+        "value": "verify@ybl",
+        "relation": "SHARED_UPI",
+        "shared_cases": 3
+      }
+    ],
+    "cluster_id": "cluster-17",
+    "cluster_risk": 78.5,
+    "centrality": 0.41,
+    "first_seen": "2026-07-02T11:00:00Z",
+    "last_seen": "2026-08-23T18:30:00Z",
+    "backend": "networkx"
+  },
+  "rag_context": [
+    {
+      "chunk_id": "rbi-2024-kyc-7",
+      "text": "Banks never ask customers to complete KYC through links sent by SMS or to make a payment to reactivate an account.",
+      "source": "RBI circular DBR.AML.BC.18/2024",
+      "citation": "RBI DBR.AML.BC.18/2024 §4.2",
+      "score": 0.81,
+      "retriever": "hybrid"
+    }
+  ],
+  "risk_features": {
+    "domain_age_days": 3.0,
+    "has_login_form": 1.0,
+    "ti_hits": 1.0,
+    "graph_prior_observations": 4.0
+  },
+  "risk_score": 88.4,
+  "risk_level": "HIGH",
+  "confidence": 0.86,
+  "classification": "banking_impersonation",
+  "evidence": [
+    {
+      "id": "f-1",
+      "title": "Domain registered three days ago",
+      "detail": "sbi-secure-login.xyz was registered on 2026-08-21 behind a privacy proxy and hosts a login form.",
+      "severity": "HIGH",
+      "confidence": 0.94,
+      "contribution": 0.31,
+      "agent": "url_investigation",
+      "sources": [
+        "whois",
+        "http_fetch"
+      ]
+    },
+    {
+      "id": "f-2",
+      "title": "UPI ID seen in three earlier cases",
+      "detail": "verify@ybl appears in 3 prior investigations in this org.",
+      "severity": "MEDIUM",
+      "confidence": 0.77,
+      "contribution": 0.18,
+      "agent": "knowledge_graph",
+      "sources": [
+        "graph:cluster-17"
+      ]
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "DO_NOT_OPEN_LINK",
+      "detail": "Do not open sbi-secure-login.xyz. It is not an SBI domain.",
+      "urgency": "CRITICAL",
+      "sources": [
+        "f-1"
+      ]
+    },
+    {
+      "action": "VERIFY_VIA_OFFICIAL_CHANNEL",
+      "detail": "Call the number printed on your debit card to check your KYC status.",
+      "urgency": "HIGH",
+      "sources": [
+        "rbi-2024-kyc-7"
+      ]
+    }
+  ],
+  "degraded": [
+    "ti:snapshot_fallback",
+    "ocr:tesseract_fallback"
+  ],
+  "trace": [
+    {
+      "span_id": "sp-1",
+      "node": "input_classifier",
+      "agent": "input_classifier",
+      "version": "0.1.0",
+      "t_start": 0.0,
+      "t_end": 0.03,
+      "latency_ms": 31,
+      "status": "ok",
+      "attempt": 1,
+      "depth": 0,
+      "parent_span_id": null,
+      "error": null
+    },
+    {
+      "span_id": "sp-2",
+      "node": "url_investigation",
+      "agent": "url_investigation",
+      "version": "0.1.0",
+      "t_start": 0.05,
+      "t_end": 0.46,
+      "latency_ms": 412,
+      "status": "ok",
+      "attempt": 1,
+      "depth": 1,
+      "parent_span_id": "sp-1",
+      "error": null
+    },
+    {
+      "span_id": "sp-3",
+      "node": "threat_intel",
+      "agent": "threat_intel",
+      "version": "0.1.0",
+      "t_start": 0.05,
+      "t_end": 3.06,
+      "latency_ms": 3004,
+      "status": "degraded",
+      "attempt": 2,
+      "depth": 1,
+      "parent_span_id": "sp-1",
+      "error": null
+    }
+  ]
+}

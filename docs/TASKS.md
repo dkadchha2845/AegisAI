@@ -1,8 +1,9 @@
 # AegisAI — Master Task List
 
-> **Status: Phase 0 complete and verified end-to-end. Phase 1 not started —
-> awaiting your go-ahead.**
-> Last updated 2026-08-24 · `main` @ `df9f09a` · 132 tests · CI green
+> **Status: Phase 0 complete. Phase 1 started — 1.1 done and verified
+> end-to-end. Awaiting your go-ahead for 1.2.**
+> Last updated 2026-08-24 · `main` @ `99c7277` + uncommitted 1.1 · 154 tests ·
+> all four gates green · ruff + mypy clean · coverage 66.70% vs the 65% gate
 
 ---
 
@@ -314,6 +315,16 @@ locally with the stack down.
 or agent) touching the repo.
 **Accept:** `CLAUDE.md` states the six invariants, the four gates, and the
 "what done means" checklist. **Effort:** 2 h.
+**Noticed while doing 1.1 — three small drifts, none fixed there, because a
+schema commit is not the place to smuggle them:**
+1. `CLAUDE.md` still says the gate is "84 tests". It is 154. Harmless (pytest
+   does not check counts) but it is the kind of drift this project calls a defect.
+2. `pyproject.toml`'s formatter comment points at a `make format-check` target
+   that does not exist. Worth adding in 1.2, when `agents/` finally has files
+   for it to check — adding it today would pass vacuously.
+3. **`.coverage` is a tracked binary** and churns on every test run
+   (`git ls-files` confirms it; it is not in `.gitignore`). Belongs with the
+   0.5 hygiene pass: `git rm --cached .coverage` and one `.gitignore` line.
 
 ---
 
@@ -323,15 +334,112 @@ or agent) touching the repo.
 through a LangGraph graph, executed with parallel fan-out, traced, persisted,
 and streamed to the UI — even if only three agents exist.
 
-### ⬜ 1.1 — `InvestigationState` + `AgentResult` in `schema/` 🔴⭐
-**Why:** the contract every agent reads and writes. Getting this wrong is the
-most expensive mistake available.
-**Do:** implement ARCHITECTURE.md §3 in `schema/models.py` **and**
-`schema/types.ts` in one commit · extend `check_contract.py` to verify the new
-enums · new fields `Optional[...] = None` so existing mock frames stay valid.
-**Accept:** contract check passes · a round-trip test serialises a full state
-through Pydantic → JSON → TypeScript type · old `StateFrame` mocks still validate.
-**Effort:** 6 h. **Depends:** 0.2.
+**Progress: 1 of 9 done** — ✅ 1.1 · next up 1.2 (agent base protocol +
+registry), which is blocked on nothing and unblocks 1.3 and 1.4.
+
+> Note on what 1.1 does **not** claim: the contract exists and is enforced by
+> the gates, but nothing in the running API imports it yet. The API still emits
+> contract-shaped dicts, as it always has. Wiring `InvestigationState` into a
+> served path is 1.5 (persistence) and 1.6 (the lifecycle API). The end-to-end
+> verification below is therefore "the running system is unharmed and the drift
+> guards demonstrably bite", not "an investigation flows through it" — that
+> sentence is not available until 1.6, and it will not be written before then.
+
+### ✅ 1.1 — `InvestigationState` + `AgentResult` in `schema/` 🔴⭐
+**Done 2026-08-24.** ARCHITECTURE.md §3 implemented in `schema/models.py` and
+`schema/types.ts` in one change: 13 models and 6 new enums, appended as a clearly
+delimited second section rather than a second file.
+
+**One file, two contracts, two version numbers.** The live-call contract
+(`StateFrame` at 4 Hz) and the investigation contract (one submission through the
+agent graph) share `models.py` so they share a vocabulary — `InvestigationState`
+reuses `ThreatLevel`, `Transcript`, `Stage` and `Verdict` verbatim, because the
+band a citizen sees during a live call and the band on their report have to mean
+the same thing. But `CONTRACT_VERSION` and `INVESTIGATION_CONTRACT_VERSION` are
+separate, so adding an investigation field cannot invalidate a client that only
+speaks frames. Both are checked against `types.ts`.
+
+**Decisions worth defending, each pinned by a test:**
+
+| Decision | Why | Alternative rejected |
+|---|---|---|
+| `risk_score` / `risk_level` / `confidence` are `Optional`, default `None` | An unscored investigation must not render as **0 / CALM** — a false negative wearing a number, on a screen a frightened person is reading. `StateFrame.threat` is Optional for the same reason | `= 0.0`, which reads as "safe" for every queued case |
+| `risk_level` is a **field**, not derived in React | Pure-renderer invariant. The live path and the report path must band a 69.6 identically | `threatLevelOf(score)` in the UI, which is how two implementations drift |
+| `FraudCategory` has **no** UNKNOWN member | `None` = "not classified yet"; `benign` = "classified, and legitimate". Collapsing them lets an unfinished investigation read as a cleared one | An UNKNOWN member "for safety" |
+| Slugs match `DATASETS.md` §3 exactly (`banking_impersonation`, …) | A corpus item and a live classification are then the same string, and the Phase 4 training join needs no mapping table | Prettier `BANKING_IMPERSONATION` values |
+| `EntitySet` field names copied from `intel/entities.ExtractedEntities` | The knowledge graph keys nodes off these names; `accounts` vs `bank_accounts` would silently drop an entity class at the Phase 3 boundary — no error, just a fraud link never drawn | Tidier names on the contract |
+| `TIRecord.malicious` is **three-valued** | A feed that is down yields `None` + a `degraded` tag, never `False`. "We do not know" has to be representable or the system invents intelligence | `bool`, defaulting False |
+| `AgentStatus.SKIPPED` distinct from `OK` | 4.1 must tell "did not run" from "clean", or a skipped APK scan becomes evidence of a safe APK | Folding SKIPPED into OK |
+| Timestamps are ISO-8601 `Z` **strings**, not `datetime` | Naive-vs-aware bit this project in 0.2 and again in 0.6. A string ending in `Z` has one representation and survives every round trip identically | `datetime`, and the JSONB/checkpoint round trips that come with it |
+
+**The acceptance criterion "Pydantic → JSON → TypeScript" is now enforced, not
+asserted.** `schema/check_contract.py` compares enums; that catches a missing
+enum *member* and cannot catch a missing *field*. So `schema/mock_investigation.py`
+emits one fully-populated state twice — as `schema/mock-investigation.json`
+(validated against Pydantic) and as `apps/web/src/mock/investigation.fixture.ts`,
+a literal annotated `: InvestigationState`. Gate three, `npm run typecheck`, then
+fails on field-level drift **in both directions**. A JSON fixture cannot do this:
+`resolveJsonModule` widens every string to `string`, so the enums would go
+unchecked. It has to be emitted as TypeScript.
+
+Verified by breaking it deliberately, three ways:
+
+| Injected fault | Caught by | Message |
+|---|---|---|
+| `feed_version` added to `TIRecord` in `models.py` only | `npm run typecheck` | `TS2353: Object literal may only specify known properties, and 'feed_version' does not exist in type 'TIRecord'` |
+| `feed_version` added to `types.ts` only | `npm run typecheck` | `TS2741: Property 'feed_version' is missing … but required in type 'TIRecord'` |
+| Committed fixture edited by hand (`risk_score` 88.4 → 12.0) | `check_contract.py`, exit 1 | `mock-investigation.json is stale — run ./scripts/sync-contract.sh` |
+
+The staleness check exists because this repo has twice been bitten by a metrics
+file that outlived the thing it measured. The generator is deterministic — fixed
+timestamps, fixed ids — precisely so the comparison is possible.
+
+**What running the application changed about the design.** The false-positive
+run was routine; the vocabulary check was not. `RecommendedAction` was drafted as
+a closed vocabulary of 11 members. Exercising the real `/api/analyze/text` and
+watching the live call showed the shipped system already says things that
+vocabulary could not express — most obviously **"Hang up. There is no legal
+consequence for ending a call."**, which the UI was printing on screen at
+CRITICAL while the enum had no member for it. Three members were added
+(`END_THE_CALL`, `DO_NOT_ACT_YET`, `PROVIDE_MORE_EVIDENCE`) and a test now
+enumerates every line `engine/analyzer.py::_actions()` can produce and fails if
+one has no member — plus a second test failing if the mapping lists a line the
+engine no longer produces, so the guard cannot rot into decoration. A closed
+vocabulary that cannot say what the product already says is not closed, it is
+incomplete, and 1.7 would have found this with a dozen call sites already written
+against it.
+
+**Tests:** 22 new in `test_investigation_contract.py` (154 total, was 132).
+Round trip · both fixtures current and annotated · generator deterministic ·
+`mock-stream.json` and a bare `StateFrame` still validate · out-of-range scores,
+negative latency and unknown statuses rejected · each pinned decision above ·
+a meta-test asserting **every** enum on the contract is registered in
+`check_contract.PAIRS`, so a future enum cannot be added unguarded.
+
+**Verified end-to-end on the running system, not just the suite:**
+
+| Check | Result |
+|---|---|
+| Four gates | 154 tests · contract consistent (13 enums, 2 versions, 3 fixtures) · typecheck clean · build clean in 1.23 s |
+| Also | ruff clean · mypy clean · coverage **66.70%** vs the 65% gate (was 66.32%) |
+| Stack | 4/4 healthy; API boot `classifier: fused`, `retrieval: dense` (31 chunks), twin fitted, 14 coach lines, **`degraded: []`** |
+| Real scam analysis | **91**, CRITICAL, `LIKELY_SCAM` — identical to the Phase 0 baseline |
+| False-positive discipline | bank debit **13.5**, delivery **7.5**, KYC branch reminder **7.5** — all CALM / `LIKELY_LEGITIMATE` |
+| Live demo call, in the browser | Full arc to **93 / CRITICAL**, stage `payment execution`; transcript, threat meter, coach banner and report all render from the regenerated `contract.ts` |
+| Entities in the report | phone, cbi, crime branch, aadhaar, rbi, Mumbai, parcel, warrant, digital arrest — auto-extracted |
+| Analyze page, in the browser | Benign bank debit → "No scam patterns detected", **20**, CALM |
+| Auth + console | Signed in as ANALYST (`analyst@aegis.local`); dashboard and intel console render — 9 clusters, 9 campaigns, 114 cases, 47 entities, force graph |
+| Browser console | **Zero errors** across landing, live call, report, login, dashboard, intel and analyze |
+
+**Two cosmetic observations, neither a regression, both recorded rather than
+fixed here:**
+- The threat meter animates its *number* upward while the *band label* renders
+  immediately from the contract, so mid-animation it briefly reads e.g. "38"
+  above "CRITICAL". Settles correctly. Belongs to 7.2 if it is worth changing.
+- `/api/health` and the dashboard report `contract v1` — the frame contract
+  only. Once 1.6 serves investigations, health should report both versions.
+
+**Effort:** 6 h estimated, ~6 h actual. **Depends:** 0.2. ✅
 
 ### ⬜ 1.2 — Agent base protocol + registry 🔴
 **Do:** `agents/base.py` — `Agent` protocol (`name`, `version`, `can_handle`,
