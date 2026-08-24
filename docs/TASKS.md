@@ -1,10 +1,9 @@
 # AegisAI — Master Task List
 
-> **Status: Phase 0 complete. Phase 1 — 1.1, 1.2 and 1.3 done and verified
-> end-to-end. Awaiting your go-ahead for 1.4.**
-> Last updated 2026-08-24 · branch `phase-1.1-investigation-contract` @ `dd1d90c`
-> · 274 tests · all four gates green · ruff + mypy clean · coverage 69.27% vs
-> the 65% gate
+> **Status: Phase 0 complete. Phase 1 — 1.1, 1.2, 1.3 and 1.4 done and
+> verified end-to-end. Awaiting your go-ahead for 1.5.**
+> Last updated 2026-08-24 · branch `codex/phase-1.4-input-classification`
+> · 282 tests · all four gates green · ruff + mypy clean
 
 ---
 
@@ -335,10 +334,10 @@ schema commit is not the place to smuggle them:**
 through a LangGraph graph, executed with parallel fan-out, traced, persisted,
 and streamed to the UI — even if only three agents exist.
 
-**Progress: 3 of 9 done** — ✅ 1.1 · ✅ 1.2 · ✅ 1.3 · next up 1.4 (the input
-classification agent), which 1.2 unblocks. It is the first agent that is a real
-agent rather than a harness, and its accuracy bar is explicit: ≥98% on a 200-item
-fixture including 20 adversarial ones.
+**Progress: 4 of 9 done** — ✅ 1.1 · ✅ 1.2 · ✅ 1.3 · ✅ 1.4. The input
+classification agent is the first real agent rather than a harness; its accuracy
+bar was ≥98% on a 200-item fixture including 20 adversarial items, and it
+measured **100%**.
 
 > Note on what 1.1–1.3 do **not** claim: the contract, the agent layer and the
 > orchestrator exist and are exercised, but no HTTP route runs the graph yet.
@@ -669,14 +668,48 @@ pretends. The REASON tier is a real node with no agents in it. Nothing persists;
 
 **Effort:** 12–16 h estimated, ~11 h actual. **Depends:** 1.2. ✅
 
-### ⬜ 1.4 — Input Classification Agent 🔴
-**Do:** classify by magic bytes first, extension second, content third — never
-by user-supplied MIME. Handle image, screenshot, PDF, email/EML, URL, APK, audio,
-video, phone, UPI ID, plain text. Emits `input_types` driving all routing.
-**Accept:** ≥98% accuracy on a 200-item fixture covering every type plus 20
-adversarial ones (APK renamed `.jpg`, HTML renamed `.pdf`) · ambiguous input
-returns multiple types rather than guessing · unknown type routes to the text
-agent, never crashes. **Effort:** 8 h. **Depends:** 1.2.
+### ✅ 1.4 — Input Classification Agent 🔴
+**Done 2026-08-24.** `input_classifier` v1.0.0 is the graph's dedicated first
+node — it runs before the EXTRACT tier, writes `inputs[].kind` and
+`input_types`, and cannot run a second time in the generic fan-out. Its
+`AgentResult` carries one detected type per evidence item, the actual media
+type, and an explicit finding for every concrete metadata conflict.
+
+**Magic bytes first, filename second, content third; never user MIME.** The
+sniffer detects images (and conservative screenshots), PDFs, EML, URLs, APKs
+from their ZIP central directory, audio and video containers, phones, UPI IDs,
+and ordinary text. A filename or claimed MIME can never override bytes; it can
+only add a `type_conflict` finding. `application/octet-stream` is deliberately
+not a conflict because it is an absence of a claim, not evidence of deception.
+The sniffer lists ZIP members but never extracts or executes them.
+
+**Ambiguity stays explicit.** An SMS containing a URL and UPI ID emits all four
+routes (`SMS`, `TEXT`, `URL`, `UPI_ID`). An unrecognised binary — including a
+generic ZIP — keeps `UNKNOWN` as its primary type *and* adds `TEXT`, so the safe
+text path still runs instead of the graph stopping with no eligible agent. If
+the classifier itself errors, the graph makes the same UNKNOWN + TEXT fallback
+and records its normal degradation tag rather than trusting caller metadata.
+
+**Measured acceptance fixture:** 200 items, 180 ordinary and 20 adversarial,
+measured **100.0%** exact type-vector accuracy. The adversarial members include
+APK renamed `.jpg`, HTML renamed `.pdf`, PDF renamed `.jpg`, PNG renamed `.apk`,
+EML masquerading as an image, MIME-only APK claims, and a generic ZIP named as a
+PDF. The test prints every miss if accuracy falls below the required 98%.
+
+**Verified end-to-end:**
+
+| Check | Result |
+|---|---|
+| Classifier graph | CLI summary shows `input_classifier` v1.0.0 in EXTRACT; graph test proves a URL-only agent sees the detected `URL` only after classification |
+| Focused agent checks | 30 tests, including the full 200-case corpus, ambiguity, type-conflict findings, UNKNOWN→TEXT fallback, benign generic-MIME discipline, and duplicate-run prevention |
+| Four gates | **282 tests** · contract consistent · frontend typecheck + production build clean |
+| Also | ruff clean · mypy clean |
+| Running API | `/api/health` returned `ok: true`, fused classifier loaded, dense retrieval and all four stores healthy, `degraded: []` |
+| Regression / false positives | Real scam text: **91 / CRITICAL / LIKELY_SCAM**; legitimate SBI debit alert: **17.6 / CALM / LIKELY_LEGITIMATE** |
+
+The lifecycle API intentionally does not expose this graph yet — that is task
+1.6, and the existing `/api/analyze/text` path remains unchanged. **Effort:**
+8 h estimated. **Depends:** 1.2. ✅
 
 ### ⬜ 1.5 — Evidence store (Postgres) 🔴
 **Do:** tables `investigations`, `evidence_items`, `agent_results` (JSONB),

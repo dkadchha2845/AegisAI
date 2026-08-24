@@ -80,6 +80,8 @@ with warnings.catch_warnings():
 
 from schema.models import (
     AgentResult,
+    AgentStatus,
+    InputType,
     InvestigationState,
     InvestigationStatus,
     utc_now_iso,
@@ -87,6 +89,7 @@ from schema.models import (
 from services.api.agents import registry
 from services.api.agents.base import STAGE_ORDER, Agent, AgentContext, run_agent, stage_of
 from services.api.agents.base import Stage as AgentStage
+from services.api.agents.classify.agent import apply_to_state
 from services.api.orchestration.determinism import fingerprint
 from services.api.orchestration.policy import NodePolicy, policy_for, should_retry
 from services.api.orchestration.trace import TraceRecorder
@@ -95,6 +98,12 @@ from services.api.orchestration.trace import TraceRecorder
 #: node; this bounds the sum, so a graph of twelve well-behaved-but-slow agents
 #: cannot add up to a wait nobody would tolerate.
 DEFAULT_BUDGET_S = 45.0
+
+# This agent is special only in graph position, not in the execution contract:
+# it still runs through `_run_with_retry`, produces an AgentResult, gets a
+# trace span and has a pinned version.  It must precede EXTRACT, though, because
+# every other agent's `can_handle()` reads the types it writes.
+INPUT_CLASSIFIER = "input_classifier"
 
 
 async def _run_with_retry(
@@ -203,6 +212,25 @@ async def _run_stage(
     }
 
 
+def _unknown_input_fallback(state: InvestigationState) -> Dict[str, Any]:
+    """Route a classifier failure safely, without trusting caller-supplied type.
+
+    `UNKNOWN` has a deliberate routing meaning in the investigation contract:
+    the text agent is the only safe, generic handler.  Leaving the initial
+    `input_types` in place after the classifier timed out would instead treat
+    an unverified caller claim as a fact, which defeats magic-byte validation.
+    """
+    if not state.inputs:
+        return {"input_types": []}
+    return {
+        "inputs": [
+            item.model_copy(update={"kind": InputType.UNKNOWN})
+            for item in state.inputs
+        ],
+        "input_types": [InputType.TEXT, InputType.UNKNOWN],
+    }
+
+
 def build_graph(
     *,
     checkpointer: Optional[Any] = None,
@@ -225,6 +253,43 @@ def build_graph(
     """
     rec = recorder if recorder is not None else TraceRecorder()
 
+    async def classify(state: InvestigationState) -> Dict[str, Any]:
+        """Run the one agent whose output changes subsequent routing.
+
+        Tests deliberately clear the registry to exercise an empty graph.  In
+        that narrow setup there is no built-in classifier to execute, so leave
+        the state alone.  In the live process `services.api.agents` imports and
+        registers it at startup; a runtime execution error then takes the
+        explicit UNKNOWN-to-text fallback below.
+        """
+        if INPUT_CLASSIFIER in exclude or INPUT_CLASSIFIER not in registry.names():
+            return {}
+
+        agent = registry.get(INPUT_CLASSIFIER)
+        ctx = AgentContext(
+            org_id=state.org_id,
+            case_id=state.case_id,
+            deadline=rec.origin + budget_s,
+        )
+        result, tags = await _run_with_retry(
+            agent,
+            state,
+            ctx,
+            policy_for(agent),
+            rec,
+            INPUT_CLASSIFIER,
+        )
+        update: Dict[str, Any] = {
+            "agent_results": [*state.agent_results, result],
+            "degraded": [*state.degraded, *tags],
+            "trace": rec.ordered(),
+        }
+        if result.status is AgentStatus.OK:
+            update.update(apply_to_state(state, result))
+        elif result.status is not AgentStatus.SKIPPED:
+            update.update(_unknown_input_fallback(state))
+        return update
+
     def make_stage_node(stage: AgentStage) -> Callable[[InvestigationState], Awaitable[Dict[str, Any]]]:
         async def node(state: InvestigationState) -> Dict[str, Any]:
             ctx = AgentContext(
@@ -232,7 +297,16 @@ def build_graph(
                 case_id=state.case_id,
                 deadline=rec.origin + budget_s,
             )
-            return await _run_stage(stage, state, ctx, rec, exclude=exclude)
+            # The classifier has already run in its dedicated node.  Leaving it
+            # eligible here would produce duplicate findings and trace spans,
+            # then make its own updated input types look like a second input.
+            return await _run_stage(
+                stage,
+                state,
+                ctx,
+                rec,
+                exclude=(*exclude, INPUT_CLASSIFIER),
+            )
 
         node.__name__ = f"{stage.value}_stage"
         return node
@@ -254,12 +328,14 @@ def build_graph(
 
     g: Any = StateGraph(InvestigationState)
     g.add_node("begin", begin)
+    g.add_node("classify", classify)
     for stage in STAGE_ORDER:
         g.add_node(f"{stage.value}_stage", make_stage_node(stage))
     g.add_node("finish", finish)
 
     g.add_edge(START, "begin")
-    previous = "begin"
+    g.add_edge("begin", "classify")
+    previous = "classify"
     for stage in STAGE_ORDER:
         g.add_edge(previous, f"{stage.value}_stage")
         previous = f"{stage.value}_stage"
@@ -338,6 +414,7 @@ def graph_summary() -> Dict[str, Any]:
 
 __all__ = [
     "DEFAULT_BUDGET_S",
+    "INPUT_CLASSIFIER",
     "build_graph",
     "fingerprint",
     "graph_summary",
