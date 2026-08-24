@@ -96,6 +96,11 @@ quote-style = "double"
 
 [tool.mypy]
 python_version = "3.12"
+# The agent layer's whole value is that every agent returns one typed shape, so
+# mypy follows imports into `schema/`. Without pydantic's own plugin it then
+# reports `Field(default_factory=Model)` as an error — a known false positive
+# from the overloads on `Field()`, not a defect in the contract.
+plugins = ["pydantic.mypy"]
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true

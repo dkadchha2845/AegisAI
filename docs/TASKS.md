@@ -1,9 +1,10 @@
 # AegisAI — Master Task List
 
-> **Status: Phase 0 complete. Phase 1 started — 1.1 done and verified
-> end-to-end. Awaiting your go-ahead for 1.2.**
-> Last updated 2026-08-24 · `main` @ `99c7277` + uncommitted 1.1 · 154 tests ·
-> all four gates green · ruff + mypy clean · coverage 66.70% vs the 65% gate
+> **Status: Phase 0 complete. Phase 1 — 1.1 and 1.2 done and verified
+> end-to-end. Awaiting your go-ahead for 1.3.**
+> Last updated 2026-08-24 · branch `phase-1.1-investigation-contract` @ `3377a72`
+> · 217 tests · all four gates green · ruff + mypy clean · coverage 67.88% vs
+> the 65% gate
 
 ---
 
@@ -334,16 +335,18 @@ schema commit is not the place to smuggle them:**
 through a LangGraph graph, executed with parallel fan-out, traced, persisted,
 and streamed to the UI — even if only three agents exist.
 
-**Progress: 1 of 9 done** — ✅ 1.1 · next up 1.2 (agent base protocol +
-registry), which is blocked on nothing and unblocks 1.3 and 1.4.
+**Progress: 2 of 9 done** — ✅ 1.1 · ✅ 1.2 · next up 1.3 (the LangGraph
+orchestrator), which 1.2 unblocks and which is the largest single task in the
+phase at 12–16 h.
 
-> Note on what 1.1 does **not** claim: the contract exists and is enforced by
-> the gates, but nothing in the running API imports it yet. The API still emits
-> contract-shaped dicts, as it always has. Wiring `InvestigationState` into a
-> served path is 1.5 (persistence) and 1.6 (the lifecycle API). The end-to-end
-> verification below is therefore "the running system is unharmed and the drift
-> guards demonstrably bite", not "an investigation flows through it" — that
-> sentence is not available until 1.6, and it will not be written before then.
+> Note on what 1.1 and 1.2 do **not** claim: the contract and the agent layer
+> exist and are exercised, but no HTTP route runs an agent yet. The API still
+> serves through `engine/analyzer.py` exactly as it always has. Wiring the graph
+> into a served path is 1.5 (persistence) and 1.6 (the lifecycle API). So the
+> end-to-end evidence below is "the running system is unharmed, and the new
+> layer does its job when driven against real dependencies" — not "an
+> investigation flows through the API". That sentence is not available until
+> 1.6 and will not be written before then.
 
 ### ✅ 1.1 — `InvestigationState` + `AgentResult` in `schema/` 🔴⭐
 **Done 2026-08-24.** ARCHITECTURE.md §3 implemented in `schema/models.py` and
@@ -441,13 +444,132 @@ fixed here:**
 
 **Effort:** 6 h estimated, ~6 h actual. **Depends:** 0.2. ✅
 
-### ⬜ 1.2 — Agent base protocol + registry 🔴
-**Do:** `agents/base.py` — `Agent` protocol (`name`, `version`, `can_handle`,
-`run`), `AgentResult`, `AgentContext` (timeout, cancellation, org, budget) ·
-`agents/registry.py` with decorator registration and version pinning.
-**Accept:** a toy agent registers, runs, and returns a valid `AgentResult` ·
-registry rejects duplicate names and unversioned agents · a raising agent yields
-`status="error"` **without** propagating. **Effort:** 5 h. **Depends:** 1.1.
+### ✅ 1.2 — Agent base protocol + registry 🔴
+**Done 2026-08-24.** `agents/base.py` (the `Agent` protocol, `AgentContext`,
+`run_agent`) and `agents/registry.py` (decorator registration, version pinning,
+`eligible()`, `warm_all()`). 43 new tests; 217 total.
+
+**`Agent` is a `Protocol`, not a base class.** Task 1.7 wraps the inherited
+engine in thin adapters, and those adapters should not have to inherit from
+anything to be agents. Structural typing keeps the crown-jewel engine free of
+any dependency on this layer — an adapter is an agent because it has the right
+shape, and `isinstance()` still works because the protocol is
+`@runtime_checkable`.
+
+**`run_agent()` is the whole point, and it never raises.** Four outcomes, all of
+them a valid `AgentResult`:
+
+| Situation | status | tag appended to `degraded` |
+|---|---|---|
+| `can_handle()` false | SKIPPED | none — not applying is not a shortfall, and a field that cries wolf gets ignored |
+| Returned normally | whatever the agent said | `agent:<name>:degraded` if it declared DEGRADED |
+| Raised | ERROR | `agent:<name>:error` |
+| Hung past its timeout, or cancelled | ERROR | `agent:<name>:timeout` / `:cancelled` |
+
+`CancelledError` is the single exception allowed past. If the harness swallowed
+it, a cancelled task would report completion, `asyncio.gather` could never shut
+a fan-out down, and cancelling an investigation would hang until every agent's
+timeout expired. Containing agent failures must not mean containing the event
+loop's own control flow — there is a test for exactly this.
+
+**A deliberate refinement of ARCHITECTURE.md §2.** The table there says a failing
+node "emits `AgentResult(status=DEGRADED)`". This returns **ERROR** and a
+`degraded` tag instead. The property §2 is protecting — the investigation still
+completes and the shortfall is visible — holds either way, and the finer
+distinction is load-bearing: only the agent itself can know it fell back.
+DEGRADED means "I answered, from a cached snapshot"; an agent that raised
+produced no answer at all. Collapsing them leaves 4.1 unable to tell how much
+weight a result deserves.
+
+**Two findings from running it, not from the suite.** A scratch harness fanned
+out three agents over one state — one wrapping the real MuRIL classifier, one
+wrapping the real entity extractor, one standing in for a dead threat-intel
+feed:
+
+| # | What surfaced | What changed |
+|---|---|---|
+| 1 | **The classifier costs 7.66 s on its first call and 22–34 ms after** — a 300× cold-start difference, all checkpoint loading. ARCHITECTURE.md §2 gives an agent 8 s, so an agent that loads lazily on first `run()` times out or nearly does on the first investigation after every restart | `registry.warm_all()` added, with an optional `async def warmup()` hook kept **off** the protocol so 1.7's adapters stay four lines. A failing warm-up is reported per agent and never blocks boot. My own docstring had advised lazy-loading on first `run()`; running it proved that advice wrong, and it is corrected in place |
+| 2 | **A UPI ID at the end of a message was silently discarded** — see the separate commit below. Found because the fan-out reported `upi_count 0.0` on text that plainly contained `UPI: cbi.verify@okaxis` | Fixed, with 14 regression tests |
+
+**Verified end-to-end:**
+
+| Check | Result |
+|---|---|
+| Four gates | 217 tests · contract consistent · typecheck clean · build clean |
+| Also | ruff clean · mypy clean (pydantic plugin enabled — see below) · coverage **67.88%** vs the 65% gate |
+| `base.py` / `registry.py` coverage | 97% / 100% — the only uncovered lines are the Protocol's `...` bodies |
+| Real fan-out, real engine | scam → `threat_score 91.0` + `upi_id cbi.verify@okaxis`; benign → `21.1`, no UPI. Dead agent timed out at 3 s, `degraded: ['agent:flaky_feed:timeout']`, both working agents' evidence intact |
+| Concurrency actually concurrent | wall clock **3001 ms** with a 60-second agent in the fan-out |
+| API after the change | boots, `degraded: []`, classifier `fused`/loaded, 4/4 stores reachable, intel 114 cases |
+| False positives | bank debit **21.1** CALM, delivery **7.5** CALM — unchanged |
+| Browser | Analyze page renders, session still authenticated, **zero console errors** |
+
+**Also in this task:** mypy now follows imports into `schema/`, because the
+agent layer's entire value is that every agent returns one typed shape. That
+surfaced `Field(default_factory=Model)` as an error — a known false positive
+from pydantic's `Field()` overloads, not a defect — so `pydantic.mypy` is
+enabled in `pyproject.toml`.
+
+**Effort:** 5 h estimated, ~5 h actual. **Depends:** 1.1. ✅
+
+### ✅ 1.2a — Fix: a UPI ID at the end of a message was silently discarded
+**Done 2026-08-24, committed separately** (`3377a72`) because a schema/agent
+commit is not the place to smuggle an engine fix.
+
+The fragment guard in `intel/entities.py::extract_from_text()` read:
+
+```python
+if _in_email(s, e) or text[e : e + 1] in "-.":
+    continue
+```
+
+At the end of a string that slice is `""`, and **`"" in "-."` is `True`** — the
+empty string is a substring of everything. So a VPA with nothing after it was
+thrown away as a fragment. Adding one trailing space made it reappear, which is
+what made the bug findable at all.
+
+That is the most common shape a payment demand takes. All three of these lost
+their payment address:
+
+```
+"Aapka KYC block ho gaya hai. Rs 10 bhejiye: sbi.kyc@okhdfcbank"
+"Court fees ke liye payment kariye abhi. UPI ID: legal.dept@paytm"
+"Refund ke liye confirm kijiye - refund.rbi@ybl"
+```
+
+**Blast radius, stated precisely.** `/api/analyze/text` was *not* affected — it
+uses `engine/analyzer.py::extract_upi_ids`, which never had the bug. The buggy
+extractor feeds `shield/verify.py`, `shield/complaint.py` and
+`intel/repository.py`. So what was actually losing the payment address was **the
+police complaint, the evidence vault, and the fraud graph** — no error, no log,
+just the single most important entity missing and the edge to every other case
+paying the same mule account never drawn.
+
+**Verified end-to-end through the citizen path:** `POST /api/shield/preserve`
+with that KYC message, then `GET /api/shield/vault/{token}/complaint` — the
+generated complaint now carries `sbi.kyc@okhdfcbank` in three places and lists
+it under `entities.upi_ids`.
+
+14 tests in `test_entity_extraction.py` cover the fix and the neighbours it must
+not break: a genuine `@gov` fragment is still rejected, an email at the end is
+still an email, a consumer-mail handle is still an email, a domain and a phone
+at the end still parse, and a benign bank alert still yields **no** payment
+entities at all.
+
+### ✅ 1.2b — One module identity for the contract
+**Done 2026-08-24, committed separately** (`d7619ef`). Prerequisite for 1.2.
+
+`services/api/` reaches the contract as `schema.models`; the four existing
+importers reached the same file as bare `models`, via a `sys.path` insert.
+Python treats those as different modules, so `models.AgentResult` and
+`schema.models.AgentResult` are **different classes** — `A1 is A2` is `False`.
+
+Nothing was broken, because nothing imported both. The moment `agents/base.py`
+landed, a test building a result through the agent layer and validating it
+inside a fixture built by `mock_investigation.py` would have failed with a type
+error naming two identically-spelled classes. The three scripts now insert the
+repo root and import `schema.models`; they still run standalone, and the 1.1
+test needed no path insert at all once the names matched.
 
 ### ⬜ 1.3 — LangGraph orchestrator skeleton 🔴⭐
 **Do:** `orchestration/graph.py` — build the graph from the registry ·
