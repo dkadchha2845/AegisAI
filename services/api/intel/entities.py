@@ -161,9 +161,17 @@ def extract_from_text(text: str) -> ExtractedEntities:
 
     # UPI: @-tokens that are not part of an email. A trailing "-" or "." means
     # the match stopped inside a longer email/domain, so it is a fragment.
+    #
+    # The membership test is a tuple, not the string "-.", because `"" in "-."`
+    # is True in Python: the empty string is a substring of everything. With a
+    # string here, a VPA at the very end of the text — where `text[e:e+1]` is
+    # "" — was discarded as a fragment. That is the most common shape a payment
+    # demand takes ("...Rs 10 bhejiye: sbi.kyc@okhdfcbank"), so the single most
+    # important entity in the message went missing, silently, with no error and
+    # no graph edge.
     for m in _UPI.finditer(text):
         s, e, tok = m.start(), m.end(), m.group(0)
-        if _in_email(s, e) or text[e : e + 1] in "-.":
+        if _in_email(s, e) or text[e : e + 1] in ("-", "."):
             continue
         suffix = tok.split("@", 1)[1].lower()
         if suffix in _EMAIL_SUFFIXES:
