@@ -32,6 +32,19 @@ SQLAlchemy>=2.0
 # working; the floor is now 3.11, so the cap is gone.
 networkx>=3.3
 
+# Agent orchestration (task 1.3). See docs/adr/0004-langgraph-over-crewai.md.
+# REQUIRED, not optional: services/api/orchestration/graph.py imports it at
+# module level, and there is no fallback — a hand-rolled DAG would reimplement
+# it badly (ADR-0004 rationale 5). Only the core graph primitives are used:
+# StateGraph, the in-memory checkpointer, and draw_mermaid(). Upper bound
+# because 0.x minor releases have moved the checkpointer's import path before.
+#
+# Cost, measured rather than assumed: +18 packages, including langchain-core.
+# That is the ADR's stated consequence. The mitigation it names is enforced by
+# the guard in ADR-0004 — no agent imports a LangChain LLM wrapper; all model
+# access goes through our own LLMBackend.
+langgraph>=0.6,<0.7
+
 # Test runner. Not optional in practice: the README asks you to run the
 # verdict regressions before every push, and a fresh clone that cannot run
 # them is a fresh clone whose checks get skipped.

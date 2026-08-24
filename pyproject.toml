@@ -121,6 +121,12 @@ addopts = "-q"
 filterwarnings = [
     # starlette's testclient asks for httpx2; not ours to fix.
     "ignore::DeprecationWarning:starlette.*",
+    # NOTE: langgraph's import-time warning is NOT filtered here, because it
+    # cannot be. langchain-core calls surface_langchain_deprecation_warnings(),
+    # which prepends its own "default" filter for its warning categories, and
+    # that beats anything configured beforehand — `-W ignore:...` on the command
+    # line does not suppress it either. It is silenced at our own import site
+    # instead; see services/api/orchestration/graph.py.
 ]
 
 [tool.coverage.run]

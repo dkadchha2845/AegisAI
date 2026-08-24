@@ -1,0 +1,348 @@
+"""
+The investigation graph — ARCHITECTURE.md §2, built from the registry.
+
+**Why it exists.** An investigation branches. An APK agent must not run on an
+audio file; URL, financial and threat-intel lookups are independent and should
+run at the same time; a node that dies must not take the investigation with it.
+A pipeline cannot express any of that. This is the skeleton every later phase
+plugs into: Phase 2 adds agents and the graph gains nodes without being edited.
+
+**What it consumes.** An `InvestigationState` and the agent registry.
+
+**What it outputs.** The same state, advanced — `agent_results`, `trace` and
+`degraded` populated, `status` moved to COMPLETE.
+
+**How it connects.** Nodes are tiers from `agents/base.Stage`; membership comes
+from `registry.eligible()`, which is `can_handle()`, which keys off
+`input_types`. The lifecycle API in 1.6 will drive this; 1.5 persists what it
+produces.
+
+**How it is evaluated.** `test_orchestration_graph.py` — compiles, renders to
+Mermaid, completes with a node deliberately timing out, records a span per
+attempt, resumes from a checkpoint after a crash, and produces an identical
+fingerprint across runs.
+
+**Limitations, stated.** The `FAN -.new entity discovered.-> FAN` loop in §2 is
+*not* implemented. `AgentContext.max_depth` is carried and enforced, so the
+bound exists, but nothing yet discovers an entity worth recursing on — that
+needs the Phase 2 agents, and building the loop now would mean testing it
+against a toy that pretends. The judgement tier is a real node with no agents
+in it yet; 4.6 and 4.7 fill it. Nothing here persists: the state comes back to
+the caller, and 1.5 is what writes it down.
+
+Why LangGraph owns the graph but not the fan-out
+------------------------------------------------
+LangGraph provides the state machine, the conditional edges, the checkpointer
+and the Mermaid rendering — the things ADR-0004 chose it for. The concurrency
+inside a tier is `asyncio.gather` here rather than parallel LangGraph nodes, for
+two reasons that both matter more than the symmetry.
+
+First, parallel LangGraph branches writing the same state key need a reducer
+declared on the state schema, as `Annotated[list, add]`. That schema is
+`InvestigationState`, which lives in `schema/` and is mirrored into TypeScript.
+Putting orchestration metadata into the shared contract to satisfy one library
+is exactly the leak the contract exists to prevent.
+
+Second, the merge order would then be the library's business, and determinism is
+ours: the results here are sorted by agent name before they are appended, so two
+runs of the same input produce the same list in the same order.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import warnings
+from dataclasses import replace
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Sequence, Tuple
+
+# langgraph's import trips a LangChainPendingDeprecationWarning about an
+# `allowed_objects` argument on a deserializer we never call.
+#
+# It cannot be filtered from pyproject.toml, and the order is the reason:
+# `langchain_core/__init__.py` calls surface_langchain_deprecation_warnings(),
+# which *prepends* a "default" filter for its own categories. Filters are
+# matched front-first, so anything configured earlier loses — `-W ignore:...`
+# on the command line does not suppress it either. The only thing that works is
+# to import langchain_core first, let it arm its filter, install ours in front
+# of it, and only then import langgraph.
+#
+# `catch_warnings` restoring the filter list afterwards is a second, deliberate
+# benefit: it undoes langchain's mutation of this process's global warning
+# state, which an application has every right to want back.
+with warnings.catch_warnings():
+    try:
+        import langchain_core  # noqa: F401  (arms its own filter on import)
+    except ImportError:  # pragma: no cover - langgraph always brings it
+        pass
+    warnings.filterwarnings("ignore", category=PendingDeprecationWarning)
+    from langgraph.checkpoint.memory import InMemorySaver
+    from langgraph.graph import END, START, StateGraph
+
+from schema.models import (
+    AgentResult,
+    InvestigationState,
+    InvestigationStatus,
+    utc_now_iso,
+)
+from services.api.agents import registry
+from services.api.agents.base import STAGE_ORDER, Agent, AgentContext, run_agent, stage_of
+from services.api.agents.base import Stage as AgentStage
+from services.api.orchestration.determinism import fingerprint
+from services.api.orchestration.policy import NodePolicy, policy_for, should_retry
+from services.api.orchestration.trace import TraceRecorder
+
+#: The whole investigation's budget. An individual agent's timeout bounds one
+#: node; this bounds the sum, so a graph of twelve well-behaved-but-slow agents
+#: cannot add up to a wait nobody would tolerate.
+DEFAULT_BUDGET_S = 45.0
+
+
+async def _run_with_retry(
+    agent: Agent,
+    state: InvestigationState,
+    ctx: AgentContext,
+    policy: NodePolicy,
+    recorder: TraceRecorder,
+    node: str,
+) -> Tuple[AgentResult, List[str]]:
+    """One node: up to `policy.attempts` tries, a span recorded for each.
+
+    Returns the last result and every degraded tag collected along the way —
+    including the tags from attempts that were later superseded by a success.
+    That is deliberate: an agent that only worked on the second try did degrade,
+    the citizen's answer was slower for it, and hiding the first failure would
+    make the trace disagree with the latency.
+    """
+    tags: List[str] = []
+    result: AgentResult
+    tag: Optional[str]
+
+    # The policy's timeout has to be put *on the context*, because that is what
+    # `run_agent` reads. Computing `policy_for(agent)` and then not applying it
+    # here is a silent no-op: every agent gets DEFAULT_TIMEOUT_S, the 3-second
+    # threat-intel budget and the 120-second APK budget both quietly become 8,
+    # and nothing fails — the investigation still completes, just on the wrong
+    # clock. That is exactly what happened until an end-to-end run showed a feed
+    # with a 2 s policy timing out at 8002 ms.
+    #
+    # `replace` rather than a new AgentContext so the cancel event stays the
+    # same object: cancelling the investigation must still cancel this agent.
+    ctx = replace(ctx, timeout_s=policy.timeout_s)
+
+    for attempt in range(1, policy.attempts + 1):
+        wait = policy.backoff_before(attempt)
+        if wait:
+            await asyncio.sleep(wait)
+
+        t_start = recorder.now()
+        result, tag = await run_agent(agent, state, ctx)
+        t_end = recorder.now()
+
+        recorder.append(
+            node=node,
+            agent=agent.name,
+            version=agent.version,
+            status=result.status,
+            t_start=t_start,
+            t_end=t_end,
+            latency_ms=result.latency_ms,
+            attempt=attempt,
+            depth=ctx.depth,
+            error=result.error,
+        )
+        if tag:
+            tags.append(tag)
+
+        if not should_retry(result, tag, attempt, policy):
+            return result, tags
+
+    return result, tags
+
+
+async def _run_stage(
+    stage: AgentStage,
+    state: InvestigationState,
+    ctx: AgentContext,
+    recorder: TraceRecorder,
+    exclude: Sequence[str] = (),
+) -> Dict[str, Any]:
+    """Fan out over every eligible agent in one tier, concurrently.
+
+    The two orderings that matter:
+
+    * agents are planned in registry order, which is sorted by name, so the
+      span ids are assigned before anything runs;
+    * results are re-sorted by agent name before they are appended, so the
+      merged list does not depend on which agent finished first.
+
+    Without the second, `agent_results` comes back in completion order — which
+    is latency order, which is machine load — and two runs of the same input
+    disagree.
+    """
+    agents = [a for a in registry.eligible(state, exclude=exclude) if stage_of(a) is stage]
+    if not agents:
+        return {}
+
+    node_names = {a.name: f"{stage.value}/{a.name}" for a in agents}
+
+    outcomes = await asyncio.gather(
+        *(
+            _run_with_retry(a, state, ctx, policy_for(a), recorder, node_names[a.name])
+            for a in agents
+        )
+    )
+
+    paired = sorted(zip([a.name for a in agents], outcomes), key=lambda p: p[0])
+    results = [outcome[0] for _, outcome in paired]
+    tags = [t for _, outcome in paired for t in outcome[1]]
+
+    return {
+        "agent_results": [*state.agent_results, *results],
+        "degraded": [*state.degraded, *tags],
+        "trace": recorder.ordered(),
+    }
+
+
+def build_graph(
+    *,
+    checkpointer: Optional[Any] = None,
+    exclude: Sequence[str] = (),
+    budget_s: float = DEFAULT_BUDGET_S,
+    recorder: Optional[TraceRecorder] = None,
+) -> Any:
+    """Compile the investigation graph.
+
+    One node per tier rather than one per agent. The §2 diagram draws agents as
+    nodes, and this draws the tiers they sit in, because tier membership is what
+    the registry actually knows — an agent declares its tier, and the graph
+    discovers the rest. Drawing one LangGraph node per agent would mean
+    rebuilding the graph object whenever the registry changes, and the fan-out
+    inside a tier is concurrent anyway, so the picture would suggest a structure
+    the execution does not have.
+
+    `exclude` is threaded through for the Phase 9 ablations: "the same graph
+    without the knowledge-graph agent" is a parameter, not a branch.
+    """
+    rec = recorder if recorder is not None else TraceRecorder()
+
+    def make_stage_node(stage: AgentStage) -> Callable[[InvestigationState], Awaitable[Dict[str, Any]]]:
+        async def node(state: InvestigationState) -> Dict[str, Any]:
+            ctx = AgentContext(
+                org_id=state.org_id,
+                case_id=state.case_id,
+                deadline=rec.origin + budget_s,
+            )
+            return await _run_stage(stage, state, ctx, rec, exclude=exclude)
+
+        node.__name__ = f"{stage.value}_stage"
+        return node
+
+    async def begin(state: InvestigationState) -> Dict[str, Any]:
+        return {"status": InvestigationStatus.RUNNING}
+
+    async def finish(state: InvestigationState) -> Dict[str, Any]:
+        # COMPLETE, not FAILED, even when every agent errored. An investigation
+        # that ran and found nothing usable is a completed investigation with an
+        # honest `degraded` list — the degradation invariant, at the top level.
+        # FAILED is reserved for the orchestrator itself being unable to run,
+        # which is a different and much rarer thing.
+        return {
+            "status": InvestigationStatus.COMPLETE,
+            "completed_at": utc_now_iso(),
+            "trace": rec.ordered(),
+        }
+
+    g: Any = StateGraph(InvestigationState)
+    g.add_node("begin", begin)
+    for stage in STAGE_ORDER:
+        g.add_node(f"{stage.value}_stage", make_stage_node(stage))
+    g.add_node("finish", finish)
+
+    g.add_edge(START, "begin")
+    previous = "begin"
+    for stage in STAGE_ORDER:
+        g.add_edge(previous, f"{stage.value}_stage")
+        previous = f"{stage.value}_stage"
+    g.add_edge(previous, "finish")
+    g.add_edge("finish", END)
+
+    return g.compile(checkpointer=checkpointer)
+
+
+async def investigate(
+    state: InvestigationState,
+    *,
+    exclude: Sequence[str] = (),
+    budget_s: float = DEFAULT_BUDGET_S,
+    checkpointer: Optional[Any] = None,
+    thread_id: Optional[str] = None,
+) -> InvestigationState:
+    """Run one investigation to completion. The entry point 1.6 will call.
+
+    Returns a real `InvestigationState`, not LangGraph's dict: the library's
+    output shape is an implementation detail, and every caller downstream is
+    typed against the contract.
+    """
+    recorder = TraceRecorder()
+    compiled = build_graph(checkpointer=checkpointer, exclude=exclude, budget_s=budget_s, recorder=recorder)
+    config = {"configurable": {"thread_id": thread_id or state.case_id}} if checkpointer else None
+    raw = await compiled.ainvoke(state, config)
+    return InvestigationState.model_validate(raw)
+
+
+async def resume(
+    checkpointer: Any, thread_id: str, *, exclude: Sequence[str] = ()
+) -> InvestigationState:
+    """Continue an investigation that died part-way through.
+
+    The nodes that already completed are not re-run — LangGraph replays from the
+    last checkpoint. That is what task 1.8's "worker crash loses no work" will
+    stand on, and what makes a 120-second APK scan survivable.
+    """
+    compiled = build_graph(checkpointer=checkpointer, exclude=exclude)
+    raw = await compiled.ainvoke(None, {"configurable": {"thread_id": thread_id}})
+    return InvestigationState.model_validate(raw)
+
+
+def new_checkpointer() -> Any:
+    """In-memory for now. 1.5 swaps in a Postgres-backed saver.
+
+    In-process means a crash that takes the process takes the checkpoint too, so
+    today this buys resume-after-agent-crash, not resume-after-restart. Saying
+    which of the two you have is the difference between a durability claim and a
+    durability guess.
+    """
+    return InMemorySaver()
+
+
+def render_mermaid(*, exclude: Sequence[str] = ()) -> str:
+    """The graph as Mermaid. Acceptance criterion for 1.3, and a paper figure."""
+    return str(build_graph(exclude=exclude).get_graph().draw_mermaid())
+
+
+def graph_summary() -> Dict[str, Any]:
+    """What the graph would do right now, without running it.
+
+    Useful in `/api/health` and when a reviewer asks which agents are live.
+    """
+    by_stage: Dict[str, List[str]] = {s.value: [] for s in STAGE_ORDER}
+    for agent in registry.all_agents():
+        by_stage[stage_of(agent).value].append(agent.name)
+    return {
+        "stages": [s.value for s in STAGE_ORDER],
+        "agents": by_stage,
+        "versions": registry.versions(),
+        "budget_s": DEFAULT_BUDGET_S,
+    }
+
+
+__all__ = [
+    "DEFAULT_BUDGET_S",
+    "build_graph",
+    "fingerprint",
+    "graph_summary",
+    "investigate",
+    "new_checkpointer",
+    "render_mermaid",
+    "resume",
+]

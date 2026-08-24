@@ -37,9 +37,12 @@ from schema.models import (
 )
 from services.api.agents.base import (
     DEFAULT_TIMEOUT_S,
+    STAGE_ORDER,
     Agent,
     AgentContext,
+    Stage,
     run_agent,
+    stage_of,
 )
 
 
@@ -449,3 +452,78 @@ def test_a_parallel_fan_out_completes_even_when_one_agent_explodes() -> None:
     # The one agent that worked still contributed its evidence.
     good = next(r for r in results if r.agent == "good")
     assert good.findings and good.features == {"toy": 1.0}
+
+
+# --------------------------------------------------------------------------
+# Tiers — what gives the investigation graph its shape
+# --------------------------------------------------------------------------
+
+
+def test_an_agent_without_a_declared_tier_lands_in_investigate() -> None:
+    """The default has to be the useful one.
+
+    Most agents investigate. Making the tier a required declaration would force
+    a decision at the moment the answer is almost always "the middle one", and
+    would stop 1.7's adapters from being four lines long.
+    """
+    assert stage_of(GoodAgent()) is Stage.INVESTIGATE
+
+
+def test_a_declared_tier_is_honoured_as_an_enum_or_as_its_string() -> None:
+    """A plain string is accepted so an adapter need not import this module."""
+
+    class Enumerated:
+        name = "enumerated"
+        version = "1.0.0"
+        stage = Stage.JUDGE
+
+    class Stringly:
+        name = "stringly"
+        version = "1.0.0"
+        stage = "extract"
+
+    assert stage_of(Enumerated()) is Stage.JUDGE  # type: ignore[arg-type]
+    assert stage_of(Stringly()) is Stage.EXTRACT  # type: ignore[arg-type]
+
+
+def test_a_nonsense_tier_is_coerced_rather_than_raised_on() -> None:
+    """The registry validates at import time; an investigation in flight is the
+    wrong place to discover a typo, and dropping the agent entirely would be a
+    silent capability loss."""
+
+    class Typo:
+        name = "typo"
+        version = "1.0.0"
+        stage = "investigat"
+
+    class Wrong:
+        name = "wrong"
+        version = "1.0.0"
+        stage = 3
+
+    assert stage_of(Typo()) is Stage.INVESTIGATE  # type: ignore[arg-type]
+    assert stage_of(Wrong()) is Stage.INVESTIGATE  # type: ignore[arg-type]
+
+
+def test_the_tier_order_is_explicit_not_declaration_order() -> None:
+    """`STAGE_ORDER` is a tuple, not `list(Stage)`.
+
+    Execution order is behaviour. Deriving it from the order enum members happen
+    to be declared in would make a harmless-looking reorder a silent change to
+    what runs when.
+    """
+    assert STAGE_ORDER == (Stage.EXTRACT, Stage.INVESTIGATE, Stage.REASON, Stage.JUDGE)
+    assert set(STAGE_ORDER) == set(Stage)
+
+
+def test_the_agent_tier_is_not_the_scam_arc_stage() -> None:
+    """Two different ideas that want the same English word.
+
+    `agents.base.Stage` is where an agent sits in the graph;
+    `schema.models.Stage` is the scam arc (GREETING, FEAR_INDUCTION, ...).
+    Confusing them would be easy and expensive, so the distinction is asserted.
+    """
+    from schema.models import Stage as ScamStage
+
+    assert Stage is not ScamStage
+    assert {s.value for s in Stage}.isdisjoint({s.value for s in ScamStage})

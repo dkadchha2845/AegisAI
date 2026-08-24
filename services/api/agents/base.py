@@ -40,6 +40,7 @@ from __future__ import annotations
 import asyncio
 import time
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Optional, Protocol, runtime_checkable
 
 from schema.models import AgentResult, AgentStatus, InvestigationState
@@ -47,6 +48,60 @@ from schema.models import AgentResult, AgentStatus, InvestigationState
 #: Per ARCHITECTURE.md §2. Individual agents override it — threat intel gets 3 s,
 #: an APK scan gets 120 s and runs off the request path entirely.
 DEFAULT_TIMEOUT_S = 8.0
+
+
+class Stage(str, Enum):
+    """Which tier of ARCHITECTURE.md §1's L3 an agent belongs to.
+
+    This is what gives the investigation graph its shape: the tiers run in
+    order, and the agents within one tier run concurrently. Extraction must
+    finish before investigation starts, because investigation works on the text
+    and entities extraction produced; judgement must come last, because it
+    reconciles everything before it.
+
+    Declared by the agent, not by the graph, so adding an agent never means
+    editing the orchestrator — the property ADR-0004 and task 1.3 both rest on.
+
+    It is *optional*: an agent that does not declare one lands in INVESTIGATE,
+    which is where most of them belong. Keeping it off the `Agent` protocol
+    matters because 1.7's adapters should stay four lines long, and because a
+    required field is a required decision at a moment when the answer is
+    usually "the middle one".
+
+    Note this is not `schema.models.Stage` — that is the scam-arc taxonomy
+    (GREETING, FEAR_INDUCTION, ...), a completely different idea that happens to
+    want the same English word. They never appear in the same expression, and
+    the orchestrator imports this one as `AgentStage` to keep it obvious.
+    """
+
+    EXTRACT = "extract"
+    INVESTIGATE = "investigate"
+    REASON = "reason"
+    JUDGE = "judge"
+
+
+#: The order the tiers execute in. Not `list(Stage)` — relying on declaration
+#: order for execution order would make a reordered enum a silent behaviour
+#: change.
+STAGE_ORDER: tuple[Stage, ...] = (Stage.EXTRACT, Stage.INVESTIGATE, Stage.REASON, Stage.JUDGE)
+
+
+def stage_of(agent: "Agent") -> Stage:
+    """An agent's tier, defaulting to INVESTIGATE.
+
+    A malformed declaration is coerced rather than raised on: the registry
+    already validates at import time, and an investigation in flight is the
+    wrong place to discover a typo.
+    """
+    declared = getattr(agent, "stage", None)
+    if isinstance(declared, Stage):
+        return declared
+    if isinstance(declared, str):
+        try:
+            return Stage(declared)
+        except ValueError:
+            return Stage.INVESTIGATE
+    return Stage.INVESTIGATE
 
 
 @dataclass

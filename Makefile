@@ -11,7 +11,7 @@ PY        := .venv/bin/python
 WEB       := --prefix apps/web
 
 .DEFAULT_GOAL := help
-.PHONY: help gates check lint types cov audit test contract typecheck build up down reset status logs api web install verify-checkpoint eval
+.PHONY: help gates check lint types cov audit test contract typecheck build up down reset status logs api web install verify-checkpoint eval graph graph-summary
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -49,6 +49,12 @@ typecheck: ## Frontend typecheck
 
 build: ## Frontend production build
 	npm run build $(WEB)
+
+graph: ## Render the investigation graph as Mermaid
+	$(PY) -m services.api.orchestration
+
+graph-summary: ## Which agents are registered, by tier
+	$(PY) -m services.api.orchestration --summary
 
 verify-checkpoint: ## Check the on-disk model against the recorded metrics
 	$(PY) -m ml.evaluation.manifest

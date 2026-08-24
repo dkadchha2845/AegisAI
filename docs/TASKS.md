@@ -1,9 +1,9 @@
 # AegisAI — Master Task List
 
-> **Status: Phase 0 complete. Phase 1 — 1.1 and 1.2 done and verified
-> end-to-end. Awaiting your go-ahead for 1.3.**
-> Last updated 2026-08-24 · branch `phase-1.1-investigation-contract` @ `3377a72`
-> · 217 tests · all four gates green · ruff + mypy clean · coverage 67.88% vs
+> **Status: Phase 0 complete. Phase 1 — 1.1, 1.2 and 1.3 done and verified
+> end-to-end. Awaiting your go-ahead for 1.4.**
+> Last updated 2026-08-24 · branch `phase-1.1-investigation-contract` @ `dd1d90c`
+> · 274 tests · all four gates green · ruff + mypy clean · coverage 69.27% vs
 > the 65% gate
 
 ---
@@ -335,18 +335,19 @@ schema commit is not the place to smuggle them:**
 through a LangGraph graph, executed with parallel fan-out, traced, persisted,
 and streamed to the UI — even if only three agents exist.
 
-**Progress: 2 of 9 done** — ✅ 1.1 · ✅ 1.2 · next up 1.3 (the LangGraph
-orchestrator), which 1.2 unblocks and which is the largest single task in the
-phase at 12–16 h.
+**Progress: 3 of 9 done** — ✅ 1.1 · ✅ 1.2 · ✅ 1.3 · next up 1.4 (the input
+classification agent), which 1.2 unblocks. It is the first agent that is a real
+agent rather than a harness, and its accuracy bar is explicit: ≥98% on a 200-item
+fixture including 20 adversarial ones.
 
-> Note on what 1.1 and 1.2 do **not** claim: the contract and the agent layer
-> exist and are exercised, but no HTTP route runs an agent yet. The API still
-> serves through `engine/analyzer.py` exactly as it always has. Wiring the graph
-> into a served path is 1.5 (persistence) and 1.6 (the lifecycle API). So the
-> end-to-end evidence below is "the running system is unharmed, and the new
-> layer does its job when driven against real dependencies" — not "an
-> investigation flows through the API". That sentence is not available until
-> 1.6 and will not be written before then.
+> Note on what 1.1–1.3 do **not** claim: the contract, the agent layer and the
+> orchestrator exist and are exercised, but no HTTP route runs the graph yet.
+> The API still serves through `engine/analyzer.py` exactly as it always has.
+> Wiring the graph into a served path is 1.5 (persistence) and 1.6 (the
+> lifecycle API). So the end-to-end evidence below is "the running system is
+> unharmed, and the new layer does its job when driven against real
+> dependencies" — not "an investigation flows through the API". That sentence is
+> not available until 1.6 and will not be written before then.
 
 ### ✅ 1.1 — `InvestigationState` + `AgentResult` in `schema/` 🔴⭐
 **Done 2026-08-24.** ARCHITECTURE.md §3 implemented in `schema/models.py` and
@@ -571,16 +572,102 @@ error naming two identically-spelled classes. The three scripts now insert the
 repo root and import `schema.models`; they still run standalone, and the 1.1
 test needed no path insert at all once the names matched.
 
-### ⬜ 1.3 — LangGraph orchestrator skeleton 🔴⭐
-**Do:** `orchestration/graph.py` — build the graph from the registry ·
-conditional routing on `input_types` · parallel fan-out with `asyncio.gather` ·
-per-node timeout/retry from `policy.py` · checkpointing so a crashed
-investigation resumes · `trace.py` recording a `TraceSpan` per node.
-**Accept:** graph compiles and renders to Mermaid via a CLI · a 3-node graph
-executes with one node deliberately timing out and the investigation still
-completes, `degraded` populated · trace shows per-node latency · **deterministic:
-same input + fixed seeds ⇒ same output** (this is what makes ablations valid).
-**Effort:** 12–16 h. **Depends:** 1.2.
+### ✅ 1.3 — LangGraph orchestrator skeleton 🔴⭐
+**Done 2026-08-24.** Four modules — `graph.py`, `policy.py`, `trace.py`,
+`determinism.py` — plus a CLI. 57 new tests; 274 total. LangGraph 0.6 added to
+requirements per ADR-0004; measured cost **+18 packages** including
+`langchain-core`, which is the consequence that ADR already recorded.
+
+**All four acceptance criteria, demonstrated on the real graph:**
+
+| # | Criterion | Evidence |
+|---|---|---|
+| 1 | Compiles and renders to Mermaid **via a CLI** | `make graph` / `python -m services.api.orchestration`; `--summary` lists the live agents by tier |
+| 2 | A node times out and the investigation still completes | Five agents, one a feed that never answers: **COMPLETE**, `degraded: ['agent:dead_feed:timeout', …]`, and the other four agents' evidence intact |
+| 3 | Trace shows per-node latency | A span per *attempt* — `investigate/upi_reputation#1@0` error, `#2@0` degraded — with real milliseconds |
+| 4 | **Same input ⇒ same output** | Two runs: `a237a8ee41a2526d…` twice. Ablating one agent changes it, so the hash is not vacuous |
+
+**LangGraph owns the graph; it does not own the fan-out.** Concurrency inside a
+tier is `asyncio.gather` — which is what the task specifies — for two reasons
+that beat symmetry. Parallel LangGraph branches writing one state key need a
+reducer declared as `Annotated[list, add]` **on the state schema**, and that
+schema is `InvestigationState`, which lives in `schema/` and is mirrored into
+TypeScript; putting orchestration metadata into the shared contract to satisfy
+one library is precisely the leak the contract exists to prevent. And the merge
+order would then be the library's business, when determinism is ours.
+
+**Determinism had to be defined before it could be claimed.** Two runs are never
+byte-identical — an investigation records how long it took. So
+`determinism.fingerprint()` hashes everything *except* the timings, and the
+exclusion list is short, explicit and justified per entry (`latency_ms`,
+`t_start`, `t_end`, `created_at`, `completed_at`, `received_at`, `retrieved_at`,
+`case_id`, `TIRecord.cached`). Everything else is in — including list *order*,
+which is deliberately not sorted at hash time, because the orchestrator sorting
+the fan-out before merging is the property under test.
+
+Three places nondeterminism was designed out rather than discovered:
+`registry.all_agents()` sorts by name, so the plan does not depend on import
+order · results are re-sorted by agent name after `gather`, so the merged list
+does not depend on which agent finished first · span ids come from the plan
+(`investigate/url_agent#2@1`) rather than a completion-order counter. The
+determinism test uses agents with *randomised* sleeps precisely so that removing
+any of the three would fail it.
+
+**A defect the end-to-end run caught, and the unit test that could not.**
+`graph.py` computed `policy_for(agent)` and used it for attempts and backoff —
+but never put its timeout on the `AgentContext`, which is what `run_agent`
+actually reads. **Every per-agent budget in `policy.py` was a silent no-op:**
+threat intel's 3 s and the APK agent's 120 s both quietly became the 8 s default.
+Nothing failed. The investigation completed, on the wrong clock.
+
+The existing test passed because it asserted only that a hanging agent produced
+an `agent:x:timeout` tag — which it did, eight seconds later. It took a real run
+showing a feed with a 2 s policy timing out at **8002 ms** to see it. Fixed with
+`dataclasses.replace(ctx, timeout_s=policy.timeout_s)`, and three new tests now
+assert the *duration*, the context the agent actually receives, and that the
+copy still shares the cancel event. Wall clock on the e2e run went 8072 ms →
+**2070 ms**.
+
+**A third-party warning that cannot be filtered by configuration.** LangGraph's
+import trips a `LangChainPendingDeprecationWarning`, and `langchain_core`'s own
+`__init__` calls `surface_langchain_deprecation_warnings()`, which *prepends* a
+`"default"` filter for its categories. Filters match front-first, so anything
+set beforehand loses — `-W ignore:…` on the command line does not suppress it
+either, which is how the cause was found. It is silenced at our import site in
+`graph.py` by importing `langchain_core` first, installing our filter in front
+of its, then importing langgraph; `catch_warnings` then restores the filter list,
+which also undoes langchain's mutation of this process's global warning state.
+`pyproject.toml` carries a note saying why the filter is *not* there.
+
+**Also decided here: agents declare a tier.** `agents/base.Stage`
+(EXTRACT · INVESTIGATE · REASON · JUDGE) is what gives the graph its shape —
+tiers run in order, agents within a tier run concurrently, and a later tier can
+read what an earlier one wrote. It is **optional**, defaulting to INVESTIGATE, so
+1.7's adapters stay four lines. `STAGE_ORDER` is an explicit tuple rather than
+`list(Stage)`, so reordering the enum is not a silent change to what runs when.
+
+**Verified end-to-end:**
+
+| Check | Result |
+|---|---|
+| Four gates | 274 tests · contract consistent · typecheck clean · build clean |
+| Also | ruff clean · mypy clean · coverage **69.27%** vs the 65% gate |
+| Module coverage | `graph.py` 99% · `policy.py` 100% · `trace.py` 100% · `determinism.py` 100% |
+| Real graph, real engine | 5 agents / 3 tiers: scam → `threat_score 91.0` + `cbi.verify@okaxis`; benign → `21.1`. Retry visible as two spans, dead feed timed out at its own 2 s budget |
+| Crash and resume | Killed mid-investigation, resumed to COMPLETE, and **the classifier ran once, not twice** — the checkpoint held |
+| API after the change | boots, `degraded: []`, 4/4 stores reachable, 114 intel cases |
+| False positives | bank debit **21.1** CALM, delivery **7.5** CALM — unchanged |
+| Browser | Live Protection renders, session authenticated, **zero console errors** |
+
+**Not implemented, and stated rather than implied:** the
+`FAN -.new entity discovered.-> FAN` recursion in ARCHITECTURE.md §2.
+`AgentContext.max_depth` is carried and enforced so the *bound* exists, but
+nothing yet discovers an entity worth recursing on — that needs the Phase 2
+agents, and building the loop now would mean testing it against a toy that
+pretends. The REASON tier is a real node with no agents in it. Nothing persists;
+1.5 writes it down.
+
+**Effort:** 12–16 h estimated, ~11 h actual. **Depends:** 1.2. ✅
 
 ### ⬜ 1.4 — Input Classification Agent 🔴
 **Do:** classify by magic bytes first, extension second, content third — never
