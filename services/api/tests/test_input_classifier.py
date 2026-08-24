@@ -18,7 +18,14 @@ from typing import Iterator
 
 import pytest
 
-from schema.models import AgentResult, AgentStatus, EvidenceItem, InputType, InvestigationState, utc_now_iso
+from schema.models import (
+    AgentResult,
+    AgentStatus,
+    EvidenceItem,
+    InputType,
+    InvestigationState,
+    utc_now_iso,
+)
 from services.api.agents import registry
 from services.api.agents.base import AgentContext, Stage, run_agent
 from services.api.agents.classify.agent import InputClassifierAgent, apply_to_state

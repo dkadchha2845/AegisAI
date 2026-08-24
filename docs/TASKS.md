@@ -1,9 +1,9 @@
 # AegisAI — Master Task List
 
-> **Status: Phase 0 complete. Phase 1 — 1.1, 1.2, 1.3 and 1.4 done and
-> verified end-to-end. Awaiting your go-ahead for 1.5.**
-> Last updated 2026-08-24 · branch `codex/phase-1.4-input-classification`
-> · 282 tests · all four gates green · ruff + mypy clean
+> **Status: Phase 0 complete — all seven tasks. Phase 1 — 1.1, 1.2, 1.3 and
+> 1.4 done and verified end-to-end. Awaiting your go-ahead for 1.5.**
+> Last updated 2026-08-24 · branch `codex/phase-0.7-contributor-docs`
+> · 298 tests · all four gates green · ruff + mypy clean
 
 ---
 
@@ -310,21 +310,77 @@ must still report `ok`.
 gate · `pip-audit`: no known vulnerabilities · the CI health block passes
 locally with the stack down.
 
-### ⬜ 0.7 — `CLAUDE.md` + contributor docs
-**Why:** the invariants in INVENTORY.md §5 must be enforceable by anyone (human
-or agent) touching the repo.
-**Accept:** `CLAUDE.md` states the six invariants, the four gates, and the
-"what done means" checklist. **Effort:** 2 h.
-**Noticed while doing 1.1 — three small drifts, none fixed there, because a
-schema commit is not the place to smuggle them:**
-1. `CLAUDE.md` still says the gate is "84 tests". It is 154. Harmless (pytest
-   does not check counts) but it is the kind of drift this project calls a defect.
-2. `pyproject.toml`'s formatter comment points at a `make format-check` target
-   that does not exist. Worth adding in 1.2, when `agents/` finally has files
-   for it to check — adding it today would pass vacuously.
-3. **`.coverage` is a tracked binary** and churns on every test run
-   (`git ls-files` confirms it; it is not in `.gitignore`). Belongs with the
-   0.5 hygiene pass: `git rm --cached .coverage` and one `.gitignore` line.
+### ✅ 0.7 — `CLAUDE.md` + contributor docs
+**Done 2026-08-24.** All eight invariants, the gates and a "definition of done"
+checklist in `CLAUDE.md`; `README.md` points contributors at it; `AGENTS.md`
+added as a **pointer**; and 15 tests in `test_contributor_docs.py` that keep the
+document true.
+
+**The three drifts recorded against this task during 1.1 are all closed:**
+
+| # | Drift | Resolution |
+|---|---|---|
+| 1 | `CLAUDE.md` said the gate was "84 tests". It was 285. | Replaced with `make gates`, which is now the canonical command. A test forbids any hard-coded count in the contributor docs |
+| 2 | `pyproject.toml` pointed at a `make format-check` target that never existed | The comment no longer names any target, and explains why: an earlier version named one that was never written, and a reader who skims a comment types the command in it |
+| 3 | **`.coverage` was a tracked binary**, rewritten by every test run | `git rm --cached`, plus a `.gitignore` block. A test asserts the ignore rule is present, because untracking alone lets the next `git add -A` put it back |
+
+**The tests do not check that the docs *say* the right thing.** String-matching
+a document catches a stale sentence and misses the two failures that actually
+happened here. So they check that the **commands the docs tell you to run
+exist** and that the **files they send you to are there** — a doc instructing a
+new contributor to run something absent is a broken door, and the only way it
+stays fixed is if the build refuses it. Verified by breaking each guard on
+purpose:
+
+| Injected fault | Caught with |
+|---|---|
+| `make format-check` added to a doc's bash block | `CLAUDE.md tells contributors to run make targets that do not exist: ['format-check']` |
+| A link to `docs/CONTRIBUTING.md` | `points at paths that do not exist: ['docs/CONTRIBUTING.md']` |
+| `# 285 tests must pass` added back | `hard-codes a test count: ['285 tests must pass']` |
+| An invariant copied into `AGENTS.md` | `restates invariants that belong in CLAUDE.md` |
+
+**`AGENTS.md` is a pointer, not a copy — and that was learned the hard way in
+this very task.** It was first created as a verbatim copy of `CLAUDE.md`, and
+within the hour the two disagreed: `CLAUDE.md` had been corrected to stop naming
+a fixed test count and the copy still named one, off by more than two hundred.
+It now sends the reader to `CLAUDE.md` and carries only the command list, and a
+test fails if anyone starts copying the invariants back into it.
+
+**Two findings from actually running what the docs tell you to run:**
+
+1. **The README's MIT badge links to a `LICENSE` file that does not exist.** The
+   badge is a claim and the link 404s on GitHub. Choosing and applying a licence
+   is not a contributor's call to make quietly, so it is recorded rather than
+   invented — see "Left for you" below. It sits in a `KNOWN_MISSING` set with
+   its reason, and a second test fails the moment the file appears, so the
+   exemption cannot rot into a permanent excuse.
+2. **The 1.4 commit claimed "ruff clean" and the committed tree had one ruff
+   finding** — an unsorted import block in `test_input_classifier.py`. Confirmed
+   by stashing and re-running ruff against HEAD. Fixed here. Worth noting the
+   class of error: the claim was made from a run that happened *before* the last
+   file was written.
+
+**Verified end-to-end.** For a documentation task the real path is the
+documentation, so every `make` target the docs name was run rather than read:
+`make gates` (green), `make help`, `make graph-summary`, `make status` (4/4
+stores reachable). Then the checklist's own instruction — start the app and read
+`/api/health`: `ok: true`, classifier `fused`, retrieval dense/31 chunks, 114
+intel cases, `degraded: []`. Scam **87.0 HIGH**, bank debit **21.1 CALM**,
+delivery **7.5 CALM** — unchanged, as a docs task should leave them.
+
+| Check | Result |
+|---|---|
+| Four gates | **298 tests** · contract consistent · typecheck clean · build clean |
+| Also | ruff clean · mypy clean |
+| Docs guards | 15 tests, all four negative controls fire |
+
+**⚠️ Left for you:** the repository has **no `LICENSE` file** while the README
+advertises MIT. Either add the MIT text (and remove `LICENSE` from
+`KNOWN_MISSING` in `test_contributor_docs.py` — a test will tell you to), or
+change the badge. It matters beyond tidiness: task 8.8 plans a *licensed*
+dataset release, and 8.1 requires a licence per corpus item.
+
+**Effort:** 2 h estimated, ~2 h actual. ✅
 
 ---
 

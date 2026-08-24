@@ -89,9 +89,11 @@ known-first-party = ["services", "schema", "ml", "aegis_core"]
 
 [tool.ruff.format]
 # Configured but NOT yet enforced repo-wide: a formatting pass would rewrite
-# ~4,100 lines across code whose git blame is currently useful. Enforced on the
-# directories Phase 1 fills, where there is no history to lose — see the
-# `format-check` make target.
+# ~4,100 lines across code whose git blame is currently useful. No formatting
+# gate has been adopted, and none is named here on purpose: an earlier version
+# of this comment pointed at a make target that was never written, and a reader
+# who skims a comment types the command in it. Run `ruff format --check` on the
+# files you touch when formatting is relevant.
 quote-style = "double"
 
 [tool.mypy]

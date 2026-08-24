@@ -55,6 +55,7 @@ conversation-analysis agent.
 | 📊 [`docs/INVENTORY.md`](./docs/INVENTORY.md) | What exists (verified), what doesn't, known defects and risks |
 | 🏗️ [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Agent graph, `InvestigationState` contract, scoring architecture, security design |
 | ✅ [`docs/TASKS.md`](./docs/TASKS.md) | The phased task backlog with acceptance criteria, timeline and critical path |
+| 🤝 [`CLAUDE.md`](./CLAUDE.md) | Contributor working rules: invariants, quality gates, and the definition of done |
 | 📚 [`docs/DATASETS.md`](./docs/DATASETS.md) | AIFC corpus strategy, splits, annotation, ethics |
 | 🔬 [`docs/RESEARCH.md`](./docs/RESEARCH.md) | Contributions, experiments, ablations, paper plan |
 | 📐 [`docs/adr/`](./docs/adr/) | Architecture decision records — every deviation, justified |

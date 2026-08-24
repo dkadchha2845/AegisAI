@@ -25,13 +25,30 @@ fresh ephemeral DB where the buggy code path behaves identically. See the
 ## The four gates — run before calling anything done
 
 ```bash
-.venv/bin/python -m pytest services/api/tests -q      # 84 tests must pass
-.venv/bin/python schema/check_contract.py             # Pydantic ↔ TypeScript
-npm run typecheck --prefix apps/web
-npm run build --prefix apps/web
+make gates
 ```
 
+This is the canonical command. It runs the backend suite, the Pydantic ↔
+TypeScript contract check, frontend typecheck, and production build. Do not
+hard-code a test count here: the suite grows with each completed task, and the
+only passing count is the count reported by the current command.
+
 Use `.venv/bin/python`, never system python — pydantic isn't installed globally.
+
+## Definition of done — before ticking a task
+
+- [ ] Implement only the task you were explicitly asked to start; do not fold
+      adjacent cleanup or a later task into the change.
+- [ ] Meet the task's acceptance criteria with focused tests. A new agent also
+      has a benign-input test and an exercised degradation path.
+- [ ] Run `make gates`; run ruff and mypy when changing the typed agent,
+      orchestration, or store layers.
+- [ ] Start the running application and exercise the path changed by the task.
+      Read `/api/health` and inspect the browser console when the UI is touched.
+- [ ] Update `docs/TASKS.md` with the final status and measured evidence. Tick
+      the task only after the gates and the real path pass.
+- [ ] Commit one logical change with the verification result in its message.
+      Wait for an explicit instruction before starting the next task.
 
 ---
 

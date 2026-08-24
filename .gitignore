@@ -63,3 +63,12 @@ aegis.db-journal
 aegis.db-wal
 aegis.db-shm
 .preview/
+
+# Coverage output. `.coverage` is a binary SQLite database rewritten by every
+# test run, so tracking it put a churning blob in every diff and told a reviewer
+# nothing. Untracked in task 0.7; the number that matters is the one the
+# coverage gate prints, and CI recomputes it.
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
