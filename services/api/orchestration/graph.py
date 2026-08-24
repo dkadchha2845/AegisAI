@@ -14,8 +14,9 @@ plugs into: Phase 2 adds agents and the graph gains nodes without being edited.
 
 **How it connects.** Nodes are tiers from `agents/base.Stage`; membership comes
 from `registry.eligible()`, which is `can_handle()`, which keys off
-`input_types`. The lifecycle API in 1.6 will drive this; 1.5 persists what it
-produces.
+`input_types`. The lifecycle API in 1.6 will drive this; `stores/evidence.py`
+(task 1.5) persists what it produces, though nothing calls it from here yet —
+the graph still returns a state to its caller, and 1.6 is what saves it.
 
 **How it is evaluated.** `test_orchestration_graph.py` — compiles, renders to
 Mermaid, completes with a node deliberately timing out, records a span per
@@ -28,7 +29,8 @@ bound exists, but nothing yet discovers an entity worth recursing on — that
 needs the Phase 2 agents, and building the loop now would mean testing it
 against a toy that pretends. The judgement tier is a real node with no agents
 in it yet; 4.6 and 4.7 fill it. Nothing here persists: the state comes back to
-the caller, and 1.5 is what writes it down.
+the caller, and 1.5's `EvidenceStore` is what writes it down once 1.6 wires the
+two together.
 
 Why LangGraph owns the graph but not the fan-out
 ------------------------------------------------
@@ -381,12 +383,22 @@ async def resume(
 
 
 def new_checkpointer() -> Any:
-    """In-memory for now. 1.5 swaps in a Postgres-backed saver.
+    """In-memory. Still in-memory after 1.5, and this says so rather than
+    pointing at a task that has already shipped.
 
-    In-process means a crash that takes the process takes the checkpoint too, so
-    today this buys resume-after-agent-crash, not resume-after-restart. Saying
-    which of the two you have is the difference between a durability claim and a
-    durability guess.
+    1.5 built the evidence store — the durable record of a *finished*
+    investigation — not a durable checkpointer. They are different things: the
+    store answers "what did this investigation conclude", a checkpointer answers
+    "which node was it on when the process died". LangGraph's Postgres saver is
+    its own package with its own schema and its own migrations, and the task
+    that needs it is 1.8, where a 90-second APK scan runs off the request path
+    and "worker crash loses no work" is an acceptance criterion rather than a
+    nice property.
+
+    So: in-process means a crash that takes the process takes the checkpoint
+    too. Today this buys resume-after-agent-crash, not resume-after-restart.
+    Saying which of the two you have is the difference between a durability
+    claim and a durability guess.
     """
     return InMemorySaver()
 

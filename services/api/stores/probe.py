@@ -128,6 +128,38 @@ def _qdrant_probe(host: str, port: int) -> tuple[bool, Optional[int], str]:
         return False, None, f"{type(exc).__name__}: {exc}"
 
 
+def serving_engine() -> str:
+    """Which relational engine the evidence store is actually bound to.
+
+    Public because `/api/health` reports it too, and the status line and the
+    probe must not be able to disagree about which database is holding the
+    case files.
+
+    Read off the configured URL rather than the running engine object, because
+    importing `services.api.db` here would create the ephemeral temp-file
+    database as a side effect of a health check.
+    """
+    url = settings.database_url
+    if not url:
+        return "sqlite:ephemeral"
+    if url.startswith("postgres"):
+        return "postgres"
+    if url.startswith("sqlite"):
+        return "sqlite"
+    # Some other SQLAlchemy dialect an operator chose. Name it rather than
+    # guessing: an unrecognised store reported as "sqlite" is a lie in a
+    # status line, which is the one place this project cannot afford one.
+    return url.split(":", 1)[0]
+
+
+def _pg_detail(serving: str) -> str:
+    if serving == "postgres":
+        return "in use as the evidence store"
+    if serving == "sqlite:ephemeral":
+        return "reachable; API on the ephemeral SQLite (set DATABASE_URL to use it)"
+    return f"reachable; API bound to {serving} (set DATABASE_URL to use it)"
+
+
 def probe_all(force: bool = False) -> Dict[str, Dict[str, Any]]:
     """Probe every store, cached. Never raises.
 
@@ -140,16 +172,24 @@ def probe_all(force: bool = False) -> Dict[str, Dict[str, Any]]:
 
     results: Dict[str, Dict[str, Any]] = {}
 
-    # --- PostgreSQL: durable case + evidence store (Phase 1.5 / 3) ----------
+    # --- PostgreSQL: durable case + evidence store (task 1.5) ---------------
+    #
+    # The one store whose `in_use` is now a real question rather than a
+    # placeholder: since 1.5 the evidence store runs on whatever `DATABASE_URL`
+    # names, so this reports the engine actually bound, not the container that
+    # happens to be listening. A Postgres that is up while the API is pointed at
+    # SQLite is reachable and not in use, and saying so is the whole point of
+    # keeping the two fields apart.
     ok, ms, detail = _tcp_probe(settings.pg_host, settings.pg_port)
+    serving = serving_engine()
     results["postgres"] = StoreStatus(
         name="postgres",
         reachable=ok,
-        in_use=False,
-        serving="sqlite",
+        in_use=serving == "postgres",
+        serving=serving,
         endpoint=f"{settings.pg_host}:{settings.pg_port}",
         latency_ms=ms,
-        detail=detail or "reachable; API still on SQLite until Phase 3",
+        detail=detail or _pg_detail(serving),
     ).as_dict()
 
     # --- Neo4j: fraud entity graph (Phase 3.1) ------------------------------
@@ -196,9 +236,19 @@ def probe_all(force: bool = False) -> Dict[str, Dict[str, Any]]:
 def degraded_tags() -> list[str]:
     """Tags for `/api/health`'s `degraded` list.
 
-    Only emitted for a store the API *would* be using. Today that is none of
-    them, so an absent stack is not a degradation — it is the documented
-    zero-setup default, and reporting it as degraded would cry wolf on every
-    clean clone. This function grows a case per store as Phase 3 migrates each.
+    Only emitted for a store the API *would* be using. An absent stack is not a
+    degradation — it is the documented zero-setup default, and reporting it as
+    degraded would cry wolf on every clean clone. This function grows a case per
+    store as Phase 3 migrates each.
+
+    PostgreSQL is the first with a case to make: since 1.5 the evidence store
+    runs on the configured database, so an operator who asked for Postgres and
+    cannot reach it *is* degraded, and one who never asked is not. The ephemeral
+    default already has its own tag (`db:ephemeral`, from `db.degraded()`), so it
+    is deliberately not repeated here.
     """
-    return []
+    if serving_engine() != "postgres":
+        return []
+    if probe_all().get("postgres", {}).get("reachable"):
+        return []
+    return ["store:postgres:unreachable"]

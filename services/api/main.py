@@ -146,15 +146,19 @@ def health() -> Dict[str, Any]:
             "mode": "enforced" if auth_enabled() else "open (demo)",
         },
         "database": {
-            "backend": "sqlite" if (settings.database_url or "").startswith("sqlite")
-                       or settings.database_url is None else "external",
+            # Names the engine rather than filing everything that is not SQLite
+            # under "external". Since task 1.5 the evidence store runs on this,
+            # so "which database is my case file in" has a real answer and the
+            # status line should give it.
+            "backend": store_probe.serving_engine(),
             "persistent": not db_mod.EPHEMERAL,
             "url_configured": settings.database_url is not None,
         },
         # Which of the compose-stack services are actually reachable. Cached,
         # bounded, and never raising — see stores/probe.py. `in_use` is tracked
-        # separately from `reachable` on purpose: Postgres being up does not
-        # mean the API writes to it yet.
+        # separately from `reachable` on purpose: since 1.5 Postgres is in use
+        # when it is configured, and merely reachable when it is not — Neo4j,
+        # Qdrant and Redis are still reachable-but-unused in every case.
         "infrastructure": store_probe.probe_all(),
         "classifier": {
             "backend": classifier.backend,

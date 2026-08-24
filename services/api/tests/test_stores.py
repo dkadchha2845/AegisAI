@@ -50,6 +50,10 @@ def _all_ports_dead(monkeypatch):
         neo4j_host="127.0.0.1", neo4j_bolt_port=1,
         qdrant_host="127.0.0.1", qdrant_port=1,
         redis_host="127.0.0.1", redis_port=1,
+        # Since 1.5 the Postgres probe also reads which engine the evidence
+        # store is actually bound to, so the double has to carry it. None is
+        # the zero-setup default: the ephemeral SQLite, nothing configured.
+        database_url=None,
     )
     monkeypatch.setattr(store_probe, "settings", dead)
 
@@ -129,3 +133,60 @@ def test_health_is_fast_with_the_stack_in_any_state():
         assert client.get("/api/health").status_code == 200
     per_call_ms = (time.perf_counter() - start) * 100
     assert per_call_ms < 250, f"/api/health averaged {per_call_ms:.0f}ms per call"
+
+
+# --- since 1.5, `in_use` for Postgres is a real answer ----------------------
+
+
+def _bound_to(monkeypatch, url):
+    """Point the probe's config at a given DATABASE_URL, ports still dead."""
+    _all_ports_dead(monkeypatch)
+    monkeypatch.setattr(store_probe.settings, "database_url", url)
+
+
+def test_the_health_line_and_the_probe_name_the_same_engine(monkeypatch):
+    """`/api/health` reports `database.backend` from the same function the probe
+    uses, so the two cannot claim different stores are holding the case files."""
+    _bound_to(monkeypatch, "postgresql+psycopg://aegis@127.0.0.1:5432/aegis")
+    assert store_probe.serving_engine() == "postgres"
+    _bound_to(monkeypatch, "sqlite:///aegis.db")
+    assert store_probe.serving_engine() == "sqlite"
+    _bound_to(monkeypatch, "mysql+pymysql://x@y/z")
+    # An unrecognised dialect is named, not filed under "sqlite". A wrong
+    # store in a status line is the one lie this project cannot afford.
+    assert store_probe.serving_engine() == "mysql+pymysql"
+
+
+def test_postgres_is_not_in_use_on_the_zero_setup_default(monkeypatch):
+    """Reachable is not the same as in use, and the default is not degraded.
+
+    A developer running `make up` has Postgres listening while the API is still
+    on the ephemeral SQLite. Reporting that as "postgres: in use" would advertise
+    a durability the deployment does not have.
+    """
+    _bound_to(monkeypatch, None)
+    pg = store_probe.probe_all(force=True)["postgres"]
+    assert pg["in_use"] is False
+    assert pg["serving"] == "sqlite:ephemeral"
+    assert store_probe.degraded_tags() == []
+
+
+def test_postgres_is_in_use_when_the_evidence_store_is_bound_to_it(monkeypatch):
+    _bound_to(monkeypatch, "postgresql+psycopg://aegis@127.0.0.1:5432/aegis")
+    pg = store_probe.probe_all(force=True)["postgres"]
+    assert pg["in_use"] is True
+    assert pg["serving"] == "postgres"
+
+
+def test_an_unreachable_postgres_is_degraded_only_when_it_was_asked_for(monkeypatch):
+    """The degradation invariant, pointed the right way round.
+
+    An operator who configured Postgres and cannot reach it is degraded and must
+    be told. One who never configured it is running the documented default, and
+    tagging that would cry wolf on every clean clone.
+    """
+    _bound_to(monkeypatch, "postgresql+psycopg://aegis@127.0.0.1:1/aegis")
+    assert store_probe.degraded_tags() == ["store:postgres:unreachable"]
+
+    _bound_to(monkeypatch, "sqlite:///aegis.db")
+    assert store_probe.degraded_tags() == []

@@ -18,14 +18,26 @@ from __future__ import annotations
 import atexit
 import os
 import tempfile
+from typing import Iterator
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, declarative_base, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from .config import settings
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    """Declarative base for every mapped class in the service.
+
+    A real class rather than `declarative_base()`. The factory returns a value
+    whose type mypy cannot follow, so every `class X(Base)` in `models_db.py`
+    and `stores/models.py` reports "invalid base class" — twenty-three errors in
+    a gate that is kept at zero precisely so a new one is visible. SQLAlchemy 2.0
+    added this form for exactly that reason; the mapping behaviour is identical,
+    and both the annotated (`Mapped[int]`) and legacy (`Column(...)`) styles in
+    this repository work unchanged underneath it.
+    """
 
 #: True when running the ephemeral (no DATABASE_URL) database — surfaced on
 #: /api/health. Still ephemeral: the temp file below is unique per process and
@@ -70,14 +82,33 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
 def init_db() -> None:
-    """Create tables. Idempotent — safe to call on every startup."""
+    """Create tables. Idempotent — safe to call on every startup.
+
+    This is the zero-setup path, and it is not the migration path. `create_all`
+    is right for the ephemeral database a clean clone boots on: there is no
+    prior version to migrate *from*, and requiring `alembic upgrade` before the
+    demo runs would trade the whole "clone and run" promise for nothing.
+
+    A durable deployment uses Alembic instead — `services/api/migrations`, or
+    `make migrate`. The two cannot drift apart unnoticed:
+    `test_migrations.py::test_head_matches_models` upgrades an empty database to
+    head and asserts the result is exactly `Base.metadata`, which is what
+    `create_all` would have produced.
+    """
     from . import models_db  # noqa: F401  (register models on Base.metadata)
+    from .stores import models as _store_models  # noqa: F401  (task 1.5 tables)
 
     Base.metadata.create_all(bind=engine)
 
 
-def get_db() -> Session:
-    """FastAPI dependency: a request-scoped session, always closed."""
+def get_db() -> Iterator[Session]:
+    """FastAPI dependency: a request-scoped session, always closed.
+
+    Annotated `Iterator[Session]`, not `Session`: this is a generator, and
+    FastAPI reads that from the function object rather than from the hint. The
+    old annotation described what a caller receives instead of what the function
+    returns, which is a difference mypy is right about.
+    """
     db = SessionLocal()
     try:
         yield db

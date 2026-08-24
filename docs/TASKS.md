@@ -1,9 +1,9 @@
 # AegisAI — Master Task List
 
-> **Status: Phase 0 complete — all seven tasks. Phase 1 — 1.1, 1.2, 1.3 and
-> 1.4 done and verified end-to-end. Awaiting your go-ahead for 1.5.**
-> Last updated 2026-08-24 · branch `codex/phase-0.7-contributor-docs`
-> · 300 tests · all four gates green · ruff + mypy clean
+> **Status: Phase 0 complete — all seven tasks. Phase 1 — 1.1, 1.2, 1.3, 1.4
+> and 1.5 done and verified end-to-end. Awaiting your go-ahead for 1.6.**
+> Last updated 2026-08-25 · branch `codex/phase-0.7-contributor-docs`
+> · 340 tests · all four gates green · ruff + mypy clean
 
 ---
 
@@ -428,19 +428,20 @@ who owns the work, which is a defect in a licence rather than a formality.
 through a LangGraph graph, executed with parallel fan-out, traced, persisted,
 and streamed to the UI — even if only three agents exist.
 
-**Progress: 4 of 9 done** — ✅ 1.1 · ✅ 1.2 · ✅ 1.3 · ✅ 1.4. The input
-classification agent is the first real agent rather than a harness; its accuracy
-bar was ≥98% on a 200-item fixture including 20 adversarial items, and it
-measured **100%**.
+**Progress: 5 of 9 done** — ✅ 1.1 · ✅ 1.2 · ✅ 1.3 · ✅ 1.4 · ✅ 1.5. The
+input classification agent is the first real agent rather than a harness; its
+accuracy bar was ≥98% on a 200-item fixture including 20 adversarial items, and
+it measured **100%**. 1.5 makes an investigation durable: six tables, Alembic
+migrations, and a repository in which an unscoped query is not expressible.
 
-> Note on what 1.1–1.3 do **not** claim: the contract, the agent layer and the
-> orchestrator exist and are exercised, but no HTTP route runs the graph yet.
-> The API still serves through `engine/analyzer.py` exactly as it always has.
-> Wiring the graph into a served path is 1.5 (persistence) and 1.6 (the
-> lifecycle API). So the end-to-end evidence below is "the running system is
-> unharmed, and the new layer does its job when driven against real
-> dependencies" — not "an investigation flows through the API". That sentence is
-> not available until 1.6 and will not be written before then.
+> Note on what 1.1–1.5 do **not** claim: the contract, the agent layer, the
+> orchestrator and the evidence store exist and are exercised, but no HTTP route
+> runs the graph yet. The API still serves through `engine/analyzer.py` exactly
+> as it always has. Wiring the graph into a served path is 1.6 (the lifecycle
+> API). So the end-to-end evidence below is "the running system is unharmed, and
+> the new layer does its job when driven against real dependencies" — not "an
+> investigation flows through the API". That sentence is not available until 1.6
+> and will not be written before then.
 
 ### ✅ 1.1 — `InvestigationState` + `AgentResult` in `schema/` 🔴⭐
 **Done 2026-08-24.** ARCHITECTURE.md §3 implemented in `schema/models.py` and
@@ -805,14 +806,119 @@ The lifecycle API intentionally does not expose this graph yet — that is task
 1.6, and the existing `/api/analyze/text` path remains unchanged. **Effort:**
 8 h estimated. **Depends:** 1.2. ✅
 
-### ⬜ 1.5 — Evidence store (Postgres) 🔴
-**Do:** tables `investigations`, `evidence_items`, `agent_results` (JSONB),
-`findings`, `entities`, `case_entities` · Alembic migrations · repository layer
-with `org_id` isolation enforced **in the repository, not the route** · SQLite
-fallback preserved.
-**Accept:** every agent result persisted and re-readable · a full state rebuilds
-from the DB · a cross-org read is impossible (test proves it) · migrations run
-forward and back. **Effort:** 10 h. **Depends:** 0.4, 1.1.
+### ✅ 1.5 — Evidence store (Postgres) 🔴
+**Done 2026-08-25.** An investigation is now a durable record rather than an
+object the graph handed back. Six tables (`investigations`, `evidence_items`,
+`agent_results`, `findings`, `entities`, `case_entities`), two Alembic
+revisions, and `stores/evidence.EvidenceStore` — the only module that touches
+them.
+
+**Tenant isolation is a shape, not a discipline.** `EvidenceStore` takes one
+`org_id` at construction; no method accepts an organisation, there is no
+`load_any()`, and there is no cross-org escape hatch for a platform owner.
+*A route that forgets to scope a query is a bug; a repository that cannot
+express an unscoped query is a design.* Every one of the six tables carries a
+non-nullable `org_id` with no exceptions, which is what lets the claim be
+checked in one assertion instead of argued in a paragraph — and a seventh table
+added without one fails
+`test_every_table_in_this_store_carries_a_non_nullable_org_id`. A separate test
+asserts no module outside the repository imports those tables, because the
+isolation *is* the repository: there is no row-level security underneath it.
+
+**The rebuild comes from rows, not from a blob.** `load()` reassembles the state
+from `evidence_items`, `agent_results`, `findings` and `case_entities`. Storing
+the whole state as one JSON document would have passed the same acceptance test
+while making the six tables decoration. What genuinely has no queryable home —
+`trace`, `rag_context`, `graph_context`, `risk_features` and eight more — lives
+in one `rest` column, computed as *the contract minus everything a column or a
+table already holds*. Nothing is stored twice, so nothing can disagree, and a
+field added to `InvestigationState` tomorrow round trips without a migration.
+`test_residual_covers_every_contract_field` fails when the contract changes —
+deliberately, so that "column, table, or residual" is a decision someone makes.
+
+**Three judgement calls worth defending.**
+`case_id` is unique **per organisation**: two tenants minting the same id are two
+unrelated cases, and a global constraint would let one org's write fail because
+of a case it may not know exists. Entity values are stored **exactly as
+extracted** — deciding two identifiers are the same identifier is the graph's
+job, and a store that rewrites evidence is not an evidence store. And every
+entity row records `linkable`, copied from the ten fields the contract names:
+`banks`, `locations`, `scam_keywords`, `amounts` and `authorities` are stored
+unlinkable, so Phase 3 cannot build a fraud edge out of two cases both saying
+"SBI".
+
+**Erasure does not depend on a database setting.** The foreign keys declare
+`ON DELETE CASCADE` and PostgreSQL honours them; SQLite ignores cascades unless
+`PRAGMA foreign_keys=ON` is issued per connection. Since deleting a case is the
+right 1.6 exposes to a citizen, `delete_case()` deletes children explicitly and
+prunes entities no surviving case references. The cascade stays declared as a
+backstop, not as the mechanism.
+
+**Two revisions, not one.** `0001` baselines the five tables that predate
+Alembic; `0002` adds the evidence store. Rolling back 1.5 therefore takes six
+tables and leaves the users and saved cases alone — verified, with rows in them.
+An existing `create_all` database is stamped (`alembic stamp 0001`) rather than
+upgraded; running `upgrade` on it instead fails loudly on the first
+`CREATE TABLE`, which is correct, and is asserted.
+
+**A drift check instead of a convention.** `create_all` builds the schema for
+the zero-setup database and Alembic builds it for a durable one. Two code paths
+to one schema become two schemas the day a model is edited and a migration is
+not — and the symptom is a `column does not exist` weeks later, not a red test.
+`test_head_matches_the_models` upgrades an empty database to head and asserts
+`compare_metadata` finds nothing to change.
+
+**One thing this task fixed that it did not set out to.** `services/api/db.py`
+used `declarative_base()`, whose return value mypy cannot follow. The moment the
+typed store layer imported it, the gate that is kept at zero reported **23**
+"invalid base class" errors across `models_db.py` and `stores/models.py`. It is
+now `class Base(DeclarativeBase)` — SQLAlchemy 2.0's typing-aware form, identical
+mapping behaviour, both the annotated and legacy column styles unchanged. Since
+that touches every persisted path, the verification below deliberately runs
+against a **pre-existing** database as well as a fresh one; that is the Phase 0
+lesson, and it is the reason `get_db()`'s return annotation was wrong too
+(`Session` for a generator) and is now `Iterator[Session]`.
+
+**`/api/health` stopped hedging about Postgres.** `in_use` was hard-coded false
+for all four stores with "until Phase 3" in the detail line. For Postgres that is
+now a real question, so it is answered from the configured engine:
+`database.backend` names the dialect instead of filing everything non-SQLite
+under "external", and `store:postgres:unreachable` is emitted **only** when an
+operator asked for Postgres and cannot reach it. Neo4j, Qdrant and Redis are
+untouched and still say Phase 3.
+
+**Verified end-to-end:**
+
+| Check | Result |
+|---|---|
+| Four gates | **340 tests** · contract consistent · frontend typecheck + production build clean |
+| Also | ruff clean · mypy clean (23 → 0) · coverage **72.30%** vs the 65% gate |
+| Module coverage | `evidence.py` **100%** · `models.py` **100%** · `probe.py` 95% |
+| Migrations, SQLite | `upgrade head` → `compare_metadata` **[]** → `downgrade base` → 0 tables → `upgrade head` again |
+| Migrations, **real PostgreSQL 16.6** | Same revisions on the compose stack: **diff []**, and `rest`/`payload` land as genuine `JSONB(astext_type=Text())`, not text |
+| JSONB is real, not a label | `payload->'provenance' @> '["whois"]'` and `jsonb_array_length(rest->'trace')` both answered from the index, without loading a state |
+| Existing database, migrated | A copy of the real `aegis.db` (12 users, 3 orgs, 38 audit rows): un-stamped `upgrade` **failed loudly**; `stamp 0001` + `upgrade head` added the six tables with **every row intact** and no drift |
+| Real graph → real Postgres | Three investigations through `orchestration.investigate` with the inherited entity extractor attached: `round-trip identical=True` for all three, 4 investigations / 4 agent results / 12 findings / 9 entities / 10 case_entities |
+| Cross-tenant, on the live DB | A second store on the same session: `list_cases() == []`, `load() is None`, `cases_for_entity() == []`; writing another org's state raised `OrgMismatch` |
+| Shared-identifier query | `cases_for_entity("upi_ids", "refund@okaxis")` → `['AEG-E2E-1', 'AEG-E2E-2']`; `sbi` and `cbi` stored `linkable=False` |
+| Erasure | `delete_case` removed the case and its children, kept the UPI two cases share, pruned what only it referenced |
+| Running API, pre-existing SQLite | `/api/health` `ok:true`, `degraded: []`; **demo login worked** (`admin@aegis.local`, owner); report saved as `AGIS-0056DBB965EC` (78.0 HIGH); orgs listed |
+| Running API, fresh Postgres | Boots on an Alembic-built schema, seeds, logs in; `database.backend: "postgres"`, `postgres.in_use: true`, `degraded: []`; case record `AGIS-C195F2353912` written to `case_records` |
+| Degradation, live | `docker stop aegis-postgres` → `degraded: ["store:postgres:unreachable"]` and the API still answered `ok:true`; restarting cleared it |
+| Browser | Login → Dashboard → Live Protection demo call → investigation report (**93 · CRITICAL · isolation**), **zero console errors** |
+| False positives | SBI debit alert **16.1 CALM**, delivery notice **7.5 CALM**, real scam **91.0 CRITICAL** — unchanged |
+
+**Not implemented, and stated rather than implied:** `EvidenceItem.uri` points at
+an object store that does not exist, so today an uploaded screenshot's *bytes*
+are not durable — only its hash, metadata and any inline text. Uploads are 1.6.
+Nothing here is encrypted at rest; that is volume encryption at deploy time, not
+a column type, and claiming it in a docstring would be an unmeasured security
+claim. Entity upsert is one `SELECT` per identifier rather than a dialect
+`INSERT … ON CONFLICT` — fine at a few dozen per case, and the first thing to
+change if a backfill gets slow. The graph does not yet write through this store:
+that is 1.6, and no route touches it today.
+
+**Effort:** 10 h estimated. **Depends:** 0.4, 1.1. ✅
 
 ### ⬜ 1.6 — Investigation lifecycle API
 **Do:** `POST /api/investigations` (multipart + JSON) · `GET /{id}` ·

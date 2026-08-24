@@ -5,13 +5,14 @@
 #   make down      stop it, keep data
 #   make reset     stop it and DESTROY all data
 #   make status    what is running, and what the API thinks of it
+#   make migrate   apply schema migrations to a durable DATABASE_URL
 
 COMPOSE   := docker compose -f infra/compose/dev.yml
 PY        := .venv/bin/python
 WEB       := --prefix apps/web
 
 .DEFAULT_GOAL := help
-.PHONY: help gates check lint types cov audit test contract typecheck build up down reset status logs api web install verify-checkpoint eval graph graph-summary
+.PHONY: help gates check lint types cov audit test contract typecheck build up down reset status logs api web install verify-checkpoint eval graph graph-summary migrate migrate-status
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -49,6 +50,14 @@ typecheck: ## Frontend typecheck
 
 build: ## Frontend production build
 	npm run build $(WEB)
+
+migrate: ## Apply schema migrations to DATABASE_URL (the durable store only)
+	@[ -n "$$DATABASE_URL" ] || (echo "Set DATABASE_URL first. The zero-setup ephemeral DB is created by create_all and has nothing to migrate."; exit 1)
+	.venv/bin/alembic upgrade head
+
+migrate-status: ## Which revision DATABASE_URL is on, and what is available
+	.venv/bin/alembic current
+	.venv/bin/alembic history --indicate-current
 
 graph: ## Render the investigation graph as Mermaid
 	$(PY) -m services.api.orchestration
