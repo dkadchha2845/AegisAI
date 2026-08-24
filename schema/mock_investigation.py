@@ -52,9 +52,10 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).parent
-sys.path.insert(0, str(HERE))
+# The repo root — see the note in check_contract.py.
+sys.path.insert(0, str(HERE.parent))
 
-from models import (
+from schema.models import (
     INVESTIGATION_CONTRACT_VERSION,
     AgentResult,
     AgentStatus,

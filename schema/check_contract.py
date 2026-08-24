@@ -32,9 +32,13 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).parent
-sys.path.insert(0, str(HERE))
+# The repo root, not `schema/`, so this file and `services/api/agents/` reach the
+# contract through the same module name. Inserting `schema/` instead would give
+# `models` here and `schema.models` there — two distinct classes for one file,
+# and a pydantic validation that fails for no visible reason.
+sys.path.insert(0, str(HERE.parent))
 
-from models import (
+from schema.models import (
     AgentStatus,
     Event,
     EventKind,
@@ -96,7 +100,7 @@ def check_investigation_fixture() -> list[str]:
     macro-F1 0.269 for a model measuring 0.767. The generator is deterministic
     precisely so this comparison is possible.
     """
-    import mock_investigation as mi
+    from schema import mock_investigation as mi
 
     failures: list[str] = []
     if not mi.JSON_OUT.exists():
@@ -146,7 +150,7 @@ def main() -> int:
     # live-call frame contract and the investigation contract evolve
     # independently — adding an investigation field must not invalidate a client
     # that only speaks frames.
-    from models import CONTRACT_VERSION, INVESTIGATION_CONTRACT_VERSION
+    from schema.models import CONTRACT_VERSION, INVESTIGATION_CONTRACT_VERSION
 
     for name, py_value in (
         ("CONTRACT_VERSION", CONTRACT_VERSION),

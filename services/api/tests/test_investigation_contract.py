@@ -25,19 +25,14 @@ from Python. It is enforced by `npm run typecheck` against the generated
 from __future__ import annotations
 
 import json
-import sys
 from enum import Enum
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT / "schema"))
-
-import check_contract  # noqa: E402
-import mock_investigation  # noqa: E402
-from models import (  # noqa: E402
+from schema import check_contract, mock_investigation
+from schema.models import (
     INVESTIGATION_CONTRACT_VERSION,
     AgentResult,
     AgentStatus,
@@ -51,6 +46,8 @@ from models import (  # noqa: E402
     ThreatLevel,
     utc_now_iso,
 )
+
+ROOT = Path(__file__).resolve().parents[3]
 
 
 @pytest.fixture(scope="module")
@@ -274,7 +271,7 @@ def test_every_contract_enum_is_covered_by_the_drift_check() -> None:
     models.py and a matching array to types.ts passes every gate, and so does
     adding it to only one of them.
     """
-    import models
+    from schema import models
 
     registered = {cls for cls, _ in check_contract.PAIRS}
     declared = {
