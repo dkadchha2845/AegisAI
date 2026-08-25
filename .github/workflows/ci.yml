@@ -95,6 +95,19 @@ jobs:
       - name: Verdict regressions + coverage gate
         run: pytest services/api/tests --cov --cov-report=term
 
+      # Task 1.7b. The step above ran against whichever classifier this runner
+      # has, and that is always the lexical fallback: ml/artifacts/ is
+      # gitignored and nothing here exports a checkpoint. So a green backend job
+      # proves the fallback, not what the application serves — which is exactly
+      # how 1.7 was ticked on the false positive 1.7a then had to fix.
+      #
+      # Asserting the state rather than leaving it implied means the day 4.9
+      # puts a promoted checkpoint on the runner this fails, and someone has to
+      # decide what the gates require, instead of the suite quietly changing
+      # what it proves.
+      - name: Which classifier did the gates prove?
+        run: python -m services.api.serving --require fallback
+
       - name: Contract drift (Python <-> TypeScript)
         run: python schema/check_contract.py
 
@@ -119,7 +132,11 @@ jobs:
           infra = h["infrastructure"]
           assert set(infra) == {"postgres", "neo4j", "qdrant", "redis"}, infra
           assert not any(s["reachable"] for s in infra.values()), infra
-          print("health ok:", h["classifier"]["backend"], "|", h["classifier"]["reason"])
+          # 1.7b: the same pin, on the served endpoint rather than in-process.
+          clf = h["classifier"]
+          assert clf["serving_best"] is False, ("a promoted checkpoint is serving on CI - see 1.7b", clf)
+          assert "clf:lexical_fallback" in h["degraded"], h["degraded"]
+          print("health ok:", clf["backend"], "|", clf["reason"])
           print("degraded:", h["degraded"])
           '
 

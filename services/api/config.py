@@ -69,6 +69,20 @@ class Settings(BaseSettings):
         description="Fitted transition matrix + dwell times for the Digital Twin.",
     )
 
+    # --- Which model a run is allowed to prove (task 1.7b) -----------------
+    require_serving_best: bool = Field(
+        default=False,
+        validation_alias=_alias("REQUIRE_SERVING_BEST"),
+        description="Make the gates fail when a genuine fallback classifier is "
+                    "serving instead of the best available model. Off by "
+                    "default, because a clean clone has no checkpoint and that "
+                    "is the documented zero-setup path. Set it on a machine "
+                    "that has the weights: `AEGIS_REQUIRE_SERVING_BEST=1 make "
+                    "gates` is the checkpoint-backed gate run, and it says so "
+                    "rather than quietly proving the stand-in. See "
+                    "services/api/serving.py.",
+    )
+
     # --- Retrieval ---------------------------------------------------------
     prefer_dense_embeddings: bool = Field(
         default=True,

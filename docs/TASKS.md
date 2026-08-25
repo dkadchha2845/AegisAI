@@ -1312,22 +1312,59 @@ scoring fix. And the gate gap itself is recorded, not closed: see below.
 
 **Effort:** 3 h. **Depends:** 1.7. ✅
 
-### ⬜ 1.7b — The gates cannot see a checkpoint-dependent defect
+### 🔨 1.7b — The gates cannot see a checkpoint-dependent defect
 
-**Do:** `ml/artifacts/*` is gitignored and `ci.yml` has no checkpoint step, so
-CI runs the lexical fallback for every test, for ever. Every benign-input test
-the contributor rules mandate per agent therefore proves something about the
-fallback and nothing about what is served — which is exactly how 1.7a reached a
-tick. Recorded here rather than fixed: the mechanism belongs to **4.9**, whose
-model registry and promotion gate own checkpoint availability, and to **4.8**,
-whose false-positive harness is the thing that should be running against a real
-model in the first place.
+**The gap.** `ml/artifacts/*` is gitignored and `ci.yml` has no checkpoint step,
+so CI runs the lexical fallback for every test, for ever. Every benign-input
+test the contributor rules mandate per agent therefore proves something about
+the fallback and nothing about what is served — which is exactly how 1.7a
+reached a tick. Closing it needs a promoted checkpoint reachable from a gate
+run, which is **4.9**'s model registry, and a false-positive harness worth
+pointing at one, which is **4.8**'s.
 
-**Accept:** 4.9 defines how a promoted checkpoint is obtained in CI (or states
-that it is not, and what compensates) · the false-positive suite from 4.8 runs
-against a served model, not a fallback · `/api/health`'s `serving_best` is what
-a gate asserts rather than something only a human reads.
-**Effort:** folded into 4.8/4.9. **Depends:** 4.8, 4.9.
+**What was closed now (2026-08-25) — the third criterion.** The gap is not that
+the fallback runs; on a clean clone it is the correct thing to run. The gap is
+that **a green run did not say which model it proved**, so "439 passed" read
+identically either way. `services/api/serving.py` turns the three facts
+`/api/health` already publishes into something a gate asserts:
+
+| Mechanism | What it does |
+|---|---|
+| `pytest_report_header` + `pytest_terminal_summary` | every run states its classifier. `addopts = "-q"` plus `make test`'s own `-q` is verbosity −2, at which pytest prints neither a header nor its own "N passed" — so this line is the one thing a gate run always says about itself |
+| `AEGIS_REQUIRE_SERVING_BEST=1` | makes a genuine fallback **fail the backend suite**. `AEGIS_REQUIRE_SERVING_BEST=1 make gates` is the checkpoint-backed gate run, and it fails rather than quietly proving the stand-in |
+| `python -m services.api.serving --require fallback` | a CI step that *pins* the runner's permanent state. The day 4.9 puts a promoted checkpoint there it fails, and someone has to decide what the gates require |
+| health-step assertions in `ci.yml` | `serving_best is False` and `clf:lexical_fallback` present, on the served endpoint rather than in-process |
+| `make serving` | reports what would serve, requiring nothing |
+
+The report is read from `classifier.py`'s own globals, not recomputed:
+`test_report_matches_health_field_for_field` pins the gate and the dashboard to
+one derivation, because `loaded` was already reported wrongly twice by a second
+one. `checkpoint_present` is tracked apart from `loaded`, so the checkout that
+has 3.5 GB of weights and no torch — a legitimate configuration, and the exact
+shape of a silent substitution — can never read as "the best model is serving".
+
+**Verified 2026-08-25.** Four gates green — **451 tests** (439 → 451, twelve new
+in `test_serving_backend.py`), contract consistent, frontend typecheck and
+production build clean; ruff and mypy clean. The suite was run in all four
+combinations of `AEGIS_REQUIRE_SERVING_BEST` × checkpoint present: green in
+three, and in the fourth exactly one test fails, the one that should. Against a
+running uvicorn: without a checkpoint `backend: lexical`, `serving_best: false`,
+`degraded` carries `clf:lexical_fallback`; with `AEGIS_ARTIFACTS` pointed at a
+full checkout, `backend: fused`, `loaded: true`, `serving_best: true`, and the
+tag is gone.
+
+**Still open, and why it is not ticked.** Two of the three acceptance criteria
+are not this task's to close. 4.9 owns how a promoted checkpoint is obtained in
+CI — or the statement that it is not, and what compensates. 4.8 owns the
+false-positive suite that should be running against a served model. Until both
+land, the honest description of a green CI run is "the fallback passed" — a
+sentence the run now prints for itself.
+
+**Accept:** ~~`/api/health`'s `serving_best` is what a gate asserts rather than
+something only a human reads~~ ✅ · 4.9 defines how a promoted checkpoint is
+obtained in CI (or states that it is not, and what compensates) · the
+false-positive suite from 4.8 runs against a served model, not a fallback.
+**Effort:** 2 h spent; the remainder folded into 4.8/4.9. **Depends:** 4.8, 4.9.
 
 ### ⬜ 1.8 — Async job system (Redis + Celery)
 **Do:** worker service · queues by cost class (`fast`, `slow`, `sandbox`) ·

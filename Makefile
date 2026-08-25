@@ -12,7 +12,7 @@ PY        := .venv/bin/python
 WEB       := --prefix apps/web
 
 .DEFAULT_GOAL := help
-.PHONY: help gates check lint types cov audit test contract typecheck build up down reset status logs api web install verify-checkpoint eval graph graph-summary migrate migrate-status
+.PHONY: help gates check lint types cov audit test contract typecheck build up down reset status logs api web install serving verify-checkpoint eval graph graph-summary migrate migrate-status
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -64,6 +64,9 @@ graph: ## Render the investigation graph as Mermaid
 
 graph-summary: ## Which agents are registered, by tier
 	$(PY) -m services.api.orchestration --summary
+
+serving: ## Which classifier would serve, and whether it is the best available
+	$(PY) -m services.api.serving
 
 verify-checkpoint: ## Check the on-disk model against the recorded metrics
 	$(PY) -m ml.evaluation.manifest

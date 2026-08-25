@@ -35,6 +35,19 @@ only passing count is the count reported by the current command.
 
 Use `.venv/bin/python`, never system python — pydantic isn't installed globally.
 
+**On a machine that has the weights, run the gates with the model:**
+
+```bash
+AEGIS_REQUIRE_SERVING_BEST=1 make gates
+```
+
+`ml/artifacts/` is gitignored, so a worktree or a CI runner has no checkpoint
+and every gate run there proves the **lexical fallback** rather than what the
+application serves. That is how task 1.7 was ticked on the benign false positive
+1.7a had to fix. Every run now names its classifier in its own output, and the
+variable above turns "a fallback is serving" from a line to notice into a gate
+that fails. `make serving` reports what would serve without requiring anything.
+
 ## Definition of done — before ticking a task
 
 - [ ] Implement only the task you were explicitly asked to start; do not fold
@@ -118,6 +131,10 @@ panel. Then run the four gates.
   `ml/artifacts/backend_comparison.json`.** If the classifier looks weak, check
   the promotion gate before retraining — a blind retrain risks overwriting a
   good checkpoint.
+- **A green suite in a fresh worktree proves the fallback.** `ml/artifacts/` is
+  3.5 GB and gitignored, so a new worktree has 8 KB of it. Point
+  `AEGIS_ARTIFACTS` at a full checkout's `ml/artifacts` before a benign-input
+  test means anything (task 1.7b).
 - **Dense script matching measured *worse* than lexical** on Hinglish
   false-positive discipline. It stays behind `AEGIS_DENSE_SCRIPTS`.
 - **English scam scoring is borderline on short inputs**; Hindi/Hinglish is
