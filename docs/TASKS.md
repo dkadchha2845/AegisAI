@@ -416,9 +416,11 @@ reinstall of `aegis-core`).
 the intended lifecycle: a note with an expiry, not a permanent excuse.
 300 tests, four gates green, ruff + mypy clean.
 
-**⚠️ Left for you:** the copyright line names one holder. You said there is a
-co-author; tell me the name and I will amend it. Until then the line understates
-who owns the work, which is a defect in a licence rather than a formality.
+**Copyright holders: Dhrumil Kadchha and Smruthi Chandrashekar.** The line was
+written with one holder and corrected once the owner supplied the co-author's
+name. A test now asserts both names are present — a name is the easiest thing in
+a licence to lose to a careless rewrite, and a licence that understates who owns
+the work is a defect in the licence rather than a formality.
 
 ---
 

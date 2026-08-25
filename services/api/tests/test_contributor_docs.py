@@ -264,6 +264,13 @@ def test_every_file_that_names_a_licence_names_the_same_one() -> None:
     licence_text = read("LICENSE")
     assert licence_text.startswith("MIT License"), "LICENSE is no longer MIT"
 
+    # Both holders, named. The line was written with one and corrected to two
+    # once the owner supplied the co-author; a licence that understates who owns
+    # the work is a defect in the licence rather than a formality, and a name is
+    # the easiest thing in a file like this to lose to a careless rewrite.
+    for holder in ("Dhrumil Kadchha", "Smruthi Chandrashekar"):
+        assert holder in licence_text, f"the copyright line no longer names {holder}"
+
     sources = {
         "README badge": "badge/license-MIT-blue" in read("README.md"),
         "docs/DATASETS.md": "Released under **MIT**" in read("docs/DATASETS.md"),
