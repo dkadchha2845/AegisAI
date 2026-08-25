@@ -299,11 +299,12 @@ aegisai/
 │   │   ├── orchestration/            # ── NEW: LangGraph
 │   │   │   ├── graph.py  nodes.py  policy.py  trace.py
 │   │   ├── investigations/           # ── NEW: lifecycle — intake, runner, report
+│   │   ├── jobs/                     # ── NEW: broker probe, journal, cost-class routing
 │   │   ├── engine/                   # inherited call engine → conversation agents
 │   │   ├── ingest/  intel/  shield/  rag/  routes/
 │   │   ├── stores/                   # ── NEW: evidence + blobs; neo4j / qdrant / redis
 │   │   └── tests/
-│   └── worker/                       # ── NEW: Celery — APK, video, TI refresh
+│   └── worker/                       # ── NEW: Celery — fast / slow / sandbox queues
 │
 ├── packages/
 │   └── aegis_core/                   # shared domain: taxonomy, entities, Hinglish
@@ -347,7 +348,7 @@ defence. Each move is its own commit with tests green on both sides.
 | Relational | **PostgreSQL** | JSONB for agent results, real concurrency. SQLite stays as the zero-setup fallback. |
 | Graph | **Neo4j** | See **ADR-0002**. NetworkX retained as the offline fallback. |
 | Vector | **Qdrant** | Named preference; good filtered-search story for per-org isolation. |
-| Cache/queue | **Redis + Celery** | Needed the moment APK/video/TI leave the request path. |
+| Cache/queue | **Redis + Celery** | Needed the moment APK/video/TI leave the request path. Built in 1.8: three queues by cost class, `acks_late` so a crashed worker's job is redelivered, a Redis-backed progress journal so any API replica can serve the stream, and an in-process fallback tagged `queue:in_process` when no broker answers. |
 | LLM | **Provider-abstracted** | `LLMBackend` protocol. Gemini today, local Llama/Gemma supported. Never hard-coded — master §22. |
 | Embeddings | **Sentence-Transformers** (multilingual) | Must handle Hindi/Hinglish. |
 | ASR | **faster-whisper** | 4× realtime on CPU; streaming-capable. |
@@ -364,7 +365,7 @@ Security is not a phase; it is a property of specific components.
 | Control | Where | Why |
 |---|---|---|
 | **SSRF defence** | URL agent | Attacker-supplied URLs. Allowlist egress, block RFC1918 + link-local + `169.254.169.254`, re-resolve DNS after redirect, cap redirect depth, no `file://`/`gopher://`. **The single highest-risk component in AegisAI.** |
-| **Malware isolation** | APK agent | Static analysis only, in a network-less container, read-only mount, resource caps. Never execute. |
+| **Malware isolation** | APK agent | Static analysis only, in a network-less container, read-only mount, resource caps. Never execute. **Not built.** 1.8 added the `sandbox` queue, which is a *cost class* and not yet a boundary: the queue is chosen at dispatch from the filename and declared MIME type, so an APK renamed `photo.jpg` runs on `fast`. 2.8 brings the container, and must enforce isolation where the sniffed type is known — inside the agent, or by re-dispatching after the classifier node — not by trusting that guess. |
 | **Upload validation** | API gateway | Size cap enforced *while reading* and filename sanitisation at intake; the magic-byte type check runs on the classifier node so a declared/detected mismatch becomes a `type_conflict` finding rather than a 415 with nothing recorded. Per-org quota is not built. |
 | **Tenant isolation** | Every store | `org_id` on every row, node and vector payload. Enforced in the repository layer, not the route. |
 | **Secrets** | Config | Env only, never committed. Verified: no key has ever entered git history. |

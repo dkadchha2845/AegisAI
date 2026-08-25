@@ -1059,7 +1059,13 @@ def test_an_unwritable_evidence_directory_degrades_the_submission(
         "/api/investigations", files={"files": ("notice.png", _PNG, "image/png")}
     )
     assert response.status_code == 202
-    assert response.json()["degraded"] == ["store:blobs:unwritable"]
+    degraded = response.json()["degraded"]
+    # Two tags, and they are different kinds of thing. The blob tag is what this
+    # test is about. `queue:in_process` arrived with 1.8 and says where the graph
+    # will run — the suite pins the queue off, so it is deterministic here; the
+    # set comparison is what keeps a third, unexplained tag from creeping in.
+    assert "store:blobs:unwritable" in degraded
+    assert set(degraded) == {"store:blobs:unwritable", "queue:in_process"}
 
     case_id = response.json()["case_id"]
     state = finish(client, case_id)

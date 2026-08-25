@@ -114,8 +114,10 @@ no_implicit_optional = true
 files = [
     "services/api/agents",
     "services/api/investigations",
+    "services/api/jobs",
     "services/api/orchestration",
     "services/api/stores",
+    "services/worker",
 ]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
@@ -131,6 +133,14 @@ check_untyped_defs = true
 # kept at zero precisely so a new one is visible.
 module = ["services.api.engine.*", "services.api.rag.*"]
 follow_imports = "silent"
+
+[[tool.mypy.overrides]]
+# Celery and kombu ship no type information and have no maintained stubs. Task
+# 1.8 touches them in exactly two places — the app configuration and the two
+# task decorators — and both are asserted by `test_jobs_worker.py`, which is a
+# better check on a configuration table than a type would be.
+module = ["celery.*", "kombu.*"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 # reportlab ships no type information, and `types-reportlab` is not a dependency

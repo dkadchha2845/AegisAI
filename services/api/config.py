@@ -135,6 +135,51 @@ class Settings(BaseSettings):
     qdrant_port: int = Field(default=6333, ge=1, le=65535, validation_alias=_alias("QDRANT_PORT"))
     redis_host: str = Field(default="127.0.0.1", validation_alias=_alias("REDIS_HOST"))
     redis_port: int = Field(default=6379, ge=1, le=65535, validation_alias=_alias("REDIS_PORT"))
+    redis_db: int = Field(default=0, ge=0, le=15, validation_alias=_alias("REDIS_DB"))
+    redis_url: Optional[str] = Field(
+        default=None,
+        validation_alias=_alias("REDIS_URL"),
+        description="Full broker URL, for a Redis that needs a password or TLS. "
+                    "Unset => built from the host/port/db above, so the compose "
+                    "stack needs no extra variable. This is the one place a "
+                    "credential could appear, which is why /api/health reports "
+                    "it through `jobs.broker.describe()` and never verbatim.",
+    )
+
+    # --- Async job system (task 1.8) ---------------------------------------
+    queue_enabled: bool = Field(
+        default=True,
+        validation_alias=_alias("QUEUE"),
+        description="Run investigations on a Celery worker when the broker is "
+                    "reachable. On by default and self-degrading: with no Redis "
+                    "the graph runs in the API process exactly as it did before "
+                    "1.8, tagged `queue:in_process`. Set false to pin that "
+                    "behaviour — useful in tests and on a laptop demo.",
+    )
+    queue_visibility_timeout_s: int = Field(
+        default=1800,
+        ge=10,
+        le=24 * 3600,
+        validation_alias=_alias("QUEUE_VISIBILITY_TIMEOUT"),
+        description="How long a job taken by a worker stays invisible before the "
+                    "broker offers it to another one. This is what makes 'a "
+                    "worker crash loses no work' finite rather than theoretical: "
+                    "Celery's Redis default is an hour, so a SIGKILLed worker's "
+                    "job is redelivered an hour later. It must stay LONGER than "
+                    "the slowest task, or a job still running is handed to a "
+                    "second worker; 30 minutes clears the `sandbox` queue's "
+                    "stated budget of minutes with an order of magnitude spare.",
+    )
+    queue_max_retries: int = Field(
+        default=2,
+        ge=0,
+        le=10,
+        validation_alias=_alias("QUEUE_MAX_RETRIES"),
+        description="Redeliveries before an investigation is dead-lettered. Low "
+                    "on purpose: the graph already retries individual agents and "
+                    "returns COMPLETE with a degraded tag, so a task that raises "
+                    "is the orchestrator failing, which repeats.",
+    )
 
     # --- Transport & hardening ---------------------------------------------
     cors_origins: tuple[str, ...] = ("http://localhost:5173", "http://127.0.0.1:5173")

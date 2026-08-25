@@ -31,6 +31,18 @@ import os
 os.environ["DATABASE_URL"] = ""
 os.environ["AEGIS_LLM"] = "none"
 
+# Task 1.8's queue is pinned off for the same reason. A developer's machine may
+# well have the compose stack up, and with a reachable broker every submission
+# would be handed to a Celery worker that the test session has not started —
+# so the suite would hang on a stream waiting for a node nobody is executing.
+# Worse, it would hang *only* on machines with Redis running, which is the kind
+# of "green here, red there" the two lines above already exist to prevent.
+#
+# The queue path is not therefore untested: `test_jobs_*.py` turn it back on
+# explicitly and skip with a printed reason when no broker answers. See the
+# summary line this file writes, and task 1.7b for why it is printed.
+os.environ["AEGIS_QUEUE"] = "0"
+
 
 # ---------------------------------------------------------------------------
 # The built-in agent set, restored before every test
@@ -90,7 +102,7 @@ def pytest_report_header() -> str:
     """
     from services.api.serving import describe
 
-    return describe()
+    return "\n".join([describe(), _queue_line()])
 
 
 def pytest_terminal_summary(terminalreporter) -> None:  # type: ignore[no-untyped-def]
@@ -106,3 +118,22 @@ def pytest_terminal_summary(terminalreporter) -> None:  # type: ignore[no-untype
     from services.api.serving import describe
 
     terminalreporter.write_line(describe())
+    terminalreporter.write_line(_queue_line())
+
+
+def _queue_line() -> str:
+    """Whether the Redis-backed half of task 1.8 was exercised or skipped.
+
+    The queue is pinned off for the suite (see the top of this file), so the
+    only thing that decides whether `test_jobs_journal.py` and
+    `test_jobs_worker.py` actually run is whether a broker answers. That makes
+    them exactly the shape 1.7b is about — tests that can pass by not running —
+    so the run says which it did.
+    """
+    from services.api.jobs import broker
+
+    ok, reason = broker.probe()
+    where = broker.describe()
+    if ok:
+        return f"queue: broker at {where} answered — Redis journal and worker tests ran"
+    return f"queue: no broker at {where} ({reason.split(':')[0]}) — those tests SKIPPED"

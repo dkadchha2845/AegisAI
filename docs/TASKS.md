@@ -1,10 +1,14 @@
 # AegisAI — Master Task List
 
-> **Status: Phase 0 complete — all seven tasks. Phase 1 — 1.1 through 1.7a done
-> and verified end-to-end. An investigation flows through the API, and the
-> inherited engine now runs inside the graph. 1.7a fixed a benign false positive
-> that 1.7's tests could not see, because they ran without the served
-> checkpoint. Awaiting your go-ahead for 1.8.**
+> **Status: Phase 0 complete — all seven tasks. Phase 1 — 1.1 through 1.8 done
+> and verified end-to-end; 1.7b is in progress and the rest of it belongs to
+> 4.8/4.9. An investigation flows through the API, the inherited engine runs
+> inside the graph, and since 1.8 the graph runs on a Celery worker rather than
+> on the event loop that answered the request — a 90-second job no longer
+> occupies a worker slot, and a `kill -9` mid-job loses nothing. 1.7a fixed a
+> benign false positive that 1.7's tests could not see because they ran without
+> the served checkpoint; 1.7b is why a run now says which model it proved.
+> Awaiting your go-ahead for 1.9.**
 > Last updated 2026-08-25 · branch `main`
 > · 439 tests · all four gates green · ruff + mypy clean
 
@@ -433,8 +437,8 @@ the work is a defect in the licence rather than a formality.
 through a LangGraph graph, executed with parallel fan-out, traced, persisted,
 and streamed to the UI — even if only three agents exist.
 
-**Progress: 7 of 9 done** — ✅ 1.1 · ✅ 1.2 · ✅ 1.3 · ✅ 1.4 · ✅ 1.5 · ✅ 1.6 ·
-✅ 1.7 · ✅ 1.7a. The input classification agent is the first real agent rather than a
+**Progress: 8 of 9 done** — ✅ 1.1 · ✅ 1.2 · ✅ 1.3 · ✅ 1.4 · ✅ 1.5 · ✅ 1.6 ·
+✅ 1.7 · ✅ 1.7a · 🔨 1.7b · ✅ 1.8. The input classification agent is the first real agent rather than a
 harness; its accuracy bar was ≥98% on a 200-item fixture including 20
 adversarial items, and it measured **100%**. 1.5 makes an investigation durable:
 six tables, Alembic migrations, and a repository in which an unscoped query is
@@ -449,11 +453,14 @@ real checkpoint exposed, in `engine/` where it had lived since KAVACH.
 > from a real browser page, not only in tests. "Even if only three agents exist"
 > is satisfied and then some.
 >
-> One qualification remains, and it is 1.8's: the graph runs **in the API
-> process** rather than on a worker, so a restart loses an in-flight run. The
-> older `engine/analyzer.py` path is untouched and still serves `/api/analyze/*`;
-> the two now provably agree, signal for signal, on the same input — which is
-> what 1.7 was for.
+> The one qualification that remained was 1.8's, and 1.8 has closed it: the
+> graph runs on a Celery worker when a broker is reachable, so a restart no
+> longer loses an in-flight run and a slow agent no longer occupies a worker
+> slot. With no broker it runs in the API process exactly as before, which is
+> the documented zero-setup path and is reported as `execution.mode: in-process`
+> rather than assumed. The older `engine/analyzer.py` path is untouched and
+> still serves `/api/analyze/*`; the two provably agree, signal for signal, on
+> the same input — which is what 1.7 was for.
 
 ### ✅ 1.1 — `InvestigationState` + `AgentResult` in `schema/` 🔴⭐
 **Done 2026-08-24.** ARCHITECTURE.md §3 implemented in `schema/models.py` and
@@ -1366,12 +1373,105 @@ obtained in CI (or states that it is not, and what compensates) · the
 false-positive suite from 4.8 runs against a served model, not a fallback.
 **Effort:** 2 h spent; the remainder folded into 4.8/4.9. **Depends:** 4.8, 4.9.
 
-### ⬜ 1.8 — Async job system (Redis + Celery)
-**Do:** worker service · queues by cost class (`fast`, `slow`, `sandbox`) ·
-result backend into the evidence store · dead-letter + retry policy.
-**Accept:** a 90-second APK-shaped stub runs off the request path · API returns
-in <1 s with a pending investigation that later completes · worker crash loses
-no work. **Effort:** 8 h. **Depends:** 0.4, 1.5.
+### ✅ 1.8 — Async job system (Redis + Celery)
+
+**Done 2026-08-25.** The graph no longer runs on the event loop that serves
+requests. `services/worker/` is a Celery app with three queues by cost class;
+`services/api/jobs/` is the API's half — a cached broker probe, the progress
+journal behind an interface, and cost-class routing. `routes/investigations.py`
+was not edited: 1.6 wrote that "the shape here — start, journal, follow, persist
+— is deliberately the shape a queue backend would keep, so 1.8 changes where
+`_drive` runs and not what a route calls", and that turned out to be true.
+
+**The journal was the hard part, not the queue.** 1.6's journal is a Python list
+on the object running the graph, and its reconnect contract rests on a follower
+holding an *index* into that list. Once the worker is a different process, the
+list is invisible to the API serving the stream. So it became an interface with
+two implementations — `MemoryJournal` (1.6, unchanged) and `RedisJournal` (a
+list, a pub/sub channel in place of the `asyncio.Event`, a TTL in place of the
+eviction sweep) — and `test_jobs_journal.py` runs **the same conformance tests
+against both**, so a behaviour that holds in memory and not in Redis is a
+failure rather than a discovery in 1.9. That parametrisation caught the one real
+journal defect: a follower resuming from an index at or past the end of a
+*finished* Redis journal yielded nothing and then waited forever on a channel
+that would never carry another message, because "done" was being decided from
+the events that call happened to emit rather than from the journal.
+
+The state snapshot is stored beside the events rather than derived from them.
+`GET /{id}` must not disagree with the stream, and an event carries only what a
+node *added* — accumulating them would rebuild a state one fragment-merge away
+from the real one, which is the same hazard `investigate_stream` documents about
+reconstructing from `updates`.
+
+**Where a queue tag goes, and where it does not.** `queue:in_process` is
+reported on the 202 and on `/api/health`, and deliberately **not** written onto
+`InvestigationState.degraded`. Where an investigation executed is a property of
+the deployment, not of the case: the analysis is identical either way, and
+`stores/probe.degraded_tags()` had already settled the same question for
+Postgres — an absent stack is the documented zero-setup default, not a
+degradation. 1.7's own notes record what happens otherwise: a tag raised on
+every case is a field people stop reading. Two tags do go up: `queue:unavailable`
+on the *case*, when the broker answered PING and then would not take the job —
+a real, per-case failure — and `queue:no_workers` on *health*, for the one
+unambiguously broken state, a reachable broker nobody is consuming.
+
+**Crash safety is four settings, not code.** `task_acks_late`,
+`task_reject_on_worker_lost`, `worker_prefetch_multiplier = 1`, and the
+visibility timeout. They are one decision, and `test_jobs_worker.py` asserts
+each by name with the reason attached, because a silent default change would
+otherwise only surface as work disappearing in production. The fourth is the one
+that is easy to miss: Celery's Redis default is **3600 s**, so a SIGKILLed
+worker's job is redelivered an hour later — the guarantee holds and nobody waits
+for it. `AEGIS_QUEUE_VISIBILITY_TIMEOUT` defaults to 1800 s, which must stay
+*longer* than the slowest task or a merely-slow job is handed to a second worker.
+
+**Verified end to end 2026-08-25**, against a real Redis, a real Celery worker
+and a durable SQLite store, with the MuRIL checkpoint loaded:
+
+| Acceptance criterion | Measured |
+|---|---|
+| a 90-second APK-shaped stub runs off the request path | `aegis.sandbox.probe(90)` on the `sandbox` queue; `POST /api/investigations` answered **202 in 52 ms** while it ran, and the investigation completed with 6 agent results before the probe was a third done |
+| API returns in <1 s with a pending investigation that later completes | 202 in **20–66 ms** across runs, `status: QUEUED`, `GET /{id}` immediately readable as QUEUED, **COMPLETE after 2.1 s** with a report and a 6-span trace |
+| worker crash loses no work | a 120-second job, worker **`kill -9`** mid-task. Redis then held it in `unacked` (1) with the queue list empty — not lost, not acked. A restarted worker was redelivered **the same task id** `3817d741-…` ~30 s later and ran it to completion. Separately: a case submitted with **no worker running at all** stayed QUEUED, raised `queue:no_workers` on health, and completed with 5 agent results the moment a worker started |
+
+Also verified on the running pair: the SSE stream **crosses processes** — the
+worker wrote the journal into Redis and the API served it, nine events, seq 1–9
+contiguous, `Last-Event-ID: 3` resuming as exactly 4–9 with no duplicate. And
+the degradation path in the live app: `docker stop aegis-redis` →
+`execution.mode: in-process`, submission answered in **19 ms** with
+`queue:in_process` on the 202, graph completed in-process with 5 agents.
+
+Fixing that last path found a second real defect. The broker probe is cached for
+ten seconds, so "reachable" is a fact about the recent past; a broker that went
+away inside that window raised out of the journal's first write and turned a
+submission into a **500** — invariant 4's failure arriving through the machinery
+built to honour it. Every Redis touch on the submission path is now inside one
+try, with the in-process fallback under it.
+
+**Four gates green — 518 tests** (451 → 518: 67 new across
+`test_jobs_journal.py`, `test_jobs_dispatch.py` and `test_jobs_worker.py`),
+contract consistent, frontend typecheck and production build clean; ruff clean
+and mypy clean over 37 files, the gate now covering `services/api/jobs` and
+`services/worker`. Run three ways: with a broker (518 passed), with
+`AEGIS_REDIS_URL` at a closed port (495 passed, 23 skipped — the CI shape), and
+with `AEGIS_REQUIRE_SERVING_BEST=1` against the real checkpoint (518 passed).
+CI now runs a Redis service container so those 23 stop being skipped there,
+which is 1.7b's lesson applied to the code this task added.
+
+**Limitations, stated.** The `sandbox` queue is a **cost class, not yet a
+security boundary**. Which queue a job takes is decided at dispatch from the
+filename and declared MIME type — the only things known before the graph's
+classifier node sniffs the bytes — so an APK renamed `photo.jpg` runs on `fast`.
+That is sound for scheduling and costs a worker slot; 2.8 brings the
+network-less container, and must enforce isolation where the sniffed type is
+known rather than trusting that guess. There is no worker container in
+`infra/compose/dev.yml`: the stack is infrastructure-only and the API already
+runs on the host, so the worker does too (`make worker`). And `acks_late` means
+a job can run twice — everything a run writes is keyed on the case id so a
+redelivery overwrites, but an agent that ever acquires a side effect outside
+those keys needs its own idempotency key.
+
+**Effort:** 8 h estimated. **Depends:** 0.4, 1.5. ✅
 
 ### ⬜ 1.9 — Frontend: investigation launcher + live progress
 **Do:** `/investigate` — evidence-type chooser, drag-drop upload, consent

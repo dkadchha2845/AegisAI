@@ -71,6 +71,7 @@ from ..engine.report_pdf import pdf_available
 from ..investigations import intake as intake_mod
 from ..investigations.report import build_report, render_pdf
 from ..investigations.runner import runner
+from ..jobs import broker as queue_broker
 from ..models_db import User
 from ..orchestration.graph import node_plan
 from ..orgs import evidence_scope
@@ -300,13 +301,20 @@ async def create_investigation(
         org_id=user.org_id,
     )
 
-    runner.start(state, scope)
+    run = runner.start(state, scope)
     return AcceptedInvestigation(
         case_id=case_id,
         status=state.status,
-        investigation=state,
+        investigation=run.state,
         stream=f"/api/investigations/{case_id}/stream",
-        degraded=list(result.degraded),
+        # `queue:in_process` is added here and nowhere else. Since 1.8 the graph
+        # runs on a Celery worker when a broker is reachable; when it does not,
+        # a restart loses this run, and the client submitting it is the one that
+        # should be told. It is deliberately not written onto the case — see
+        # `jobs/broker.IN_PROCESS` for why execution location is a property of
+        # the deployment rather than of the investigation.
+        degraded=list(run.state.degraded if run.state.degraded else result.degraded)
+        + ([] if run.queued else [queue_broker.IN_PROCESS]),
     )
 
 

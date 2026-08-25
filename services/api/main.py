@@ -31,6 +31,9 @@ from .engine import classifier as classifier_mod
 from .engine.classifier import load_classifier
 from .engine.twin import DigitalTwin
 from .intel import get_intel
+from .jobs import broker as job_broker
+from .jobs import queue_purpose
+from .jobs.journal import dead_letters
 from .orchestration.graph import graph_summary
 from .rag.coach import get_coach
 from .rag.store import get_kb
@@ -157,6 +160,8 @@ def health() -> Dict[str, Any]:
     # its job and there is nothing to warn about — see classifier.serving_is_fallback.
     if classifier_mod.serving_is_fallback:
         degraded.append("clf:lexical_fallback")
+    execution = _execution_status()
+    degraded.extend(execution["degraded"])
 
     return {
         "ok": True,
@@ -195,11 +200,18 @@ def health() -> Dict[str, Any]:
         # its own evidence, which is why `blobs:ephemeral` is raised for exactly
         # that combination and not for an all-ephemeral install.
         "evidence_storage": blob_store.status(),
+        # Where an investigation's graph actually runs (task 1.8). Reported
+        # rather than assumed for the same reason `database.backend` is: "on a
+        # worker" and "on the event loop that answered your POST" are different
+        # systems with different failure modes, and only one of them survives a
+        # restart with an investigation in flight.
+        "execution": execution,
         # Which of the compose-stack services are actually reachable. Cached,
         # bounded, and never raising — see stores/probe.py. `in_use` is tracked
         # separately from `reachable` on purpose: since 1.5 Postgres is in use
-        # when it is configured, and merely reachable when it is not — Neo4j,
-        # Qdrant and Redis are still reachable-but-unused in every case.
+        # when it is configured and merely reachable when it is not, and since
+        # 1.8 Redis is in use whenever it is reachable and the queue is enabled.
+        # Neo4j and Qdrant are still reachable-but-unused in every case.
         "infrastructure": store_probe.probe_all(),
         "classifier": {
             "backend": classifier.backend,
@@ -235,6 +247,56 @@ def health() -> Dict[str, Any]:
         "intel": _intel_status(),
         "degraded": degraded,
     }
+
+
+def _execution_status() -> Dict[str, Any]:
+    """Where investigations run, and whether anything is listening (task 1.8).
+
+    Three facts, deliberately separate. Whether a broker answers is cheap and
+    cached and is what the request path decides on. Whether a *worker* is
+    consuming the queue is a live control-protocol round trip, which is why it
+    is only done here and never on submission: a broker with no worker accepts
+    the job and nothing runs it, and that is a state an operator has to be able
+    to see without it costing a citizen a second on every POST.
+    """
+    reachable, reason = job_broker.available()
+    status: Dict[str, Any] = {
+        "mode": "worker" if reachable else "in-process",
+        "queue_enabled": settings.queue_enabled,
+        "broker": job_broker.describe(),
+        "broker_reachable": reachable,
+        "reason": reason,
+        "queues": queue_purpose(),
+        "degraded": [],
+    }
+    if not reachable:
+        # No tag. Having no broker is the documented zero-setup path, and
+        # `stores/probe.degraded_tags()` already settled that an absent stack is
+        # not a degradation — reporting it as one would cry wolf on every clean
+        # clone. `mode: in-process` above says it plainly instead.
+        return status
+
+    status["workers"] = _worker_count()
+    if status["workers"] == 0:
+        status["degraded"] = [job_broker.NO_WORKERS]
+    status["dead_letters"] = len(dead_letters(limit=50))
+    return status
+
+
+def _worker_count() -> int:
+    """How many workers answered a ping, or -1 if the question could not be put.
+
+    -1 rather than 0: "nobody answered" and "we could not ask" are different,
+    and collapsing them would raise `queue:no_workers` every time the control
+    protocol timed out.
+    """
+    try:
+        from services.worker.celery_app import app as celery_app
+
+        replies = celery_app.control.ping(timeout=0.4)
+        return len(replies or [])
+    except Exception:
+        return -1
 
 
 def _intel_status() -> Dict[str, Any]:

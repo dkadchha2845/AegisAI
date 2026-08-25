@@ -12,7 +12,7 @@ PY        := .venv/bin/python
 WEB       := --prefix apps/web
 
 .DEFAULT_GOAL := help
-.PHONY: help gates check lint types cov audit test contract typecheck build up down reset status logs api web install serving verify-checkpoint eval graph graph-summary migrate migrate-status
+.PHONY: help gates check lint types cov audit test contract typecheck build up down reset status logs api worker dlq web install serving verify-checkpoint eval graph graph-summary migrate migrate-status
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -102,6 +102,14 @@ status: ## Show container health and what the API can actually reach
 api: ## Run the API (reload-dir set, or reloads wipe the ephemeral DB)
 	$(PY) -m uvicorn services.api.main:app --reload \
 	  --reload-dir services --reload-dir schema --port 8000
+
+worker: ## Run a Celery worker on all three queues (task 1.8; needs `make up`)
+	.venv/bin/celery -A services.worker.celery_app worker \
+	  -Q fast,slow,sandbox -c 4 --loglevel=info
+
+dlq: ## Show jobs the retry policy gave up on
+	@$(PY) -c "from services.api.jobs.journal import dead_letters; import json; \
+	  d = dead_letters(); print(json.dumps(d, indent=2) if d else 'dead-letter queue is empty')"
 
 web: ## Run the frontend dev server
 	npm run dev $(WEB)

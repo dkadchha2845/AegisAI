@@ -54,6 +54,19 @@ networkx>=3.3
 # access goes through our own LLMBackend.
 langgraph>=0.6,<0.7
 
+# Async job system (task 1.8). REQUIRED, not optional, and for the same reason
+# alembic is: `services/api/jobs/` imports redis and `services/worker/` imports
+# celery at module level, and a clone that cannot import them cannot run the
+# suite — the queue tests would be skipped rather than failed, which task 1.7b
+# is about. Both are pure Python and neither contacts anything at import time:
+# with no Redis running, the API still boots, still answers, and runs the graph
+# in-process, reporting `execution.mode: in-process` on /api/health.
+#
+# Cost, measured rather than assumed: +15 packages (amqp, billiard, click-*,
+# kombu, prompt-toolkit, python-dateutil, redis, six, tzdata, tzlocal, vine,
+# wcwidth). No compiled extensions, no system libraries.
+celery[redis]>=5.4
+
 # Test runner. Not optional in practice: the README asks you to run the
 # verdict regressions before every push, and a fresh clone that cannot run
 # them is a fresh clone whose checks get skipped.

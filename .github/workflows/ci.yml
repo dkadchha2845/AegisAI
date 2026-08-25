@@ -61,6 +61,27 @@ jobs:
   backend:
     name: backend (py${{ matrix.python }})
     runs-on: ubuntu-latest
+
+    # Task 1.8's queue tests skip without a broker, and a test that passes by
+    # not running is the thing task 1.7b is about. Redis is one service
+    # container and a few seconds, so the Redis-backed journal, the cost-class
+    # routing at the transport, and the dead-letter list are actually exercised
+    # here rather than only on a developer's machine with `make up`.
+    #
+    # The API's own behaviour is unaffected: `conftest.py` pins AEGIS_QUEUE=0 so
+    # every other test still runs the in-process path, and the step below proves
+    # the no-broker shape too.
+    services:
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+
     strategy:
       fail-fast: false
       matrix:
@@ -94,6 +115,18 @@ jobs:
       # Docker stack, and a service that still answers.
       - name: Verdict regressions + coverage gate
         run: pytest services/api/tests --cov --cov-report=term
+
+      # The other half of 1.8's degradation invariant: with no broker the API
+      # must still answer and run the graph in its own process. Pointed at a
+      # closed port rather than by stopping the service, so this asserts the
+      # code path and not the runner's networking.
+      - name: The same job tests with no broker at all
+        env:
+          AEGIS_REDIS_URL: redis://127.0.0.1:6399/0
+        run: |
+          pytest services/api/tests/test_jobs_dispatch.py \
+                 services/api/tests/test_jobs_journal.py \
+                 services/api/tests/test_jobs_worker.py -q
 
       # Task 1.7b. The step above ran against whichever classifier this runner
       # has, and that is always the lexical fallback: ml/artifacts/ is
@@ -131,7 +164,16 @@ jobs:
           # asserted rather than assumed.
           infra = h["infrastructure"]
           assert set(infra) == {"postgres", "neo4j", "qdrant", "redis"}, infra
+          # Redis is a service container in the backend job but not in this one,
+          # so every store here is unreachable and the service must still be ok.
           assert not any(s["reachable"] for s in infra.values()), infra
+          # 1.8: with no broker the graph runs in this process, and that is the
+          # documented zero-setup path rather than a degradation.
+          ex = h["execution"]
+          assert ex["mode"] == "in-process", ex
+          assert ex["broker_reachable"] is False, ex
+          assert ex["degraded"] == [], ex
+          assert "@" not in ex["broker"], "a broker credential reached /api/health"
           # 1.7b: the same pin, on the served endpoint rather than in-process.
           clf = h["classifier"]
           assert clf["serving_best"] is False, ("a promoted checkpoint is serving on CI - see 1.7b", clf)
