@@ -144,7 +144,20 @@ jobs:
       - name: Contract drift (Python <-> TypeScript)
         run: python schema/check_contract.py
 
-      - name: API boots and reports its own health
+      # Two boots, because this job now has exactly one piece of infrastructure
+      # and the interesting assertions are different on each side of that.
+      #
+      # With the Redis service reachable the API switches to the queue, and
+      # nothing on this runner consumes it — which is the one queue state that
+      # must be loud, so `queue:no_workers` is asserted rather than hoped for.
+      # With the broker pointed at a closed port every store is unreachable and
+      # the service must still answer, which is the documented clean-clone path
+      # and the degradation invariant.
+      #
+      # An earlier version of this step asserted "no store is reachable" while a
+      # Redis service container was attached to the same job. It was wrong about
+      # its own environment, and it turned main red.
+      - name: API boots against the broker, and knows nobody is consuming it
         run: |
           python -m uvicorn services.api.main:app --port 8011 &
           for _ in $(seq 1 60); do
@@ -159,20 +172,16 @@ jobs:
           assert h["twin"]["fitted"], "twin did not fit - is transitions.json committed?"
           assert h["coach"]["lines"] > 0, "coach library is empty"
           assert h["retrieval"]["chunks"] > 0, "knowledge base loaded nothing"
-          # No compose stack on the runner: every store must report unreachable
-          # and the service must still be ok. This is the degradation invariant,
-          # asserted rather than assumed.
           infra = h["infrastructure"]
           assert set(infra) == {"postgres", "neo4j", "qdrant", "redis"}, infra
-          # Redis is a service container in the backend job but not in this one,
-          # so every store here is unreachable and the service must still be ok.
-          assert not any(s["reachable"] for s in infra.values()), infra
-          # 1.8: with no broker the graph runs in this process, and that is the
-          # documented zero-setup path rather than a degradation.
+          assert infra["redis"]["reachable"] is True, infra["redis"]
+          assert not any(infra[n]["reachable"] for n in ("postgres", "neo4j", "qdrant")), infra
           ex = h["execution"]
-          assert ex["mode"] == "in-process", ex
-          assert ex["broker_reachable"] is False, ex
-          assert ex["degraded"] == [], ex
+          assert ex["mode"] == "worker", ex
+          assert ex["broker_reachable"] is True, ex
+          assert ex["workers"] == 0, ex
+          assert ex["degraded"] == ["queue:no_workers"], ex
+          assert "queue:no_workers" in h["degraded"], h["degraded"]
           assert "@" not in ex["broker"], "a broker credential reached /api/health"
           # 1.7b: the same pin, on the served endpoint rather than in-process.
           clf = h["classifier"]
@@ -181,6 +190,39 @@ jobs:
           print("health ok:", clf["backend"], "|", clf["reason"])
           print("degraded:", h["degraded"])
           '
+          kill %1 || true
+
+      - name: API boots with no infrastructure at all
+        env:
+          # The port, not AEGIS_REDIS_URL. The broker takes its URL from the
+          # host/port pair when no URL is set, and `stores/probe.py` reads the
+          # same pair -- so moving the port moves both, and the service
+          # container genuinely disappears from this boot's point of view.
+          # Setting only the URL would leave `infrastructure.redis` still
+          # pointed at 6379, where the service container is answering.
+          AEGIS_REDIS_PORT: "6399"
+        run: |
+          python -m uvicorn services.api.main:app --port 8012 &
+          for _ in $(seq 1 60); do
+            curl -sf localhost:8012/api/health >/dev/null && break
+            sleep 0.5
+          done
+          curl -sf localhost:8012/api/health | python -c '
+          import json, sys
+          h = json.load(sys.stdin)
+          assert h["ok"], h
+          infra = h["infrastructure"]
+          assert not any(s["reachable"] for s in infra.values()), infra
+          # 1.8: with no broker the graph runs in this process, and that is the
+          # documented zero-setup path rather than a degradation.
+          ex = h["execution"]
+          assert ex["mode"] == "in-process", ex
+          assert ex["broker_reachable"] is False, ex
+          assert ex["degraded"] == [], ex
+          assert "queue:no_workers" not in h["degraded"], h["degraded"]
+          print("no-infrastructure health ok; degraded:", h["degraded"])
+          '
+          kill %1 || true
 
   frontend:
     name: frontend

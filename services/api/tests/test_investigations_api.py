@@ -1079,11 +1079,22 @@ def test_a_failed_final_write_degrades_rather_than_losing_the_answer(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The stream still delivers the investigation; `degraded` says it is not
-    filed. A 500 here would throw away work that had already been done."""
+    filed. A 500 here would throw away work that had already been done.
+
+    The store is refused *before* the submission, and that ordering is the whole
+    test. Patching afterwards races the graph: `runner.start()` puts the run on a
+    background task that keeps going between requests, so on a machine where the
+    graph finishes first the save succeeds, `degraded` is empty and the assertion
+    below fails on something that is not a defect. That is not hypothetical — it
+    is what turned CI red while the same test passed locally, and it reproduces
+    on demand with a three-second sleep in the gap.
+
+    Only the runner's reference is patched. `routes/investigations.py` imports
+    `EvidenceStore` separately, so the QUEUED row is still written at submission
+    and this stays a test about the *final* write.
+    """
     import services.api.investigations.runner as runner_mod
     from services.api.investigations.runner import WRITE_FAILED
-
-    case_id = submit(client)
 
     class _Refusing:
         def __init__(self, db: Any, org_id: str) -> None:
@@ -1093,6 +1104,8 @@ def test_a_failed_final_write_degrades_rather_than_losing_the_answer(
             raise RuntimeError("disk is on fire")
 
     monkeypatch.setattr(runner_mod, "EvidenceStore", _Refusing)
+
+    case_id = submit(client)
     events = read_stream(client, case_id)
 
     terminal = events[-1]
