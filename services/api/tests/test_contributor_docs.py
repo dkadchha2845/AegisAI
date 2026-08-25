@@ -298,3 +298,35 @@ def test_the_licence_does_not_claim_to_cover_what_it_cannot() -> None:
     licence_text = read("LICENSE")
     assert "THIRD-PARTY MATERIAL" in licence_text
     assert "Apache-2.0" in licence_text, "the MuRIL obligation is no longer stated"
+
+
+#: Everywhere the project declares who wrote it. The LICENSE is the one that
+#: matters legally; the rest exist so npm, PyPI metadata and the dossier cover
+#: agree with it instead of quietly disagreeing.
+AUTHORS = ("Dhrumil Kadchha", "Smruthi Chandrashekar")
+
+AUTHORSHIP_FILES = (
+    "LICENSE",
+    "apps/web/package.json",
+    "packages/aegis_core/pyproject.toml",
+    "docs/build-dossier.html",
+)
+
+
+@pytest.mark.parametrize("path", AUTHORSHIP_FILES)
+def test_both_authors_are_named_wherever_authorship_is_declared(path: str) -> None:
+    """Two co-equal authors, named the same way in four files.
+
+    The copyright line was written with one holder and corrected when the owner
+    supplied the second name. That correction is the kind that gets undone by a
+    regenerated manifest or a rewritten cover, and it goes unnoticed because
+    nothing breaks — the build is perfectly happy attributing the work to one
+    person.
+
+    npm's `author` field takes a single person, so the web manifest uses
+    `contributors`: promoting one author and demoting the other to make the
+    field fit would invent a hierarchy the LICENSE does not have.
+    """
+    body = read(path)
+    missing = [name for name in AUTHORS if name not in body]
+    assert not missing, f"{path} does not name: {missing}"

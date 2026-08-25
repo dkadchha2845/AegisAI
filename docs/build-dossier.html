@@ -176,6 +176,17 @@
     line-height: 1.28;
   }
 
+  .byline {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px;
+    font-family: var(--f-mono); font-size: .8rem; color: var(--ink-2);
+    letter-spacing: .02em;
+  }
+  .byline .k {
+    font-size: .68rem; font-weight: 600; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+  .byline b { font-weight: 600; color: var(--ink); }
+
   .loop {
     display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
     font-family: var(--f-mono); font-size: .74rem; font-weight: 600;
@@ -449,6 +460,12 @@
     <div class="titleline">
       <h1>AegisAI</h1>
       <p class="subtitle">An Agentic Digital Public Safety Platform for Autonomous Multi-Modal Fraud Investigation</p>
+      <p class="byline">
+        <span class="k">Authors</span>
+        <b>Dhrumil Kadchha</b>
+        <span aria-hidden="true">&middot;</span>
+        <b>Smruthi Chandrashekar</b>
+      </p>
     </div>
 
     <p class="lede">
