@@ -111,10 +111,32 @@ no_implicit_optional = true
 # inherited engine is a large change with no defect-finding payoff today; the
 # agent layer is where typed contracts actually buy something, because every
 # agent implements one protocol and returns one shape.
-files = ["services/api/agents", "services/api/orchestration", "services/api/stores"]
+files = [
+    "services/api/agents",
+    "services/api/investigations",
+    "services/api/orchestration",
+    "services/api/stores",
+]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+# The inherited engine and the retrieval layer became *reachable* from the typed
+# layer in task 1.6, when `investigations/report.py` started reusing the evidence
+# package's disclaimer and reporting guidance rather than re-wording them. They
+# are still not part of what this gate covers, for the reason above. `silent`
+# keeps their types available — so the new code is genuinely checked against
+# them — while leaving their own 10 pre-existing errors out of a gate that is
+# kept at zero precisely so a new one is visible.
+module = ["services.api.engine.*", "services.api.rag.*"]
+follow_imports = "silent"
+
+[[tool.mypy.overrides]]
+# reportlab ships no type information, and `types-reportlab` is not a dependency
+# worth adding for one optional PDF path that already degrades to a 503.
+module = ["reportlab.*"]
+ignore_missing_imports = true
 
 
 [tool.pytest.ini_options]

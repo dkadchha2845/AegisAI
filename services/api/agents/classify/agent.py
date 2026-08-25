@@ -8,8 +8,8 @@ gets the same timeout, error containment, trace span and version pinning as
 everything else (task 1.2), and a special node so that its output can reach
 `state.input_types` — which is what `can_handle()` reads.
 
-**What it consumes.** `state.inputs` — each `EvidenceItem`'s bytes (via `uri`,
-once 1.5 stores them), inline `text`, filename and declared type.
+**What it consumes.** `state.inputs` — each `EvidenceItem`'s bytes (read back
+from the blob store through `uri`), inline `text`, filename and declared type.
 
 **What it outputs.** An `AgentResult` whose findings carry one `detected_type`
 per evidence item, plus a `type_conflict` finding wherever the declared type or
@@ -24,11 +24,11 @@ exactly what drifts silently.
 **How it is evaluated.** ≥98% on a 200-item corpus with 20 adversarial members,
 measured in `test_input_classifier.py`, which prints every miss.
 
-**Limitations, stated.** Until 1.5 gives evidence items a readable `uri`, only
-inline `text` and any bytes handed in directly can be classified; an item with
-neither is UNKNOWN, which routes to the text agent rather than crashing — the
-third acceptance criterion. The agent does not open the network, does not
-decompress anything, and never executes an upload.
+**Limitations, stated.** An item whose bytes are gone — never stored, or
+erased since — and which carries no inline text is UNKNOWN, which routes to the
+text agent rather than crashing; that is the third acceptance criterion, and it
+is the same outcome an unreadable blob produces. The agent does not open the
+network, does not decompress anything, and never executes an upload.
 """
 
 from __future__ import annotations
@@ -51,6 +51,7 @@ from services.api.agents.classify.sniff import (
     classify_bytes,
     classify_inline_text,
 )
+from services.api.stores.blobs import BlobRejected, EvidenceBlobs
 
 #: Findings are the agent's output vocabulary, so the labels are part of the
 #: contract between this agent and the graph node that applies it.
@@ -62,8 +63,9 @@ MEDIA_FINDING = "detected_media_type"
 def detect_item(item: EvidenceItem, blob: Optional[bytes] = None) -> Detection:
     """Classify one evidence item.
 
-    `blob` is passed in rather than fetched: an agent that opened storage would
-    need credentials, a network path and a failure mode, and 1.5 owns all three.
+    `blob` is a parameter rather than something this function fetches, so the
+    200-case corpus can be classified from bytes in a test without a store, a
+    filesystem or a tenant. `_blob_of` is the one place that reaches storage.
     """
     if blob:
         return classify_bytes(blob, filename=item.filename, declared_type=item.declared_type)
@@ -91,7 +93,7 @@ class InputClassifierAgent:
         conflicts = 0
 
         for item in state.inputs:
-            detection = detect_item(item, blob=_blob_of(item))
+            detection = detect_item(item, blob=_blob_of(item, state.org_id))
             for kind in detection.types:
                 findings.append(
                     Finding(
@@ -137,14 +139,29 @@ class InputClassifierAgent:
         )
 
 
-def _blob_of(item: EvidenceItem) -> Optional[bytes]:
-    """The bytes for an item, when this process already has them.
+def _blob_of(item: EvidenceItem, org_id: str) -> Optional[bytes]:
+    """The bytes behind an evidence item's `uri`, or None.
 
-    A hook, not an implementation. 1.5 gives evidence items a readable `uri`;
-    until then only inline text is available, and pretending otherwise would
-    mean an agent that silently classifies nothing.
+    Task 1.6 filled this in. It used to be a hook returning nothing, because
+    there was nowhere for an upload's bytes to live and pretending otherwise
+    would have meant an agent that silently classified nothing; the lifecycle
+    API's blob store is what changed that, and magic-byte routing only became
+    real for uploads at that moment.
+
+    Scoped to the state's own organisation, so an item carrying another
+    tenant's uri reads as absent rather than as evidence — the store refuses it,
+    and the item falls through to its inline text or to UNKNOWN, which is the
+    documented safe route. A missing blob is likewise not an error: erasure may
+    have removed it between the write and this read, and an investigation that
+    crashed because a file was legitimately deleted would be worse than one that
+    classifies from what is left.
     """
-    return getattr(item, "_blob", None)
+    if not item.uri:
+        return None
+    try:
+        return EvidenceBlobs(org_id).read(item.uri)
+    except (BlobRejected, ValueError, OSError):
+        return None
 
 
 # --------------------------------------------------------------------------

@@ -26,9 +26,9 @@ trips byte-identically, every agent result and finding is re-readable on its
 own, a second organisation cannot see any of it, and the Alembic head produces
 exactly this metadata with no diff.
 
-**Limitations, stated.** `EvidenceItem.uri` points at an object store that does
-not exist yet, so today only `text` is durable and an uploaded screenshot's
-bytes are not (1.6 brings uploads). `entities` deduplicates *within* an
+**Limitations, stated.** `EvidenceItem.uri` points at `stores/blobs.py`, a
+directory on a local disk — durable, and not a replicated object store, so two
+API replicas do not share it. `entities` deduplicates *within* an
 organisation only; the cross-organisation linkage that makes a fraud network is
 Module 2's graph store, deliberately not this one — see the note on
 `EntityRecord`. And nothing here is encrypted at rest: that is a deployment

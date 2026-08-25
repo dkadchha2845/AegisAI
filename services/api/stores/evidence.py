@@ -17,9 +17,10 @@ the narrower reads (agent results, findings, the cases an identifier appears in)
 that exist so callers do not have to load a whole case to answer a small
 question.
 
-**How it connects.** 1.6's lifecycle API saves through `save()` and serves
-`GET /investigations/{id}` from `load()`. 1.8's worker saves from outside the
-request path. Phase 3's graph builder reads `cases_for_entity()`. The tables
+**How it connects.** The lifecycle API (1.6) saves through `save()`, serves
+`GET /api/investigations/{id}` from `load()`, and erases through
+`delete_case()`. 1.8's worker will save from outside the request path. Phase 3's
+graph builder reads `cases_for_entity()`. The tables
 themselves are in `stores/models.py`, and nothing outside this module queries
 them.
 
@@ -43,8 +44,9 @@ On SQLite, cascade is not the delete mechanism
 The foreign keys declare `ON DELETE CASCADE`, and PostgreSQL honours them.
 SQLite does not, unless `PRAGMA foreign_keys=ON` is issued on every connection —
 off by default, per-connection, and easy to lose to a pool change. Deleting a
-case is the erasure path 1.6 exposes to a citizen exercising a right, so it may
-not depend on a database setting that can silently be off. `delete_case()`
+case is the erasure path `DELETE /api/investigations/{id}` exposes to a citizen
+exercising a right, so it may not depend on a database setting that can
+silently be off. `delete_case()`
 deletes children explicitly, in dependency order. The cascade stays declared
 because it is correct, and is a backstop for anything that ever deletes a parent
 row outside this class — not the thing the erasure claim rests on.

@@ -64,6 +64,27 @@ def is_platform_owner(user: User) -> bool:
     return user.role == "owner"
 
 
+def evidence_scope(user: User) -> Optional[str]:
+    """The tenant key the 1.5 evidence store and the 1.6 blob store are built with.
+
+    Those stores take an `org_id: str`; platform users carry an `org_id: int`.
+    One function owns the mapping so the two stores cannot disagree about which
+    directory and which rows belong to the same tenant.
+
+    Derived from the organisation's **primary key**, never its slug. A slug is a
+    display name that a rename would change, and a renamed slug would orphan
+    every case and every blob written under the old one — silently, because the
+    new scope simply reads as an empty tenant.
+
+    `None` for a user with no organisation. That is the safe default this module
+    already documents ("a user with no org sees nothing tenant-scoped"), and it
+    is returned rather than raised so the caller decides the status code.
+    """
+    if user.org_id is None:
+        return None
+    return f"org-{user.org_id}"
+
+
 def scope_query(query, model, user: User):
     """Restrict a query on a tenant-scoped model to what `user` may see.
 

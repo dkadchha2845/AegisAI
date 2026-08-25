@@ -735,3 +735,61 @@ export interface InvestigationState {
   degraded: string[];
   trace: TraceSpan[];
 }
+
+// ---------------------------------------------------------------------------
+// The lifecycle stream
+// ---------------------------------------------------------------------------
+
+/** The five things the lifecycle API says while a case runs.
+ *
+ *  Deliberately not a mirror of `EVENT_KINDS`, which belongs to the live-call
+ *  contract and names things that happen inside a scam. These name things that
+ *  happen to an *investigation*.
+ *
+ *  There is no `node_started`: the graph reports completions, so a "started"
+ *  event would be inferred from the plan rather than observed — a fake timer
+ *  wearing a node name. The client gets the whole plan on `accepted` and
+ *  renders "3 of 7" from two facts it was actually told. */
+export const INVESTIGATION_EVENT_KINDS = [
+  "accepted",
+  "node_complete",
+  "complete",
+  "failed",
+  "cancelled",
+] as const;
+export type InvestigationEventKind = (typeof INVESTIGATION_EVENT_KINDS)[number];
+
+/** One server-sent event on `GET /api/investigations/{id}/stream`.
+ *
+ *  `seq` is the SSE `id:` field, monotonic from 1 within a run. A client that
+ *  saw event 4 reconnects with `Last-Event-ID: 4` and is replayed 5 onward, so
+ *  nothing arrives twice and nothing is skipped. Keepalives are SSE comment
+ *  lines, which carry no id and therefore cannot be duplicated.
+ *
+ *  `agent_results` and `degraded` are the *delta* for this node, not the
+ *  accumulated lists. Appending every event reconstructs the state's own lists
+ *  exactly, and a mid-run reconnect does not double-count earlier tiers. */
+export interface InvestigationEvent {
+  v: number;
+  type: "investigation_event";
+
+  /** monotonic within one run; the SSE event id */
+  seq: number;
+  case_id: string;
+  kind: InvestigationEventKind;
+  /** ISO-8601 UTC */
+  at: string;
+  status: InvestigationStatus;
+
+  /** graph node that just completed */
+  node: string | null;
+  /** every node this run will execute, in order — sent on `accepted` */
+  plan: string[];
+  nodes_done: number;
+
+  /** results produced by this node only */
+  agent_results: AgentResult[];
+  /** tags added by this node only */
+  degraded: string[];
+  error: string | null;
+}

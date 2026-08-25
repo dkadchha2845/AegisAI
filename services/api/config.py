@@ -134,7 +134,17 @@ class Settings(BaseSettings):
     )
     max_upload_bytes: int = Field(default=4 * 1024 * 1024, gt=0)
 
-    @field_validator("database_url", "llm_model", "gemini_key", mode="before")
+    evidence_dir: Optional[Path] = Field(
+        default=None,
+        validation_alias=_alias("EVIDENCE_DIR"),
+        description="Where uploaded evidence bytes are stored (task 1.6). Unset "
+                    "=> a per-process temp directory deleted at exit, so a clean "
+                    "clone accepts an upload with zero setup and leaves nothing "
+                    "behind. Set this whenever DATABASE_URL is set, or a case "
+                    "will outlive its own screenshots.",
+    )
+
+    @field_validator("database_url", "llm_model", "gemini_key", "evidence_dir", mode="before")
     @classmethod
     def _blank_is_unset(cls, v: object) -> object:
         """Treat "" as absent.

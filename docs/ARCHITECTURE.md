@@ -297,9 +297,10 @@ aegisai/
 │   │   │   ├── risk/  fusion/  explain/
 │   │   ├── orchestration/            # ── NEW: LangGraph
 │   │   │   ├── graph.py  nodes.py  policy.py  trace.py
+│   │   ├── investigations/           # ── NEW: lifecycle — intake, runner, report
 │   │   ├── engine/                   # inherited call engine → conversation agents
 │   │   ├── ingest/  intel/  shield/  rag/  routes/
-│   │   ├── stores/                   # ── NEW: pg / neo4j / qdrant / redis adapters
+│   │   ├── stores/                   # ── NEW: evidence + blobs; neo4j / qdrant / redis
 │   │   └── tests/
 │   └── worker/                       # ── NEW: Celery — APK, video, TI refresh
 │
@@ -363,7 +364,7 @@ Security is not a phase; it is a property of specific components.
 |---|---|---|
 | **SSRF defence** | URL agent | Attacker-supplied URLs. Allowlist egress, block RFC1918 + link-local + `169.254.169.254`, re-resolve DNS after redirect, cap redirect depth, no `file://`/`gopher://`. **The single highest-risk component in AegisAI.** |
 | **Malware isolation** | APK agent | Static analysis only, in a network-less container, read-only mount, resource caps. Never execute. |
-| **Upload validation** | API gateway | Magic-byte type check (not extension), size caps, filename sanitisation, per-org quota. |
+| **Upload validation** | API gateway | Size cap enforced *while reading* and filename sanitisation at intake; the magic-byte type check runs on the classifier node so a declared/detected mismatch becomes a `type_conflict` finding rather than a 415 with nothing recorded. Per-org quota is not built. |
 | **Tenant isolation** | Every store | `org_id` on every row, node and vector payload. Enforced in the repository layer, not the route. |
 | **Secrets** | Config | Env only, never committed. Verified: no key has ever entered git history. |
 | **PII minimisation** | Ingest + storage | Raw audio not retained by default; transcripts redacted before leaving the org boundary; research datasets anonymised. |

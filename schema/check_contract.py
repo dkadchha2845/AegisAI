@@ -45,6 +45,7 @@ from schema.models import (
     FraudCategory,
     GuardianState,
     InputType,
+    InvestigationEventKind,
     InvestigationState,
     InvestigationStatus,
     PaymentState,
@@ -74,6 +75,7 @@ PAIRS = [
     (FraudCategory, "FRAUD_CATEGORIES"),
     (Severity, "SEVERITIES"),
     (RecommendedAction, "RECOMMENDED_ACTIONS"),
+    (InvestigationEventKind, "INVESTIGATION_EVENT_KINDS"),
 ]
 
 

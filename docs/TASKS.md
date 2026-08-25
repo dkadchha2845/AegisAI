@@ -1,9 +1,10 @@
 # AegisAI — Master Task List
 
-> **Status: Phase 0 complete — all seven tasks. Phase 1 — 1.1, 1.2, 1.3, 1.4
-> and 1.5 done and verified end-to-end. Awaiting your go-ahead for 1.6.**
-> Last updated 2026-08-25 · branch `codex/phase-0.7-contributor-docs`
-> · 340 tests · all four gates green · ruff + mypy clean
+> **Status: Phase 0 complete — all seven tasks. Phase 1 — 1.1 through 1.6 done
+> and verified end-to-end. An investigation now flows through the API. Awaiting
+> your go-ahead for 1.7.**
+> Last updated 2026-08-25 · branch `claude/start-1-6-0032a8`
+> · 392 tests · all four gates green · ruff + mypy clean
 
 ---
 
@@ -430,20 +431,22 @@ the work is a defect in the licence rather than a formality.
 through a LangGraph graph, executed with parallel fan-out, traced, persisted,
 and streamed to the UI — even if only three agents exist.
 
-**Progress: 5 of 9 done** — ✅ 1.1 · ✅ 1.2 · ✅ 1.3 · ✅ 1.4 · ✅ 1.5. The
-input classification agent is the first real agent rather than a harness; its
-accuracy bar was ≥98% on a 200-item fixture including 20 adversarial items, and
-it measured **100%**. 1.5 makes an investigation durable: six tables, Alembic
-migrations, and a repository in which an unscoped query is not expressible.
+**Progress: 6 of 9 done** — ✅ 1.1 · ✅ 1.2 · ✅ 1.3 · ✅ 1.4 · ✅ 1.5 · ✅ 1.6.
+The input classification agent is the first real agent rather than a harness;
+its accuracy bar was ≥98% on a 200-item fixture including 20 adversarial items,
+and it measured **100%**. 1.5 makes an investigation durable: six tables,
+Alembic migrations, and a repository in which an unscoped query is not
+expressible. 1.6 joins them to a served path.
 
-> Note on what 1.1–1.5 do **not** claim: the contract, the agent layer, the
-> orchestrator and the evidence store exist and are exercised, but no HTTP route
-> runs the graph yet. The API still serves through `engine/analyzer.py` exactly
-> as it always has. Wiring the graph into a served path is 1.6 (the lifecycle
-> API). So the end-to-end evidence below is "the running system is unharmed, and
-> the new layer does its job when driven against real dependencies" — not "an
-> investigation flows through the API". That sentence is not available until 1.6
-> and will not be written before then.
+> **The sentence 1.1–1.5 could not write is now available.** An investigation is
+> submitted over HTTP, routed by input type through the LangGraph graph, traced,
+> persisted, streamed to a client node by node, reported, and erased — verified
+> against a running uvicorn and from a real browser page, not only in tests.
+> Two qualifications, because the exit criterion names them: the graph runs
+> **in the API process** rather than on a worker (1.8), and the only agent in it
+> is the input classifier — 1.7 brings the inherited engine in as agents. The
+> older `engine/analyzer.py` path is untouched and still serves
+> `/api/analyze/*`; the two coexist deliberately until 1.7 makes them one.
 
 ### ✅ 1.1 — `InvestigationState` + `AgentResult` in `schema/` 🔴⭐
 **Done 2026-08-24.** ARCHITECTURE.md §3 implemented in `schema/models.py` and
@@ -538,6 +541,7 @@ fixed here:**
   above "CRITICAL". Settles correctly. Belongs to 7.2 if it is worth changing.
 - `/api/health` and the dashboard report `contract v1` — the frame contract
   only. Once 1.6 serves investigations, health should report both versions.
+  *Done in 1.6: `investigation_contract_version` sits beside it.*
 
 **Effort:** 6 h estimated, ~6 h actual. **Depends:** 0.2. ✅
 
@@ -922,13 +926,151 @@ that is 1.6, and no route touches it today.
 
 **Effort:** 10 h estimated. **Depends:** 0.4, 1.1. ✅
 
-### ⬜ 1.6 — Investigation lifecycle API
-**Do:** `POST /api/investigations` (multipart + JSON) · `GET /{id}` ·
-`GET /{id}/stream` (SSE progress) · `GET /{id}/report[.pdf]` ·
-`GET /{id}/trace` · `DELETE /{id}` (GDPR-style erasure).
-**Accept:** submit → live per-node progress → final report, end to end ·
-SSE reconnect resumes without duplicate events · 4 MB upload cap enforced ·
-OpenAPI documents every route. **Effort:** 8 h. **Depends:** 1.3, 1.5.
+### ✅ 1.6 — Investigation lifecycle API
+**Done 2026-08-25.** The graph from 1.3 and the store from 1.5 were built to be
+wired together and nothing was calling either of them. Six routes now do:
+`POST /api/investigations` (JSON **or** multipart) · `GET /{id}` ·
+`GET /{id}/stream` (SSE) · `GET /{id}/report[.pdf]` · `GET /{id}/trace` ·
+`DELETE /{id}`. Behind them, `services/api/investigations/` — `intake.py`,
+`runner.py`, `report.py` — plus `stores/blobs.py` for the bytes.
+
+**Progress is observed, not estimated.** `orchestration.graph` gained
+`investigate_stream()`, which runs the compiled graph with LangGraph's
+`updates` and `values` stream modes together and yields one `NodeUpdate` as
+each node actually completes. There is deliberately **no `node_started`
+event**: the graph reports completions, so a "started" event would be inferred
+from the plan rather than observed — a fake timer wearing a node name, which is
+exactly what 1.9's acceptance criterion forbids. The client is instead handed
+the whole node plan on `accepted` and told about each completion, so "3 of 7"
+is built from two facts it was given. `investigate()` is now implemented *on
+top of* `investigate_stream()` rather than beside it, because two entry points
+into one graph is two execution paths that have to be kept identical by hand.
+
+**Reconnect is arithmetic, not a promise about timing.** Each run keeps a
+journal — a list of `InvestigationEvent`, `seq` assigned from the list's own
+length — and every follower holds an index into it. `Last-Event-ID: 4` means
+"resume from index 4". The usual per-subscriber queue makes the requirement
+*unsatisfiable*: once an event is taken off a queue it is gone, so a client
+that dropped between two events has no way to ask for what it missed. Keepalives
+are SSE comment lines, which carry no id by definition and therefore cannot be
+replayed — if the idle signal were ever a real event, "no duplicates" would
+quietly start meaning "no duplicates unless the connection was idle".
+
+**`agent_results` on an event is the delta, not the running total.** The graph's
+nodes return whole lists (`[*state.agent_results, *new]`), so an event that
+forwarded the update verbatim would re-send every earlier tier and a
+reconnecting client would count them twice. A client that appends every event's
+results reconstructs the state's own list exactly, and a test fails if that
+regresses.
+
+**Uploads got somewhere to live.** 1.5 stated the hole it left — "an uploaded
+screenshot's *bytes* are not durable; uploads are 1.6" — and `stores/blobs.py`
+fills it: `<root>/<org>/<case>/<sha256>`, write-then-rename, org-scoped with no
+cross-org accessor, exactly like `EvidenceStore`. **Case-scoped rather than
+globally content-addressed**, and that is the erasure requirement talking:
+under global content addressing "may I delete these bytes" becomes "is any
+other case still referencing them", and a right to erasure that depends on a
+reference count being correct is one that fails quietly, in the direction of
+keeping data. Deleting a case is now deleting a directory. `_blob_of()` in the
+input classifier — a hook that returned `None` since 1.4 — resolves `uri`
+through this store, so **magic-byte routing became real for uploads at this
+moment** rather than in 1.4.
+
+**Intake does not reject on magic bytes, and that is the control working.**
+`CLAUDE.md` requires uploads validated by bytes, not extension. There is no
+allowlist to reject against — the promise is "upload anything" — and what
+matters is the *disagreement*. Rejecting at the door would turn the most
+interesting fact about a hostile upload into a 415 with nothing recorded. So
+the declared type and filename are written down verbatim, the classifier
+decides from the bytes, and the mismatch becomes a `type_conflict` finding. A
+zip with `AndroidManifest.xml` uploaded as `holiday.jpg`, declared
+`image/jpeg`, comes back `kind=APK` with both conflicts recorded, on the live
+server.
+
+**The cap is enforced while reading.** `await file.read()` followed by a length
+check — what the older `/api/analyze/*` routes do — has already buffered the
+whole body by the time it decides to refuse it, so a 500 MB upload costs 500 MB
+to say no to. `read_capped()` refuses one 64 KB chunk past the limit, and a
+test asserts the read count rather than just the status code.
+
+**Four judgement calls worth defending.** (1) **There is no cross-organisation
+view, not even for an `owner`** — a visible difference from `routes/reports.py`,
+which uses `scope_query` and does let an owner read across tenants. 1.5 chose
+"no `load_any()`, no escape hatch for a platform superadmin", and matching the
+older route here would have undone it. (2) The **stream authenticates with a
+header, never `?token=`**: `EventSource` cannot set headers, which is why so
+many SSE endpoints end up accepting a token in the URL, and a token in a URL is
+in every access log it passes. A browser reaches this with `fetch()` plus a
+`ReadableStream` reader — verified from a real page below. (3) The evidence
+scope is derived from the organisation's **primary key**, never its slug: a
+renamed slug would orphan every case and every blob under the old one, silently,
+because the new scope simply reads as an empty tenant. (4) `GET /{id}` serves
+the runner's state while a run is in flight, because the durable row is written
+when the graph finishes and serving it mid-run would report QUEUED to a client
+being streamed the third node's results.
+
+**The report says what it does not know.** The judgement tier has no agents
+until 4.6/4.7, so every investigation completes with `risk_score` None. The
+report's assessment block says so in a sentence — *"Absence of a score is not a
+finding of safety"* — rather than rendering 0.0/CALM, which is a false negative
+wearing a number. A test pins both halves: unscored says unscored, and a state
+that *has* a score has it rendered verbatim rather than re-banded.
+
+**One thing 1.1 parked that this task could finally answer.** `/api/health`
+reported `contract_version: 1` — the *frame* contract — while the API had begun
+serving the investigation contract too. 1.1 recorded that and deferred it in
+those words: "once 1.6 serves investigations, health should report both
+versions." It does now; both numbers are read from `schema/`, so neither can
+drift from the contract it names.
+
+**Two things this task fixed that it did not set out to.** Adding
+`investigations/` to mypy's scope made the inherited engine reachable from the
+typed layer for the first time (the report reuses the evidence package's
+disclaimer rather than re-wording it), surfacing 10 pre-existing errors in a
+gate kept at zero; `follow_imports = "silent"` on `services.api.engine.*` and
+`services.api.rag.*` keeps their types available while leaving their errors
+where `files` had been leaving them implicitly. And the first PDF render put
+long finding values on top of the column beside them — reportlab lays a bare
+string on one line and lets it overflow — so free-text cells are `Paragraph`s
+now. Both were found by looking at the output, not by a test.
+
+**Verified end-to-end:**
+
+| Check | Result |
+|---|---|
+| Four gates | **392 tests** · contract consistent · frontend typecheck + production build clean |
+| Also | ruff clean · mypy clean (10 → 0) · coverage **73.5%** vs the 65% gate |
+| Module coverage | `runner.py` **97%** · `intake.py` **95%** · `routes/investigations.py` **94%** · `report.py` 91% · `blobs.py` 86% |
+| Running API, live stream | uvicorn + `curl -N`: 9 events for a 7-node graph, `text/event-stream`, ids 1–9 contiguous |
+| Progress is real, measured | With a deliberate 2 s agent in the tier: events 1–3 at **0 ms**, then a **1983 ms** gap, then 4–9. Not a timer |
+| Reconnect, mid-run, real HTTP | Hung up after `id: 3` while the graph was still running; reconnected with `Last-Event-ID: 3` → resumed at **4**, no duplicate, no gap |
+| Multipart + magic bytes | APK-shaped zip named `holiday.jpg`, declared `image/jpeg` → `kind=APK`, `media_type=application/vnd.android.package-archive`, **both** conflicts recorded, blob at `org-1/AEG-…/<sha256>` |
+| Upload cap | 4 MB + 1 → **413** ("at most 4 MB"); exactly 4 MB → **202**; 9 artefacts → **413** |
+| Durability across a restart | Killed and restarted uvicorn: case rebuilt from rows (2 items, 1 agent result, 1 trace span), blob uri still resolves; the stream returns **409** naming `GET /api/investigations/{id}`, not a 404 |
+| Report + PDF | `scored: false` with the full note; 8 findings attributed to `input_classifier`; PDF **4.3 KB**, `%PDF-1.4`, `Content-Disposition` names the case — read back and inspected page by page |
+| Cross-tenant, live | Second org via `POST /api/orgs` + a real login: state / report / trace / stream / delete all **404** (not 403 — a case id must not be probeable), and its own POST still **202** |
+| Erasure, live | `DELETE` → `{erased: true, blobs_removed: 1}`; case 404s; **its** blob gone from disk, the other case's untouched; `investigation.delete` audit row survives naming actor and case |
+| Browser, real page | `fetch()` + `ReadableStream` from `localhost:5174` against the API: 202, `text/event-stream`, plan of 7, 9 ordered events, report unscored — **zero console errors**, app renders "2 degraded" |
+| `blobs:ephemeral` discipline | All-ephemeral install reports `db:ephemeral` only — confirmed live. The tag is raised for a **durable DB with an ephemeral evidence dir**, the case that outlives its own screenshots |
+| False positives | Benign SBI debit alert: no `type_conflict`, `degraded: []`, `classification: null`, `evidence: []`. It contains a real VPA, so `UPI_ID` is detected — extraction is not judgement, and a system that read "a UPI ID is present" as a signal would flag every bank alert in India |
+
+**Not implemented, and stated rather than implied.** Execution is **in the API
+process**, on the event loop that serves requests — that is 1.8, and until then
+a restart loses every in-flight run and the durable row says QUEUED forever,
+the journal is in memory so a post-restart reconnect gets a 409 (the case and
+its report still read fine), and a slow agent occupies a worker slot. There is
+**no collection `GET /api/investigations`**: `EvidenceStore.list_cases()` was
+built for one, but the task names six routes and a seventh is a decision for
+1.9's launcher, not a freebie here. There is **no per-org storage quota** —
+ARCHITECTURE.md §8 names one; eight 4 MB artefacts per submission is the only
+bound on disk growth today. Blob storage is a local directory, so two API
+replicas do not share it, and nothing is encrypted at rest (volume encryption at
+deploy time, not a column type). `TestClient` buffers a streaming response in
+full, measured — so no test in the suite can assert that events arrive *as they
+happen*; that claim belongs to the running server and is the row above, and the
+live-resume path is covered directly against `Run.follow` instead.
+
+**Effort:** 8 h estimated. **Depends:** 1.3, 1.5. ✅
 
 ### ⬜ 1.7 — Adapt the inherited engine into agents ⭐
 **Why:** KAVACH's engine is the crown jewel. It must become agents **without

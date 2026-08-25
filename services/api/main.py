@@ -18,6 +18,8 @@ from typing import Any, AsyncIterator, Dict
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from schema.models import CONTRACT_VERSION, INVESTIGATION_CONTRACT_VERSION
+
 from . import db as db_mod
 from . import llm
 from .auth import auth_enabled, seed_admin
@@ -29,8 +31,9 @@ from .engine.twin import DigitalTwin
 from .intel import get_intel
 from .rag.coach import get_coach
 from .rag.store import get_kb
-from .routes import analyze, auth, intel, orgs, reports, session, shield
+from .routes import analyze, auth, intel, investigations, orgs, reports, session, shield
 from .security import RateLimitMiddleware, SecurityHeadersMiddleware
+from .stores import blobs as blob_store
 from .stores import probe as store_probe
 
 
@@ -71,6 +74,7 @@ app.add_middleware(
 )
 
 app.include_router(analyze.router)
+app.include_router(investigations.router)
 app.include_router(session.router)
 app.include_router(auth.router)
 app.include_router(reports.router)
@@ -128,7 +132,7 @@ def health() -> Dict[str, Any]:
     kb = get_kb()
     twin = DigitalTwin()
     degraded = (list(kb.degraded) + list(twin.degraded) + db_mod.degraded()
-                + store_probe.degraded_tags())
+                + store_probe.degraded_tags() + blob_store.degraded())
     # Only a *genuine* fallback is a degradation. When the lexical model is
     # serving because it measurably beat the checkpoint, the promotion gate did
     # its job and there is nothing to warn about — see classifier.serving_is_fallback.
@@ -137,7 +141,14 @@ def health() -> Dict[str, Any]:
 
     return {
         "ok": True,
-        "contract_version": 1,
+        # Two contracts, two numbers. They are versioned separately in
+        # `schema/` because they evolve separately — adding an investigation
+        # field must not invalidate a client that only speaks 4 Hz frames — and
+        # reporting one of them while serving both is how a client ends up
+        # checking the wrong version. Task 1.1 recorded this gap and parked it
+        # until an investigation was actually served, which is 1.6.
+        "contract_version": CONTRACT_VERSION,
+        "investigation_contract_version": INVESTIGATION_CONTRACT_VERSION,
         "auth": {
             "enforced": auth_enabled(),
             "backend": "jwt-hs256",
@@ -154,6 +165,12 @@ def health() -> Dict[str, Any]:
             "persistent": not db_mod.EPHEMERAL,
             "url_configured": settings.database_url is not None,
         },
+        # Where an uploaded screenshot's bytes actually are (task 1.6). Reported
+        # next to the database because the pair is what matters: a durable
+        # database with an ephemeral evidence directory is a case that outlives
+        # its own evidence, which is why `blobs:ephemeral` is raised for exactly
+        # that combination and not for an all-ephemeral install.
+        "evidence_storage": blob_store.status(),
         # Which of the compose-stack services are actually reachable. Cached,
         # bounded, and never raising — see stores/probe.py. `in_use` is tracked
         # separately from `reachable` on purpose: since 1.5 Postgres is in use

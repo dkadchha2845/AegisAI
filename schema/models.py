@@ -909,3 +909,75 @@ def utc_now_iso() -> str:
     survives every round trip identically.
     """
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+# --------------------------------------------------------------------------
+# The lifecycle stream — what the API pushes while an investigation runs
+# --------------------------------------------------------------------------
+
+
+class InvestigationEventKind(str, Enum):
+    """The five things the lifecycle API has to say while a case is running.
+
+    Deliberately *not* a mirror of `EventKind`, which belongs to the live-call
+    frame contract and names things that happen inside a scam ("payment
+    attempted", "guardian alerted"). These name things that happen to an
+    *investigation*, which is a different object with a different lifetime.
+
+    There is no `node_started`. The graph tells us when a node finishes; a
+    "started" event would be inferred from the plan rather than observed, and an
+    inferred progress event is a fake timer wearing a node name — the exact
+    thing task 1.9's acceptance criterion forbids. The client gets the whole
+    node plan on `accepted` instead, so it can render "3 of 7" from two facts it
+    was actually told.
+    """
+
+    ACCEPTED = "accepted"
+    NODE_COMPLETE = "node_complete"
+    COMPLETE = "complete"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class InvestigationEvent(BaseModel):
+    """One server-sent event on `GET /api/investigations/{id}/stream`.
+
+    `seq` is the SSE `id:` field, monotonic from 1 within a single run. That is
+    what makes reconnection exact rather than approximate: a client that saw
+    event 4 sends `Last-Event-ID: 4` and is replayed 5 onward, so no event
+    arrives twice and none is skipped. Keepalives go out as SSE comment lines,
+    which carry no id by definition and therefore cannot be duplicated.
+
+    `agent_results` carries only the results *this node produced*, not the
+    accumulated list. A client that appends every event's results reconstructs
+    `InvestigationState.agent_results` exactly, and one that reconnects mid-run
+    does not double-count the earlier tiers.
+
+    `degraded` is likewise the delta. An agent that fell back is visible in the
+    frame it fell back in, which is what lets the UI show a degraded agent as
+    degraded rather than hiding it behind a final summary.
+    """
+
+    v: int = INVESTIGATION_CONTRACT_VERSION
+    type: Literal["investigation_event"] = "investigation_event"
+
+    seq: int = Field(ge=1, description="monotonic within one run; the SSE event id")
+    case_id: str
+    kind: InvestigationEventKind
+    at: str = Field(description="ISO-8601 UTC")
+    status: InvestigationStatus
+
+    node: Optional[str] = Field(None, description="graph node that just completed")
+    plan: list[str] = Field(
+        default_factory=list,
+        description="every node this run will execute, in order — sent on `accepted`",
+    )
+    nodes_done: int = Field(0, ge=0)
+
+    agent_results: list[AgentResult] = Field(
+        default_factory=list, description="results produced by this node only"
+    )
+    degraded: list[str] = Field(
+        default_factory=list, description="tags added by this node only"
+    )
+    error: Optional[str] = None

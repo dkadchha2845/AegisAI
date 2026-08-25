@@ -44,7 +44,7 @@ _INCIDENT_BY_STAGE = {
     "PAYMENT_EXECUTION": "Attempted fraudulent fund transfer (execution)",
 }
 
-_REPORTING_GUIDANCE = [
+REPORTING_GUIDANCE = [
     "Call the national cyber-fraud helpline 1930 immediately if money has moved.",
     "File a complaint at cybercrime.gov.in (I4C / NCRB) and attach this package.",
     "Do not delete the call log, messages, or any payment screenshots — they are evidence.",
@@ -176,6 +176,6 @@ def build_evidence_package(session: "Session") -> Dict[str, Any]:
         ],
 
         "citations": _citations(session, number_intel),
-        "reporting_guidance": _REPORTING_GUIDANCE,
+        "reporting_guidance": REPORTING_GUIDANCE,
         "degraded": frame.get("degraded", []),
     }

@@ -14,23 +14,26 @@ plugs into: Phase 2 adds agents and the graph gains nodes without being edited.
 
 **How it connects.** Nodes are tiers from `agents/base.Stage`; membership comes
 from `registry.eligible()`, which is `can_handle()`, which keys off
-`input_types`. The lifecycle API in 1.6 will drive this; `stores/evidence.py`
-(task 1.5) persists what it produces, though nothing calls it from here yet —
-the graph still returns a state to its caller, and 1.6 is what saves it.
+`input_types`. The lifecycle API (task 1.6) drives this through
+`investigate_stream()` and persists what it produces through 1.5's
+`stores/evidence.py`; the graph itself still writes nothing down, which is why
+`investigations/runner.py` exists rather than a `save()` call in `finish`.
 
 **How it is evaluated.** `test_orchestration_graph.py` — compiles, renders to
 Mermaid, completes with a node deliberately timing out, records a span per
 attempt, resumes from a checkpoint after a crash, and produces an identical
-fingerprint across runs.
+fingerprint across runs. `test_investigations_api.py` covers the streaming
+entry point end to end.
 
 **Limitations, stated.** The `FAN -.new entity discovered.-> FAN` loop in §2 is
 *not* implemented. `AgentContext.max_depth` is carried and enforced, so the
 bound exists, but nothing yet discovers an entity worth recursing on — that
 needs the Phase 2 agents, and building the loop now would mean testing it
 against a toy that pretends. The judgement tier is a real node with no agents
-in it yet; 4.6 and 4.7 fill it. Nothing here persists: the state comes back to
-the caller, and 1.5's `EvidenceStore` is what writes it down once 1.6 wires the
-two together.
+in it yet; 4.6 and 4.7 fill it, so an investigation completes today with
+`risk_score` still None — unscored, which the report says rather than rendering
+as zero. Nothing here persists: the state comes back to the caller, and 1.5's
+`EvidenceStore` is what writes it down.
 
 Why LangGraph owns the graph but not the fan-out
 ------------------------------------------------
@@ -54,8 +57,19 @@ from __future__ import annotations
 
 import asyncio
 import warnings
-from dataclasses import replace
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Sequence, Tuple
+from dataclasses import dataclass, replace
+from typing import (
+    Any,
+    AsyncIterator,
+    Awaitable,
+    Callable,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 # langgraph's import trips a LangChainPendingDeprecationWarning about an
 # `allowed_objects` argument on a deserializer we never call.
@@ -347,6 +361,95 @@ def build_graph(
     return g.compile(checkpointer=checkpointer)
 
 
+def node_plan() -> List[str]:
+    """Every node a run executes, in order.
+
+    Knowable before anything runs because the graph is built from tiers rather
+    than from agents, and that is the whole point: the lifecycle API sends this
+    list to the client on `accepted`, so a progress bar has a real denominator.
+    Without it the UI would have to guess how many steps are left, which is the
+    fake timer task 1.9 forbids.
+    """
+    return ["begin", "classify", *(f"{s.value}_stage" for s in STAGE_ORDER), "finish"]
+
+
+@dataclass(frozen=True)
+class NodeUpdate:
+    """One graph node, finished.
+
+    `update` is exactly what the node returned — the keys it wrote and nothing
+    else — so a consumer can tell "this tier produced two agent results" from
+    "this tier was empty" without diffing whole states.
+
+    `state` is the whole investigation as it stands after this node — attached
+    rather than yielded as a separate sentinel, so the stream is one event per
+    node with no phantom extra step. It is None for a node that wrote nothing
+    (an empty tier, where no agent was eligible), because the graph emits no
+    new snapshot for one and inventing a duplicate would suggest something
+    happened. It is always set on the last update, which is the finished
+    investigation.
+    """
+
+    node: str
+    update: Mapping[str, Any]
+    state: Optional[InvestigationState] = None
+
+
+async def investigate_stream(
+    state: InvestigationState,
+    *,
+    exclude: Sequence[str] = (),
+    budget_s: float = DEFAULT_BUDGET_S,
+    checkpointer: Optional[Any] = None,
+    thread_id: Optional[str] = None,
+) -> AsyncIterator[NodeUpdate]:
+    """Run one investigation, yielding a `NodeUpdate` as each node completes.
+
+    This is what `GET /api/investigations/{id}/stream` is built on, and the
+    reason progress is observed rather than estimated: LangGraph reports a node
+    when the node is actually done, so a tier that took nine seconds shows as
+    nine seconds of nothing followed by a real completion — which is the truth,
+    and is more useful than a bar that moves smoothly and means nothing.
+
+    Two stream modes are requested together. `updates` names the node and gives
+    what it wrote; `values` gives the full state after each superstep, and the
+    last one is the finished investigation. Reconstructing the final state by
+    accumulating the updates instead would work today and break silently the
+    first time a channel gets a reducer, because the update would then be a
+    fragment to merge rather than a value to overwrite.
+    """
+    recorder = TraceRecorder()
+    compiled = build_graph(
+        checkpointer=checkpointer, exclude=exclude, budget_s=budget_s, recorder=recorder
+    )
+    config = {"configurable": {"thread_id": thread_id or state.case_id}} if checkpointer else None
+
+    seen_values = False
+    pending: Optional[NodeUpdate] = None
+
+    async for mode, payload in compiled.astream(state, config, stream_mode=["updates", "values"]):
+        if mode == "values":
+            # A snapshot always arrives *after* the `updates` frame of the node
+            # that produced it, so it belongs to whatever is pending. Holding
+            # each update back by one is what lets it be attached there instead
+            # of arriving as an orphan after the last node.
+            seen_values = True
+            if pending is not None:
+                pending = replace(pending, state=InvestigationState.model_validate(payload))
+            continue
+        for node, update in (payload or {}).items():
+            if pending is not None:
+                yield pending
+            pending = NodeUpdate(node=node, update=update or {})
+
+    if pending is None:  # pragma: no cover - `begin` and `finish` always run
+        raise RuntimeError("the investigation graph executed no nodes")
+    if pending.state is None or not seen_values:  # pragma: no cover - `finish` always writes
+        raise RuntimeError("the investigation graph produced no final state")
+
+    yield pending
+
+
 async def investigate(
     state: InvestigationState,
     *,
@@ -355,17 +458,30 @@ async def investigate(
     checkpointer: Optional[Any] = None,
     thread_id: Optional[str] = None,
 ) -> InvestigationState:
-    """Run one investigation to completion. The entry point 1.6 will call.
+    """Run one investigation to completion. The entry point 1.6 calls.
 
     Returns a real `InvestigationState`, not LangGraph's dict: the library's
     output shape is an implementation detail, and every caller downstream is
     typed against the contract.
+
+    Implemented on `investigate_stream` rather than beside it. Two entry points
+    into one graph is two execution paths that have to be kept behaving
+    identically by hand, and the day they diverge is the day a bug reproduces
+    over SSE and not in the test that calls this.
     """
-    recorder = TraceRecorder()
-    compiled = build_graph(checkpointer=checkpointer, exclude=exclude, budget_s=budget_s, recorder=recorder)
-    config = {"configurable": {"thread_id": thread_id or state.case_id}} if checkpointer else None
-    raw = await compiled.ainvoke(state, config)
-    return InvestigationState.model_validate(raw)
+    final: Optional[InvestigationState] = None
+    async for update in investigate_stream(
+        state,
+        exclude=exclude,
+        budget_s=budget_s,
+        checkpointer=checkpointer,
+        thread_id=thread_id,
+    ):
+        if update.state is not None:
+            final = update.state
+    if final is None:  # pragma: no cover - investigate_stream raises first
+        raise RuntimeError("the investigation graph produced no final state")
+    return final
 
 
 async def resume(
@@ -427,11 +543,14 @@ def graph_summary() -> Dict[str, Any]:
 __all__ = [
     "DEFAULT_BUDGET_S",
     "INPUT_CLASSIFIER",
+    "NodeUpdate",
     "build_graph",
     "fingerprint",
     "graph_summary",
     "investigate",
+    "investigate_stream",
     "new_checkpointer",
+    "node_plan",
     "render_mermaid",
     "resume",
 ]
