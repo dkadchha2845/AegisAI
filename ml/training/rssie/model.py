@@ -29,8 +29,14 @@ training script warns when it is used on a small one.
 behavioural vectors from `services/api/engine/features/` are appended to the
 BiLSTM output before the heads. They carry information the text encoder
 structurally cannot see — arc adherence is a property of the whole sequence,
-not of any token — and they are the same features the rule-based fallback uses,
-so the two backends stay comparable rather than being different systems.
+not of any token.
+
+That package is research-only, and this model is its only reader: nothing under
+`services/` imports it, so these are *not* the features the served rule-based
+path computes. That path uses `engine/spoofing.py` and `engine/scripts.py`,
+which `engine/features/` partly duplicates — and `features/spoofing.py` and
+`features/script_templates.py` have no importer at all. Which features the
+serving path actually consumes is task 4.1's feature registry to decide.
 
 Uncertainty weighting
 ---------------------
