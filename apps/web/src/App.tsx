@@ -35,6 +35,7 @@ const AdminDashboard = lazy(() => import("@/pages/AdminDashboard").then((m) => (
 const Analyzer = lazy(() => import("@/pages/Analyzer").then((m) => ({ default: m.Analyzer })));
 const Guardian = lazy(() => import("@/pages/Guardian").then((m) => ({ default: m.Guardian })));
 const Intel = lazy(() => import("@/pages/Intel").then((m) => ({ default: m.Intel })));
+const Investigate = lazy(() => import("@/pages/Investigate").then((m) => ({ default: m.Investigate })));
 const Shield = lazy(() => import("@/pages/Shield").then((m) => ({ default: m.Shield })));
 const CaseBook = lazy(() => import("@/pages/CaseBook").then((m) => ({ default: m.CaseBook })));
 const Knowledge = lazy(() => import("@/pages/Knowledge").then((m) => ({ default: m.Knowledge })));
@@ -57,6 +58,7 @@ const TITLES: Record<string, string> = {
   "/admin": "Admin · AegisAI",
   "/dashboard": "Dashboard · AegisAI",
   "/analyst/console": "Live console (analyst) · AegisAI",
+  "/investigate": "Investigate · AegisAI",
   "/intel": "Fraud intel · AegisAI",
   "/analyzer": "Analyzer (audit) · AegisAI",
   "/guardian": "Guardian · AegisAI",
@@ -152,6 +154,7 @@ export default function App() {
                 <Route element={<RequireAuth />}>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/analyst/console" element={<LiveConsole />} />
+                  <Route path="/investigate" element={<Investigate />} />
                   <Route path="/guardian" element={<Guardian />} />
                   <Route path="/analyzer" element={<Analyzer />} />
                   <Route path="/intel" element={<Intel />} />

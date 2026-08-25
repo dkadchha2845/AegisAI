@@ -823,3 +823,156 @@ html[data-theme="light"] .btn2--primary { color: #fff; }
 }
 .cb-table tbody tr:last-child td { border-bottom: none; }
 .cb-table tbody tr:hover td { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+
+/* --- Investigate (task 1.9) ----------------------------------------------- */
+/* The launcher for the lifecycle API. Everything here is tokens only, so light
+   and dark come out of `tokens.css` rather than out of a second set of colours
+   maintained next to it. */
+
+.inv__hint {
+  margin: 0 0 var(--s-3);
+  color: var(--ink-muted);
+  font-size: var(--t-sm);
+  max-width: 72ch;
+  line-height: 1.6;
+}
+
+.inv__kinds { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-bottom: var(--s-4); }
+.inv__kind {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 34px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-strong);
+  background: var(--bg-raised);
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: var(--t-sm);
+  cursor: pointer;
+}
+.inv__kind:hover { border-color: var(--accent); color: var(--ink); }
+.inv__kind[data-selected] {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.inv__label {
+  display: block;
+  margin-bottom: var(--s-2);
+  font-size: var(--t-sm);
+  color: var(--ink-muted);
+}
+.inv__textarea { resize: vertical; min-height: 44px; line-height: 1.55; }
+
+/* The dropzone is a <button>, so the base button reset has to be undone rather
+   than the element downgraded to a div — a div is not keyboard reachable, and
+   this is the upload affordance. */
+.inv__drop { width: 100%; font: inherit; font-size: var(--t-sm); }
+.inv__drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.inv__file { display: none; }
+
+.inv__files { list-style: none; margin: var(--s-3) 0 0; padding: 0; display: grid; gap: var(--s-2); }
+.inv__files li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg-raised);
+  font-size: var(--t-sm);
+}
+.inv__filename { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.inv__consent .card__title { display: flex; align-items: center; gap: var(--s-2); }
+.inv__consentlist {
+  margin: 0;
+  padding-left: var(--s-4);
+  display: grid;
+  gap: var(--s-2);
+  color: var(--ink-muted);
+  font-size: var(--t-sm);
+  max-width: 78ch;
+  line-height: 1.6;
+}
+
+/* --- progress --- */
+.inv__live { outline: none; }
+.inv__live:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--r-xs); }
+
+.inv__bar {
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.inv__bar i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  /* A width transition between two *reported* values is presentation, not
+     invention: it never moves unless the server said a node finished. */
+  transition: width var(--t-med) var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) { .inv__bar i { transition: none; } }
+
+.inv__count { margin: var(--s-2) 0 var(--s-4); font-size: var(--t-xs); color: var(--ink-muted); }
+
+.inv__plan { list-style: none; margin: 0 0 var(--s-4); padding: 0; display: grid; gap: var(--s-1); }
+.inv__plan li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--t-sm);
+  color: var(--ink-faint);
+}
+.inv__plan li[data-state="done"] { color: var(--calm); }
+.inv__plan li[data-state="now"] { color: var(--ink); font-weight: 600; }
+
+.inv__subhead {
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  margin: 0 0 var(--s-2);
+  color: var(--ink-muted);
+}
+.inv__agents { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
+.inv__agent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--bg-raised);
+  font-size: var(--t-sm);
+}
+/* A degraded agent looks different from a clean one on purpose. The whole
+   reason `AgentResult.status` is a contract field is that the UI must not be
+   able to round it up quietly. */
+.inv__agent[data-status="ok"] { border-left-color: var(--calm); }
+.inv__agent[data-status="degraded"] { border-left-color: var(--elevated); }
+.inv__agent[data-status="error"] { border-left-color: var(--critical); }
+.inv__agent[data-status="skipped"] { border-left-color: var(--line); opacity: 0.75; }
+.inv__agentname { font-weight: 600; }
+.inv__agenterror { flex-basis: 100%; color: var(--ink-muted); font-size: var(--t-xs); }
+
+.inv__note {
+  margin: var(--s-3) 0 0;
+  padding: var(--s-3);
+  border-radius: var(--r-sm);
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  color: var(--ink-muted);
+  font-size: var(--t-sm);
+  line-height: 1.55;
+}
+
+.inv__verdict { margin: 0 0 var(--s-3); font-size: var(--t-md); line-height: 1.5; }

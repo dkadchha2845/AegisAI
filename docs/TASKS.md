@@ -1,14 +1,15 @@
 # AegisAI — Master Task List
 
-> **Status: Phase 0 complete — all seven tasks. Phase 1 — 1.1 through 1.8 done
-> and verified end-to-end; 1.7b is in progress and the rest of it belongs to
-> 4.8/4.9. An investigation flows through the API, the inherited engine runs
-> inside the graph, and since 1.8 the graph runs on a Celery worker rather than
-> on the event loop that answered the request — a 90-second job no longer
-> occupies a worker slot, and a `kill -9` mid-job loses nothing. 1.7a fixed a
+> **Status: Phase 0 complete — all seven tasks. Phase 1 complete — all nine,
+> verified end-to-end; 1.7b is in progress and the rest of it belongs to
+> 4.8/4.9. An investigation is submitted from the product, routed through the
+> graph, executed on a Celery worker rather than on the event loop that answered
+> the request, streamed back node by node to a page that renders only what the
+> server reported, and handed off as a report. A 90-second job no longer
+> occupies a worker slot and a `kill -9` mid-job loses nothing. 1.7a fixed a
 > benign false positive that 1.7's tests could not see because they ran without
 > the served checkpoint; 1.7b is why a run now says which model it proved.
-> Awaiting your go-ahead for 1.9.**
+> Awaiting your go-ahead for Phase 2.**
 > Last updated 2026-08-25 · branch `main`
 > · 439 tests · all four gates green · ruff + mypy clean
 
@@ -437,8 +438,9 @@ the work is a defect in the licence rather than a formality.
 through a LangGraph graph, executed with parallel fan-out, traced, persisted,
 and streamed to the UI — even if only three agents exist.
 
-**Progress: 8 of 9 done** — ✅ 1.1 · ✅ 1.2 · ✅ 1.3 · ✅ 1.4 · ✅ 1.5 · ✅ 1.6 ·
-✅ 1.7 · ✅ 1.7a · 🔨 1.7b · ✅ 1.8. The input classification agent is the first real agent rather than a
+**Progress: 9 of 9 done** — ✅ 1.1 · ✅ 1.2 · ✅ 1.3 · ✅ 1.4 · ✅ 1.5 · ✅ 1.6 ·
+✅ 1.7 · ✅ 1.7a · 🔨 1.7b · ✅ 1.8 · ✅ 1.9. **Phase 1 is closed.** The input
+classification agent is the first real agent rather than a
 harness; its accuracy bar was ≥98% on a 200-item fixture including 20
 adversarial items, and it measured **100%**. 1.5 makes an investigation durable:
 six tables, Alembic migrations, and a repository in which an unscoped query is
@@ -1473,12 +1475,64 @@ those keys needs its own idempotency key.
 
 **Effort:** 8 h estimated. **Depends:** 0.4, 1.5. ✅
 
-### ⬜ 1.9 — Frontend: investigation launcher + live progress
-**Do:** `/investigate` — evidence-type chooser, drag-drop upload, consent
-copy · live agent-progress list driven by SSE · result hand-off to the report page.
-**Accept:** every input type submittable · progress reflects real node
-completion, not a fake timer · degraded agents shown as degraded, not hidden ·
-keyboard accessible, works light + dark. **Effort:** 12 h. **Depends:** 1.6.
+### ✅ 1.9 — Frontend: investigation launcher + live progress
+
+**Done 2026-08-25.** `/investigate` is the first reader the per-node event
+stream has ever had. Everything an investigation needs has existed on the server
+since 1.6; until now submitting one was a `curl` command. `pages/Investigate.tsx`
+plus the lifecycle half of `lib/api.ts` closes that, behind the same deliberate
+sign-in the other analyst surfaces sit behind — the POST route requires the
+`analyst` role, so the page is listed on Profile rather than in the citizen nav.
+
+**The SSE client is `fetch()` and a `ReadableStream`, not `EventSource`.** That
+is a cost 1.6 chose deliberately and this task pays: `EventSource` cannot set
+request headers, which is why so many SSE endpoints end up accepting `?token=…`,
+and a bearer token in a URL is written to every access log, proxy log and
+browser history entry it passes through. So the client does its own framing —
+about forty lines — and reconnects with `Last-Event-ID`, which makes resume
+arithmetic rather than a promise. Retries are bounded at five with backoff; a
+stream that cannot be re-established falls back to `GET /{id}`, because the
+durable record is a better answer than an invisible loop.
+
+**Progress is arithmetic over two contract fields and nothing else.** The
+denominator is `plan`, sent on `accepted` before any node has run; the numerator
+is `nodes_done`, sent when a node has actually finished. Nothing interpolates or
+estimates. Both facts are already pinned by the backend suite — 
+`test_investigations_api.py` asserts `accepted` carries the full plan with
+`nodes_done == 0`, and that the completions are exactly 1..N — so the claim the
+UI rests on is tested underneath it.
+
+**Verified against the running application 2026-08-25**, with a real API, a real
+Celery worker and a real Redis, driven from a real browser:
+
+| Acceptance criterion | Measured |
+|---|---|
+| every input type submittable | pasted message → `TEXT, URL, UPI_ID` detected from one artefact, 6 agents. A two-file multipart drop (`notice.png` + `headers.eml`) → 2 evidence items, `TEXT, EMAIL, UNKNOWN`, 7 agents. Both through the same route |
+| progress reflects real node completion, not a fake timer | the worker was **stopped** and a case submitted. Nine seconds later: `0 of 7 steps`, bar at **0%**, plan rendered, zero agents — the bar had not moved a pixel. The worker was started; the run went to `7 of 7 · COMPLETE` with its agents. A timer cannot produce that, and neither can this page |
+| degraded agents shown as degraded, not hidden | the API and worker were restarted with `AEGIS_ARTIFACTS` pointing at nothing, which makes `stage_classifier` report DEGRADED for real. It rendered with an amber rail, a `degraded` chip and its own error — *"serving the lexical fallback; no promoted checkpoint"* — next to the run-level `agent:stage_classifier:degraded`. The file submission produced two degraded agents and showed both |
+| keyboard accessible, works light + dark | the evidence chooser is a real radiogroup with roving tabindex and Arrow/Home/End, wrap verified in both directions; the dropzone is a `<button>`, not a div with a click handler; focus moves to the `aria-live` region on submit. Rendered in both themes from tokens only, and no horizontal overflow at 375 px |
+
+An unscored investigation says so. The judgement tier has no agents until 4.6
+and 4.7, so the result panel prints *"Not scored"* and the reason — never a risk
+of zero, which is the one lie the whole contract is arranged to prevent. The
+`queue:in_process` note from 1.8 renders too, in the honest form: the run is not
+durable, the case file already is.
+
+**Four gates green — 518 tests** (unchanged: this task adds no backend
+behaviour), contract consistent, frontend typecheck and production build clean;
+ruff and mypy clean. No console errors in the browser across the whole flow.
+
+**Limitations, stated.** There is **no frontend test runner in this repository**,
+so nothing above is held by a frontend test — the criteria were verified in the
+running application, which the working agreement ranks above a green suite, and
+the contract underneath them is covered by the backend suite. Adding vitest and
+Testing Library is a new gate and a new dependency set; it belongs to 7.x with
+the rest of the frontend work rather than folded in here. Two other things this
+page does not do: there is no in-app view of the report JSON — the hand-off is
+the PDF and `/reports` — and the trace endpoint 1.6 serves is not rendered at
+all, which is **7.3**'s React Flow view rather than a gap here.
+
+**Effort:** 12 h. **Depends:** 1.6. ✅
 
 ---
 

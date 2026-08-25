@@ -16,12 +16,14 @@ import {
   LogOut,
   Network,
   ScanLine,
+  ScanSearch,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const TOOLS = [
+  { to: "/investigate", icon: ScanSearch, label: "Investigate", blurb: "Submit evidence to the agent graph and watch each node complete." },
   { to: "/dashboard", icon: BarChart3, label: "Operations dashboard", blurb: "System state, live metrics, and what's degraded." },
   { to: "/analyst/console", icon: Activity, label: "Live console (analyst)", blurb: "The full instrument view — threat meter, digital twin, manipulation map." },
   { to: "/intel", icon: Network, label: "Fraud intelligence graph", blurb: "The full knowledge graph, clusters, and hotspot analytics." },

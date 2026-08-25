@@ -8,7 +8,12 @@
  * component that crashes on a rejected promise cannot fall back to anything.
  */
 
-import type { StateFrame } from "@/types/contract";
+import type {
+  InvestigationEvent,
+  InvestigationState,
+  InvestigationStatus,
+  StateFrame,
+} from "@/types/contract";
 
 export const API_BASE =
   (import.meta.env.VITE_API_BASE as string | undefined) ?? "http://localhost:8000";
@@ -754,3 +759,243 @@ export const getAwareness = () =>
     trending_scams: { cluster_id: string; scam: string; size: number; risk: string; states: string[] }[];
     hotspot_states: Hotspot[];
   }>("/api/shield/awareness");
+
+// ---------------------------------------------------------------------------
+// Investigations — the 1.6 lifecycle API, read by the 1.9 launcher
+// ---------------------------------------------------------------------------
+
+/** What `POST /api/investigations` returns, before the graph has run. */
+export interface AcceptedInvestigation {
+  case_id: string;
+  status: InvestigationStatus;
+  investigation: InvestigationState;
+  /** the SSE endpoint for live progress */
+  stream: string;
+  /** capabilities already known to be reduced — e.g. `queue:in_process` */
+  degraded: string[];
+}
+
+/** One pasted artefact in a JSON submission. */
+export interface InlineEvidence {
+  text: string;
+  filename?: string;
+  /** what the caller claims this is — recorded by the server, never trusted */
+  declared_type?: string;
+}
+
+export const createInvestigation = (body: { text?: string; items?: InlineEvidence[] }) =>
+  request<AcceptedInvestigation>("/api/investigations", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
+/** Multipart submission. Up to 8 files, each within the server's size cap,
+ *  plus an optional pasted `text`. FormData rather than JSON because the bytes
+ *  are the point; `request` already omits the JSON content-type for FormData so
+ *  the browser can set its own multipart boundary. */
+export const uploadInvestigation = (files: File[], text?: string) => {
+  const form = new FormData();
+  for (const file of files) form.append("files", file, file.name);
+  if (text && text.trim()) form.append("text", text);
+  return request<AcceptedInvestigation>("/api/investigations", {
+    method: "POST",
+    body: form,
+  });
+};
+
+export const getInvestigation = (caseId: string) =>
+  request<InvestigationState>(`/api/investigations/${caseId}`);
+
+export const getInvestigationReport = (caseId: string) =>
+  request<Record<string, unknown>>(`/api/investigations/${caseId}/report`);
+
+export interface InvestigationTrace {
+  case_id: string;
+  status: string;
+  plan: string[];
+  spans: { node: string; agent: string | null; t_start: number; t_end: number; latency_ms: number; status: string; attempt: number; error: string | null }[];
+  /** wall clock, not the sum of the spans — a concurrent fan-out makes the sum
+   *  larger, and quoting it would overstate how long the citizen waited */
+  elapsed_ms: number;
+  agent_ms: number;
+  degraded: string[];
+}
+
+export const getInvestigationTrace = (caseId: string) =>
+  request<InvestigationTrace>(`/api/investigations/${caseId}/trace`);
+
+export const investigationReportPdfUrl = (caseId: string) =>
+  `${API_BASE}/api/investigations/${caseId}/report.pdf`;
+
+// --- the progress stream ---------------------------------------------------
+
+/** Why a stream stopped. `terminal` is the only one that means "the server told
+ *  us it was done"; every other value means the caller should read the final
+ *  state over HTTP rather than assume anything about it. */
+export type StreamEnd = "terminal" | "aborted" | "gone" | "error";
+
+export interface StreamHandlers {
+  onEvent: (event: InvestigationEvent) => void;
+  /** Called once, with why the stream ended and the last sequence number seen. */
+  onEnd?: (reason: StreamEnd, detail: { lastSeq: number; message?: string }) => void;
+}
+
+/**
+ * Follow one investigation's progress.
+ *
+ * `fetch()` and a `ReadableStream` reader rather than `EventSource`, and that is
+ * a deliberate cost rather than an oversight. `EventSource` cannot set request
+ * headers, which is why so many SSE endpoints end up accepting `?token=…`; task
+ * 1.6 refused to build one, because a bearer token in a URL is written to every
+ * access log, proxy log and browser history entry it passes through. So the
+ * stream takes the same `Authorization: Bearer` header as every other route and
+ * the client does its own framing — about forty lines, and no credential in a
+ * URL.
+ *
+ * Reconnect is arithmetic, not hope. Every event carries a monotonic `seq`, and
+ * a dropped connection resumes with `Last-Event-ID: <last seq>`, so the server
+ * replays from the next one: nothing arrives twice and nothing is skipped.
+ * Keepalives are SSE comment lines and carry no id, which is exactly why they
+ * cannot be replayed.
+ *
+ * Returns an abort function. Callers must call it on unmount, or a page that
+ * navigates away leaves a reader attached to a live response.
+ */
+export function streamInvestigation(caseId: string, handlers: StreamHandlers): () => void {
+  const controller = new AbortController();
+  let lastSeq = 0;
+  let stopped = false;
+
+  const finish = (reason: StreamEnd, message?: string) => {
+    if (stopped) return;
+    stopped = true;
+    handlers.onEnd?.(reason, { lastSeq, message });
+  };
+
+  const run = async () => {
+    // Bounded, and deliberately not "until it works". A stream that cannot be
+    // re-established is not a transient blip after this many tries, and the
+    // caller's fallback — read the final state over HTTP — is a better answer
+    // than an invisible loop.
+    for (let attempt = 0; attempt < 5 && !stopped; attempt++) {
+      if (attempt > 0) await sleep(Math.min(1000 * 2 ** (attempt - 1), 8000));
+      const outcome = await follow(caseId, lastSeq, controller.signal, (event) => {
+        lastSeq = Math.max(lastSeq, event.seq);
+        handlers.onEvent(event);
+      });
+      if (outcome.done) {
+        finish(outcome.reason, outcome.message);
+        return;
+      }
+    }
+    finish("error", "the progress stream could not be re-established");
+  };
+
+  void run();
+  return () => {
+    if (stopped) return;
+    controller.abort();
+    finish("aborted");
+  };
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+type FollowOutcome =
+  | { done: true; reason: StreamEnd; message?: string }
+  | { done: false };
+
+async function follow(
+  caseId: string,
+  after: number,
+  signal: AbortSignal,
+  emit: (event: InvestigationEvent) => void,
+): Promise<FollowOutcome> {
+  const token = getToken();
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}/api/investigations/${caseId}/stream`, {
+      signal,
+      headers: {
+        Accept: "text/event-stream",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(after > 0 ? { "Last-Event-ID": String(after) } : {}),
+      },
+    });
+  } catch {
+    return signal.aborted ? { done: true, reason: "aborted" } : { done: false };
+  }
+
+  if (response.status === 404 || response.status === 409) {
+    // 409 is "this case exists but is not streaming here" — it finished, or the
+    // server restarted. Both are answered by reading the final state, so this
+    // is not a retry: retrying would loop on a condition that cannot change.
+    return { done: true, reason: "gone", message: await detailOf(response) };
+  }
+  if (!response.ok || !response.body) {
+    return { done: false };
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      // SSE frames are separated by a blank line. Anything after the last one
+      // is a partial frame and stays in the buffer until the rest arrives —
+      // chunk boundaries have nothing to do with frame boundaries.
+      let split = buffer.indexOf("\n\n");
+      while (split !== -1) {
+        const frame = buffer.slice(0, split);
+        buffer = buffer.slice(split + 2);
+        const event = parseFrame(frame);
+        if (event) {
+          emit(event);
+          if (event.kind === "complete" || event.kind === "failed" || event.kind === "cancelled") {
+            return { done: true, reason: "terminal" };
+          }
+        }
+        split = buffer.indexOf("\n\n");
+      }
+    }
+  } catch {
+    if (signal.aborted) return { done: true, reason: "aborted" };
+    return { done: false };
+  } finally {
+    void reader.cancel().catch(() => undefined);
+  }
+  // The response ended without a terminal event — the connection dropped.
+  return signal.aborted ? { done: true, reason: "aborted" } : { done: false };
+}
+
+/** One SSE frame into an event, or null if it carries none.
+ *
+ *  Comment lines (`: keepalive`) and `retry:` are dropped rather than counted,
+ *  which is exactly how a browser treats them — and is why the no-duplicates
+ *  guarantee survives an idle stream. */
+function parseFrame(frame: string): InvestigationEvent | null {
+  const data: string[] = [];
+  for (const line of frame.split("\n")) {
+    if (line.startsWith(":") || line.trim() === "") continue;
+    if (line.startsWith("data:")) data.push(line.slice(5).trimStart());
+  }
+  if (data.length === 0) return null;
+  try {
+    return JSON.parse(data.join("\n")) as InvestigationEvent;
+  } catch {
+    return null;
+  }
+}
+
+async function detailOf(response: Response): Promise<string> {
+  try {
+    const body = await response.json();
+    if (typeof body?.detail === "string") return body.detail;
+  } catch {
+    /* non-JSON error body */
+  }
+  return `${response.status} ${response.statusText}`;
+}
