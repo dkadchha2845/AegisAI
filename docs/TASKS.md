@@ -1,10 +1,10 @@
 # AegisAI — Master Task List
 
-> **Status: Phase 0 complete — all seven tasks. Phase 1 — 1.1 through 1.6 done
-> and verified end-to-end. An investigation now flows through the API. Awaiting
-> your go-ahead for 1.7.**
+> **Status: Phase 0 complete — all seven tasks. Phase 1 — 1.1 through 1.7 done
+> and verified end-to-end. An investigation flows through the API, and the
+> inherited engine now runs inside the graph. Awaiting your go-ahead for 1.8.**
 > Last updated 2026-08-25 · branch `claude/start-1-6-0032a8`
-> · 392 tests · all four gates green · ruff + mypy clean
+> · 435 tests · all four gates green · ruff + mypy clean
 
 ---
 
@@ -431,22 +431,26 @@ the work is a defect in the licence rather than a formality.
 through a LangGraph graph, executed with parallel fan-out, traced, persisted,
 and streamed to the UI — even if only three agents exist.
 
-**Progress: 6 of 9 done** — ✅ 1.1 · ✅ 1.2 · ✅ 1.3 · ✅ 1.4 · ✅ 1.5 · ✅ 1.6.
-The input classification agent is the first real agent rather than a harness;
-its accuracy bar was ≥98% on a 200-item fixture including 20 adversarial items,
-and it measured **100%**. 1.5 makes an investigation durable: six tables,
-Alembic migrations, and a repository in which an unscoped query is not
-expressible. 1.6 joins them to a served path.
+**Progress: 7 of 9 done** — ✅ 1.1 · ✅ 1.2 · ✅ 1.3 · ✅ 1.4 · ✅ 1.5 · ✅ 1.6 ·
+✅ 1.7. The input classification agent is the first real agent rather than a
+harness; its accuracy bar was ≥98% on a 200-item fixture including 20
+adversarial items, and it measured **100%**. 1.5 makes an investigation durable:
+six tables, Alembic migrations, and a repository in which an unscoped query is
+not expressible. 1.6 joins them to a served path. 1.7 puts the inherited engine
+inside it.
 
-> **The sentence 1.1–1.5 could not write is now available.** An investigation is
-> submitted over HTTP, routed by input type through the LangGraph graph, traced,
-> persisted, streamed to a client node by node, reported, and erased — verified
-> against a running uvicorn and from a real browser page, not only in tests.
-> Two qualifications, because the exit criterion names them: the graph runs
-> **in the API process** rather than on a worker (1.8), and the only agent in it
-> is the input classifier — 1.7 brings the inherited engine in as agents. The
-> older `engine/analyzer.py` path is untouched and still serves
-> `/api/analyze/*`; the two coexist deliberately until 1.7 makes them one.
+> **The phase exit criterion, read against what exists.** An investigation is
+> submitted over HTTP, routed by input type, executed with a parallel fan-out
+> over **eight agents in four tiers**, traced, persisted, streamed to a client
+> node by node, reported, and erased — verified against a running uvicorn and
+> from a real browser page, not only in tests. "Even if only three agents exist"
+> is satisfied and then some.
+>
+> One qualification remains, and it is 1.8's: the graph runs **in the API
+> process** rather than on a worker, so a restart loses an in-flight run. The
+> older `engine/analyzer.py` path is untouched and still serves `/api/analyze/*`;
+> the two now provably agree, signal for signal, on the same input — which is
+> what 1.7 was for.
 
 ### ✅ 1.1 — `InvestigationState` + `AgentResult` in `schema/` 🔴⭐
 **Done 2026-08-24.** ARCHITECTURE.md §3 implemented in `schema/models.py` and
@@ -1072,27 +1076,170 @@ live-resume path is covered directly against `Run.follow` instead.
 
 **Effort:** 8 h estimated. **Depends:** 1.3, 1.5. ✅
 
-### ⬜ 1.7 — Adapt the inherited engine into agents ⭐
-**Why:** KAVACH's engine is the crown jewel. It must become agents **without
-being rewritten** — a rewrite would lose the 84 tests that make it trustworthy.
-**Do:** thin adapters wrapping `engine/classifier.py`, `coercion.py`, `threat.py`,
-`twin.py`, `passport.py`, `spoofing.py`, `scripts.py` as registered agents
-emitting `AgentResult`. Internals untouched.
+### ✅ 1.7 — Adapt the inherited engine into agents ⭐
+**Done 2026-08-25.** Seven adapters in `services/api/agents/inherited/`, and
+**zero lines changed under `services/api/engine/`** — provable with
+`git diff HEAD -- services/api/engine/`, which is the form the constraint should
+take. `stage_classifier`, `coercion_tracker`, `trust_passport` and
+`script_match` run concurrently in REASON; `number_spoofing` runs earlier in
+INVESTIGATE because it works on metadata rather than conversation;
+`threat_fusion` and `digital_twin` run last in JUDGE, which 1.3 built empty.
 
-> **Scope correction from 0.6:** `services/api/engine/features/` (601
-> statements — behaviour, callflow, emotion, linguistic, script_templates,
-> spoofing, video) is **not on the serving path**. Coverage measurement showed
-> it at 0%, and it turns out to be imported only by
-> `ml/training/rssie/dataset.py`, for the multi-head research model that is not
-> served. So it is *not* part of what 1.7 wraps. It also duplicates concerns
-> that the served engine implements separately — `engine/spoofing.py` vs
-> `engine/features/spoofing.py`, `engine/scripts.py` vs
-> `engine/features/script_templates.py`. Decide deliberately in Phase 1 whether
-> these become agents, stay research-only, or are consolidated; do not wrap them
-> by reflex.
-**Accept:** all 84 existing tests still pass unmodified · each adapter emits a
-valid `AgentResult` · the existing live-call flow works through the new
-orchestrator and through the old path. **Effort:** 10 h. **Depends:** 1.3.
+**"Adapt without rewriting" is only checkable if something proves nothing was
+quietly reimplemented.** A green suite does not: an adapter that recomputed the
+coercion index with slightly different constants would pass every test that
+existed. So the bar in `test_inherited_agents.py` is **equality with the old
+path** — for the same input the graph must produce the same stage labels, the
+same peak, the same manipulation map, the same coercion index, the same trust
+percentage, the same script similarity and the same fused drivers as
+`engine/analyzer.analyze_text`. Driver-for-driver rather than by total, because
+two different weightings can reach the same score and the same drivers with the
+same contributions in the same order cannot happen twice by coincidence.
+
+**One shared parser, not six.** `inherited/conversation.py` decides what "the
+conversation" is for an investigation, and delegates the parsing to
+`analyzer.normalise` — the old path's own function. That is what makes the
+equality claim mean something: it is one implementation reached two ways rather
+than two that happen to agree today. It also resolves the shape mismatch, since
+the batch path scores a string and an investigation carries `inputs`,
+`extracted_text` and a `transcript`; the first non-empty source wins rather than
+all three concatenating, because `extracted_text` is *derived from* the inputs
+and reading both would score the same words twice through every cumulative
+signal the engine has.
+
+**The manipulation accumulator is replayed, not passed.** `threat.fuse` wants a
+`ManipulationAccumulator` charged by the caller's stages *and* the victim's
+states, interleaved. Two concurrent agents produce those halves and neither can
+hold the object — only an `AgentResult` crosses between agents. So the fusion
+agent rebuilds it by calling the accumulator's own public methods over the
+published findings, which keeps the charge constants in `threat.py` where a
+copy of `0.34` would eventually drift from. Replay order is faithful because
+every charge is `min(1.0, current + delta)` with non-negative deltas, so the
+result depends on the multiset and not the order — and the test asserts the map
+equals the interleaved one rather than resting on that argument.
+
+**Two things this task deliberately did not do, and both are the architecture
+talking rather than a shortcut.** `threat_fusion` does **not** write
+`state.risk_score`: the contract's score belongs to 4.6, which reconciles a
+calibrated model, deterministic rules and graph evidence, and filling it from a
+heuristic weighted sum would put an unearned number in the field the report
+reads first. And it does not apply the dispositive floor `analyze_text` uses on
+top of `fuse()`: ARCHITECTURE.md §4 puts "deterministic rules — dispositive
+signals only" inside the fusion box that 4.6 builds, and a second copy of
+`55 + 40 × weight` is how two paths start disagreeing about a 69.6. The fused
+score travels as a *feature* instead — available to 4.1, visible in the trace,
+and not yet a claim.
+
+**Where the paths differ, the difference has a name.** On the sample scam SMS
+`analyze_text` reaches **91.0** and the graph's fusion reaches **30.3**. All of
+that gap is one finding — "Impersonates an institution", weight 0.9, produced by
+`engine/upi.py` against `refund@okaxis` and floored in by the dispositive rule.
+`upi.py` is task **2.6**'s Financial Fraud Agent and is not one of the seven
+modules 1.7 wraps; no passport check failed on that input at all. So the graph
+is not disagreeing with the engine, it is missing an agent and a rule, both
+named — and `test_the_gap_to_the_old_paths_final_score_is_attributable` pins it
+so the day either lands the difference must be re-explained rather than quietly
+absorbed.
+
+**`engine/features/` — the 0.6 scope correction, decided rather than deferred
+again.** It **stays research-only and is not wrapped.** Three reasons, in order
+of weight. (1) It duplicates two things the served engine already implements —
+`features/spoofing.py` against `engine/spoofing.py`, `features/script_templates.py`
+against `engine/scripts.py` — and registering both would put two views of the
+same evidence into one weighted sum, which the package's own docstring warns
+produces "confidence rather than corroboration". (2) It is measured at 0% on the
+serving path; an agent whose code has never run in a request is a capability
+claim without a measurement. (3) Its only importer is `ml/training/rssie/dataset.py`,
+the multi-head research model, so the four modules with *no* served counterpart —
+`behaviour`, `callflow`, `emotion`, `linguistic` — are genuinely new signal
+rather than duplicates, and their natural homes are 2.7 (Social Engineering) and
+5.2 (Conversation Dynamics), with 4.1's feature registry deciding what the model
+actually consumes. Consolidating now would be guessing at that answer.
+*Noted while checking:* `ml/training/rssie/model.py` says these are "the same
+features the rule-based fallback uses", and they are not — nothing under
+`services/` imports the package. Left as found, because the right wording
+depends on the decision 4.1 makes.
+
+**Three things running it found that the tests could not.**
+
+*A seven-second agent.* The Trust Passport adapter took **7 224 ms** on its
+first run in a cold process, against a default node budget of 8 000 — every FAIL
+it publishes carries a citation, and fetching one builds the retrieval index.
+`registry.warm_all()` existed for exactly this and nothing called it; the
+lifespan now awaits it and `/api/health` reports the per-agent result, which is
+where the registry's own docstring says the report belongs. Second run: 77 ms.
+
+*A green suite that was green for the wrong reason.* The 1.6 API tests kept
+passing in a full run while failing when run alone, because `test_input_classifier`
+comes earlier in the alphabet and calls `registry.clear()` — so the lifecycle
+tests had been exercising an agent set of one. The registry's docstring names
+the hazard ("the suite passes or fails depending on file order") and it was
+live. `conftest.py` now restores the built-in agent set before every test, and
+every module was re-run in isolation to prove it.
+
+*A `degraded` field on its way to being ignored.* The fusion agent's first rule
+marked itself DEGRADED whenever a contributing agent had not answered — which
+made **every** SMS investigation degraded, because a forwarded message has no
+victim side and the coercion tracker correctly does not apply. A signal that
+does not apply is not a shortfall. DEGRADED is now reserved for a contributing
+agent that ran and *failed*; how much the fusion had is said precisely twice
+already, by `provenance` and by `confidence` as a fraction of five.
+
+**One defect surfaced and deliberately not fixed here.** `_run_stage` filters
+each tier through `registry.eligible()`, so an agent whose `can_handle` returns
+False produces **no result at all** rather than a SKIPPED one — making
+`base.skipped()`'s stated purpose ("the trace should show that the APK agent was
+considered and did not apply") and `AgentStatus.SKIPPED`'s contract note ("must
+never be read as clean by the feature assembly in 4.1") unreachable from the
+graph. 1.7 surfaced it rather than introduced it: this is the first task whose
+`can_handle` gates are routinely false. It is left for **4.1**, the task whose
+stated need it serves, because the fix changes `agent_results` for every
+investigation — what the store persists, what the report's agent table shows,
+what the SSE events carry — and that shape is 4.1's decision, not a change to
+fold into this one.
+
+**One rename, for the same reason 1.3 was bitten.** `policy.py` had reserved an
+8 s / one-attempt budget under the placeholder name `scam_classifier`. A policy
+key that matches no agent is a silent no-op — exactly the defect 1.3's
+end-to-end run caught — so the reservation was renamed to `stage_classifier`
+rather than the agent bent to the reservation, and a test pins that the budget
+still applies.
+
+**Verified end-to-end:**
+
+| Check | Result |
+|---|---|
+| Four gates | **435 tests** · contract consistent · frontend typecheck + production build clean |
+| Also | ruff clean · mypy clean · coverage **75.34%** vs the 65% gate |
+| Module coverage | every file in `agents/inherited/` at **100%** |
+| Engine untouched | `git diff HEAD -- services/api/engine/` is empty; no existing test file was modified except the three 1.6 assertions the richer agent set invalidated |
+| No private coupling | `test_no_adapter_reaches_into_a_private_name_in_the_engine` scans the package — the adapters use nothing the engine did not choose to expose (`analyze_text` itself reaches `coercion._victim_state`; this package may not) |
+| Equality, per signal | stage labels · peak stage · manipulation map · coercion index · trust % · passport FAILs · script similarity · fused drivers — **all equal** to `analyze_text` on the same call |
+| Equality, end to end | Three benign messages score **identically** through both paths — 7.5 / CALM each, not "close" |
+| Running API, real call | Digital-arrest transcript through `POST /api/investigations`: 7 agents, fused **81.4 HIGH**, drivers *Stage: Isolation 0.353 · Identity unverified 0.15 · Script match 0.15 · Victim stress 0.101*, twin forecasting VERIFICATION_DEMAND "~144 s to a payment demand" |
+| The eighth agent, live | Same call plus an Indian mobile as its own evidence item: `number_spoofing` fires, FAILs *Caller-ID vs claimed authority*, and the fused score moves **81.4 → 89.5** — a personal handset claiming to be the CBI |
+| Live-call path, unchanged | `POST /api/session` + 7 utterances: threat **89.5 HIGH**, peak 89.6, passport 0%, number risk 45 FAIL, forecast, evidence package `AGIS-…`, `/investigate` **LIKELY_SCAM 95.0 CRITICAL**, report saved 201, live PDF 5 112 bytes |
+| The three paths agree | The live session's `manipulation_map` is `{authority 0.339, fear 0.372, isolation 0.373, urgency 0.108, compliance 0.0}` — **byte-identical** to the graph's fusion agent and to `analyze_text` on the same conversation |
+| Browser | Live Protection → demo call → threat meter rising 5 → 31 → report **93 CRITICAL** with extracted entities. **Zero console errors** |
+| False positives | Benign SBI debit alert through the API: **7.5 CALM**, no type conflict, no classification, and the only driver is *"Identity unverified"* — a statement about what was not checked, not about the message |
+| Degradation, each exercised | text-only coercion (capped at 72, tagged) · twin falling back to the canonical prior · classifier reporting a genuine fallback · a raising script matcher leaving the investigation COMPLETE and the fusion running over four signals |
+| Determinism | `fingerprint()` identical across runs with seven more agents contributing |
+
+**Not implemented, and stated rather than implied.** `number_spoofing` reads
+`state.entities.phones` and `PHONE`-typed evidence items only — nothing
+populates `entities` yet, so a number merely *mentioned* inside a message does
+not reach it, and a **foreign** number submitted as its own item is typed `TEXT`
+by the 1.4 classifier (whose phone pattern is India-specific) and misses too.
+Both close in 2.1/3.2; scraping identifiers with a regex in the adapter would be
+a second, unowned implementation of extraction. The coercion index is always
+text-only here and capped at 72, because the prosodic half comes from live ASR
+word timings that a batch investigation does not have — 6.2 supplies it. And
+`coercion_index` is passed to `fuse` as `0.0` rather than `None` when the agent
+skipped: faithful, because `fuse` types it as a plain float and the engine has
+no unrun value for it, unlike `trust_pct` and `spoofing_risk`, which are passed
+as `None` so an absent number is never scored as a clean one.
+
+**Effort:** 10 h estimated. **Depends:** 1.3. ✅
 
 ### ⬜ 1.8 — Async job system (Redis + Celery)
 **Do:** worker service · queues by cost class (`fast`, `slow`, `sandbox`) ·

@@ -17,8 +17,26 @@ themselves). See docs/ARCHITECTURE.md §3 and docs/TASKS.md phases 1-2.
 """
 
 # Built-in agents register at import time.  Keeping the list here makes the
-# process's live agent set explicit: the graph CLI and the future lifecycle API
-# both import this package, so neither can silently omit an implemented agent.
+# process's live agent set explicit: the graph CLI and the lifecycle API both
+# import this package, so neither can silently omit an implemented agent.
 from .classify.agent import InputClassifierAgent
+from .inherited import (
+    CoercionAgent,
+    DigitalTwinAgent,
+    NumberSpoofingAgent,
+    ScriptMatchAgent,
+    StageClassifierAgent,
+    ThreatFusionAgent,
+    TrustPassportAgent,
+)
 
-__all__ = ["InputClassifierAgent"]
+__all__ = [
+    "CoercionAgent",
+    "DigitalTwinAgent",
+    "InputClassifierAgent",
+    "NumberSpoofingAgent",
+    "ScriptMatchAgent",
+    "StageClassifierAgent",
+    "ThreatFusionAgent",
+    "TrustPassportAgent",
+]

@@ -92,23 +92,6 @@ def _db() -> None:
     init_db()
 
 
-@pytest.fixture(autouse=True)
-def _builtin_agents() -> Iterator[None]:
-    """Guarantee the process's real agent set for this module.
-
-    Three other test modules call `registry.clear()`, so whether the built-in
-    input classifier is registered by the time this file runs depends on
-    alphabetical file order. These are the end-to-end tests and "which agents
-    ran" is part of what they assert, so the answer must not be a function of
-    who ran first.
-    """
-    from services.api.agents.classify.agent import InputClassifierAgent
-
-    if "input_classifier" not in registry.names():
-        registry.register(InputClassifierAgent)
-    yield
-
-
 @pytest.fixture
 def client() -> Iterator[TestClient]:
     address = f"10.0.{next(_ADDRESS) // 250}.{next(_ADDRESS) % 250 + 1}"
@@ -242,9 +225,15 @@ def test_the_finished_case_is_durable_and_rebuilt_from_rows(client: TestClient) 
         stored = EvidenceStore(db, _scope_of(client)).load(case_id)
     finally:
         db.close()
+    live = client.get(f"/api/investigations/{case_id}").json()
     assert stored is not None
     assert stored.status is InvestigationStatus.COMPLETE
-    assert [r.agent for r in stored.agent_results] == ["input_classifier"]
+    # Every agent that ran survived the round trip, in the same order — the
+    # store rebuilds from rows, so this is the six tables agreeing with the
+    # object they were written from.
+    assert [r.agent for r in stored.agent_results] == [r["agent"] for r in live["agent_results"]]
+    assert "input_classifier" in [r.agent for r in stored.agent_results]
+    assert "threat_fusion" in [r.agent for r in stored.agent_results]
     assert stored.inputs[0].text == SCAM_TEXT
 
 
@@ -756,8 +745,11 @@ def test_the_trace_separates_wall_clock_from_summed_agent_time(client: TestClien
     finish(client, case_id)
     trace = client.get(f"/api/investigations/{case_id}/trace").json()
 
+    state = client.get(f"/api/investigations/{case_id}").json()
     assert trace["plan"] == node_plan()
-    assert [s["agent"] for s in trace["spans"]] == ["input_classifier"]
+    # One span per agent execution, and the set matches what actually ran —
+    # a trace that lost an agent would be a latency table with a hole in it.
+    assert {s["agent"] for s in trace["spans"]} == {r["agent"] for r in state["agent_results"]}
     assert trace["elapsed_ms"] >= 0
     assert "agent_ms" in trace
 
@@ -784,13 +776,28 @@ def test_a_legitimate_bank_alert_produces_no_manufactured_signal(client: TestCli
     case_id = submit(client, BENIGN_TEXT)
     state = finish(client, case_id)
 
-    assert state["degraded"] == []
     assert state["classification"] is None
     assert state["risk_score"] is None
     labels = [f["label"] for r in state["agent_results"] for f in r["findings"]]
     assert "type_conflict" not in labels
     assert state["input_types"] == ["TEXT", "UPI_ID"]
     assert client.get(f"/api/investigations/{case_id}/report").json()["evidence"] == []
+
+    # Nothing in `degraded` is a claim about this message. Every tag is an
+    # `agent:<name>:degraded` capability shortfall — on a machine with no
+    # promoted checkpoint the stage classifier serves the lexical model and says
+    # so. A tag that named the evidence would be a finding wearing a shortfall's
+    # clothes.
+    assert all(d.startswith("agent:") and d.endswith(":degraded") for d in state["degraded"]), (
+        state["degraded"]
+    )
+
+    # And the inherited engine, now wired into the graph, does not manufacture a
+    # threat out of an ordinary bank alert.
+    fusion = next(r for r in state["agent_results"] if r["agent"] == "threat_fusion")
+    assert fusion["features"]["threat_score"] < 25.0
+    level = next(f["value"] for f in fusion["findings"] if f["label"] == "threat_level")
+    assert level == "CALM"
 
 
 # --------------------------------------------------------------------------

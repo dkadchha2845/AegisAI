@@ -20,8 +20,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from schema.models import CONTRACT_VERSION, INVESTIGATION_CONTRACT_VERSION
 
+from . import agents as _agents  # noqa: F401  (registers the built-in agents)
 from . import db as db_mod
 from . import llm
+from .agents import registry
 from .auth import auth_enabled, seed_admin
 from .config import settings
 from .db import SessionLocal, init_db
@@ -29,12 +31,19 @@ from .engine import classifier as classifier_mod
 from .engine.classifier import load_classifier
 from .engine.twin import DigitalTwin
 from .intel import get_intel
+from .orchestration.graph import graph_summary
 from .rag.coach import get_coach
 from .rag.store import get_kb
 from .routes import analyze, auth, intel, investigations, orgs, reports, session, shield
 from .security import RateLimitMiddleware, SecurityHeadersMiddleware
 from .stores import blobs as blob_store
 from .stores import probe as store_probe
+
+#: What `registry.warm_all()` reported at startup, per agent. Surfaced on
+#: /api/health because a warm-up that failed is a shortfall a citizen will pay
+#: for on the first investigation, and the registry's own docstring says this is
+#: where the report is meant to go.
+warmup_report: Dict[str, str] = {}
 
 
 @asynccontextmanager
@@ -44,8 +53,18 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     `@app.on_event("startup")` is deprecated in current FastAPI; a lifespan
     context manager is the supported replacement. `warm()` is defined further
     down the module and resolved at call time, which is after import completes.
+
+    The agent warm-up is awaited here rather than left to first use, and the
+    reason is a measurement rather than tidiness: task 1.7's Trust Passport
+    adapter took **7 224 ms** on its first run in a cold process — building the
+    retrieval index to cite its checks — against an 8 s node budget, and the
+    stage classifier costs 7.66 s the first time it loads a checkpoint. An agent
+    that warms lazily is an agent that times out for whoever arrives first after
+    a restart.
     """
     warm()
+    global warmup_report
+    warmup_report = await registry.warm_all()
     yield
 
 
@@ -165,6 +184,11 @@ def health() -> Dict[str, Any]:
             "persistent": not db_mod.EPHEMERAL,
             "url_configured": settings.database_url is not None,
         },
+        # Which agents are live, in which tier, and whether each one managed to
+        # preload what it needs. "Is the inherited engine wired into the graph?"
+        # (task 1.7) is a question this answers rather than one a reader has to
+        # infer from a version string.
+        "agents": {**graph_summary(), "warmup": warmup_report},
         # Where an uploaded screenshot's bytes actually are (task 1.6). Reported
         # next to the database because the pair is what matters: a durable
         # database with an ephemeral evidence directory is a case that outlives

@@ -295,6 +295,7 @@ aegisai/
 │   │   │   ├── classify/  ocr/  qr/  url/  email/  apk/  image/
 │   │   │   ├── financial/  social/  threat_intel/  rag/  graph/
 │   │   │   ├── risk/  fusion/  explain/
+│   │   │   ├── inherited/            #    the engine below, wrapped, unchanged
 │   │   ├── orchestration/            # ── NEW: LangGraph
 │   │   │   ├── graph.py  nodes.py  policy.py  trace.py
 │   │   ├── investigations/           # ── NEW: lifecycle — intake, runner, report

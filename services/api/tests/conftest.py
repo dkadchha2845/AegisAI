@@ -30,3 +30,40 @@ import os
 # .env loader from overriding it.
 os.environ["DATABASE_URL"] = ""
 os.environ["AEGIS_LLM"] = "none"
+
+
+# ---------------------------------------------------------------------------
+# The built-in agent set, restored before every test
+# ---------------------------------------------------------------------------
+
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _builtin_agents():
+    """Every test starts with the process's real agent set registered.
+
+    `registry.clear()` is module-global state, and three test modules call it —
+    `test_agent_registry`, `test_input_classifier` and `test_orchestration_graph`
+    all need to start from empty. The registry's own docstring names the hazard
+    that creates: "the suite passes or fails depending on file order".
+
+    It was not hypothetical. Task 1.7 registered seven engine adapters, and the
+    1.6 API tests went on passing in a full run while failing when run alone —
+    because a module earlier in the alphabet had cleared the registry, so the
+    lifecycle tests were exercising an agent set of one. A suite that is green
+    for that reason is not green.
+
+    Restoring in setup rather than teardown is what makes it robust: a module
+    that wants an empty registry clears it in its own fixture, which runs after
+    this one, so both intents are satisfied without either knowing about the
+    other.
+    """
+    from services.api import agents as agents_pkg
+    from services.api.agents import registry
+
+    for name in agents_pkg.__all__:
+        cls = getattr(agents_pkg, name)
+        if getattr(cls, "name", None) not in registry.names():
+            registry.register(cls)
+    yield

@@ -83,8 +83,16 @@ POLICIES: dict[str, NodePolicy] = {
     # Network-bound and worth a second try.
     "url_investigation": NodePolicy(timeout_s=10.0, attempts=2),
     # Local model inference. It either works or it is broken; a retry changes
-    # nothing and doubles the latency of the slowest node in the graph.
-    "scam_classifier": NodePolicy(timeout_s=8.0, attempts=1),
+    # nothing and doubles the latency of the slowest node in the graph. The
+    # budget was reserved here before the agent existed, under the placeholder
+    # name `scam_classifier`; task 1.7 built it and it is called
+    # `stage_classifier`, because a stage of the scam arc is what it returns.
+    # Renaming the reservation rather than the agent keeps the registry name
+    # — which appears in every trace span and every report — honest, and keeps
+    # the budget applying to the agent it was written for. A key that no longer
+    # matches any agent is a silent no-op, which is exactly the defect 1.3's
+    # end-to-end run caught.
+    "stage_classifier": NodePolicy(timeout_s=8.0, attempts=1),
 }
 
 DEFAULT_POLICY = NodePolicy()
