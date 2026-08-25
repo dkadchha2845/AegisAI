@@ -453,7 +453,7 @@
   <header class="cover">
     <div class="cover-meta">
       <span class="eyebrow">Build Dossier</span>
-      <span class="eyebrow">Updated 25 Aug 2026 &middot; after tasks 1.7b and 1.8 &mdash; merged to <span class="mono">main</span></span>
+      <span class="eyebrow">Updated 25 Aug 2026 &middot; Phase 1 complete &mdash; merged to <span class="mono">main</span></span>
       <span class="eyebrow">B.Tech CSE Capstone &middot; Research</span>
     </div>
 
@@ -481,20 +481,20 @@
     </div>
 
     <div class="stats">
-      <div class="stat"><b class="mono">19/87</b><small>tasks done</small></div>
+      <div class="stat"><b class="mono">20/87</b><small>tasks done</small></div>
       <div class="stat"><b class="mono">518</b><small>tests green</small></div>
-      <div class="stat"><b class="mono">76.1%</b><small>backend coverage</small></div>
+      <div class="stat"><b class="mono">76.6%</b><small>backend coverage</small></div>
       <div class="stat"><b class="mono">0.767</b><small>macro-F1, zero-leak</small></div>
       <div class="stat"><b class="mono">11</b><small>phases</small></div>
-      <div class="stat"><b class="mono">966</b><small>hours remaining</small></div>
+      <div class="stat"><b class="mono">954</b><small>hours remaining</small></div>
     </div>
 
     <div class="position">
       <div class="row">
         <span class="eyebrow">Current position</span>
         <span class="chip done">Phase 0 complete &middot; 8 of 8</span>
-        <span class="chip now">Phase 1 &middot; 8 of 9</span>
-        <span class="chip next">Next: 1.9</span>
+        <span class="chip done">Phase 1 complete &middot; 9 of 9</span>
+        <span class="chip next">Next: Phase 2</span>
       </div>
       <p>
         Phase 0 shipped and was verified against the running application, which found three
@@ -541,6 +541,18 @@
         smaller and more uncomfortable lesson from 1.7a made permanent: <strong>a gate run now
         states which model it proved</strong>, and can be made to fail rather than quietly prove
         the stand-in.
+      </p>
+      <p>
+        <strong>Phase 1 closes with 1.9, and with the stream finally having a reader.</strong>
+        Everything above had existed on the server since 1.6 while submitting an investigation was
+        still a <span class="mono">curl</span> command. <span class="mono">/investigate</span> is
+        the page &mdash; evidence in, observed progress, report out &mdash; and its progress bar is
+        arithmetic over two contract fields rather than an animation: <span class="mono">plan</span>
+        for the denominator, sent before any node runs, and <span class="mono">nodes_done</span> for
+        the numerator, sent when one actually finishes. The proof is the negative one. With the
+        worker stopped, a submitted case sat at <strong>0 of 7 with the bar at 0%</strong> for nine
+        seconds and did not move a pixel; starting the worker took it to 7 of 7. A fake timer
+        cannot do that, and neither can this page.
       </p>
     </div>
   </header>
@@ -620,7 +632,7 @@
       <div class="phase">
         <div class="pnum">01<small>W3&ndash;5</small></div>
         <div class="pbody">
-          <div class="ptop"><h3>Agent architecture &amp; orchestration</h3><span class="chip now">In progress &middot; 8 of 9</span><span class="chip hrs">12h left</span></div>
+          <div class="ptop"><h3>Agent architecture &amp; orchestration</h3><span class="chip done">9 of 9 &middot; complete</span><span class="chip hrs">~95h</span></div>
           <p class="pdesc"><code class="mono">InvestigationState</code> contract &middot; agent protocol &amp; registry &middot;
           LangGraph orchestrator &middot; input classifier &middot; evidence store &middot; the inherited engine
           adapted into agents without rewriting it &middot; the graph moved onto a Celery worker.</p>
@@ -761,7 +773,7 @@
       <!-- PHASE 1 -->
       <div class="cl-phase">
         <h3>Phase 1 &mdash; Agent architecture &amp; orchestration</h3>
-        <span class="pcount">8 / 9</span>
+        <span class="pcount">9 / 9</span>
         <span class="meter"><i style="width:78%"></i></span>
       </div>
       <div class="task is-done"><span class="tid">1.1</span><span class="tname"><span class="mono">InvestigationState</span> + <span class="mono">AgentResult</span> in <span class="mono">schema/</span> &mdash; 13 models, 6 enums, drift-guarded in both languages</span><span class="tmeta"><i class="tag crit">crit</i><i class="tag res">res</i><span class="box">&#10003;</span></span></div>
@@ -776,7 +788,7 @@
       <div class="task is-done"><span class="tid">1.7a</span><span class="tname">Fix &mdash; a benign message named a scam stage, because <span class="mono">threat_weight(&ldquo;BENIGN&rdquo;)</span> is 0 and any label at any confidence outranked it</span><span class="tmeta"><i class="tag crit">crit</i><span class="box">&#10003;</span></span></div>
       <div class="task is-now"><span class="tid">1.7b</span><span class="tname">The gates cannot see a checkpoint-dependent defect &mdash; a run now names the classifier it proved, and <span class="mono">AEGIS_REQUIRE_SERVING_BEST=1</span> makes a fallback fail the suite. The other two criteria stay with 4.8/4.9</span><span class="tmeta"><i class="tag crit">crit</i><span class="box">&#9679;</span></span></div>
       <div class="task is-done"><span class="tid">1.8</span><span class="tname">Async job system &mdash; Redis + Celery, three queues by cost class, a Redis-backed progress journal so the stream survives crossing processes, and a <span class="mono">kill -9</span> that loses no work</span><span class="tmeta"><span class="box">&#10003;</span></span></div>
-      <div class="task is-todo"><span class="tid">1.9</span><span class="tname">Frontend launcher + live agent progress driven by real node completion</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-done"><span class="tid">1.9</span><span class="tname">Frontend launcher + live agent progress &mdash; a progress bar that is arithmetic over two contract fields, and refuses to move when nothing has happened</span><span class="tmeta"><span class="box">&#10003;</span></span></div>
 
       <!-- PHASE 2 -->
       <div class="cl-phase">
@@ -993,6 +1005,11 @@
             <td class="was">A real Redis, a real Celery worker and a durable store, with the MuRIL checkpoint loaded &middot; a 90-second job on the <span class="mono">sandbox</span> queue while submissions continue &middot; a 120-second job and <span class="mono">kill -9</span> on the worker mid-task &middot; a submission with no worker running at all &middot; <span class="mono">docker stop aegis-redis</span> &middot; the SSE stream read from an API process that never ran the graph</td>
             <td class="now">Two real defects, both found by the parts that are hard to unit-test. The <strong>parametrised journal conformance suite</strong> &mdash; the same tests against the in-memory and the Redis implementation &mdash; caught a follower resuming from an index at or past the end of a <em>finished</em> Redis journal <strong>waiting forever</strong> on a channel that would never carry another message, because &ldquo;done&rdquo; was decided from the events that call happened to emit rather than from the journal. And chasing the degradation path found the worse one: the broker probe is cached ten seconds, so &ldquo;reachable&rdquo; is a fact about the recent past, and a Redis that went away inside that window raised out of the journal's first write and turned a submission into a <strong>500</strong> &mdash; invariant 4's failure arriving through the machinery built to honour it. Measured after both: 202 in <strong>52&nbsp;ms</strong> with a 90-second sandbox job running, COMPLETE after 2.1&nbsp;s, a <span class="mono">kill -9</span>'d worker's job redelivered by task id ~30&nbsp;s later, and nine SSE events seq&nbsp;1&ndash;9 contiguous with <span class="mono">Last-Event-ID:&nbsp;3</span> resuming as exactly 4&ndash;9. Celery's Redis <strong>default visibility timeout is an hour</strong>, so the crash guarantee held and nobody would have waited for it &mdash; now 1800&nbsp;s, and asserted</td>
           </tr>
+          <tr>
+            <th class="rowlab">1.9</th>
+            <td class="was">The page in a real browser against a real API, worker and Redis &middot; a pasted message and a two-file multipart drop &middot; the worker <em>stopped</em> mid-submission and started again &middot; the API restarted with no checkpoint, to make an agent genuinely degrade &middot; keyboard-only through the chooser &middot; both themes, and 375&nbsp;px</td>
+            <td class="now">The interesting verification was the <strong>negative</strong> one. Asserting that a progress bar advances proves nothing about whether it was told to; asserting that it <em>refuses to</em> does. With the Celery worker stopped, a submitted case sat at <strong>0 of 7, bar at 0%, zero agents for nine seconds</strong> &mdash; plan rendered, denominator known, nothing invented &mdash; and went to 7 of 7 the moment a worker started. Degradation got the same treatment rather than being taken on trust: pointing <span class="mono">AEGIS_ARTIFACTS</span> at nothing makes <span class="mono">stage_classifier</span> really report DEGRADED, and it rendered with its own error text, <em>&ldquo;serving the lexical fallback; no promoted checkpoint&rdquo;</em>. One thing the build cannot hold: <strong>this repository has no frontend test runner</strong>, so every criterion above is carried by the browser session and by the backend tests that pin <span class="mono">plan</span> and <span class="mono">nodes_done</span> underneath it &mdash; said here rather than left for someone to assume, which is the same discipline 1.7b exists for</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1168,24 +1185,23 @@
   <section>
     <div class="nextup">
       <span class="eyebrow">Next action</span>
-      <h2>Task 1.9 &mdash; Frontend launcher and live progress</h2>
-      <p>Everything an investigation needs now exists on the server and <em>nothing in the product
-      lets a person start one</em>. Submission is a <span class="mono">curl</span> command; the
-      per-node event stream 1.6 built and 1.8 taught to cross processes has no reader. 1.9 is the
-      <span class="mono">/investigate</span> page &mdash; evidence-type chooser, drag-and-drop
-      upload, the consent copy the live-audio path needs, and an agent-progress list driven by the
-      real stream.</p>
-      <p>Two of its acceptance criteria are already sharp because of what came before. <strong>Progress
-      must reflect real node completion, not a fake timer</strong> &mdash; which is why
-      <span class="mono">accepted</span> carries the whole node plan, so the client has a real
-      denominator before the first node finishes and every later event is an observed completion.
-      And <strong>degraded agents are shown as degraded, not hidden</strong>, which is the UI half of
-      the discipline 1.7 and 1.8 both spent a decision on: a signal that does not apply is not a
-      shortfall, and a tag raised on every case is a field people stop reading. The client also has
-      to reach the stream with <span class="mono">fetch()</span> and a
-      <span class="mono">ReadableStream</span> reader rather than <span class="mono">EventSource</span>,
-      because 1.6 refused to accept a bearer token in a URL &mdash; a token in a URL is a token in
-      every access log it passes through.</p>
+      <h2>Phase 2 &mdash; Evidence agents</h2>
+      <p>Phase 1's exit criterion is met and its skeleton is finished: an investigation is
+      submitted from the product, routed by input type, fanned out over agents in four tiers,
+      executed on a worker, streamed back node by node, reported and erased. What it is <em>not</em>
+      yet is broad. Seven of the eight agents in that graph are the inherited call engine wearing an
+      adapter; the platform's actual promise &mdash; upload anything &mdash; is still a promise.</p>
+      <p>Phase 2 is where that stops being true, and its exit criterion says so plainly: a
+      screenshot containing a phishing URL and a UPI ID produces a complete, evidence-backed report
+      with no hand-waving. Ten agents, and the order is dependency rather than appetite. <strong>2.3,
+      the URL agent, is the one to be careful with</strong> &mdash; ARCHITECTURE.md &sect;8 calls it
+      the single highest-risk component in AegisAI, because it fetches attacker-supplied addresses:
+      SSRF guard first, features second, DNS re-resolved after <em>every</em> redirect. <strong>2.8,
+      the APK agent, is where the <span class="mono">sandbox</span> queue stops being a cost class
+      and becomes a security boundary</strong>, and 1.8 wrote down the trap it has to avoid: the
+      queue is chosen at dispatch from a filename, so an APK renamed <span class="mono">photo.jpg</span>
+      rides the <span class="mono">fast</span> queue. Isolation has to be enforced where the sniffed
+      type is known, not where the guess was made.</p>
     </div>
   </section>
 
