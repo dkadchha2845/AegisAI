@@ -453,7 +453,7 @@
   <header class="cover">
     <div class="cover-meta">
       <span class="eyebrow">Build Dossier</span>
-      <span class="eyebrow">Updated 25 Aug 2026 &middot; after task 1.5 &mdash; merged to <span class="mono">main</span></span>
+      <span class="eyebrow">Updated 25 Aug 2026 &middot; after task 1.6 &mdash; on <span class="mono">claude/start-1-6-0032a8</span>, not yet merged</span>
       <span class="eyebrow">B.Tech CSE Capstone &middot; Research</span>
     </div>
 
@@ -481,34 +481,44 @@
     </div>
 
     <div class="stats">
-      <div class="stat"><b class="mono">15/87</b><small>tasks done</small></div>
-      <div class="stat"><b class="mono">340</b><small>tests green</small></div>
-      <div class="stat"><b class="mono">72.3%</b><small>backend coverage</small></div>
+      <div class="stat"><b class="mono">16/87</b><small>tasks done</small></div>
+      <div class="stat"><b class="mono">392</b><small>tests green</small></div>
+      <div class="stat"><b class="mono">73.5%</b><small>backend coverage</small></div>
       <div class="stat"><b class="mono">0.767</b><small>macro-F1, zero-leak</small></div>
       <div class="stat"><b class="mono">11</b><small>phases</small></div>
-      <div class="stat"><b class="mono">994</b><small>hours remaining</small></div>
+      <div class="stat"><b class="mono">986</b><small>hours remaining</small></div>
     </div>
 
     <div class="position">
       <div class="row">
         <span class="eyebrow">Current position</span>
         <span class="chip done">Phase 0 complete &middot; 8 of 8</span>
-        <span class="chip now">Phase 1 &middot; 5 of 9</span>
-        <span class="chip next">Next: 1.6</span>
+        <span class="chip now">Phase 1 &middot; 6 of 9</span>
+        <span class="chip next">Next: 1.7</span>
       </div>
       <p>
         Phase 0 shipped and was verified against the running application, which found three
         defects 129 green unit tests could not see. Task 1.1 &mdash; the
         <span class="mono">InvestigationState</span> contract every later agent reads and writes
         &mdash; the agent protocol and registry of 1.2, the LangGraph orchestrator of 1.3, the
-        input classifier of 1.4, and now the evidence store of 1.5 are done, gated and verified the
-        same way, and Phase 0 is closed. Each iteration, run for real, found something the tests
-        could not: a cold-start problem, a silent evidence-extraction bug, a per-agent timeout that
-        was quietly doing nothing, a licence badge pointing at a file that does not exist, and this
-        time a declarative base that put 23 type errors into a gate kept at zero. An investigation
-        now outlives the request that created it &mdash; but <strong>no HTTP route runs the graph
-        yet</strong>, so this page still does not claim an investigation flows through the API.
-        That sentence belongs to 1.6 and is not written before then.
+        input classifier of 1.4, the evidence store of 1.5 and now the lifecycle API of 1.6 are
+        done, gated and verified the same way, and Phase 0 is closed. Each iteration, run for real,
+        found something the tests could not: a cold-start problem, a silent evidence-extraction
+        bug, a per-agent timeout that was quietly doing nothing, a licence badge pointing at a file
+        that does not exist, a declarative base that put 23 type errors into a gate kept at zero,
+        and this time a test client that buffers a stream in full &mdash; so the one property the
+        SSE endpoint exists for could not be proven by any test in the suite, and had to be
+        measured against a running server instead.
+      </p>
+      <p>
+        <strong>After five iterations of refusing to, this page can now write the sentence:
+        an investigation flows through the API.</strong> Evidence is submitted over HTTP, routed by
+        input type through the graph, traced, persisted, streamed back node by node as each one
+        actually completes, reported as JSON or PDF, and erased on request &mdash; rows, stored
+        bytes and progress journal together. Two qualifications, because the phase exit criterion
+        names them: the graph runs <em>in the API process</em> rather than on a worker, which is
+        1.8, and the only agent in it is the input classifier &mdash; 1.7 brings the inherited
+        engine in.
       </p>
     </div>
   </header>
@@ -588,7 +598,7 @@
       <div class="phase">
         <div class="pnum">01<small>W3&ndash;5</small></div>
         <div class="pbody">
-          <div class="ptop"><h3>Agent architecture &amp; orchestration</h3><span class="chip now">In progress &middot; 5 of 9</span><span class="chip hrs">38h left</span></div>
+          <div class="ptop"><h3>Agent architecture &amp; orchestration</h3><span class="chip now">In progress &middot; 6 of 9</span><span class="chip hrs">30h left</span></div>
           <p class="pdesc"><code class="mono">InvestigationState</code> contract &middot; agent protocol &amp; registry &middot;
           LangGraph orchestrator &middot; input classifier &middot; evidence store &middot; the inherited engine
           adapted into agents without rewriting it.</p>
@@ -729,8 +739,8 @@
       <!-- PHASE 1 -->
       <div class="cl-phase">
         <h3>Phase 1 &mdash; Agent architecture &amp; orchestration</h3>
-        <span class="pcount">5 / 9</span>
-        <span class="meter"><i style="width:56%"></i></span>
+        <span class="pcount">6 / 9</span>
+        <span class="meter"><i style="width:67%"></i></span>
       </div>
       <div class="task is-done"><span class="tid">1.1</span><span class="tname"><span class="mono">InvestigationState</span> + <span class="mono">AgentResult</span> in <span class="mono">schema/</span> &mdash; 13 models, 6 enums, drift-guarded in both languages</span><span class="tmeta"><i class="tag crit">crit</i><i class="tag res">res</i><span class="box">&#10003;</span></span></div>
       <div class="task is-done"><span class="tid">1.2</span><span class="tname">Agent base protocol + registry &mdash; a raising, hanging or cancelled agent yields a valid result and never propagates</span><span class="tmeta"><i class="tag crit">crit</i><span class="box">&#10003;</span></span></div>
@@ -739,7 +749,7 @@
       <div class="task is-done"><span class="tid">1.3</span><span class="tname">LangGraph orchestrator &mdash; tiered routing, parallel fan-out, per-node policy, checkpoint resume, and a fingerprint that makes determinism checkable</span><span class="tmeta"><i class="tag crit">crit</i><i class="tag res">res</i><span class="box">&#10003;</span></span></div>
       <div class="task is-done"><span class="tid">1.4</span><span class="tname">Input classification agent &mdash; magic bytes first, never the uploader's MIME; ambiguous evidence returns several types rather than guessing one</span><span class="tmeta"><i class="tag crit">crit</i><span class="box">&#10003;</span></span></div>
       <div class="task is-done"><span class="tid">1.5</span><span class="tname">Evidence store (Postgres) &mdash; six tables, two Alembic revisions, and a repository in which an unscoped query is not expressible</span><span class="tmeta"><i class="tag crit">crit</i><span class="box">&#10003;</span></span></div>
-      <div class="task is-todo"><span class="tid">1.6</span><span class="tname">Investigation lifecycle API &mdash; submit, SSE progress, report, trace, erasure</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-done"><span class="tid">1.6</span><span class="tname">Investigation lifecycle API &mdash; six routes, per-node SSE progress that is observed rather than estimated, and a reconnect that resumes by index instead of promising not to repeat itself</span><span class="tmeta"><span class="box">&#10003;</span></span></div>
       <div class="task is-todo"><span class="tid">1.7</span><span class="tname">Adapt the inherited engine into agents &mdash; thin adapters, internals untouched</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#9633;</span></span></div>
       <div class="task is-todo"><span class="tid">1.8</span><span class="tname">Async job system &mdash; Redis + Celery, queues by cost class</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
       <div class="task is-todo"><span class="tid">1.9</span><span class="tname">Frontend launcher + live agent progress driven by real node completion</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
@@ -934,6 +944,11 @@
             <td class="was">The migrations up, down and up again on SQLite <em>and</em> on the compose PostgreSQL 16.6 &middot; a copy of the real <span class="mono">aegis.db</span> &middot; three investigations through the real graph, persisted and read back &middot; the API on both databases &middot; the container stopped mid-flight &middot; the browser</td>
             <td class="now">Two things only the real stores could show. <strong>The SQLite suite cannot tell <span class="mono">JSONB</span> from JSON text</strong> &mdash; it passes identically either way, so the whole §7 reason for choosing PostgreSQL was unproven until the same revisions ran against the real server and the columns came back <span class="mono">JSONB(astext_type=Text())</span>. And the <em>pre-existing</em> database again: a copy of the live <span class="mono">aegis.db</span> &mdash; 12 users, 3 orgs, 38 audit rows &mdash; correctly <strong>refused</strong> an un-stamped upgrade, then took <span class="mono">stamp 0001</span> + <span class="mono">upgrade head</span> with every row intact. Separately, the typed store layer reaching <span class="mono">db.py</span> for the first time exposed <span class="mono">declarative_base()</span> putting <strong>23 &ldquo;invalid base class&rdquo; errors</strong> into a gate kept at zero &mdash; fixed at the source rather than silenced</td>
           </tr>
+          <tr>
+            <th class="rowlab">1.6</th>
+            <td class="was">A live uvicorn with a deliberately slow agent, watched with <span class="mono">curl -N</span> &middot; a mid-run hang-up and reconnect &middot; an APK-shaped zip named <span class="mono">holiday.jpg</span> &middot; the cap at 4&nbsp;MB and at 4&nbsp;MB+1 &middot; a restart mid-case &middot; a second tenant with a real login &middot; erasure, then the disk &middot; and the whole flow from a real browser page</td>
+            <td class="now">The test client <strong>buffers a streaming response in full</strong> &mdash; measured, with a two-second agent in the graph: the first chunk still arrives only when the last one does. So the one property an SSE endpoint exists for could not be asserted by any test in the suite, and the claim was moved to where it can be measured: against the running server, events 1&ndash;3 land at <span class="mono">0&nbsp;ms</span>, then a <span class="mono">1983&nbsp;ms</span> gap while the agent works, then 4&ndash;9. The test file says so rather than implying the suite proved it. Looking at the output also caught what no assertion was watching &mdash; the first PDF printed long finding values <em>on top of</em> the column beside them, because reportlab lays a bare string on one line and lets it overflow</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1109,25 +1124,29 @@
   <section>
     <div class="nextup">
       <span class="eyebrow">Next action</span>
-      <h2>Task 1.6 &mdash; Investigation lifecycle API</h2>
-      <p><span class="mono">POST /api/investigations</span> for multipart and JSON, <span class="mono">GET /{id}</span>,
-      an SSE progress stream, <span class="mono">/report</span> and <span class="mono">/report.pdf</span>,
-      <span class="mono">/trace</span>, and <span class="mono">DELETE</span> for GDPR-style erasure. This is the
-      task that finally connects the three pieces already built: the graph runs an investigation, the
-      evidence store keeps it, and the API is what lets anyone ask for either.</p>
-      <p>It is also the task that earns the sentence this page has refused to write for five
-      iterations &mdash; <strong>an investigation flows through the API</strong>. Until a route
-      submits evidence, streams real per-node progress and returns a report, the orchestrator hands
-      its state back to its caller and nothing else happens. The criteria that carry the weight are
-      the honest ones: SSE reconnect must resume <em>without duplicate events</em>, the 4&nbsp;MB
-      upload cap must be enforced rather than documented, and progress must reflect real node
-      completion rather than a plausible timer.</p>
+      <h2>Task 1.7 &mdash; Adapt the inherited engine into agents</h2>
+      <p>The graph now runs, persists and streams &mdash; over exactly one agent. KAVACH's engine
+      is the crown jewel of this project and the reason it started with something rather than
+      nothing: a stage classifier, coercion and threat scoring, the Digital Twin forecast, the
+      trust passport, caller-number spoofing checks and script matching, carried by <strong>84
+      tests that make it trustworthy</strong>. 1.7 makes it available to the graph as thin adapters
+      emitting <span class="mono">AgentResult</span>, with the internals untouched.</p>
+      <p>The constraint <em>is</em> the task. A rewrite would produce cleaner code and forfeit the
+      only thing that makes the engine believable, which is that it has been measured. So the
+      acceptance criterion is deliberately awkward: <strong>all 84 existing tests still pass
+      unmodified</strong>, and the live-call flow works through the new orchestrator <em>and</em>
+      through the old path, because both will be serving until Phase 2 finishes. There is also a
+      judgement call carried forward from 0.6 and not to be made by reflex &mdash;
+      <span class="mono">engine/features/</span> is 601 statements at 0% coverage, imported only by
+      a research model that is not served, and duplicating concerns the served engine implements
+      separately. Whether it becomes agents, stays research-only, or is consolidated is a decision
+      to make on purpose.</p>
     </div>
   </section>
 
   <footer>
     <span>AegisAI &middot; build dossier</span>
-    <span>Updated 25 Aug 2026, after task 1.5 &middot; commit 3a95a1e on main</span>
+    <span>Updated 25 Aug 2026, after task 1.6 &middot; commit a02929d on <span class="mono">claude/start-1-6-0032a8</span></span>
     <span>Full detail in docs/TASKS.md &middot; docs/ARCHITECTURE.md &middot; docs/RESEARCH.md</span>
   </footer>
 
