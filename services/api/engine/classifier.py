@@ -490,3 +490,38 @@ def threat_weight(label: str) -> float:
         "ISOLATION": 0.9, "VERIFICATION_DEMAND": 0.8, "PAYMENT_SETUP": 0.9,
         "PAYMENT_EXECUTION": 1.0, "BENIGN": 0.0,
     }.get(label, 0.0)
+
+
+#: Below this, a non-benign stage label is not distinguishable from noise.
+#:
+#: Chance over the eight stages is 0.125. Measured on the fixtures in
+#: `test_inherited_agents.py`, the non-benign labels a *benign* message
+#: produces top out at 0.340 — GREETING on an SBI debit alert, and
+#: VERIFICATION_DEMAND at 0.242 on an Amazon delivery notice — while the turns
+#: that carry a scam verdict start at 0.601 and run to 0.911. 0.40 sits in the
+#: empty band between the two, at 3.2x chance.
+#:
+#: This is calibrated on five fixtures, which is not the same as evaluated:
+#: task 4.4 owns probability calibration and 4.8 the false-positive harness,
+#: and this number should be set from a corpus once they exist.
+MIN_STAGE_CONFIDENCE = 0.40
+
+
+def stage_rank(label: str, confidence: float) -> float:
+    """How threatening one labelled turn is — for peak selection and fusion.
+
+    `threat_weight("BENIGN")` is 0, so a turn the classifier calls BENIGN can
+    never out-rank one it calls anything else, however sure it is. That meant a
+    0.242-confidence VERIFICATION_DEMAND beat a 0.553-confidence BENIGN and put
+    "Stage: Verification Demand" on the report for an Amazon delivery SMS — on
+    two of the three benign fixtures, in fact. A label the classifier is not
+    confident about now ranks 0, so it can neither become the peak nor
+    contribute points to the score.
+
+    Both callers rank through this one function: `analyzer` for the served
+    path, the `stage_classifier` adapter for the graph. They have to agree
+    turn for turn, so there is one implementation rather than two.
+    """
+    if confidence < MIN_STAGE_CONFIDENCE:
+        return 0.0
+    return threat_weight(label) * confidence

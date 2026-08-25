@@ -10,9 +10,12 @@ by it. Without this adapter the graph has no access to any of that.
 
 **What it outputs.** One `stage` finding per caller turn — label, confidence and
 which backend produced it — plus the `peak_stage`, chosen the same way
-`analyze_text` chooses it: the turn with the highest
-`threat_weight(stage) × confidence`, not the last one. A message that reaches
-ISOLATION and then chats about the weather is still an isolation attempt.
+`analyze_text` chooses it: the turn with the highest `stage_rank`, not the last
+one. A message that reaches ISOLATION and then chats about the weather is still
+an isolation attempt. `stage_rank` is `threat_weight × confidence` with a floor
+under it — below `MIN_STAGE_CONFIDENCE` a non-benign label ranks 0, because
+`threat_weight("BENIGN")` is 0 and without the floor any label at any
+confidence out-ranks a BENIGN the classifier is sure of.
 
 **How it connects.** `threat_fusion` replays the stage findings to rebuild the
 manipulation accumulator, and reads `peak_stage` as the stage to fuse on;
@@ -40,7 +43,7 @@ from typing import Dict, List, Optional
 from schema.models import AgentResult, AgentStatus, Finding, InvestigationState
 
 from ...engine import classifier as classifier_mod
-from ...engine.classifier import load_classifier, threat_weight
+from ...engine.classifier import load_classifier, stage_rank
 from .. import registry
 from ..base import AgentContext, Stage
 from . import conversation, signals
@@ -97,7 +100,7 @@ class StageClassifierAgent:
             findings.append(finding)
             counts[f"stage:{prediction.label}"] = counts.get(f"stage:{prediction.label}", 0.0) + 1.0
 
-            rank = threat_weight(prediction.label) * prediction.confidence
+            rank = stage_rank(prediction.label, prediction.confidence)
             if rank > peak_rank:
                 peak_rank, peak = rank, finding
 

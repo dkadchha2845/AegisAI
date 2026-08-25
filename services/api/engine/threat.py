@@ -21,7 +21,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import ClassVar
 
-from .classifier import threat_weight
+from .classifier import MIN_STAGE_CONFIDENCE, stage_rank
 
 # The four conversational signals sum to 1.0 at full saturation.
 W_STAGE = 0.40          # what the caller is doing right now
@@ -79,6 +79,14 @@ class ManipulationAccumulator:
     }
 
     def observe(self, stage: str, confidence: float) -> None:
+        # Same floor as `stage_rank`, for the same reason. A benign delivery
+        # notice whose second sentence draws a 0.242 VERIFICATION_DEMAND was
+        # charging real urgency here — small enough that no driver named it,
+        # large enough that `pressure` was not 0 on a message that did nothing.
+        # Charging a bar from a label the classifier is unsure of is how a
+        # benign conversation accumulates pressure it never applied.
+        if confidence < MIN_STAGE_CONFIDENCE:
+            return
         entry = self._CHARGE.get(stage)
         if entry is None:
             return
@@ -151,7 +159,7 @@ def fuse(
 
     # 1. Current stage, discounted by how sure the classifier is. An uncertain
     #    ISOLATION call should not slam the meter to 90.
-    stage_component = threat_weight(stage) * stage_confidence * W_STAGE * 100
+    stage_component = stage_rank(stage, stage_confidence) * W_STAGE * 100
     if stage_component > 1:
         drivers.append(
             ThreatDriverOut(

@@ -453,7 +453,7 @@
   <header class="cover">
     <div class="cover-meta">
       <span class="eyebrow">Build Dossier</span>
-      <span class="eyebrow">Updated 25 Aug 2026 &middot; after task 1.7 &mdash; on <span class="mono">claude/start-1-6-0032a8</span>, not yet merged</span>
+      <span class="eyebrow">Updated 25 Aug 2026 &middot; after task 1.7a &mdash; merged to <span class="mono">main</span></span>
       <span class="eyebrow">B.Tech CSE Capstone &middot; Research</span>
     </div>
 
@@ -481,8 +481,8 @@
     </div>
 
     <div class="stats">
-      <div class="stat"><b class="mono">17/87</b><small>tasks done</small></div>
-      <div class="stat"><b class="mono">435</b><small>tests green</small></div>
+      <div class="stat"><b class="mono">18/87</b><small>tasks done</small></div>
+      <div class="stat"><b class="mono">439</b><small>tests green</small></div>
       <div class="stat"><b class="mono">75.3%</b><small>backend coverage</small></div>
       <div class="stat"><b class="mono">0.767</b><small>macro-F1, zero-leak</small></div>
       <div class="stat"><b class="mono">11</b><small>phases</small></div>
@@ -506,9 +506,11 @@
         found something the tests could not: a cold-start problem, a silent evidence-extraction
         bug, a per-agent timeout that was quietly doing nothing, a licence badge pointing at a file
         that does not exist, a declarative base that put 23 type errors into a gate kept at zero,
-        and this time a test client that buffers a stream in full &mdash; so the one property the
+        a test client that buffers a stream in full &mdash; so the one property the
         SSE endpoint exists for could not be proven by any test in the suite, and had to be
-        measured against a running server instead.
+        measured against a running server instead &mdash; and this time a suite that was green
+        because it had never met the model it was testing, the checkpoint being gitignored and the
+        worktree having none.
       </p>
       <p>
         <strong>After five iterations of refusing to, this page can now write the sentence:
@@ -518,7 +520,11 @@
         completes, reported as JSON or PDF, and erased on request &mdash; rows, stored bytes and
         progress journal together. Task 1.7 put the inherited engine inside that graph without
         changing a line of it, and the two paths now provably agree signal for signal: the same
-        stage labels, the same manipulation map, the same fused drivers. One qualification remains,
+        stage labels, the same manipulation map, the same fused drivers. Running that graph against
+        the <em>real</em> checkpoint is what 1.7a then had to fix &mdash; the first edit under
+        <span class="mono">engine/</span> in this phase, because the false positive it found was
+        inherited rather than introduced: a benign delivery notice was naming a scam stage on every
+        path, including the live call. One qualification remains,
         and it is 1.8's &mdash; the graph runs <em>in the API process</em> rather than on a worker,
         so a restart loses an in-flight run.
       </p>
@@ -753,6 +759,8 @@
       <div class="task is-done"><span class="tid">1.5</span><span class="tname">Evidence store (Postgres) &mdash; six tables, two Alembic revisions, and a repository in which an unscoped query is not expressible</span><span class="tmeta"><i class="tag crit">crit</i><span class="box">&#10003;</span></span></div>
       <div class="task is-done"><span class="tid">1.6</span><span class="tname">Investigation lifecycle API &mdash; six routes, per-node SSE progress that is observed rather than estimated, and a reconnect that resumes by index instead of promising not to repeat itself</span><span class="tmeta"><span class="box">&#10003;</span></span></div>
       <div class="task is-done"><span class="tid">1.7</span><span class="tname">Adapt the inherited engine into agents &mdash; seven adapters, zero lines changed under <span class="mono">engine/</span>, and equality with the old path asserted signal for signal</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#10003;</span></span></div>
+      <div class="task is-done"><span class="tid">1.7a</span><span class="tname">Fix &mdash; a benign message named a scam stage, because <span class="mono">threat_weight(&ldquo;BENIGN&rdquo;)</span> is 0 and any label at any confidence outranked it</span><span class="tmeta"><i class="tag crit">crit</i><span class="box">&#10003;</span></span></div>
+      <div class="task is-todo"><span class="tid">1.7b</span><span class="tname">The gates cannot see a checkpoint-dependent defect &mdash; recorded, and owned by 4.8/4.9</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
       <div class="task is-todo"><span class="tid">1.8</span><span class="tname">Async job system &mdash; Redis + Celery, queues by cost class</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
       <div class="task is-todo"><span class="tid">1.9</span><span class="tname">Frontend launcher + live agent progress driven by real node completion</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
 
@@ -956,6 +964,11 @@
             <td class="was">A digital-arrest transcript through the graph and through <span class="mono">analyze_text</span> and through a live session, compared signal for signal &middot; the same call plus a phone number as its own evidence item &middot; three benign messages &middot; the live console in the browser, demo call to report</td>
             <td class="now">Three. The Trust Passport adapter took <strong>7 224 ms on its first run</strong> in a cold process against an 8 000 ms budget &mdash; it builds the retrieval index to cite its checks &mdash; and <span class="mono">registry.warm_all()</span>, written for exactly this, was called by nothing. Second run: 77 ms. The <strong>1.6 API tests were green for the wrong reason</strong>: a module earlier in the alphabet calls <span class="mono">registry.clear()</span>, so they had been exercising an agent set of one, and failed the moment they were run alone. And the fusion agent's first degradation rule marked <em>every SMS investigation</em> degraded, because a forwarded message has no victim side &mdash; a signal that does not apply is not a shortfall, and that is how a <span class="mono">degraded</span> field becomes one people ignore</td>
           </tr>
+          <tr>
+            <th class="rowlab">1.7a</th>
+            <td class="was">The same suite, in a checkout that actually has the promoted checkpoint &mdash; then all five conversation fixtures through <span class="mono">analyze_text</span>, through the graph API and through a live session, before and after the fix</td>
+            <td class="now">The tick on 1.7 was earned in a worktree whose <span class="mono">ml/artifacts/</span> was <strong>8&nbsp;KB against 3.5&nbsp;GB</strong> &mdash; gitignored, so no checkpoint, so 435 tests exercised the <em>lexical fallback</em> rather than what the app serves. With the real model loaded the benign-input test fails: <span class="mono">threat_weight(&ldquo;BENIGN&rdquo;)</span> is 0, so a 0.242-confidence VERIFICATION_DEMAND outranked a 0.553 BENIGN, became the peak, and printed &ldquo;Stage: Verification Demand&rdquo; on an <strong>Amazon delivery notice</strong>. Two of the three benign fixtures did it; one assertion was watching. Not a graph defect either &mdash; <span class="mono">analyze_text</span> and the live call produced the same driver, so it shipped with KAVACH. Fixed with one floored <span class="mono">stage_rank</span> all four ranking sites share, at <span class="mono">MIN_STAGE_CONFIDENCE&nbsp;=&nbsp;0.40</span> &mdash; the empty band between the benign labels (&le;&nbsp;0.340) and the turns that carry a verdict (0.601&ndash;0.911). Benign 15.5&nbsp;/&nbsp;16.3&nbsp;&rarr;&nbsp;<strong>7.5 CALM</strong>, scam 95.0 and 91.0 unchanged. <strong>And CI can never catch this class</strong>: the checkpoint is gitignored, so every gate run is a fallback run &mdash; recorded as 1.7b against 4.8/4.9</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1152,7 +1165,7 @@
 
   <footer>
     <span>AegisAI &middot; build dossier</span>
-    <span>Updated 25 Aug 2026, after task 1.7 &middot; on <span class="mono">claude/start-1-6-0032a8</span></span>
+    <span>Updated 25 Aug 2026, after task 1.7a &middot; merged to <span class="mono">main</span></span>
     <span>Full detail in docs/TASKS.md &middot; docs/ARCHITECTURE.md &middot; docs/RESEARCH.md</span>
   </footer>
 

@@ -47,7 +47,7 @@ THREAT_FUSION = "threat_fusion"
 
 #: One per caller turn: `value` is the stage, `confidence` the classifier's.
 F_STAGE = "stage"
-#: The turn that drives the score — highest `threat_weight * confidence`.
+#: The turn that drives the score — highest `classifier.stage_rank`.
 F_PEAK_STAGE = "peak_stage"
 #: One per victim turn: `value` is the victim state the coercion tracker read.
 F_VICTIM_STATE = "victim_state"

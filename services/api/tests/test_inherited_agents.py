@@ -51,9 +51,9 @@ from services.api.agents import registry
 from services.api.agents.base import STAGE_ORDER, AgentContext, stage_of
 from services.api.agents.inherited import conversation, signals
 from services.api.engine.analyzer import analyze_text, normalise
-from services.api.engine.classifier import threat_weight
+from services.api.engine.classifier import MIN_STAGE_CONFIDENCE, stage_rank, threat_weight
 from services.api.engine.spoofing import analyze_number
-from services.api.engine.threat import SCRIPT_MIN
+from services.api.engine.threat import SCRIPT_MIN, ManipulationAccumulator, fuse
 from services.api.orchestration import graph as orch
 from services.api.orchestration.policy import POLICIES
 
@@ -312,7 +312,7 @@ def test_stage_labels_and_the_peak_match_the_old_path() -> None:
 
     expected_peak = max(
         (ln for ln in old.lines if ln.speaker == "CALLER"),
-        key=lambda ln: threat_weight(ln.stage) * ln.confidence,
+        key=lambda ln: stage_rank(ln.stage, ln.confidence),
     )
     peak = signals.first_finding(stage, signals.F_PEAK_STAGE)
     assert peak is not None
@@ -528,7 +528,8 @@ def test_an_ordinary_indian_mobile_fails_no_number_check() -> None:
     assert result.features[signals.K_SPOOFING_RISK] == 0.0
 
 
-def test_a_benign_message_is_scored_only_by_what_was_not_checked() -> None:
+@pytest.mark.parametrize("name", sorted(BENIGN))
+def test_a_benign_message_is_scored_only_by_what_was_not_checked(name: str) -> None:
     """The one driver a clean message produces is about *us*, not about it.
 
     "Identity unverified" is the Trust Passport reading 50% because nothing
@@ -537,13 +538,77 @@ def test_a_benign_message_is_scored_only_by_what_was_not_checked() -> None:
     manipulation pressure, no script match, no victim stress. A benign SMS that
     produced a content driver would be the false positive this project treats as
     a first-class failure.
+
+    Parametrised over every benign fixture, because checking one of them is how
+    this got through: with the promoted checkpoint serving, `sbi debit alert`
+    produced "Stage: Verification Demand" as well, and no assertion was pointed
+    at it. See `test_an_unsure_stage_label_cannot_outrank_a_confident_benign`
+    for the rule that caused it.
     """
-    done = investigate(make_state(BENIGN["delivery notice"]))
+    done = investigate(make_state(BENIGN[name]))
     fusion = by_agent(done)[signals.THREAT_FUSION]
 
     assert fusion.features[signals.K_THREAT_SCORE] < 25.0
     assert values(fusion, signals.F_THREAT_DRIVER) == ["Identity unverified"]
     assert fusion.features[signals.K_TACTIC_PRESSURE] == 0.0
+
+
+def test_an_unsure_stage_label_cannot_outrank_a_confident_benign() -> None:
+    """The rule that made two of the three benign fixtures name a scam stage.
+
+    `threat_weight("BENIGN")` is 0, so before the floor existed *any* non-benign
+    label at *any* confidence out-ranked a BENIGN the classifier was sure of: a
+    0.242 VERIFICATION_DEMAND became the peak over a 0.553 BENIGN on an Amazon
+    delivery notice, and the peak is what `fuse()` scores and then names in the
+    report. Below `MIN_STAGE_CONFIDENCE` the rank is 0, so an unsure label can
+    neither become the peak nor contribute points.
+
+    The confidences here are the measured ones, not invented: 0.242 and 0.266
+    are what the promoted checkpoint produces on the benign fixtures, and 0.601
+    to 0.911 is the band the turns carrying a scam verdict occupy.
+    """
+    assert stage_rank("VERIFICATION_DEMAND", 0.242) == 0.0
+    assert stage_rank("VERIFICATION_DEMAND", 0.266) == 0.0
+    assert stage_rank("GREETING", 0.340) == 0.0
+
+    # Above the floor the old product stands unchanged — this is a floor, not
+    # a rescaling, so every score that was already attributable still is.
+    assert stage_rank("ISOLATION", 0.911) == threat_weight("ISOLATION") * 0.911
+    assert stage_rank("VERIFICATION_DEMAND", 0.601) == threat_weight("VERIFICATION_DEMAND") * 0.601
+    assert stage_rank("ISOLATION", 0.911) > stage_rank("VERIFICATION_DEMAND", 0.601) > 0.0
+
+    # BENIGN is weightless either way; the floor is not what silences it.
+    assert stage_rank("BENIGN", 0.999) == 0.0
+    assert MIN_STAGE_CONFIDENCE > 0.340
+
+
+def test_an_unsure_stage_adds_no_points_not_merely_no_driver() -> None:
+    """`fuse()` opens by promising every point is attributable.
+
+    Suppressing the driver while still adding its component to `raw` would keep
+    the report clean and leave the number wrong — points on the meter that no
+    named driver accounts for. The floor zeroes the component, so the score a
+    sub-threshold stage produces is the score no stage at all produces.
+    """
+    def fused(stage: str, confidence: float):
+        return fuse(
+            stage=stage,
+            stage_confidence=confidence,
+            manipulation=ManipulationAccumulator(),
+            coercion_index=0.0,
+            trust_pct=None,
+        )
+
+    unsure = fused("VERIFICATION_DEMAND", 0.242)
+    absent = fused("BENIGN", 0.242)
+
+    assert unsure.score == absent.score
+    assert [d.label for d in unsure.drivers] == [d.label for d in absent.drivers]
+
+    # And the same label above the floor does still score and still explain.
+    sure = fused("VERIFICATION_DEMAND", 0.601)
+    assert sure.score > unsure.score
+    assert "Stage: Verification Demand" in [d.label for d in sure.drivers]
 
 
 # --------------------------------------------------------------------------

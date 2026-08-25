@@ -343,7 +343,7 @@ def analyze_text(
     # attempt, and scoring only the final line would miss it entirely.
     peak = max(
         (line for line in lines if line.speaker == "CALLER"),
-        key=lambda line: _stage_rank(line.stage) * line.confidence,
+        key=lambda line: _stage_rank(line.stage, line.confidence),
         default=None,
     )
     # Caller-number intelligence, if a number was supplied. The claimed
@@ -423,10 +423,10 @@ def analyze_text(
     )
 
 
-def _stage_rank(stage: str) -> float:
-    from .classifier import threat_weight
+def _stage_rank(stage: str, confidence: float) -> float:
+    from .classifier import stage_rank
 
-    return threat_weight(stage)
+    return stage_rank(stage, confidence)
 
 
 def _from_findings(

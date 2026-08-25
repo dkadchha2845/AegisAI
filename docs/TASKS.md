@@ -1,10 +1,12 @@
 # AegisAI — Master Task List
 
-> **Status: Phase 0 complete — all seven tasks. Phase 1 — 1.1 through 1.7 done
+> **Status: Phase 0 complete — all seven tasks. Phase 1 — 1.1 through 1.7a done
 > and verified end-to-end. An investigation flows through the API, and the
-> inherited engine now runs inside the graph. Awaiting your go-ahead for 1.8.**
-> Last updated 2026-08-25 · branch `claude/start-1-6-0032a8`
-> · 435 tests · all four gates green · ruff + mypy clean
+> inherited engine now runs inside the graph. 1.7a fixed a benign false positive
+> that 1.7's tests could not see, because they ran without the served
+> checkpoint. Awaiting your go-ahead for 1.8.**
+> Last updated 2026-08-25 · branch `main`
+> · 439 tests · all four gates green · ruff + mypy clean
 
 ---
 
@@ -432,12 +434,13 @@ through a LangGraph graph, executed with parallel fan-out, traced, persisted,
 and streamed to the UI — even if only three agents exist.
 
 **Progress: 7 of 9 done** — ✅ 1.1 · ✅ 1.2 · ✅ 1.3 · ✅ 1.4 · ✅ 1.5 · ✅ 1.6 ·
-✅ 1.7. The input classification agent is the first real agent rather than a
+✅ 1.7 · ✅ 1.7a. The input classification agent is the first real agent rather than a
 harness; its accuracy bar was ≥98% on a 200-item fixture including 20
 adversarial items, and it measured **100%**. 1.5 makes an investigation durable:
 six tables, Alembic migrations, and a repository in which an unscoped query is
 not expressible. 1.6 joins them to a served path. 1.7 puts the inherited engine
-inside it.
+inside it — and 1.7a fixes the false positive that going through it with the
+real checkpoint exposed, in `engine/` where it had lived since KAVACH.
 
 > **The phase exit criterion, read against what exists.** An investigation is
 > submitted over HTTP, routed by input type, executed with a parallel fan-out
@@ -1240,6 +1243,91 @@ no unrun value for it, unlike `trust_pct` and `spoofing_risk`, which are passed
 as `None` so an absent number is never scored as a clean one.
 
 **Effort:** 10 h estimated. **Depends:** 1.3. ✅
+
+### ✅ 1.7a — Fix: a benign message named a scam stage it never reached
+
+**Why this exists as its own task.** 1.7 was ticked on 435 green tests. They
+were green for an environmental reason: `ml/artifacts/` is gitignored except two
+JSON files, and the worktree 1.7 was verified in held no `stage-classifier/`
+checkpoint — 8 KB against the 3.5 GB in a full checkout. So the suite exercised
+the **lexical fallback**, not what the application serves. With the promoted
+checkpoint loaded (`/api/health`: `backend: fused`, `serving_best: true`,
+macro-F1 0.767 vs lexical 0.375), `test_a_benign_message_is_scored_only_by_what_was_not_checked`
+fails. This is the working-agreement lesson in a new shape: not a fresh DB this
+time, but a fresh *model directory*.
+
+**The defect.** `threat_weight("BENIGN")` is `0.0`, and the peak turn was chosen
+by `threat_weight(stage) × confidence`. A BENIGN turn therefore scores 0 no
+matter how sure the classifier is, so **any** non-benign label at **any**
+confidence outranked it. On an Amazon delivery notice, `normalise` splits two
+sentences into two turns and the second draws VERIFICATION_DEMAND at 0.242 —
+which beat BENIGN at 0.553, became the peak, and put "Stage: Verification
+Demand" on the report. Two of the three benign fixtures did this; only one was
+asserted against, which is why one test caught what two messages were doing.
+It was never a graph defect: `analyze_text` — the inherited served path, and
+the live call with it — produced the identical driver, so the adapter was
+faithfully reproducing a defect that shipped with KAVACH.
+
+**The fix.** One function, `classifier.stage_rank(label, confidence)`, with
+`MIN_STAGE_CONFIDENCE = 0.40` under it. Below the floor a label ranks 0, so it
+can neither become the peak nor contribute points. All four ranking sites route
+through it — `analyzer` for the served path, the `stage_classifier` adapter for
+the graph, `threat.fuse` for the score, and the test that acts as the equality
+oracle — so the two paths cannot drift apart. `ManipulationAccumulator.observe`
+takes the same floor: without it a benign notice still charged 0.011 urgency,
+too small to name a driver and large enough that `pressure` was not 0.
+
+**Why 0.40, measured rather than picked.** Chance over eight stages is 0.125.
+The non-benign labels the *benign* fixtures produce top out at 0.340; the turns
+that carry a scam verdict run 0.601–0.911. 0.40 sits in the empty band between
+them, at 3.2× chance. This is calibrated on five fixtures, which is not the same
+as evaluated — 4.4 owns calibration and 4.8 the false-positive harness, and this
+number should come from a corpus once they exist.
+
+| Fixture | Before | After |
+|---|---|---|
+| digital-arrest call | 95.0 LIKELY_SCAM, 4 drivers | **unchanged** |
+| scam KYC SMS | 91.0 LIKELY_SCAM, 3 drivers | **unchanged** (graph 32.5 → 32.2) |
+| benign delivery notice | 15.5, "Stage: Verification Demand" | **7.5, `['Identity unverified']`** |
+| benign SBI debit alert | 16.3, "Stage: Verification Demand" | **7.5, `['Identity unverified']`** |
+| benign HDFC OTP reminder | 7.5, clean | unchanged |
+
+**Verified:** four gates green — **439 tests** (435 → 439: two new, one
+parametrised over all three benign fixtures), contract consistent, frontend
+typecheck and production build clean; ruff and mypy clean. Against a running
+uvicorn with the checkpoint actually loaded: both benign messages return 7.5
+CALM with one driver and all five manipulation bars at 0.0; the digital-arrest
+call still returns 95.0 LIKELY_SCAM CRITICAL with its four drivers and the scam
+SMS 91.0. Through the 1.6 graph API, the benign case reports `peak_stage=BENIGN`
+and 7.5 CALM, the scam case `peak_stage=ISOLATION` at 91% and 78.7 HIGH over
+four drivers. On the live-call path, benign holds 7.5 CALM with no stage driver
+while the digital-arrest call reaches 77.7 HIGH.
+
+**Two things left alone, deliberately.** `frame.stage.current` still displays
+the raw per-turn label — a benign notice shows `VERIFICATION_DEMAND 0.242` in
+the live console's stage panel. It no longer reaches any score, but it is a
+contract field the UI renders, and whether a sub-threshold stage should be
+*shown* is a rendering decision that belongs with 1.9/7.2 rather than to a
+scoring fix. And the gate gap itself is recorded, not closed: see below.
+
+**Effort:** 3 h. **Depends:** 1.7. ✅
+
+### ⬜ 1.7b — The gates cannot see a checkpoint-dependent defect
+
+**Do:** `ml/artifacts/*` is gitignored and `ci.yml` has no checkpoint step, so
+CI runs the lexical fallback for every test, for ever. Every benign-input test
+the contributor rules mandate per agent therefore proves something about the
+fallback and nothing about what is served — which is exactly how 1.7a reached a
+tick. Recorded here rather than fixed: the mechanism belongs to **4.9**, whose
+model registry and promotion gate own checkpoint availability, and to **4.8**,
+whose false-positive harness is the thing that should be running against a real
+model in the first place.
+
+**Accept:** 4.9 defines how a promoted checkpoint is obtained in CI (or states
+that it is not, and what compensates) · the false-positive suite from 4.8 runs
+against a served model, not a fallback · `/api/health`'s `serving_best` is what
+a gate asserts rather than something only a human reads.
+**Effort:** folded into 4.8/4.9. **Depends:** 4.8, 4.9.
 
 ### ⬜ 1.8 — Async job system (Redis + Celery)
 **Do:** worker service · queues by cost class (`fast`, `slow`, `sandbox`) ·
