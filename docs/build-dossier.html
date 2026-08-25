@@ -453,7 +453,7 @@
   <header class="cover">
     <div class="cover-meta">
       <span class="eyebrow">Build Dossier</span>
-      <span class="eyebrow">Updated 25 Aug 2026 &middot; after task 1.7a &mdash; merged to <span class="mono">main</span></span>
+      <span class="eyebrow">Updated 25 Aug 2026 &middot; after tasks 1.7b and 1.8 &mdash; merged to <span class="mono">main</span></span>
       <span class="eyebrow">B.Tech CSE Capstone &middot; Research</span>
     </div>
 
@@ -481,20 +481,20 @@
     </div>
 
     <div class="stats">
-      <div class="stat"><b class="mono">18/87</b><small>tasks done</small></div>
-      <div class="stat"><b class="mono">439</b><small>tests green</small></div>
-      <div class="stat"><b class="mono">75.3%</b><small>backend coverage</small></div>
+      <div class="stat"><b class="mono">19/87</b><small>tasks done</small></div>
+      <div class="stat"><b class="mono">518</b><small>tests green</small></div>
+      <div class="stat"><b class="mono">76.1%</b><small>backend coverage</small></div>
       <div class="stat"><b class="mono">0.767</b><small>macro-F1, zero-leak</small></div>
       <div class="stat"><b class="mono">11</b><small>phases</small></div>
-      <div class="stat"><b class="mono">976</b><small>hours remaining</small></div>
+      <div class="stat"><b class="mono">966</b><small>hours remaining</small></div>
     </div>
 
     <div class="position">
       <div class="row">
         <span class="eyebrow">Current position</span>
         <span class="chip done">Phase 0 complete &middot; 8 of 8</span>
-        <span class="chip now">Phase 1 &middot; 7 of 9</span>
-        <span class="chip next">Next: 1.8</span>
+        <span class="chip now">Phase 1 &middot; 8 of 9</span>
+        <span class="chip next">Next: 1.9</span>
       </div>
       <p>
         Phase 0 shipped and was verified against the running application, which found three
@@ -513,7 +513,7 @@
         worktree having none.
       </p>
       <p>
-        <strong>After five iterations of refusing to, this page can now write the sentence:
+        <strong>After five iterations of refusing to, this page could finally write the sentence:
         an investigation flows through the API.</strong> Evidence is submitted over HTTP, routed by
         input type through the graph, executed with a parallel fan-out over <strong>eight agents in
         four tiers</strong>, traced, persisted, streamed back node by node as each one actually
@@ -524,9 +524,23 @@
         the <em>real</em> checkpoint is what 1.7a then had to fix &mdash; the first edit under
         <span class="mono">engine/</span> in this phase, because the false positive it found was
         inherited rather than introduced: a benign delivery notice was naming a scam stage on every
-        path, including the live call. One qualification remains,
-        and it is 1.8's &mdash; the graph runs <em>in the API process</em> rather than on a worker,
-        so a restart loses an in-flight run.
+        path, including the live call. The one qualification
+        that remained was 1.8's, and 1.8 has closed it.
+      </p>
+      <p>
+        <strong>The graph no longer runs on the event loop that answered the request.</strong>
+        Task 1.8 puts it on a Celery worker &mdash; three queues by cost class, and a progress
+        journal moved into Redis so the process writing it and the process serving the stream no
+        longer have to be the same one. Measured on the running pair: a 90-second job occupying the
+        <span class="mono">sandbox</span> queue while <span class="mono">POST /api/investigations</span>
+        still answers <strong>202 in 52&nbsp;ms</strong>, and a worker <span class="mono">kill -9</span>
+        mid-job that loses nothing &mdash; Redis holds the message unacknowledged and a restarted
+        worker is handed <em>the same task id</em> back. With no broker at all the graph runs here
+        exactly as before, answers in 19&nbsp;ms, and says <span class="mono">execution.mode:
+        in-process</span> rather than leaving it to be discovered. Task 1.7b, alongside it, is the
+        smaller and more uncomfortable lesson from 1.7a made permanent: <strong>a gate run now
+        states which model it proved</strong>, and can be made to fail rather than quietly prove
+        the stand-in.
       </p>
     </div>
   </header>
@@ -606,10 +620,10 @@
       <div class="phase">
         <div class="pnum">01<small>W3&ndash;5</small></div>
         <div class="pbody">
-          <div class="ptop"><h3>Agent architecture &amp; orchestration</h3><span class="chip now">In progress &middot; 7 of 9</span><span class="chip hrs">20h left</span></div>
+          <div class="ptop"><h3>Agent architecture &amp; orchestration</h3><span class="chip now">In progress &middot; 8 of 9</span><span class="chip hrs">12h left</span></div>
           <p class="pdesc"><code class="mono">InvestigationState</code> contract &middot; agent protocol &amp; registry &middot;
           LangGraph orchestrator &middot; input classifier &middot; evidence store &middot; the inherited engine
-          adapted into agents without rewriting it.</p>
+          adapted into agents without rewriting it &middot; the graph moved onto a Celery worker.</p>
           <span class="milestone">M1 &mdash; end-to-end investigation through the graph</span>
         </div>
       </div>
@@ -747,7 +761,7 @@
       <!-- PHASE 1 -->
       <div class="cl-phase">
         <h3>Phase 1 &mdash; Agent architecture &amp; orchestration</h3>
-        <span class="pcount">7 / 9</span>
+        <span class="pcount">8 / 9</span>
         <span class="meter"><i style="width:78%"></i></span>
       </div>
       <div class="task is-done"><span class="tid">1.1</span><span class="tname"><span class="mono">InvestigationState</span> + <span class="mono">AgentResult</span> in <span class="mono">schema/</span> &mdash; 13 models, 6 enums, drift-guarded in both languages</span><span class="tmeta"><i class="tag crit">crit</i><i class="tag res">res</i><span class="box">&#10003;</span></span></div>
@@ -760,8 +774,8 @@
       <div class="task is-done"><span class="tid">1.6</span><span class="tname">Investigation lifecycle API &mdash; six routes, per-node SSE progress that is observed rather than estimated, and a reconnect that resumes by index instead of promising not to repeat itself</span><span class="tmeta"><span class="box">&#10003;</span></span></div>
       <div class="task is-done"><span class="tid">1.7</span><span class="tname">Adapt the inherited engine into agents &mdash; seven adapters, zero lines changed under <span class="mono">engine/</span>, and equality with the old path asserted signal for signal</span><span class="tmeta"><i class="tag res">res</i><span class="box">&#10003;</span></span></div>
       <div class="task is-done"><span class="tid">1.7a</span><span class="tname">Fix &mdash; a benign message named a scam stage, because <span class="mono">threat_weight(&ldquo;BENIGN&rdquo;)</span> is 0 and any label at any confidence outranked it</span><span class="tmeta"><i class="tag crit">crit</i><span class="box">&#10003;</span></span></div>
-      <div class="task is-todo"><span class="tid">1.7b</span><span class="tname">The gates cannot see a checkpoint-dependent defect &mdash; recorded, and owned by 4.8/4.9</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
-      <div class="task is-todo"><span class="tid">1.8</span><span class="tname">Async job system &mdash; Redis + Celery, queues by cost class</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
+      <div class="task is-now"><span class="tid">1.7b</span><span class="tname">The gates cannot see a checkpoint-dependent defect &mdash; a run now names the classifier it proved, and <span class="mono">AEGIS_REQUIRE_SERVING_BEST=1</span> makes a fallback fail the suite. The other two criteria stay with 4.8/4.9</span><span class="tmeta"><i class="tag crit">crit</i><span class="box">&#9679;</span></span></div>
+      <div class="task is-done"><span class="tid">1.8</span><span class="tname">Async job system &mdash; Redis + Celery, three queues by cost class, a Redis-backed progress journal so the stream survives crossing processes, and a <span class="mono">kill -9</span> that loses no work</span><span class="tmeta"><span class="box">&#10003;</span></span></div>
       <div class="task is-todo"><span class="tid">1.9</span><span class="tname">Frontend launcher + live agent progress driven by real node completion</span><span class="tmeta"><span class="box">&#9633;</span></span></div>
 
       <!-- PHASE 2 -->
@@ -969,6 +983,16 @@
             <td class="was">The same suite, in a checkout that actually has the promoted checkpoint &mdash; then all five conversation fixtures through <span class="mono">analyze_text</span>, through the graph API and through a live session, before and after the fix</td>
             <td class="now">The tick on 1.7 was earned in a worktree whose <span class="mono">ml/artifacts/</span> was <strong>8&nbsp;KB against 3.5&nbsp;GB</strong> &mdash; gitignored, so no checkpoint, so 435 tests exercised the <em>lexical fallback</em> rather than what the app serves. With the real model loaded the benign-input test fails: <span class="mono">threat_weight(&ldquo;BENIGN&rdquo;)</span> is 0, so a 0.242-confidence VERIFICATION_DEMAND outranked a 0.553 BENIGN, became the peak, and printed &ldquo;Stage: Verification Demand&rdquo; on an <strong>Amazon delivery notice</strong>. Two of the three benign fixtures did it; one assertion was watching. Not a graph defect either &mdash; <span class="mono">analyze_text</span> and the live call produced the same driver, so it shipped with KAVACH. Fixed with one floored <span class="mono">stage_rank</span> all four ranking sites share, at <span class="mono">MIN_STAGE_CONFIDENCE&nbsp;=&nbsp;0.40</span> &mdash; the empty band between the benign labels (&le;&nbsp;0.340) and the turns that carry a verdict (0.601&ndash;0.911). Benign 15.5&nbsp;/&nbsp;16.3&nbsp;&rarr;&nbsp;<strong>7.5 CALM</strong>, scam 95.0 and 91.0 unchanged. <strong>And CI can never catch this class</strong>: the checkpoint is gitignored, so every gate run is a fallback run &mdash; recorded as 1.7b against 4.8/4.9</td>
           </tr>
+          <tr>
+            <th class="rowlab">1.7b</th>
+            <td class="was">The suite in all four combinations of <span class="mono">AEGIS_REQUIRE_SERVING_BEST</span> &times; checkpoint-present, and <span class="mono">/api/health</span> read from a running uvicorn in both model states</td>
+            <td class="now">Not a defect this time &mdash; a <em>legibility</em> fix for the one that produced 1.7a. The gap was never that CI runs the fallback; on a clean clone the lexical model is the right thing to serve. It is that <strong>&ldquo;439 passed&rdquo; read identically whether the run had met the model or a stand-in for it</strong>. Every run now names its classifier in a hook that writes below the verbosity&nbsp;&minus;2 threshold at which pytest prints neither a header <em>nor its own pass count</em> &mdash; so on a <span class="mono">make gates</span> run whose entire output is a row of dots, the serving backend is the one thing stated. <span class="mono">AEGIS_REQUIRE_SERVING_BEST=1</span> turns a fallback into a failing gate; CI runs <span class="mono">--require fallback</span>, which pins its permanent state so the day 4.9 puts a checkpoint on the runner <em>somebody has to decide</em> rather than the suite quietly changing what it proves. Two of the three acceptance criteria are still 4.8's and 4.9's, so it is marked in progress rather than ticked</td>
+          </tr>
+          <tr>
+            <th class="rowlab">1.8</th>
+            <td class="was">A real Redis, a real Celery worker and a durable store, with the MuRIL checkpoint loaded &middot; a 90-second job on the <span class="mono">sandbox</span> queue while submissions continue &middot; a 120-second job and <span class="mono">kill -9</span> on the worker mid-task &middot; a submission with no worker running at all &middot; <span class="mono">docker stop aegis-redis</span> &middot; the SSE stream read from an API process that never ran the graph</td>
+            <td class="now">Two real defects, both found by the parts that are hard to unit-test. The <strong>parametrised journal conformance suite</strong> &mdash; the same tests against the in-memory and the Redis implementation &mdash; caught a follower resuming from an index at or past the end of a <em>finished</em> Redis journal <strong>waiting forever</strong> on a channel that would never carry another message, because &ldquo;done&rdquo; was decided from the events that call happened to emit rather than from the journal. And chasing the degradation path found the worse one: the broker probe is cached ten seconds, so &ldquo;reachable&rdquo; is a fact about the recent past, and a Redis that went away inside that window raised out of the journal's first write and turned a submission into a <strong>500</strong> &mdash; invariant 4's failure arriving through the machinery built to honour it. Measured after both: 202 in <strong>52&nbsp;ms</strong> with a 90-second sandbox job running, COMPLETE after 2.1&nbsp;s, a <span class="mono">kill -9</span>'d worker's job redelivered by task id ~30&nbsp;s later, and nine SSE events seq&nbsp;1&ndash;9 contiguous with <span class="mono">Last-Event-ID:&nbsp;3</span> resuming as exactly 4&ndash;9. Celery's Redis <strong>default visibility timeout is an hour</strong>, so the crash guarantee held and nobody would have waited for it &mdash; now 1800&nbsp;s, and asserted</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1144,28 +1168,30 @@
   <section>
     <div class="nextup">
       <span class="eyebrow">Next action</span>
-      <h2>Task 1.8 &mdash; Async job system</h2>
-      <p>Eight agents now run inside the graph, and every one of them runs <em>in the process that
-      serves the request</em>. That is fine for a classifier that answers in 30&nbsp;ms and wrong
-      for an APK scan that takes two minutes: ARCHITECTURE.md &sect;2 already budgets 120&nbsp;s for
-      static analysis and says it never runs in-request. 1.8 is the worker that makes that true
-      &mdash; Redis and Celery, queues split by cost class (<span class="mono">fast</span>,
-      <span class="mono">slow</span>, <span class="mono">sandbox</span>), results landing back in
-      the evidence store, and a dead-letter policy for what never finishes.</p>
-      <p>It also closes the honest gap 1.6 wrote down rather than hid. Today a restart loses every
-      in-flight investigation and its durable row says <span class="mono">QUEUED</span> for ever,
-      because the runner and its progress journal live in memory. The acceptance criteria are the
-      ones that make the difference checkable: a 90-second stub runs off the request path, the API
-      returns in under a second with an investigation that later completes, and <strong>a worker
-      crash loses no work</strong> &mdash; which is where the LangGraph checkpointer stops being
-      in-process, and where "resume after a crash" stops meaning "resume unless the crash took the
-      process".</p>
+      <h2>Task 1.9 &mdash; Frontend launcher and live progress</h2>
+      <p>Everything an investigation needs now exists on the server and <em>nothing in the product
+      lets a person start one</em>. Submission is a <span class="mono">curl</span> command; the
+      per-node event stream 1.6 built and 1.8 taught to cross processes has no reader. 1.9 is the
+      <span class="mono">/investigate</span> page &mdash; evidence-type chooser, drag-and-drop
+      upload, the consent copy the live-audio path needs, and an agent-progress list driven by the
+      real stream.</p>
+      <p>Two of its acceptance criteria are already sharp because of what came before. <strong>Progress
+      must reflect real node completion, not a fake timer</strong> &mdash; which is why
+      <span class="mono">accepted</span> carries the whole node plan, so the client has a real
+      denominator before the first node finishes and every later event is an observed completion.
+      And <strong>degraded agents are shown as degraded, not hidden</strong>, which is the UI half of
+      the discipline 1.7 and 1.8 both spent a decision on: a signal that does not apply is not a
+      shortfall, and a tag raised on every case is a field people stop reading. The client also has
+      to reach the stream with <span class="mono">fetch()</span> and a
+      <span class="mono">ReadableStream</span> reader rather than <span class="mono">EventSource</span>,
+      because 1.6 refused to accept a bearer token in a URL &mdash; a token in a URL is a token in
+      every access log it passes through.</p>
     </div>
   </section>
 
   <footer>
     <span>AegisAI &middot; build dossier</span>
-    <span>Updated 25 Aug 2026, after task 1.7a &middot; merged to <span class="mono">main</span></span>
+    <span>Updated 25 Aug 2026, after tasks 1.7b and 1.8 &middot; merged to <span class="mono">main</span></span>
     <span>Full detail in docs/TASKS.md &middot; docs/ARCHITECTURE.md &middot; docs/RESEARCH.md</span>
   </footer>
 
