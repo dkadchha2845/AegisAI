@@ -509,20 +509,8 @@
 .threatfield { position: absolute; inset: 0; z-index: 0; }
 .threatfield canvas { display: block; width: 100%; height: 100%; }
 .hero__inner { position: relative; z-index: 1; max-width: 860px; text-align: center; }
-.hero__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s-2);
-  padding: 5px var(--s-3);
-  border-radius: var(--r-pill);
-  border: 1px solid var(--line-strong);
-  background: color-mix(in srgb, var(--bg) 70%, transparent);
-  backdrop-filter: blur(8px);
-  font-size: var(--t-2xs);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--ink-muted);
-}
+/* The hero's pill eyebrow is gone: the brand lockup says what the eyebrow was
+   saying, at the size that claim deserves. See `.brandlock` in modules.css. */
 .hero__title {
   font-family: var(--font-display);
   font-size: var(--t-3xl);

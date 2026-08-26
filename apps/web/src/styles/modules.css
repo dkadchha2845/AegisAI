@@ -494,7 +494,62 @@
 @media (max-width: 560px) { .lhead__signin { display: none; } }
 
 .hero--landing { min-height: calc(100vh - 56px); }
-.hero__title--xl { font-size: clamp(2.6rem, 6.4vw, 5rem); }
+
+/* --- Brand lockup --------------------------------------------------------
+   The name, set at the size the name deserves on the one page whose job is
+   to introduce it. Everything under it steps down from here, so the hero has
+   a single obvious entry point instead of a slogan competing with an eyebrow.
+
+   Tracking is the notable choice. The Logo component runs at 0.12em because
+   at 20px a geometric sans needs the air; at 90px the same value reads as a
+   gap between letters rather than a word, so it tightens to -0.02em and the
+   wordmark closes into one shape. */
+.brandlock { display: grid; justify-items: center; }
+/* Optical spacing, not even spacing: the mark sits close enough to the
+   wordmark to read as one lockup, while the descriptor gets more air because
+   it is a separate statement rather than part of the name. */
+.brandlock__mark { color: var(--ink); margin-bottom: var(--s-3); }
+.brandlock__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(3.4rem, 11vw, 6.4rem);
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.brandlock__desc {
+  margin: var(--s-4) 0 0;
+  font-size: var(--t-sm);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+@media (max-width: 560px) {
+  /* 0.18em of tracking on a phone pushes the descriptor onto two ragged
+     lines; it wraps deliberately instead. */
+  .brandlock__desc { letter-spacing: 0.1em; font-size: var(--t-xs); max-width: 22ch; text-align: center; line-height: 1.6; }
+  /* The supporting paragraph runs to nine lines at 18px on a 375px screen,
+     which pushes the primary action a full screen below the fold. It steps
+     down with everything else. */
+  .hero--landing .hero__sub { font-size: var(--t-base); margin-bottom: var(--s-5); }
+}
+/* A hairline under the lockup, drawn short and centred: it separates the
+   brand from the pitch without putting a full rule across the hero. */
+.brandlock::after {
+  content: "";
+  width: 56px;
+  height: 1px;
+  margin-top: var(--s-4);
+  background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
+}
+
+/* The pitch steps down from the wordmark rather than competing with it. */
+.hero__title--xl {
+  font-size: clamp(1.9rem, 4.4vw, 3.2rem);
+  margin: var(--s-5) 0 var(--s-4);
+}
 .hero__pills { display: flex; gap: var(--s-3); justify-content: center; flex-wrap: wrap; margin-top: var(--s-5); }
 .hero__pills span {
   padding: 6px var(--s-3); border-radius: var(--r-pill);

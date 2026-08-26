@@ -52,7 +52,7 @@ import {
   ShieldCheck,
   Sun,
 } from "lucide-react";
-import { Logo } from "@/components/brand/Logo";
+import { Logo, LogoMark } from "@/components/brand/Logo";
 import { ThreatField } from "@/components/three/ThreatField";
 import { STAGE_BLURB, STAGE_ORDER, pretty, stageColor } from "@/lib/stages";
 import { gsap, ScrollTrigger, prefersReducedMotion, armFailsafe } from "@/lib/gsap";
@@ -324,13 +324,27 @@ export function Home() {
         <section className="hero hero--landing">
           <ThreatField />
           <div className="hero__inner">
-            <span className="hero__eyebrow" data-hero-reveal data-reveal>
-              AI for Digital Public Safety · Defeating digital-arrest scams
-            </span>
-            <h1 className="hero__title hero__title--xl" data-hero-reveal data-reveal>
+            {/* The name leads.
+                A landing page's h1 is the product, not a slogan — a visitor who
+                has never heard of this should be able to answer "what is it
+                called and what is it" before reading a word of the pitch. The
+                mark is set at 56px above the wordmark rather than beside it:
+                inline, at this scale, it reads as a bullet point; stacked, it
+                reads as a crest. */}
+            <div className="brandlock" data-hero-reveal data-reveal>
+              <LogoMark size={58} className="brandlock__mark" />
+              <h1 className="brandlock__name">AegisAI</h1>
+              <p className="brandlock__desc">
+                Agentic AI for digital public safety
+              </p>
+            </div>
+
+            {/* Still the pitch, still the most important sentence on the page —
+                just no longer pretending to be the page's title. */}
+            <p className="hero__title hero__title--xl" data-hero-reveal data-reveal>
               It knows what the scammer<br />
               <em>will say next.</em>
-            </h1>
+            </p>
             <p className="hero__sub" data-hero-reveal data-reveal>
               AegisAI investigates digital threats before they become real-world damage.
               Multimodal evidence, a graph of intelligent agents, and reasoning you can
