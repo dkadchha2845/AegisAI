@@ -26,6 +26,8 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/States";
 import { useLiveSession } from "@/hooks/useLiveSession";
 import { NarrationPanel } from "@/components/NarrationPanel";
 import { pretty } from "@/lib/stages";
@@ -59,33 +61,29 @@ export function Guardian() {
 
   return (
     <div className="page">
-      <header className="page__head">
-        <p className="label">Monitor</p>
-        <h1 className="page__title">Guardian</h1>
-        <p className="page__lede">
-          The intervention side. Escalate a call, watch the alert fire, then try
-          to send money and see the circuit breaker hold it. Every button here
-          hits the real API — nothing on this screen is mocked.
-        </p>
-      </header>
+      <PageHeader
+        title="Guardian"
+        lede="The intervention side. Escalate a call, watch the registered contact be alerted, then attempt a payment and see the circuit breaker hold it."
+      />
 
       {!started ? (
         <div className="card">
-          <h2 className="card__title">Start a session</h2>
-          <p className="muted small">
-            Opens a live session against the analysis service, with Priya
-            registered as the guardian contact.
-          </p>
-          <button
-            className="btn2 btn2--primary"
-            style={{ marginTop: "var(--s-4)" }}
-            onClick={() => live.start("+91 98XXXX1234", "Priya (daughter)")}
-          >
-            <ShieldCheck size={15} /> Start guarded session
-          </button>
+          <EmptyState
+            icon={<ShieldCheck size={20} />}
+            title="No guarded session running"
+            body="A guarded session watches a call and registers someone who should be told if it turns — here, Priya. Start one to see the alert fire and the payment circuit breaker hold a transfer."
+            action={
+              <button
+                className="btn2 btn2--primary"
+                onClick={() => live.start("+91 98XXXX1234", "Priya (daughter)")}
+              >
+                <ShieldCheck size={15} aria-hidden="true" /> Start guarded session
+              </button>
+            }
+          />
           {live.error && (
-            <div className="banner banner--bad" style={{ marginTop: "var(--s-4)" }}>
-              <div className="small">{live.error}</div>
+            <div className="alert" data-tone="bad" role="alert" style={{ marginTop: "var(--s-4)" }}>
+              <span>{live.error}</span>
             </div>
           )}
         </div>

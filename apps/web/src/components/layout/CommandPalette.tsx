@@ -7,45 +7,86 @@
  * rehearsed run and a fumbled one.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CornerDownLeft, Search } from "lucide-react";
-import { NAV } from "./nav";
+import type { NavItem } from "./nav";
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** The destinations this user can actually reach — the shell passes the
+   *  same role-filtered list the sidebar renders, so the palette never offers
+   *  a screen that would bounce them straight back out of it. */
+  items: NavItem[];
 }
 
-export function CommandPalette({ open, onClose }: Props) {
+export function CommandPalette({ open, onClose, items }: Props) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return NAV;
+    if (!q) return items;
     // Match on the blurb/detail too, so "upi" finds Analyze even though the
     // word does not appear in its label.
-    return NAV.filter((item) =>
+    return items.filter((item) =>
       `${item.label} ${item.blurb} ${item.detail}`.toLowerCase().includes(q),
     );
-  }, [query]);
+  }, [query, items]);
 
-  useEffect(() => {
-    if (open) {
-      setQuery("");
-      setActive(0);
-      // rAF, not a bare focus() — the element is not in the layout yet on the
-      // frame the state flips.
-      requestAnimationFrame(() => inputRef.current?.focus());
-    }
+  /**
+   * Opening and closing a modal is a focus contract, not a visibility change.
+   *
+   * `useLayoutEffect`, not `useEffect` + `requestAnimationFrame`: the input is
+   * in the DOM by the time layout effects run, so it can be focused directly.
+   * The rAF version was one frame late and, on a machine that drops that
+   * frame, never ran at all — which left focus on `<body>`, and with it the
+   * Escape handler (bound to the panel) unreachable.
+   *
+   * Focus goes back where it came from on close. A palette that swallows the
+   * user's place in the page is worse than no palette.
+   */
+  useLayoutEffect(() => {
+    if (!open) return;
+    returnFocusRef.current = document.activeElement as HTMLElement | null;
+    setQuery("");
+    setActive(0);
+    inputRef.current?.focus();
+    return () => {
+      returnFocusRef.current?.focus?.();
+    };
   }, [open]);
+
+  // Escape anywhere, not only inside the panel — the scrim takes focus after a
+  // click on it, and a modal you cannot dismiss from the keyboard is a trap.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
 
   useEffect(() => {
     setActive(0);
   }, [query]);
+
+  // Arrowing past the fold has to bring the option with it, or the selection
+  // is somewhere the user cannot see.
+  useEffect(() => {
+    listRef.current
+      ?.querySelector<HTMLElement>("[data-active]")
+      ?.scrollIntoView({ block: "nearest" });
+  }, [active]);
 
   if (!open) return null;
 
@@ -106,7 +147,9 @@ export function CommandPalette({ open, onClose }: Props) {
             </li>
           ))}
           {!results.length && (
-            <li className="palette__empty">No screen matches “{query}”.</li>
+            <li className="palette__empty">
+              No screen matches “{query}”. Try “message”, “call” or “graph”.
+            </li>
           )}
         </ul>
       </div>

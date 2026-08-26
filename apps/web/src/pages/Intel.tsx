@@ -20,6 +20,7 @@ import {
   Search,
   TrendingUp,
 } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import * as api from "@/lib/api";
 import type {
   CentralityEntity,
@@ -30,19 +31,10 @@ import type {
   InvestigationReport,
   LinkPrediction,
 } from "@/lib/api";
+import { formatInr, inr } from "@/lib/format";
 import { ForceGraph } from "@/components/intel/ForceGraph";
 import { ScamMap } from "@/components/map/ScamMap";
 
-const inr = (n: number) => "₹" + Math.round(n).toLocaleString("en-IN");
-
-/** Compact Indian-system figure for stat tiles — "₹12.16 cr", "₹4.5 L".
- *  The full paise-exact figure belongs in reports; a stat card that clips
- *  its own number reads as broken. */
-const inrCompact = (n: number) => {
-  if (n >= 1e7) return "₹" + (n / 1e7).toFixed(2).replace(/\.?0+$/, "") + " cr";
-  if (n >= 1e5) return "₹" + (n / 1e5).toFixed(1).replace(/\.0$/, "") + " L";
-  return inr(n);
-};
 
 export function Intel() {
   const [stats, setStats] = useState<IntelStats | null>(null);
@@ -103,26 +95,24 @@ export function Intel() {
 
   return (
     <div className="page">
-      <header className="page__head">
-        <p className="eyebrow">Analyst tool</p>
-        <h1 className="page__title">Fraud intelligence graph</h1>
-        <p className="page__lede">
-          Every detection becomes a node in a continuously-evolving fraud graph.
-          Community detection connects related cases into campaigns, geospatial
-          analysis surfaces hotspots, and each cluster gets a dynamic risk score
-          and an AI investigation report — turning single scam calls into
-          organised-crime intelligence.
-        </p>
-      </header>
+      <PageHeader
+        title="Fraud intelligence graph"
+        lede="Every detection becomes a node in a continuously-evolving fraud graph. Community detection connects related cases into campaigns, geospatial analysis surfaces hotspots, and each cluster gets a risk score and an investigation report — turning single scam calls into organised-crime intelligence."
+      />
 
       {/* live statistics */}
       {stats && (
         <div className="statband" style={{ marginBottom: "var(--s-6)" }}>
+          {/* No tones. The ramp is the threat scale, and spending `bad` on
+              cumulative reported loss — money already gone, not a live
+              danger — is exactly the dilution that makes an actual CRITICAL
+              verdict mean less. Cluster risk is where the ramp belongs, and
+              it is already carried by the cards below. */}
           <Stat n={stats.active_clusters} label="Active fraud clusters" />
-          <Stat n={stats.campaigns} label="Coordinated campaigns" tone="warn" />
+          <Stat n={stats.campaigns} label="Coordinated campaigns" />
           <Stat n={stats.total_cases} label="Total scam cases" />
           <Stat n={stats.linked_entities} label="Linked entities" />
-          <Stat n={inrCompact(stats.total_loss_inr)} label="Reported exposure" tone="bad" />
+          <Stat n={formatInr(stats.total_loss_inr)} label="Reported exposure" />
         </div>
       )}
 
@@ -306,7 +296,11 @@ function EntitySearch({ onCluster }: { onCluster: (id: string) => void }) {
     <div className="card" style={{ marginBottom: "var(--s-5)" }}>
       <h2 className="card__title"><Search size={16} /> Entity search</h2>
       <div className="row" style={{ gap: "var(--s-2)" }}>
+        <label className="vh" htmlFor="intel-q">
+          Search by phone, UPI ID, wallet, email, or case ID
+        </label>
         <input
+          id="intel-q"
           className="field"
           placeholder="Phone, UPI ID, wallet, email, or case ID (e.g. 7042118830, customs.duty@okaxis)"
           value={q}

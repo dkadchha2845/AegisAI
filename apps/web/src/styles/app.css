@@ -12,45 +12,60 @@
    =========================================================================== */
 
 /* --- Layout modes ---------------------------------------------------------
-   The console is a fixed viewport; every other route is a scrolling document.
-   global.css sets `overflow: hidden` on body for the console's benefit, so
-   the flow routes have to opt back in. */
-html[data-layout="flow"] body {
-  overflow: auto;
-}
-html[data-layout="flow"],
-html[data-layout="flow"] body,
-html[data-layout="flow"] #root {
-  height: auto;
-  min-height: 100%;
+   The console is a fixed instrument viewport; every other route is a scrolling
+   document. Documents are the default (global.css), so only "fixed" needs a
+   rule here — an unset attribute now degrades to a normal scrolling page
+   instead of a page clipped at the fold.
+
+   The whole switch is scoped to ≥901px, and that is the load-bearing part.
+   Below it the console becomes a scrolling document (console.css): three
+   columns of dense readout squeezed into a phone is not a responsive layout,
+   it is a layout that has stopped working — the audit found 90 elements past
+   the right edge of a 375px viewport with no way to reach any of them,
+   because `overflow: hidden` on a fixed viewport does not merely crop, it
+   deletes. Scoping by width here, rather than overriding later, means the two
+   layouts never both apply and never race across two stylesheets.
+
+   `.shell` is `height: 100%` and predates the app shell — it expects to own
+   the whole window, so inside the shell it is pinned to the window minus the
+   top bar. Without that the console overflows by exactly the top bar's height
+   and the coach card falls off the bottom of the screen. */
+@media (min-width: 901px) {
+  html[data-layout="fixed"],
+  html[data-layout="fixed"] body,
+  html[data-layout="fixed"] #root {
+    height: 100%;
+    overflow: hidden;
+  }
+  html[data-layout="fixed"] .shell2 { height: 100vh; min-height: 0; }
+  html[data-layout="fixed"] .content {
+    height: calc(100vh - var(--topbar-h));
+    min-height: 0;
+    overflow: hidden;
+  }
 }
 
-/* The console is a fixed instrument viewport that predates the app shell: its
-   `.shell` is `height: 100%` and expects to own the whole window. Inside the
-   shell it owns the window minus the top bar, so the main area is pinned to
-   exactly that and clips rather than scrolling the document. Without this the
-   console overflows by the height of the top bar and the coach card falls off
-   the bottom of the screen. */
-html[data-layout="fixed"] .shell2 { height: 100vh; min-height: 0; }
-html[data-layout="fixed"] .content {
-  height: calc(100vh - var(--topbar-h));
-  min-height: 0;
-  overflow: hidden;
-}
-html[data-layout="fixed"] .sidebar { height: calc(100vh - var(--topbar-h)); }
+/* ---------------------------------------------------------------------------
+   Shell grid.
 
+   The sidebar owns the whole left column — "side top" / "side main" rather
+   than "top top" / "side main". That gives the brand one home (the sidebar
+   header) and hands the top bar's leading edge to the page title, instead of
+   the old arrangement where the logo, a tagline and the page's own H1 all
+   competed for the same corner.
+--------------------------------------------------------------------------- */
 .shell2 {
-  --sidebar-w: 264px;
+  --sidebar-w: 248px;
   --topbar-h: 56px;
   display: grid;
-  grid-template-columns: var(--sidebar-w) 1fr;
-  grid-template-rows: var(--topbar-h) 1fr;
-  grid-template-areas: "top top" "side main";
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  grid-template-rows: var(--topbar-h) minmax(0, 1fr);
+  grid-template-areas: "side top" "side main";
   min-height: 100vh;
-  transition: grid-template-columns var(--t-med) var(--ease-out);
 }
-.shell2[data-collapsed] {
-  --sidebar-w: 62px;
+.shell2[data-collapsed] { --sidebar-w: 60px; }
+@media (prefers-reduced-motion: no-preference) {
+  .shell2 { transition: grid-template-columns var(--t-med) var(--ease-out); }
 }
 
 /* --- Top bar -------------------------------------------------------------- */
@@ -63,86 +78,64 @@ html[data-layout="fixed"] .sidebar { height: calc(100vh - var(--topbar-h)); }
   align-items: center;
   gap: var(--s-3);
   padding: 0 var(--s-4);
+  min-width: 0;
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
 }
 
-.brand2 {
+/* Breadcrumb: where you are, named the same way the sidebar names it. */
+.crumbs {
   display: flex;
   align-items: baseline;
-  gap: var(--s-2);
-  text-decoration: none;
-  color: inherit;
+  gap: var(--s-3);
   min-width: 0;
+  margin-right: auto;
 }
-.brand2__mark {
-  width: 9px;
-  height: 9px;
-  border-radius: 2px;
-  background: var(--threat-color, var(--accent));
-  box-shadow: 0 0 0 3px var(--threat-dim, transparent);
-  transition: background var(--t-med) var(--ease-out);
-  align-self: center;
-}
-.brand2__name {
+.crumbs__here {
   font-family: var(--font-display);
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  font-size: var(--t-sm);
+  font-weight: 600;
+  font-size: var(--t-base);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  white-space: nowrap;
 }
-.brand2__tag {
+.crumbs__blurb {
   font-size: var(--t-xs);
   color: var(--ink-faint);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+@media (max-width: 1080px) { .crumbs__blurb { display: none; } }
+
+/* The brand only appears in the bar once the sidebar is off-canvas. */
+/* Compound selectors on purpose: `.iconbtn` sets `display: inline-grid` and
+   lives in primitives.css, which loads later — a bare `.topbar2__burger`
+   would lose the cascade and the burger would show on desktop. */
+.topbar2 > .topbar2__brand { display: none; text-decoration: none; color: inherit; }
+.topbar2__right { display: flex; align-items: center; gap: var(--s-2); flex: none; }
+.topbar2 > .topbar2__burger { display: none; }
+
 @media (max-width: 900px) {
-  .brand2__tag { display: none; }
-}
-
-.topbar2__right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-}
-
-.iconbtn {
-  display: inline-grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--r-sm);
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--ink-muted);
-  cursor: pointer;
-  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
-}
-.iconbtn:hover { background: var(--panel-hover); color: var(--ink); border-color: var(--line); }
-.iconbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-.topbar2__burger { display: none; }
-@media (max-width: 860px) {
-  .topbar2__burger { display: inline-grid; }
-  .topbar2__collapse { display: none; }
+  .topbar2 > .topbar2__burger { display: inline-grid; }
+  .topbar2 > .topbar2__brand { display: inline-flex; align-items: center; }
+  .crumbs { display: none; }        /* the drawer names the destination */
 }
 
 .paletteHint {
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
-  height: 30px;
+  height: 32px;
   padding: 0 var(--s-2) 0 var(--s-3);
   border-radius: var(--r-sm);
   border: 1px solid var(--line);
-  background: var(--panel);
+  background: var(--bg-raised);
   color: var(--ink-faint);
   font-size: var(--t-xs);
-  font-family: inherit;
   cursor: pointer;
+  transition: border-color var(--t-fast), color var(--t-fast);
 }
 .paletteHint:hover { border-color: var(--line-strong); color: var(--ink-muted); }
 .paletteHint kbd,
@@ -153,61 +146,83 @@ html[data-layout="fixed"] .sidebar { height: calc(100vh - var(--topbar-h)); }
   border-radius: 4px;
   border: 1px solid var(--line);
   color: var(--ink-faint);
-  background: var(--bg-raised);
+  background: var(--panel);
 }
-@media (max-width: 720px) { .paletteHint span { display: none; } }
+/* A keyboard shortcut is a lie on a touch device: below the pointer:coarse
+   breakpoint the hint becomes a plain search affordance. */
+@media (max-width: 720px), (pointer: coarse) {
+  .paletteHint span, .paletteHint kbd { display: none; }
+  .paletteHint { width: 32px; padding: 0; justify-content: center; }
+}
 
+/* --- System status --------------------------------------------------------
+   Lives in the sidebar footer, which means it survives on a phone. The old
+   top-bar placement hid it below 620px — the viewport where a degraded
+   backend matters most, because that is the device someone reaches for while
+   the call is still live. */
 .statuspill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 26px;
-  padding: 0 var(--s-3);
-  border-radius: var(--r-pill);
+  padding: 5px var(--s-3);
+  border-radius: var(--r-sm);
   font-size: var(--t-2xs);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   border: 1px solid var(--line);
+  background: var(--bg-raised);
   color: var(--ink-muted);
-  white-space: nowrap;
 }
-.statuspill[data-state="ok"] { color: var(--calm); border-color: color-mix(in srgb, var(--calm) 35%, transparent); }
-.statuspill[data-state="degraded"] { color: var(--elevated); border-color: color-mix(in srgb, var(--elevated) 40%, transparent); }
-.statuspill[data-state="offline"] { color: var(--high); border-color: color-mix(in srgb, var(--high) 40%, transparent); }
-@media (max-width: 620px) { .statuspill { display: none; } }
+.statuspill svg, .statuspill__dot { flex: none; }
+.statuspill__dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--ink-faint);
+}
+.statuspill[data-state="ok"] { color: var(--calm-ink); border-color: color-mix(in srgb, var(--calm) 32%, transparent); }
+.statuspill[data-state="degraded"] { color: var(--elevated-ink); border-color: color-mix(in srgb, var(--elevated) 38%, transparent); }
+.statuspill[data-state="offline"] { color: var(--high-ink); border-color: color-mix(in srgb, var(--high) 38%, transparent); }
 
-/* Signed-in identity, top-bar right. Compact — role always visible, email
-   hidden on narrow viewports, sign-out always reachable. */
+/* --- Signed-in identity ---------------------------------------------------- */
 .userchip {
-  display: inline-flex; align-items: center; gap: var(--s-2);
-  height: 28px; padding: 0 4px 0 var(--s-2);
-  border-radius: var(--r-pill);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2);
+  border-radius: var(--r-sm);
   border: 1px solid var(--line);
-  background: var(--panel);
-  font-size: var(--t-2xs);
-  max-width: 240px;
+  background: var(--bg-raised);
+  min-width: 0;
+}
+.userchip__avatar {
+  display: grid; place-items: center;
+  width: 26px; height: 26px; flex: none;
+  border-radius: var(--r-xs);
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+.userchip__text { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.userchip__email {
+  font-size: var(--t-xs);
+  color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .userchip__role {
-  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
-  color: var(--accent);
+  font-size: var(--t-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.userchip__email {
-  color: var(--ink-faint); font-family: var(--font-mono); font-size: 10px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px;
-}
-.userchip__out {
-  display: inline-grid; place-items: center; width: 22px; height: 22px;
-  border: none; border-radius: 50%; background: transparent; color: var(--ink-faint);
-  cursor: pointer; transition: background var(--t-fast), color var(--t-fast);
-}
-.userchip__out:hover { background: var(--critical-dim); color: var(--critical); }
-@media (max-width: 780px) { .userchip__email { display: none; } }
-@media (max-width: 620px) { .userchip { display: none; } }
+.userchip__out { margin-left: auto; width: 26px; height: 26px; }
+.userchip__out:hover { background: var(--critical-dim); color: var(--critical); border-color: transparent; }
 
-/* --- Styled tooltip (replaces overlapping native title=) ------------------
-   Opt in with class "tt" + a data-tooltip attribute. Appears above the target,
-   never under the cursor, so it can't sit on top of the label it describes. */
-.tt { position: relative; }
-.tt::after {
+/* --- Tooltip ---------------------------------------------------------------
+   Opt in with `data-tooltip`. Replaces native `title=`, which appears under
+   the cursor, a beat late, and cannot be styled. The collapsed sidebar shows
+   its tooltips to the right; everything else shows them above. */
+.tt, [data-tooltip] { position: relative; }
+[data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
   bottom: calc(100% + 8px);
@@ -221,9 +236,11 @@ html[data-layout="fixed"] .sidebar { height: calc(100vh - var(--topbar-h)); }
   background: var(--panel);
   box-shadow: var(--shadow-md);
   color: var(--ink-muted);
+  font-family: var(--font-body);
   font-size: var(--t-2xs);
+  font-weight: 400;
   line-height: 1.5;
-  white-space: normal;
+  white-space: pre-line;
   text-align: left;
   letter-spacing: normal;
   text-transform: none;
@@ -232,30 +249,59 @@ html[data-layout="fixed"] .sidebar { height: calc(100vh - var(--topbar-h)); }
   transition: opacity var(--t-fast), transform var(--t-fast);
   z-index: var(--z-overlay);
 }
-.tt:hover::after,
-.tt:focus-within::after { opacity: 1; transform: translateX(-50%) translateY(0); }
-@media (max-width: 620px) { .tt::after { display: none; } }
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* Tooltips are a pointer affordance; on touch they fire on tap and sit over
+   the thing you just tapped. */
+@media (max-width: 620px), (pointer: coarse) { [data-tooltip]::after { display: none; } }
 
 /* --- Sidebar -------------------------------------------------------------- */
 .sidebar {
   grid-area: side;
   position: sticky;
-  top: var(--topbar-h);
-  height: calc(100vh - var(--topbar-h));
+  top: 0;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: var(--s-5);
-  padding: var(--s-4) var(--s-3);
+  min-height: 0;
   border-right: 1px solid var(--line);
   background: var(--bg-raised);
+}
+
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: var(--topbar-h);
+  flex: none;
+  padding: 0 var(--s-3);
+  border-bottom: 1px solid var(--line);
+}
+.sidebar__logo { display: inline-flex; align-items: center; text-decoration: none; min-width: 0; }
+.sidebar__collapse { margin-left: auto; }
+.shell2[data-collapsed] .sidebar__brand { justify-content: center; padding: 0; }
+.shell2[data-collapsed] .sidebar__collapse { display: none; }
+
+.sidebar__nav {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  padding: var(--s-4) var(--s-2);
 }
-.sidebar__group + .sidebar__group { margin-top: var(--s-5); }
+.sidebar__group + .sidebar__group {
+  margin-top: var(--s-5);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--line);
+}
 .sidebar__grouplabel { padding: 0 var(--s-3) var(--s-2); }
-.shell2[data-collapsed] .sidebar__grouplabel { opacity: 0; height: 8px; }
+.shell2[data-collapsed] .sidebar__grouplabel {
+  /* Kept in the accessibility tree, out of the 60px rail. */
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);
+}
 
 .sidenav {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--s-3);
@@ -266,6 +312,7 @@ html[data-layout="fixed"] .sidebar { height: calc(100vh - var(--topbar-h)); }
   border: 1px solid transparent;
   transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
 }
+.sidenav + .sidenav { margin-top: 2px; }
 .sidenav:hover { background: var(--panel-hover); color: var(--ink); }
 .sidenav--active {
   background: var(--panel);
@@ -274,6 +321,15 @@ html[data-layout="fixed"] .sidebar { height: calc(100vh - var(--topbar-h)); }
 }
 /* The active marker is the accent, never the threat colour — a nav item is
    not a threat readout, and reusing the ramp here would dilute it. */
+.sidenav--active::before {
+  content: "";
+  position: absolute;
+  left: -1px; top: 50%;
+  width: 2px; height: 16px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  transform: translateY(-50%);
+}
 .sidenav--active .sidenav__icon { color: var(--accent); }
 .sidenav__icon { flex: none; }
 .sidenav__text { display: flex; flex-direction: column; min-width: 0; }
@@ -281,28 +337,51 @@ html[data-layout="fixed"] .sidebar { height: calc(100vh - var(--topbar-h)); }
 .sidenav__blurb {
   font-size: var(--t-2xs);
   color: var(--ink-faint);
-  white-space: nowrap;
+  line-height: 1.4;
+  /* Two lines rather than one clipped line. "Check a message, screenshot, or
+     nu…" told the reader less than nothing. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
+
+/* Collapsed: icons only, with the tooltip carrying the label to the right. */
 .shell2[data-collapsed] .sidenav__text { display: none; }
 .shell2[data-collapsed] .sidenav { justify-content: center; padding: var(--s-2); }
+.shell2[data-collapsed] .sidenav[data-tooltip]::after {
+  bottom: auto; top: 50%; left: calc(100% + 10px);
+  transform: translateY(-50%) translateX(-4px);
+}
+.shell2[data-collapsed] .sidenav[data-tooltip]:hover::after,
+.shell2[data-collapsed] .sidenav[data-tooltip]:focus-visible::after {
+  transform: translateY(-50%) translateX(0);
+}
 
 .sidebar__foot {
-  margin-top: auto;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
   padding: var(--s-3);
-  border-radius: var(--r-sm);
-  border: 1px solid var(--line);
-  background: var(--panel);
+  border-top: 1px solid var(--line);
 }
 .sidebar__helpline {
-  margin: var(--s-2) 0 0;
-  font-size: var(--t-xs);
-  color: var(--ink-muted);
-  line-height: 1.5;
+  margin: 0;
+  font-size: var(--t-2xs);
+  color: var(--ink-faint);
+  line-height: 1.55;
 }
 .sidebar__helpline a { color: var(--accent); }
-.shell2[data-collapsed] .sidebar__foot { display: none; }
+/* At 60px there is no room for prose; the helpline stays reachable from the
+   Emergency route, which is one click away in the rail above. */
+.shell2[data-collapsed] .sidebar__foot { padding: var(--s-2); }
+.shell2[data-collapsed] .sidebar__helpline,
+.shell2[data-collapsed] .userchip__text,
+.shell2[data-collapsed] .statuspill span:not(.statuspill__dot) { display: none; }
+.shell2[data-collapsed] .userchip { justify-content: center; padding: 4px; }
+.shell2[data-collapsed] .userchip__out { display: none; }
+.shell2[data-collapsed] .statuspill { justify-content: center; padding: 5px; font-size: 0; }
 
 .scrim {
   position: fixed;
@@ -312,18 +391,36 @@ html[data-layout="fixed"] .sidebar { height: calc(100vh - var(--topbar-h)); }
   backdrop-filter: blur(2px);
 }
 
-@media (max-width: 860px) {
-  .shell2 { grid-template-columns: 1fr; grid-template-areas: "top" "main"; }
+@media (max-width: 900px) {
+  .shell2 {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "top" "main";
+  }
   .sidebar {
     position: fixed;
-    top: var(--topbar-h);
+    top: 0;
     left: 0;
-    width: min(300px, 84vw);
+    width: min(300px, 86vw);
+    height: 100vh;
     z-index: var(--z-sticky);
     transform: translateX(-102%);
-    transition: transform var(--t-med) var(--ease-out);
+    box-shadow: none;
   }
   .sidebar[data-open] { transform: none; box-shadow: var(--shadow-lg); }
+  /* Collapse is a desktop affordance; the drawer is always full width. */
+  .shell2[data-collapsed] .sidebar { --sidebar-w: auto; }
+  .shell2[data-collapsed] .sidenav { justify-content: flex-start; padding: var(--s-2) var(--s-3); }
+  .shell2[data-collapsed] .sidenav__text,
+  .shell2[data-collapsed] .sidebar__helpline,
+  .shell2[data-collapsed] .userchip__text,
+  .shell2[data-collapsed] .userchip__out { display: revert; }
+  .shell2[data-collapsed] .userchip { justify-content: flex-start; padding: var(--s-2); }
+  .shell2[data-collapsed] .statuspill { font-size: var(--t-2xs); padding: 5px var(--s-3); }
+  .shell2[data-collapsed] .sidebar__grouplabel { position: static; width: auto; height: auto; clip-path: none; }
+  .shell2[data-collapsed] .sidebar__brand { justify-content: space-between; padding: 0 var(--s-3); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sidebar { transition: transform var(--t-med) var(--ease-out); }
 }
 
 .content { grid-area: main; min-width: 0; }
@@ -385,93 +482,20 @@ html[data-layout="fixed"] .sidebar { height: calc(100vh - var(--topbar-h)); }
 .palette__enter { flex: none; color: var(--accent); }
 .palette__empty { padding: var(--s-5); text-align: center; color: var(--ink-faint); font-size: var(--t-sm); }
 
-/* --- Page furniture ------------------------------------------------------- */
-.page {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: var(--s-6) var(--s-5) var(--s-8);
-}
-.page__head { margin-bottom: var(--s-6); }
-.page__title {
-  font-family: var(--font-display);
-  font-size: var(--t-xl);
-  font-weight: 700;
-  letter-spacing: var(--tracking-tight);
-  margin: var(--s-2) 0;
-}
-.page__lede {
-  margin: 0;
-  max-width: 68ch;
-  color: var(--ink-muted);
-  line-height: 1.65;
-}
-
-.card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  padding: var(--s-5);
-}
+/* .page, .page__title, .page__lede, .card and .card__title live in
+   primitives.css: one container, three widths, one header block. */
+/* 190px is the width at which "₹12.16 Cr" stops wrapping mid-figure. A stat
+   tile that breaks its own number across two lines reads as broken data. */
+.statband { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--s-4); }
+@media (max-width: 560px) { .statband { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .card + .card { margin-top: var(--s-4); }
-.card__title {
-  font-family: var(--font-display);
-  font-size: var(--t-md);
-  font-weight: 600;
-  margin: 0 0 var(--s-3);
-}
 
 .grid2 { display: grid; gap: var(--s-4); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
 /* Exactly two columns — for card sets of four, where auto-fit's 3+1 split
    reads as a mistake rather than a layout. Collapses to one column narrow. */
 .grid2--pairs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-@media (max-width: 720px) { .grid2--pairs { grid-template-columns: 1fr; } }
-.stack { display: flex; flex-direction: column; gap: var(--s-4); }
-.row { display: flex; gap: var(--s-3); flex-wrap: wrap; align-items: center; }
-
-.btn2 {
-  text-decoration: none;   /* .btn2 is used on <Link> as well as <button> */
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s-2);
-  height: 38px;
-  padding: 0 var(--s-4);
-  border-radius: var(--r-sm);
-  border: 1px solid var(--line-strong);
-  background: var(--panel);
-  color: var(--ink);
-  font: inherit;
-  font-size: var(--t-sm);
-  cursor: pointer;
-  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-instant);
-}
-.btn2:hover:not(:disabled) { background: var(--panel-hover); border-color: var(--accent); }
-.btn2:active:not(:disabled) { transform: translateY(1px); }
-.btn2:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn2--primary { background: var(--accent); border-color: var(--accent); color: #04070f; font-weight: 600; }
-/* The light theme deepens the accent for contrast on white, which flips the
-   readable text colour on top of it. */
-html[data-theme="light"] .btn2--primary { color: #fff; }
-.btn2--primary:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 88%, white); }
-.btn2--danger { border-color: color-mix(in srgb, var(--critical) 55%, transparent); color: var(--critical); }
-.btn2--ghost { border-color: transparent; color: var(--ink-muted); }
-
-.field {
-  width: 100%;
-  padding: var(--s-3);
-  border-radius: var(--r-sm);
-  border: 1px solid var(--line);
-  background: var(--bg-raised);
-  color: var(--ink);
-  font: inherit;
-  font-size: var(--t-sm);
-  resize: vertical;
-}
-.field:focus { outline: none; border-color: var(--accent); }
-.field::placeholder { color: var(--ink-faint); }
-
-.muted { color: var(--ink-muted); }
-.faint { color: var(--ink-faint); }
-.small { font-size: var(--t-xs); }
+@media (max-width: 720px) { .grid2--pairs { grid-template-columns: minmax(0, 1fr); } }
+/* .stack, .row, .btn2, .field and the text utilities live in primitives.css. */
 
 /* --- Home ----------------------------------------------------------------- */
 .hero {
@@ -561,20 +585,6 @@ html[data-theme="light"] .btn2--primary { color: #fff; }
 .arcstep__label { font-weight: 600; font-size: var(--t-sm); letter-spacing: 0.02em; }
 .arcstep__body { margin: var(--s-2) 0 0; color: var(--ink-muted); font-size: var(--t-sm); line-height: 1.6; }
 
-.statband { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--s-4); }
-.stat { padding: var(--s-4); border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel); }
-.stat__n {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  font-size: var(--t-xl);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  /* A figure longer than its card wraps rather than clips — a stat card
-     that cuts off its own number reads as broken data. */
-  overflow-wrap: anywhere;
-  line-height: 1.15;
-}
-.stat__l { margin-top: var(--s-1); font-size: var(--t-xs); color: var(--ink-faint); line-height: 1.5; }
 
 /* --- Dashboard ------------------------------------------------------------ */
 .featurecard {
@@ -605,7 +615,7 @@ html[data-theme="light"] .btn2--primary { color: #fff; }
 }
 .featurecard__label { font-family: var(--font-display); font-weight: 600; font-size: var(--t-base); }
 .featurecard__detail { margin: 0; font-size: var(--t-sm); color: var(--ink-muted); line-height: 1.6; }
-.featurecard__go { margin-top: auto; font-size: var(--t-xs); color: var(--accent); display: flex; align-items: center; gap: 6px; }
+.featurecard__go { margin-top: auto; font-size: var(--t-xs); color: var(--accent-ink); display: flex; align-items: center; gap: 6px; }
 
 .kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s-2) var(--s-4); font-size: var(--t-sm); }
 .kv dt { color: var(--ink-faint); white-space: nowrap; }
@@ -620,39 +630,11 @@ html[data-theme="light"] .btn2--primary { color: #fff; }
   overflow-wrap: anywhere;
 }
 
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px var(--s-2);
-  border-radius: var(--r-xs);
-  border: 1px solid var(--line);
-  font-family: var(--font-mono);
-  font-size: var(--t-2xs);
-  color: var(--ink-muted);
-}
-.chip[data-tone="ok"] { color: var(--calm); border-color: color-mix(in srgb, var(--calm) 35%, transparent); }
-.chip[data-tone="warn"] { color: var(--elevated); border-color: color-mix(in srgb, var(--elevated) 35%, transparent); }
-.chip[data-tone="bad"] { color: var(--critical); border-color: color-mix(in srgb, var(--critical) 40%, transparent); }
+/* .chip and its whole severity vocabulary live in primitives.css. */
 
 /* --- Analyzer ------------------------------------------------------------- */
 .analyzer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-5); align-items: start; }
-@media (max-width: 980px) { .analyzer { grid-template-columns: 1fr; } }
-
-.tabs { display: flex; gap: var(--s-1); padding: var(--s-1); border-radius: var(--r-sm); background: var(--bg-raised); border: 1px solid var(--line); }
-.tab {
-  flex: 1;
-  padding: var(--s-2) var(--s-3);
-  border: none;
-  border-radius: var(--r-xs);
-  background: transparent;
-  color: var(--ink-muted);
-  font: inherit;
-  font-size: var(--t-xs);
-  cursor: pointer;
-}
-.tab[data-active] { background: var(--panel); color: var(--ink); box-shadow: var(--shadow-sm); }
-
+@media (max-width: 980px) { .analyzer { grid-template-columns: minmax(0, 1fr); } }
 .dropzone {
   display: grid;
   place-items: center;
@@ -670,37 +652,7 @@ html[data-theme="light"] .btn2--primary { color: #fff; }
 
 /* The verdict card is the one place saturation is allowed off the meter,
    because it *is* the meter for this screen. */
-.verdict {
-  border: 1px solid var(--verdict-color, var(--line));
-  border-radius: var(--r-md);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--verdict-color, var(--panel)) 12%, var(--panel)),
-    var(--panel)
-  );
-  padding: var(--s-5);
-}
-.verdict[data-v="LIKELY_SCAM"] { --verdict-color: var(--critical); }
-.verdict[data-v="SUSPICIOUS"] { --verdict-color: var(--elevated); }
-.verdict[data-v="LIKELY_LEGITIMATE"] { --verdict-color: var(--calm); }
-.verdict[data-v="INSUFFICIENT"] { --verdict-color: var(--ink-faint); }
-.verdict__head { display: flex; align-items: baseline; gap: var(--s-3); flex-wrap: wrap; }
-.verdict__label {
-  font-family: var(--font-display);
-  font-size: var(--t-lg);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--verdict-color);
-}
-.verdict__score {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  font-size: var(--t-xl);
-  font-weight: 700;
-  color: var(--verdict-color);
-}
-.verdict__summary { margin: var(--s-3) 0 0; line-height: 1.65; }
+/* .verdict lives in primitives.css — dial, sentence, tone from data-v. */
 
 .findings { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
 .finding {
@@ -735,7 +687,7 @@ html[data-theme="light"] .btn2--primary { color: #fff; }
 
 /* --- Knowledge ------------------------------------------------------------ */
 .kbhit { padding: var(--s-4); border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel); }
-.kbhit__src { font-family: var(--font-mono); font-size: var(--t-2xs); color: var(--accent); }
+.kbhit__src { font-family: var(--font-mono); font-size: var(--t-2xs); color: var(--accent-ink); }
 .kbhit__text { margin: var(--s-2) 0 0; font-size: var(--t-sm); line-height: 1.65; color: var(--ink-muted); white-space: pre-wrap; }
 
 /* --- Narration ------------------------------------------------------------ */
@@ -808,21 +760,8 @@ html[data-theme="light"] .btn2--primary { color: #fff; }
 /* ------------------------------------------------------------------ *
  * Case book — tables for saved cases, the audit log, and users.
  * ------------------------------------------------------------------ */
-.card__title { display: flex; align-items: center; gap: var(--s-2); }
-.card__title .cb-refresh { margin-left: auto; font-size: var(--t-xs); padding: 2px 8px; }
-
-.cb-tablewrap { overflow-x: auto; margin-top: var(--s-3); }
-.cb-table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); }
-.cb-table th {
-  text-align: left; font-weight: 600; color: var(--ink-muted);
-  padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap;
-}
-.cb-table td {
-  padding: 8px 10px; border-bottom: 1px solid var(--line);
-  vertical-align: top; color: var(--ink);
-}
-.cb-table tbody tr:last-child td { border-bottom: none; }
-.cb-table tbody tr:hover td { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.card__title .cb-refresh { margin-left: auto; }
+/* .cb-table is the shared .table in primitives.css. */
 
 /* --- Investigate (task 1.9) ----------------------------------------------- */
 /* The launcher for the lifecycle API. Everything here is tokens only, so light
@@ -976,3 +915,113 @@ html[data-theme="light"] .btn2--primary { color: #fff; }
 }
 
 .inv__verdict { margin: 0 0 var(--s-3); font-size: var(--t-md); line-height: 1.5; }
+
+/* Evidence quote in the investigation workspace — the submitted text, kept
+   verbatim and visibly quoted so it never reads as the product's own words. */
+.inv__quote {
+  margin: var(--s-2) 0 0;
+  padding: var(--s-3);
+  border-left: 2px solid var(--line-strong);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: var(--bg-raised);
+  color: var(--ink-muted);
+  font-size: var(--t-sm);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+/* --- Learn: guides ---------------------------------------------------------
+   A citation id is `rbi-advisories.md § PAYMENT_EXECUTION`. The readable half
+   leads; the id follows as provenance. Rendering the whole id as the headline
+   turned a citizen education page into a listing of our own repository. */
+.guide + .guide { margin-top: var(--s-6); }
+.guide__title {
+  display: flex; align-items: center; gap: var(--s-2);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+.guide__title svg { color: var(--ink-faint); }
+.guide__meta { margin: var(--s-1) 0 var(--s-3); font-size: var(--t-xs); color: var(--ink-faint); }
+.guide__list { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); overflow: hidden; }
+.guide__item + .guide__item { border-top: 1px solid var(--line); }
+.guide__item > summary {
+  display: flex; align-items: center; gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  cursor: pointer;
+  list-style: none;
+  transition: background var(--t-fast);
+}
+.guide__item > summary::-webkit-details-marker { display: none; }
+.guide__item > summary:hover { background: var(--panel-hover); }
+.guide__q { flex: 1; font-size: var(--t-sm); font-weight: 500; color: var(--ink); }
+.guide__chev { flex: none; color: var(--ink-faint); transition: transform var(--t-fast) var(--ease-out); }
+.guide__item[open] > summary .guide__chev { transform: rotate(180deg); }
+.guide__a {
+  margin: 0;
+  padding: 0 var(--s-4) var(--s-3);
+  font-size: var(--t-sm);
+  line-height: 1.7;
+  color: var(--ink-muted);
+  white-space: pre-wrap;
+}
+.guide__src {
+  margin: 0;
+  padding: 0 var(--s-4) var(--s-3);
+  font-size: var(--t-2xs);
+  color: var(--ink-faint);
+}
+
+.kbhit__head { font-size: var(--t-sm); font-weight: 600; color: var(--ink); }
+
+/* Add-a-thing forms in tenant admin — labelled fields on one row, wrapping to
+   a stack when there is no room. Placeholder-only inputs disappear the moment
+   they have a value, which is exactly when the label is needed. */
+.adduser {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line);
+}
+.adduser__field { flex: 1 1 200px; min-width: 0; }
+.adduser__field--narrow { flex: 0 1 140px; }
+.adduser__field .fieldlabel { margin-bottom: 6px; }
+.adduser__go { flex: none; }
+@media (max-width: 620px) {
+  .adduser { flex-direction: column; align-items: stretch; }
+  .adduser__go { width: 100%; }
+}
+
+/* ---------------------------------------------------------------------------
+   Leaflet brings its own typography — the attribution line, the zoom control
+   and the popup all fall back to a generic sans/monospace stack, which is why
+   a font audit of the map screens turned up "Lucida Console" alongside our
+   two faces. The map is data, but its furniture is chrome.
+--------------------------------------------------------------------------- */
+.leaflet-container,
+.leaflet-container .leaflet-control,
+.leaflet-container .leaflet-control-attribution,
+.leaflet-container .leaflet-popup-content {
+  font-family: var(--font-body);
+  font-size: var(--t-2xs);
+}
+.leaflet-container .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  color: var(--ink-faint);
+}
+.leaflet-container .leaflet-control-attribution a { color: var(--ink-muted); }
+.leaflet-container .leaflet-control-zoom a {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--panel);
+  border-color: var(--line);
+}
+.leaflet-container .leaflet-control-zoom a:hover { background: var(--panel-hover); }

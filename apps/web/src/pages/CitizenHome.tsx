@@ -11,6 +11,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Activity, ArrowRight, FolderArchive, ScanSearch, Siren } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import * as api from "@/lib/api";
 import type { Hotspot, ScamPoint } from "@/lib/api";
 import { ScamMap } from "@/components/map/ScamMap";
@@ -78,10 +79,7 @@ export function CitizenHome() {
 
   return (
     <div className="page">
-      <header className="page__head">
-        <h1 className="page__title">{greeting}</h1>
-        <p className="page__lede">How can we help today?</p>
-      </header>
+      <PageHeader title={greeting} lede="How can we help today?" />
 
       <div className="home-tasks">
         {TASKS.map((t) => (

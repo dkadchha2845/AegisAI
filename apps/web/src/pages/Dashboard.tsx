@@ -1,17 +1,32 @@
 /**
- * Dashboard — the hub. What is loaded, what is degraded, where to go next.
+ * Operations — what the platform is seeing, and the honest state of each part
+ * of the machine that is seeing it.
  *
- * The system-state panel is first, above the navigation cards, on purpose.
- * Which classifier is serving and whether retrieval is dense or lexical
- * changes how much weight every other screen's output deserves, and a user who
- * does not know the fallback is active will read its results as if they came
- * from the good model.
+ * Two things changed here in the UI audit.
+ *
+ * **The bottom half is gone.** It was a grid of seven cards linking to the
+ * seven sidebar destinations, with the same labels and the same icons. It
+ * existed because the analyst tools were not in the sidebar at the time; now
+ * that `navGroups` puts them there, a card grid restating the navigation is
+ * furniture that pushes the actual content below the fold.
+ *
+ * **Measurements come first.** A dashboard opens with what is happening, not
+ * with a configuration readout. The system-state panel is still here and
+ * still above the fold — which classifier is serving changes how much weight
+ * every other screen's output deserves, and a user who does not know the
+ * fallback is active will read its results as if they came from the good
+ * model — but it is no longer the *only* thing on the page.
+ *
+ * Every figure below is a contract field. There is no arithmetic in this file.
  */
 
-import { Link } from "react-router-dom";
-import { ArrowRight, RefreshCw } from "lucide-react";
-import { NAV } from "@/components/layout/nav";
+import { useEffect, useState } from "react";
+import { RefreshCw } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState, ErrorState, Skeleton } from "@/components/ui/States";
+import { count, formatInr } from "@/lib/format";
 import { useHealth } from "@/hooks/useHealth";
+import * as api from "@/lib/api";
 
 /** Plain-language readings of the machine-readable `degraded` tags. The tags
  *  are for logs; this is for people. */
@@ -45,44 +60,79 @@ const DEGRADED_COPY: Record<string, string> = {
   "asr:local_fallback":
     "Live audio transcription is not configured; transcripts come from text "
     + "input only.",
+  "queue:no_workers":
+    "No Celery worker is attached, so investigations run in-process. Results are "
+    + "identical; throughput is one at a time.",
 };
 
 export function Dashboard() {
   const { data, loading, error } = useHealth();
+  const [stats, setStats] = useState<api.IntelStats | null>(null);
+  const [statsFailed, setStatsFailed] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      const r = await api.getIntelStats();
+      if (!live) return;
+      if (r.ok) setStats(r.data);
+      else setStatsFailed(true);
+    })();
+    return () => {
+      live = false;
+    };
+  }, []);
 
   return (
     <div className="page">
-      <header className="page__head">
-        <p className="label">Overview</p>
-        <h1 className="page__title">Dashboard</h1>
-        <p className="page__lede">
-          Everything this build can do, and the honest state of each part of it.
-          Press <kbd>⌘K</kbd> from anywhere to jump between screens.
-        </p>
-      </header>
+      <PageHeader
+        title="Operations"
+        lede="What the platform is seeing right now, and the honest state of each part of it."
+      />
 
-      <section className="card" style={{ marginBottom: "var(--s-6)" }}>
+      {/* --- What the platform is seeing ---------------------------------- */}
+      <section className="statband" aria-label="Platform metrics">
+        {stats ? (
+          <>
+            <Metric value={count(stats.total_cases)} label="fraud cases in the intelligence graph" />
+            <Metric value={count(stats.active_clusters)} label="active clusters, each risk-scored" />
+            <Metric value={count(stats.high_risk_clusters)} label="clusters scored high risk or worse" />
+            <Metric value={count(stats.linked_entities)} label="linked entities — numbers, UPI IDs, wallets" />
+            <Metric value={formatInr(stats.total_loss_inr)} label="reported exposure across those cases" />
+          </>
+        ) : statsFailed ? (
+          <div className="stat" style={{ gridColumn: "1 / -1" }}>
+            <p className="small muted" style={{ margin: 0 }}>
+              Platform metrics are unavailable while the analysis service is unreachable.
+            </p>
+          </div>
+        ) : (
+          Array.from({ length: 5 }, (_, i) => (
+            <div className="stat" key={i}>
+              <Skeleton lines={2} label="Loading metrics" />
+            </div>
+          ))
+        )}
+      </section>
+
+      {/* --- What the machine is running ---------------------------------- */}
+      <section className="card" style={{ marginTop: "var(--s-6)" }}>
         <h2 className="card__title">System state</h2>
 
-        {loading && (
-          <p className="row muted small">
-            <span className="spinner" /> Checking the analysis service…
-          </p>
-        )}
+        {loading && <Skeleton lines={4} label="Checking the analysis service" />}
 
         {error && (
-          <div className="banner banner--bad">
-            <div>
-              <strong>The analysis service is not reachable.</strong>
-              <p className="small" style={{ margin: "6px 0 0" }}>
-                Every screen still renders, and the console falls back to the
-                recorded demo stream — but nothing here is live. Start it with:
-              </p>
-              <p className="mono small" style={{ margin: "8px 0 0" }}>
-                .venv/bin/uvicorn services.api.main:app --reload --port 8000
-              </p>
-            </div>
-          </div>
+          <ErrorState
+            inline
+            title="The analysis service is not reachable"
+            body={
+              <>
+                Every screen still renders and the console falls back to the recorded
+                stream, but nothing here is live.
+              </>
+            }
+            detail=".venv/bin/uvicorn services.api.main:app --reload --port 8000"
+          />
         )}
 
         {data && (
@@ -144,7 +194,7 @@ export function Dashboard() {
               </div>
 
               <div>
-                <p className="label">Coach & explanation</p>
+                <p className="label">Coach &amp; explanation</p>
                 <dl className="kv">
                   <dt>coach lines</dt>
                   <dd>{data.coach.lines} curated</dd>
@@ -160,10 +210,10 @@ export function Dashboard() {
               </div>
             </div>
 
-            {data.degraded.length > 0 && (
-              <div className="banner" style={{ marginTop: "var(--s-5)", display: "block" }}>
-                <strong className="row" style={{ gap: 8 }}>
-                  <RefreshCw size={15} /> {data.degraded.length} component
+            {data.degraded.length > 0 ? (
+              <div className="alert" data-tone="warn" style={{ marginTop: "var(--s-5)", display: "block" }}>
+                <strong className="row alert__title" style={{ gap: 8 }}>
+                  <RefreshCw size={15} aria-hidden="true" /> {data.degraded.length} component
                   {data.degraded.length > 1 ? "s are" : " is"} running degraded
                 </strong>
                 <ul style={{ margin: "var(--s-3) 0 0", paddingLeft: "1.1rem" }}>
@@ -174,30 +224,32 @@ export function Dashboard() {
                   ))}
                 </ul>
               </div>
+            ) : (
+              <div className="alert" data-tone="ok" style={{ marginTop: "var(--s-5)" }}>
+                <span className="alert__title">Nothing is degraded.</span> Every component is
+                serving its primary path.
+              </div>
             )}
           </>
         )}
-      </section>
 
-      <section style={{ marginBottom: "var(--s-6)" }}>
-        <p className="label" style={{ marginBottom: "var(--s-3)" }}>
-          Go to
-        </p>
-        <div className="grid2">
-          {NAV.map((item) => (
-            <Link key={item.to} to={item.to} className="featurecard">
-              <span className="featurecard__icon">
-                <item.icon size={17} />
-              </span>
-              <span className="featurecard__label">{item.label}</span>
-              <p className="featurecard__detail">{item.detail}</p>
-              <span className="featurecard__go">
-                Open <ArrowRight size={13} />
-              </span>
-            </Link>
-          ))}
-        </div>
+        {!loading && !error && !data && (
+          <EmptyState
+            inline
+            title="No health reading yet"
+            body="The analysis service answered, but with nothing to report."
+          />
+        )}
       </section>
+    </div>
+  );
+}
+
+function Metric({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="stat">
+      <div className="stat__n mono">{value}</div>
+      <p className="stat__l">{label}</p>
     </div>
   );
 }

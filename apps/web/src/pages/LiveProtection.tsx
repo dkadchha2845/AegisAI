@@ -32,6 +32,8 @@ import {
   ShieldCheck,
   Wifi,
 } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState, ErrorState, Skeleton } from "@/components/ui/States";
 import * as api from "@/lib/api";
 import type { Hotspot, VerifyResult } from "@/lib/api";
 import type { ManipulationMap, AegisEvent, StateFrame } from "@/types/contract";
@@ -337,22 +339,42 @@ export function LiveProtection() {
 
   if (phase === "report") {
     return (
-      <div className="page">
-        <header className="page__head">
-          <h1 className="page__title">Your investigation</h1>
-        </header>
-        {reportBusy ? (
-          <div className="card shield-empty">
-            <span className="spinner" style={{ width: 26, height: 26 }} />
-            <p className="muted">Putting your call together…</p>
-          </div>
-        ) : reportError || !report ? (
-          <div className="card shield-empty">
-            <ShieldCheck size={28} />
-            <p className="muted">{reportError ?? "Nothing to show for this call."}</p>
+      <div className="page page--wide">
+        <PageHeader
+          title="Your investigation"
+          lede="Everything AegisAI heard, what it concluded, and what to do about it."
+          actions={
             <button className="btn2" onClick={resetAll}>
               Start another call
             </button>
+          }
+        />
+        {reportBusy ? (
+          <div className="card">
+            <Skeleton lines={5} label="Putting your call together" />
+          </div>
+        ) : reportError ? (
+          <div className="card">
+            <ErrorState
+              inline
+              title="We couldn't put this call together"
+              onRetry={resetAll}
+              retryLabel="Start another call"
+              detail={reportError}
+            />
+          </div>
+        ) : !report ? (
+          <div className="card">
+            <EmptyState
+              icon={<ShieldCheck size={20} />}
+              title="Nothing to show for this call"
+              body="No speech was captured, so there is no evidence to reason about."
+              action={
+                <button className="btn2" onClick={resetAll}>
+                  Start another call
+                </button>
+              }
+            />
           </div>
         ) : (
           <>
@@ -374,47 +396,53 @@ export function LiveProtection() {
 
   if (phase === "idle") {
     return (
-      <div className="page">
-        <header className="page__head">
-          <h1 className="page__title">Live Protection</h1>
-          <p className="page__lede">
-            On a suspicious call right now? Put it on speaker and let AegisAI listen. It names the
-            danger as it unfolds, warns you the moment it turns, and tells you exactly what to say.
-          </p>
-        </header>
+      <div className="page page--doc">
+        <PageHeader
+          title="Live Protection"
+          lede="On a suspicious call right now? Put it on speaker and let AegisAI listen. It names the danger as it unfolds, warns you the moment it turns, and tells you exactly what to say."
+        />
 
-        <div className="live-lang">
-          <label className="label" htmlFor="live-lang">
-            Call language
-          </label>
-          <select
-            id="live-lang"
-            className="field"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-          >
-            <option value="hi-IN">Hindi / Hinglish</option>
-            <option value="en-IN">English</option>
-            <option value="en-US">English (US)</option>
-          </select>
-          <span className="small faint">
-            Sets what AegisAI listens for. Hindi / Hinglish handles code-mixed calls.
-          </span>
-        </div>
+        {/* The idle screen used to be three loose controls at the top of an
+            otherwise empty page. It is a setup step, so it looks like one. */}
+        <div className="card">
+          <h2 className="card__title">Before you start</h2>
 
-        <div className="live-start">
-          <button className="btn2 btn2--primary btn2--lg" onClick={startMic}>
-            <Mic size={18} /> Start Live Protection
-          </button>
-          <button className="btn2 btn2--lg" onClick={startDemo}>
-            <Play size={16} /> Try a demo call
-          </button>
+          <div className="live-lang">
+            <label className="fieldlabel" htmlFor="live-lang">
+              Call language
+            </label>
+            <select
+              id="live-lang"
+              className="field"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+            >
+              <option value="hi-IN">Hindi / Hinglish</option>
+              <option value="en-IN">English</option>
+              <option value="en-US">English (US)</option>
+            </select>
+            <span className="small faint">
+              Sets what AegisAI listens for. Hindi / Hinglish handles code-mixed calls.
+            </span>
+          </div>
+
+          <ol className="steplist">
+            <li>Put the call on speakerphone — AegisAI listens through your device microphone.</li>
+            <li>
+              The audio is transcribed on your device and never uploaded. Works best in Chrome.
+            </li>
+            <li>Watch the threat reading. It will tell you what to say, and when to hang up.</li>
+          </ol>
+
+          <div className="live-start">
+            <button className="btn2 btn2--primary btn2--lg" onClick={startMic}>
+              <Mic size={18} aria-hidden="true" /> Start Live Protection
+            </button>
+            <button className="btn2 btn2--lg" onClick={startDemo}>
+              <Play size={16} aria-hidden="true" /> Try a demo call
+            </button>
+          </div>
         </div>
-        <p className="small faint" style={{ marginTop: "var(--s-4)" }}>
-          AegisAI listens through your device microphone, so put the call on speakerphone. Nothing is
-          uploaded — the audio is transcribed on your device. Works best in Chrome. Not sure? Try the
-          demo call first.
-        </p>
       </div>
     );
   }

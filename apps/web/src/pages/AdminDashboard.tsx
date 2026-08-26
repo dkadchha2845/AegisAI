@@ -16,20 +16,15 @@ import {
   Database,
   MapPin,
   ShieldCheck,
-  UserPlus,
   Users,
 } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { AuditLog, Organizations, Users as UserRoster } from "@/pages/admin/Tenancy";
+import { formatInr } from "@/lib/format";
 import * as api from "@/lib/api";
-import type { AuthUser, Health, IntelStats, ModelCard, ScamPoint } from "@/lib/api";
+import type { Health, IntelStats, ModelCard, ScamPoint } from "@/lib/api";
 import { ScamMap } from "@/components/map/ScamMap";
 import { useAuth } from "@/context/AuthContext";
-
-const INR = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-  notation: "compact",
-});
 
 export function AdminDashboard() {
   const { user } = useAuth();
@@ -38,21 +33,9 @@ export function AdminDashboard() {
   const [stats, setStats] = useState<IntelStats | null>(null);
   const [points, setPoints] = useState<ScamPoint[]>([]);
   const [scamTypes, setScamTypes] = useState<{ id: string; name: string }[]>([]);
-  const [users, setUsers] = useState<AuthUser[]>([]);
-  const [usersError, setUsersError] = useState<string | null>(null);
 
-  // add-user form
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("analyst");
-  const [adding, setAdding] = useState(false);
-  const [addMsg, setAddMsg] = useState<string | null>(null);
-
-  const loadUsers = async () => {
-    const res = await api.listUsers();
-    if (res.ok) setUsers(res.data.users);
-    else setUsersError(res.error);
-  };
+  // The user roster and its add-user form live in pages/admin/Tenancy, which
+  // owns the only copy. This page used to fetch and render its own.
 
   useEffect(() => {
     void (async () => {
@@ -70,51 +53,34 @@ export function AdminDashboard() {
         setScamTypes(p.data.scam_types);
       }
     })();
-    void loadUsers();
   }, []);
-
-  const addUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAdding(true);
-    setAddMsg(null);
-    const res = await api.createUser(email, password, role);
-    setAdding(false);
-    if (res.ok) {
-      setAddMsg(`Added ${res.data.user.email} (${res.data.user.role}).`);
-      setEmail("");
-      setPassword("");
-      void loadUsers();
-    } else {
-      setAddMsg(res.error);
-    }
-  };
 
   const scores = card?.evaluation?.scores ?? {};
   const kpis = [
-    { label: "Users", value: users.length || "—", icon: Users },
     { label: "Fraud cases", value: stats?.total_cases ?? "—", icon: Database },
     { label: "Active clusters", value: stats?.active_clusters ?? "—", icon: Activity },
+    { label: "Linked entities", value: stats?.linked_entities ?? "—", icon: Users },
     {
+      // Same formatter as the operations screen. These two pages used to
+      // render the same field as "₹12Cr" and "₹12.16 cr", which reads as two
+      // different measurements of two different things.
       label: "Loss tracked",
-      value: stats ? INR.format(stats.total_loss_inr) : "—",
+      value: stats ? formatInr(stats.total_loss_inr) : "—",
       icon: ShieldCheck,
     },
   ];
 
   return (
     <div className="page">
-      <header className="page__head">
-        <h1 className="page__title">Admin dashboard</h1>
-        <p className="page__lede">
-          Platform health, fraud intelligence, and access control.
-          {user?.role && (
-            <>
-              {" "}
-              Signed in as <span className="chip" data-tone="ok">{user.role}</span>
-            </>
-          )}
-        </p>
-      </header>
+      <PageHeader
+        title="Administration"
+        lede="Platform health, fraud intelligence, and access control."
+        actions={
+          user?.role ? (
+            <span className="chip chip--caps" data-tone="ok">{user.role}</span>
+          ) : undefined
+        }
+      />
 
       {/* KPI row */}
       <div className="admin-kpis">
@@ -239,71 +205,12 @@ export function AdminDashboard() {
         )}
       </div>
 
-      {/* User management */}
-      <div className="card">
-        <h2 className="card__title">
-          <Users size={16} /> User management
-        </h2>
-        {usersError ? (
-          <p className="small" data-tone="bad" style={{ color: "var(--critical)" }}>
-            {usersError}
-          </p>
-        ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Org</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id}>
-                  <td className="mono">{u.email}</td>
-                  <td>
-                    <span className="chip" data-tone={u.role === "owner" || u.role === "admin" ? "ok" : undefined}>
-                      {u.role}
-                    </span>
-                  </td>
-                  <td className="small muted">{u.org_id ?? "—"}</td>
-                  <td className="small">{u.disabled ? "disabled" : "active"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-
-        <form className="admin-adduser" onSubmit={addUser}>
-          <input
-            className="field"
-            type="email"
-            placeholder="new.user@org"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            className="field"
-            type="password"
-            placeholder="temporary password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-          />
-          <select className="field" value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="viewer">viewer</option>
-            <option value="analyst">analyst</option>
-            <option value="admin">admin</option>
-          </select>
-          <button className="btn2 btn2--primary" disabled={adding} type="submit">
-            <UserPlus size={15} /> {adding ? "Adding…" : "Add user"}
-          </button>
-        </form>
-        {addMsg && <p className="small faint" style={{ marginTop: 8 }}>{addMsg}</p>}
-      </div>
+      {/* Tenancy — organisations, users, audit trail. One implementation,
+          shared with nothing else: `/reports` used to render a second user
+          table with a second add-user form beside this one. */}
+      <Organizations />
+      <UserRoster />
+      <AuditLog />
     </div>
   );
 }

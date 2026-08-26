@@ -17,6 +17,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Eye, EyeOff, Lock, ShieldCheck, User } from "lucide-react";
+import { Logo } from "@/components/brand/Logo";
 import { ThreatField } from "@/components/three/ThreatField";
 import { useAuth } from "@/context/AuthContext";
 import { useTilt } from "@/hooks/useTilt";
@@ -87,8 +88,7 @@ export function Login() {
       <div className="login__panel" ref={panelRef}>
         <div className="login__content">
           <div className="login__brand" data-reveal>
-            <span className="brand2__mark" aria-hidden="true" />
-            <span className="login__brandname">AegisAI</span>
+            <Logo size={24} />
           </div>
           <h1 className="login__title" data-reveal>Sign in to the console</h1>
           <p className="login__sub" data-reveal>

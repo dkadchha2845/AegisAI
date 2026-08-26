@@ -11,7 +11,17 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html, body, #root { height: 100%; }
+/* A document by default. Only the live console is a fixed instrument
+   viewport, and it opts in via `html[data-layout="fixed"]` (app.css).
+
+   The default used to be the other way round — `overflow: hidden` here, and
+   every scrolling route had to opt back in. That made an unset layout mode
+   fail *closed*: the landing and the login screen render outside the AppShell,
+   which was the only thing that set the attribute, so both were stuck at
+   viewport height with everything below the fold clipped and unreachable.
+   Defaulting to "scrolls" means a route that forgets to declare itself is
+   merely ordinary, not broken. */
+html, body, #root { min-height: 100%; }
 
 body {
   margin: 0;
@@ -23,8 +33,19 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-synthesis: none;
-  overflow: hidden;           /* the console is a fixed viewport, never scrolls */
+  overflow-x: hidden;         /* never a horizontal scrollbar; vertical is free */
 }
+
+/* Form controls do not inherit the document font in any browser: left alone,
+   every <button>, <input>, <select> and <textarea> silently renders in Arial
+   at 13.33px. Icon-only buttons hid this for a while; the moment one grows a
+   text label it lands in the wrong typeface. */
+button, input, select, textarea, optgroup {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+button { background: none; border: none; }
 
 /* Tabular figures everywhere numbers change in place, so digits don't
    jitter the layout as they count. This is the single biggest thing that
@@ -76,10 +97,35 @@ html.js .fx-fade { opacity: 0; }
 html.js .fx-rise { opacity: 0; transform: translateY(14px); }
 html.js .fx-revealed { opacity: 1 !important; transform: none !important; }
 
+/* Reduced motion, from either source.
+   The media query is the floor — respecting the OS setting is not optional.
+   `html[data-motion="reduced"]` is the in-app override, for a person who
+   wants this interface still without changing a machine-wide setting they may
+   not control. `data-motion="full"` is the reverse override, and only ever
+   set by an explicit choice on the Profile screen.
+
+   Nothing in this interface is *communicated* by motion, so switching it off
+   costs the reader nothing: every reading, label and control stays exactly
+   where it is. */
 @media (prefers-reduced-motion: reduce) {
-  html.js .fx-fade, html.js .fx-rise { opacity: 1; transform: none; }
-  *, *::before, *::after {
+  html:not([data-motion="full"]).js .fx-fade,
+  html:not([data-motion="full"]).js .fx-rise { opacity: 1; transform: none; }
+  html:not([data-motion="full"]) *,
+  html:not([data-motion="full"]) *::before,
+  html:not([data-motion="full"]) *::after {
     animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
+}
+html[data-motion="reduced"].js .fx-fade,
+html[data-motion="reduced"].js .fx-rise { opacity: 1; transform: none; }
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
 }

@@ -6,40 +6,11 @@
    pipeline and the hotspot map, because there it *is* the information.
    =========================================================================== */
 
-/* --- shared: risk-coloured chips + bars ---------------------------------- */
-/* Cluster risk (LOW/MEDIUM/HIGH/CRITICAL) and call level (CALM…CRITICAL) both
-   land here, so a single ramp keeps the map bubble, the cluster card, and the
-   verdict chip all speaking the same colour language. */
-.chip[data-risk="CRITICAL"] { color: var(--critical); border-color: color-mix(in srgb, var(--critical) 45%, transparent); }
-.chip[data-risk="HIGH"] { color: var(--high); border-color: color-mix(in srgb, var(--high) 42%, transparent); }
-.chip[data-risk="MEDIUM"],
-.chip[data-risk="ELEVATED"] { color: var(--elevated); border-color: color-mix(in srgb, var(--elevated) 40%, transparent); }
-.chip[data-risk="WATCH"] { color: var(--watch); border-color: color-mix(in srgb, var(--watch) 40%, transparent); }
-.chip[data-risk="LOW"],
-.chip[data-risk="CALM"] { color: var(--calm); border-color: color-mix(in srgb, var(--calm) 38%, transparent); }
-
-.chip--link { cursor: pointer; background: transparent; font: inherit; }
-.chip--link:hover { border-color: var(--accent); color: var(--accent); }
-
-.eyebrow {
-  font-size: var(--t-2xs);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--accent);
-  margin: 0 0 var(--s-1);
-}
-
-.fieldlabel {
-  display: block;
-  font-size: var(--t-2xs);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  margin-bottom: 6px;
-}
-
-.stat__n[data-tone="bad"] { color: var(--critical); }
-.stat__n[data-tone="warn"] { color: var(--elevated); }
+/* --- shared: risk-coloured bars ------------------------------------------ */
+/* Cluster risk (LOW/MEDIUM/HIGH/CRITICAL) and call level (CALM…CRITICAL) share
+   one ramp so the map bubble, the cluster card and the verdict chip speak the
+   same colour language. The chip vocabulary itself lives in primitives.css. */
+/* .eyebrow, .fieldlabel and the stat tile live in primitives.css. */
 
 .routeloading {
   display: flex; align-items: center; justify-content: center; gap: var(--s-3);
@@ -67,7 +38,7 @@
   align-items: start;
   margin-bottom: var(--s-6);
 }
-@media (max-width: 940px) { .intel-split { grid-template-columns: 1fr; } }
+@media (max-width: 940px) { .intel-split { grid-template-columns: minmax(0, 1fr); } }
 
 .intel-clusters { position: sticky; top: calc(var(--topbar-h) + var(--s-4)); }
 @media (max-width: 940px) { .intel-clusters { position: static; } }
@@ -103,7 +74,7 @@
   display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   gap: var(--s-5); margin-top: var(--s-6);
 }
-@media (max-width: 940px) { .intel-geo-grid { grid-template-columns: 1fr; } }
+@media (max-width: 940px) { .intel-geo-grid { grid-template-columns: minmax(0, 1fr); } }
 
 .centralrow, .searchrow { display: flex; align-items: center; gap: var(--s-2); padding: 6px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .centralrow:last-child, .searchrow:last-child { border-bottom: none; }
@@ -114,7 +85,7 @@
 .linkrow__via { width: 100%; margin: 2px 0 0; overflow-wrap: anywhere; }
 
 .factorrow { display: grid; grid-template-columns: 150px minmax(60px, 1fr) auto; gap: var(--s-3); align-items: center; }
-@media (max-width: 620px) { .factorrow { grid-template-columns: 1fr; gap: 4px; } }
+@media (max-width: 620px) { .factorrow { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
 
 /* force graph */
 .fgraph { position: relative; width: 100%; margin-top: var(--s-3); border-radius: var(--r-sm); background: radial-gradient(120% 120% at 50% 0, var(--bg-raised), var(--panel)); border: 1px solid var(--line); overflow: hidden; }
@@ -144,11 +115,24 @@
 /* ======================================================================== *
  *  MODULE 3 — Citizen shield
  * ======================================================================== */
-.shield-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-5); align-items: start; }
-@media (max-width: 940px) { .shield-grid { grid-template-columns: 1fr; } }
-
-.shield-empty { display: grid; place-items: center; gap: var(--s-3); min-height: 260px; text-align: center; color: var(--ink-faint); }
-.shield-empty svg { color: var(--ink-faint); }
+/* The form and the answer are not the same size. A 50/50 split gave the
+   three-field form as much room as a verdict with a dial, an evidence list,
+   six weighted signals and a map — so the form had dead space and the report
+   was squeezed into a column narrower than its own content. */
+.shield-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.75fr) minmax(0, 1.25fr);
+  gap: var(--s-5);
+  align-items: start;
+}
+/* Before a result exists there is nothing to weight towards, so the two
+   columns sit even and the page stays at document width. */
+.shield-grid:not([data-has-result]) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.shield-grid > .card:first-child { position: sticky; top: calc(var(--topbar-h) + var(--s-4)); }
+@media (max-width: 940px) {
+  .shield-grid, .shield-grid:not([data-has-result]) { grid-template-columns: minmax(0, 1fr); }
+  .shield-grid > .card:first-child { position: static; }
+}
 
 .panicbanner {
   border: 1px solid color-mix(in srgb, var(--critical) 55%, transparent);
@@ -192,8 +176,8 @@
 }
 .backlink:hover { color: var(--ink); }
 
-.task-picker { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); margin-top: var(--s-3); }
-@media (max-width: 560px) { .task-picker { grid-template-columns: 1fr; } }
+.task-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3); margin-top: var(--s-3); }
+@media (max-width: 560px) { .task-picker { grid-template-columns: minmax(0, 1fr); } }
 .task-tile {
   display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
   padding: var(--s-4); border-radius: var(--r-sm); border: 1px solid var(--line);
@@ -238,8 +222,8 @@
 .blocknumber-tip p { margin: var(--s-2) 0 0; }
 
 /* --- Citizen Home: task cards ---------------------------------------------- */
-.home-tasks { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); }
-@media (max-width: 720px) { .home-tasks { grid-template-columns: 1fr; } }
+.home-tasks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-4); }
+@media (max-width: 720px) { .home-tasks { grid-template-columns: minmax(0, 1fr); } }
 .home-task {
   display: flex; align-items: center; gap: var(--s-4);
   padding: var(--s-4) var(--s-5); border-radius: var(--r-md);
@@ -269,7 +253,30 @@
 .emergency-line[data-priority="primary"] { border-color: color-mix(in srgb, var(--critical) 55%, transparent); background: var(--critical-dim); }
 .emergency-line[data-priority="primary"] svg { color: var(--critical); }
 .emergency-line__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.emergency-line__value { margin-left: auto; font-size: var(--t-lg); font-weight: 700; font-variant-numeric: tabular-nums; flex: none; }
+.emergency-line__value {
+  margin-left: auto;
+  font-size: var(--t-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+  overflow-wrap: anywhere;
+}
+/* "1930" and "cybercrime.gov.in" are the same slot and wildly different
+   widths. On a phone the long one pushed the whole row 54px past the viewport
+   — and this is the screen someone opens while money is moving, so it is the
+   last place to lose a control off the right edge. Below 560px the value
+   drops onto its own line instead of fighting the label for the row. */
+@media (max-width: 560px) {
+  .emergency-line { flex-wrap: wrap; }
+  .emergency-line__text { flex: 1 1 100%; order: 1; }
+  .emergency-line__value {
+    margin-left: 0;
+    order: 2;
+    flex: 1 1 100%;
+    font-size: var(--t-md);
+  }
+  .emergency-line > svg { order: 0; }
+}
 
 /* --- Profile: analyst tool list -------------------------------------------- */
 .tool-list { display: grid; gap: var(--s-2); margin-top: var(--s-3); }
@@ -296,8 +303,8 @@
 }
 
 .live-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-4); }
-.live-grid--2 { grid-template-columns: 1fr 1fr; }
-@media (max-width: 860px) { .live-grid, .live-grid--2 { grid-template-columns: 1fr; } }
+.live-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 860px) { .live-grid, .live-grid--2 { grid-template-columns: minmax(0, 1fr); } }
 
 .live-stat { display: flex; flex-direction: column; gap: 6px; }
 .live-stat__v { font-family: var(--font-display); font-size: var(--t-lg); font-weight: 700; letter-spacing: -0.01em; }
@@ -352,9 +359,9 @@
   gap: var(--s-4);
   align-items: start;
 }
-.cockpit-grid--wide { grid-template-columns: 1fr 1fr; margin-top: var(--s-4); }
-@media (max-width: 1080px) { .cockpit-grid { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 720px) { .cockpit-grid, .cockpit-grid--wide { grid-template-columns: 1fr; } }
+.cockpit-grid--wide { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: var(--s-4); }
+@media (max-width: 1080px) { .cockpit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) { .cockpit-grid, .cockpit-grid--wide { grid-template-columns: minmax(0, 1fr); } }
 
 .cockpit-col { display: grid; gap: var(--s-4); align-content: start; min-width: 0; }
 
@@ -393,13 +400,13 @@
 
 /* --- Admin dashboard -------------------------------------------------------- */
 .admin-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-4); margin-bottom: var(--s-4); }
-@media (max-width: 820px) { .admin-kpis { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 820px) { .admin-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .admin-kpi { display: flex; flex-direction: column; gap: 4px; }
 .admin-kpi__icon { color: var(--accent); }
 .admin-kpi__v { font-family: var(--font-display); font-size: var(--t-xl); font-weight: 700; letter-spacing: -0.02em; }
 
-.admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); margin-bottom: var(--s-4); }
-@media (max-width: 820px) { .admin-grid { grid-template-columns: 1fr; } }
+.admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-4); margin-bottom: var(--s-4); }
+@media (max-width: 820px) { .admin-grid { grid-template-columns: minmax(0, 1fr); } }
 
 .admin-status { list-style: none; margin: var(--s-2) 0 0; padding: 0; display: grid; gap: var(--s-2); }
 .admin-status__row { display: grid; grid-template-columns: 10px 120px 1fr; gap: var(--s-2); align-items: center; }
@@ -415,10 +422,7 @@
 .admin-score__bar i { display: block; height: 100%; background: var(--accent); transform-origin: left; transition: transform var(--t-med) var(--ease-out); }
 .admin-limits summary { cursor: pointer; color: var(--ink-muted); }
 
-.admin-table { width: 100%; border-collapse: collapse; margin-top: var(--s-2); font-size: var(--t-sm); }
-.admin-table th { text-align: left; font-size: var(--t-2xs); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--ink-faint); font-weight: 500; padding: 6px 8px; border-bottom: 1px solid var(--line); }
-.admin-table td { padding: 8px; border-bottom: 1px solid var(--line); }
-.admin-table tr:last-child td { border-bottom: 0; }
+/* .admin-table is the shared .table in primitives.css. */
 
 .admin-adduser { display: flex; gap: var(--s-2); flex-wrap: wrap; margin-top: var(--s-4); padding-top: var(--s-4); border-top: 1px solid var(--line); }
 .admin-adduser .field { flex: 1; min-width: 140px; }
@@ -444,27 +448,53 @@
 
 /* ======================================================================== *
  *  LANDING
+ *
+ *  The narrative spine: problem → engine → how it thinks → the agents →
+ *  a real frame of a real call → the arc → correlation → explainability →
+ *  security → act.
+ *
+ *  Colour rule, restated because the landing is where it is easiest to break:
+ *  the threat ramp appears where a threat is being described and nowhere
+ *  else. The three modules used to carry red / amber / green top borders and
+ *  the section heading was a red-to-green gradient — which meant the word
+ *  "Detect" wore the same red as a CRITICAL verdict two screens away. They
+ *  are neutral now; the ramp is spent on the call card, the arc, and the
+ *  score, which are the only places it carries a reading.
  * ======================================================================== */
 .landing { position: relative; }
+.landing__sentinel { position: absolute; top: 0; left: 0; width: 1px; height: 24px; pointer-events: none; }
 
 .lhead {
   position: sticky; top: 0; z-index: var(--z-sticky);
   display: flex; align-items: center; gap: var(--s-5);
   padding: var(--s-3) var(--s-5);
+  /* Transparent over the hero, settling into a bar once the page moves.
+     Both states are declared here so the transition has somewhere to go. */
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition:
+    background var(--t-med) var(--ease-out),
+    border-color var(--t-med) var(--ease-out),
+    backdrop-filter var(--t-med) var(--ease-out);
+}
+.lhead[data-scrolled] {
   background: color-mix(in srgb, var(--bg) 82%, transparent);
   backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--line);
+  border-bottom-color: var(--line);
 }
-.lhead__brand { display: flex; align-items: center; gap: var(--s-2); text-decoration: none; color: inherit; }
-.lhead__name { font-family: var(--font-display); font-weight: 900; letter-spacing: 0.16em; font-size: var(--t-sm); }
-.lhead__nav { display: flex; gap: var(--s-5); margin-left: var(--s-5); }
-.lhead__nav a { color: var(--ink-muted); text-decoration: none; font-size: var(--t-sm); }
+.lhead__brand { display: flex; align-items: center; text-decoration: none; color: inherit; }
+.lhead__nav { display: flex; gap: var(--s-5); margin-left: var(--s-4); }
+.lhead__nav a {
+  color: var(--ink-muted); text-decoration: none; font-size: var(--t-sm);
+  transition: color var(--t-fast);
+}
 .lhead__nav a:hover { color: var(--ink); }
 .lhead__right { margin-left: auto; display: flex; align-items: center; gap: var(--s-2); }
-@media (max-width: 720px) { .lhead__nav { display: none; } .lhead__enter span { display: none; } }
+@media (max-width: 940px) { .lhead__nav { display: none; } }
+@media (max-width: 560px) { .lhead__signin { display: none; } }
 
-.hero--landing { min-height: calc(100vh - 54px); }
-.hero__title--xl { font-size: clamp(2.8rem, 7vw, 5.4rem); }
+.hero--landing { min-height: calc(100vh - 56px); }
+.hero__title--xl { font-size: clamp(2.6rem, 6.4vw, 5rem); }
 .hero__pills { display: flex; gap: var(--s-3); justify-content: center; flex-wrap: wrap; margin-top: var(--s-5); }
 .hero__pills span {
   padding: 6px var(--s-3); border-radius: var(--r-pill);
@@ -472,46 +502,202 @@
   backdrop-filter: blur(8px); font-size: var(--t-2xs); color: var(--ink-muted);
 }
 
-.btn2--lg { height: 46px; padding: 0 var(--s-5); font-size: var(--t-base); border-radius: var(--r-md); }
+/* The engine in five words. A row of nodes on a hairline, which is the same
+   shape as the pipeline section further down — the hero states the structure
+   the page then walks through. */
+.flow {
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-5);
+  list-style: none;
+  margin: var(--s-6) 0 0;
+  padding: 0;
+}
+.flow__node {
+  position: relative;
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  font-size: var(--t-2xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.flow__node + .flow__node::before {
+  content: "";
+  position: absolute; left: calc(var(--s-5) * -1 + 2px); top: 50%;
+  width: calc(var(--s-5) - 10px); height: 1px;
+  background: var(--line-strong);
+}
+.flow__dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent);
+  opacity: calc(0.35 + var(--i) * 0.16);
+}
 
 .section--tight { padding-top: var(--s-6); padding-bottom: var(--s-6); }
-.grad {
-  background: linear-gradient(90deg, var(--high), var(--elevated) 45%, var(--calm));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
+.section--cta { padding-bottom: var(--s-8); }
 
-.pipeline {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-4);
-  position: relative;
-  perspective: 1100px;   /* depth reference for the per-card 3D tilt */
+/* --- Problem: the attack surface ---------------------------------------- */
+.surface {
+  display: flex; flex-wrap: wrap; gap: var(--s-2);
+  list-style: none; margin: 0; padding: 0;
 }
-@media (max-width: 860px) { .pipeline { grid-template-columns: 1fr; perspective: none; } }
+.surface__item {
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--panel);
+  font-size: var(--t-sm);
+  color: var(--ink-muted);
+  transition: border-color var(--t-fast), color var(--t-fast);
+}
+.surface__item svg { color: var(--ink-faint); transition: color var(--t-fast); }
+.surface__item:hover { border-color: var(--line-strong); color: var(--ink); }
+.surface__item:hover svg { color: var(--accent); }
+
+/* --- Solution: the three modules ---------------------------------------- */
+.pipeline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); position: relative; }
+@media (max-width: 860px) { .pipeline { grid-template-columns: minmax(0, 1fr); } }
 .pipestep {
   position: relative;
   padding: var(--s-5);
   border: 1px solid var(--line);
-  border-top: 2px solid var(--m-color, var(--accent));
+  border-top: 2px solid var(--line-strong);
   border-radius: var(--r-md);
   background: var(--panel);
-  /* transform is driven by the JS tilt (useTilt) — keep it off the CSS
-     transition or the two ease against each other and it lags the cursor. */
-  transition: border-color var(--t-fast), box-shadow var(--t-med) var(--ease-out);
+  transition: border-color var(--t-fast), background var(--t-fast);
 }
-.pipestep:hover {
-  border-color: color-mix(in srgb, var(--m-color) 50%, var(--line));
-  box-shadow: 0 22px 48px -24px color-mix(in srgb, var(--m-color) 60%, transparent);
+.pipestep:hover { border-color: var(--line-strong); background: var(--panel-hover); }
+.pipestep:hover { border-top-color: var(--accent); }
+.pipestep__n { position: absolute; top: var(--s-4); right: var(--s-4); font-size: var(--t-md); color: var(--ink-faint); }
+.pipestep__icon {
+  display: grid; place-items: center; width: 42px; height: 42px;
+  border-radius: var(--r-sm); background: var(--accent-dim); color: var(--accent);
 }
-.pipestep__n { position: absolute; top: var(--s-4); right: var(--s-4); font-size: var(--t-md); color: var(--m-color); opacity: 0.5; }
-.pipestep__icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: var(--r-sm); background: color-mix(in srgb, var(--m-color) 14%, transparent); color: var(--m-color); }
 .pipestep__verb { font-family: var(--font-display); font-size: var(--t-lg); font-weight: 800; margin-top: var(--s-3); letter-spacing: -0.02em; }
 .pipestep__name { font-size: var(--t-xs); color: var(--ink-faint); letter-spacing: 0.1em; }
 .pipestep__body { margin: var(--s-3) 0; color: var(--ink-muted); font-size: var(--t-sm); line-height: 1.65; }
-.pipestep__link { display: inline-flex; align-items: center; gap: 6px; color: var(--m-color); text-decoration: none; font-size: var(--t-sm); }
+.pipestep__link { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); text-decoration: none; font-size: var(--t-sm); }
 .pipestep__arrow { position: absolute; right: calc(var(--s-4) * -1 - 5px); top: 50%; transform: translateY(-50%); color: var(--ink-faint); font-size: var(--t-lg); z-index: 1; }
 @media (max-width: 860px) { .pipestep__arrow { display: none; } }
 
-.landing__cta { margin-top: var(--s-6); }
-.landing__foot { margin-top: var(--s-5); }
+/* --- How it thinks ------------------------------------------------------ */
+.think { position: relative; list-style: none; margin: 0; padding: 0 0 0 var(--s-6); display: grid; gap: var(--s-4); }
+.think__rail {
+  position: absolute; left: 15px; top: 6px; bottom: 6px;
+  width: 1px;
+  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 20%, transparent));
+  transform-origin: top;
+}
+.think__step { position: relative; display: grid; grid-template-columns: auto 1fr; gap: var(--s-4); align-items: start; }
+.think__n {
+  position: relative; z-index: 1;
+  display: grid; place-items: center;
+  width: 30px; height: 30px; margin-left: -30px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  font-size: var(--t-2xs);
+  color: var(--ink-faint);
+}
+.think__name { margin: 5px 0 0; font-size: var(--t-base); font-weight: 600; font-family: var(--font-display); }
+.think__body { margin: 4px 0 0; color: var(--ink-muted); font-size: var(--t-sm); line-height: 1.65; max-width: 68ch; }
+
+/* --- Agent tiers -------------------------------------------------------- */
+.tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--s-4); }
+.tier { padding: var(--s-4); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); }
+.tier__head { display: flex; align-items: center; gap: var(--s-3); }
+.tier__icon { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: var(--r-sm); background: var(--accent-dim); color: var(--accent); }
+.tier__name { margin: 0; font-size: var(--t-base); font-weight: 600; font-family: var(--font-display); }
+.tier__n { margin-left: auto; font-size: var(--t-xs); color: var(--ink-faint); }
+.tier__body { margin: var(--s-3) 0; font-size: var(--t-sm); line-height: 1.6; color: var(--ink-muted); }
+.tier__agents { list-style: none; margin: 0; padding: var(--s-3) 0 0; border-top: 1px solid var(--line); display: grid; gap: 6px; }
+.tier__agents li { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: var(--t-2xs); color: var(--ink-faint); }
+
+/* --- Live call card ------------------------------------------------------
+   The one place on the landing where the threat ramp is spent, because it is
+   the one place a threat is being reported. */
+.callcard {
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  overflow: hidden;
+}
+.callcard__head {
+  display: flex; align-items: center; gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-raised);
+  font-size: var(--t-xs);
+}
+.callcard__live { display: inline-flex; align-items: center; gap: 6px; color: var(--critical); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; font-size: var(--t-2xs); }
+.callcard__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--critical); animation: pulse 2s var(--ease-in-out) infinite; }
+.callcard__num { color: var(--ink-muted); }
+.callcard__t { margin-left: auto; color: var(--ink); }
+.callcard__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+@media (max-width: 820px) { .callcard__grid { grid-template-columns: minmax(0, 1fr); } }
+.callcard__left { padding: var(--s-5); min-width: 0; }
+.callcard__right { padding: var(--s-5); border-left: 1px solid var(--line); background: var(--bg-raised); min-width: 0; }
+@media (max-width: 820px) { .callcard__right { border-left: 0; border-top: 1px solid var(--line); } }
+.callcard__quote {
+  margin: var(--s-2) 0 0;
+  font-size: var(--t-base);
+  line-height: 1.65;
+  color: var(--ink);
+}
+.tactics { list-style: none; margin: var(--s-2) 0 0; padding: 0; display: grid; gap: var(--s-2); }
+.tactics li { display: grid; grid-template-columns: 84px 1fr; gap: var(--s-3); align-items: center; }
+.tactics__label { font-size: var(--t-xs); color: var(--ink-muted); }
+.tactics__track { height: 4px; border-radius: var(--r-pill); background: var(--line); overflow: hidden; }
+.tactics__track i { display: block; height: 100%; border-radius: var(--r-pill); background: var(--high); }
+.callcard__score { display: flex; align-items: baseline; gap: var(--s-3); }
+.callcard__num2 { font-size: var(--t-2xl); font-weight: 700; line-height: 1; letter-spacing: -0.04em; color: var(--high); }
+.callcard__stage { margin: var(--s-3) 0 0; font-size: var(--t-sm); color: var(--ink-muted); }
+.callcard__stage strong { color: var(--ink); }
+.callcard__forecast { margin: var(--s-2) 0 0; font-size: var(--t-sm); color: var(--ink-muted); line-height: 1.6; }
+.callcard__forecast strong { color: var(--accent); }
+.callcard__coach { margin-top: var(--s-4); padding-top: var(--s-4); border-top: 1px solid var(--line); }
+.callcard__coachline { margin: var(--s-2) 0 0; font-size: var(--t-sm); font-weight: 600; line-height: 1.6; color: var(--ink); }
+.callcard__src { margin: var(--s-2) 0 0; font-size: var(--t-2xs); color: var(--ink-faint); line-height: 1.55; }
+
+/* --- Two-column story blocks -------------------------------------------- */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-7); align-items: center; }
+@media (max-width: 940px) { .split { grid-template-columns: minmax(0, 1fr); gap: var(--s-5); } }
+.split--rev > *:first-child { order: 2; }
+@media (max-width: 940px) { .split--rev > *:first-child { order: 0; } }
+.statband--tall { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.whycard { padding: var(--s-5); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); }
+.whylist { list-style: none; margin: var(--s-3) 0 0; padding: 0; display: grid; gap: var(--s-2); }
+.whylist li {
+  display: grid; grid-template-columns: 18px 1fr; gap: var(--s-2);
+  font-size: var(--t-sm); line-height: 1.6; color: var(--ink-muted);
+}
+.whylist li::before { content: "✓"; color: var(--calm); font-weight: 700; }
+.whycard__foot { margin: var(--s-4) 0 0; padding-top: var(--s-3); border-top: 1px solid var(--line); font-size: var(--t-xs); color: var(--ink-faint); line-height: 1.6; }
+
+/* --- Closing CTA and footer --------------------------------------------- */
+.cta {
+  padding: var(--s-8) var(--s-5);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background:
+    radial-gradient(120% 140% at 50% 0%, var(--accent-dim), transparent 60%),
+    var(--panel);
+  text-align: center;
+}
+.cta__title { margin: 0; font-family: var(--font-display); font-size: var(--t-xl); font-weight: 800; letter-spacing: var(--tracking-tight); }
+.cta__body { margin: var(--s-3) auto var(--s-5); max-width: 46ch; color: var(--ink-muted); }
+
+.lfoot {
+  display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap;
+  max-width: var(--w-app);
+  margin: 0 auto;
+  padding: var(--s-5);
+  border-top: 1px solid var(--line);
+}
+.lfoot__note { margin: 0; font-size: var(--t-xs); color: var(--ink-faint); }
+.lfoot__note a { color: var(--accent); }
 
 /* ======================================================================== *
  *  LOGIN
@@ -563,7 +749,7 @@
 
 /* Role quick-sign-in — the RBAC workflow, one tap each. */
 .login__roles {
-  display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2);
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2);
   margin-bottom: var(--s-4);
 }
 .login__role {
@@ -581,8 +767,7 @@
 .login__role svg { color: var(--accent); }
 .login__rolename { font-weight: 600; font-size: var(--t-sm); text-transform: capitalize; }
 .login__rolemail { font-size: 10px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; max-width: 100%; white-space: nowrap; }
-.login__brand { display: flex; align-items: center; gap: var(--s-2); margin-bottom: var(--s-4); }
-.login__brandname { font-family: var(--font-display); font-weight: 900; letter-spacing: 0.16em; }
+.login__brand { display: flex; align-items: center; margin-bottom: var(--s-5); }
 .login__title { font-family: var(--font-display); font-size: var(--t-lg); font-weight: 700; margin: 0; letter-spacing: var(--tracking-tight); }
 .login__sub { margin: var(--s-2) 0 var(--s-5); color: var(--ink-muted); font-size: var(--t-sm); }
 .login__note {
@@ -634,3 +819,30 @@
 }
 .assistant__body { margin: var(--s-3) 0 var(--s-2); font-size: var(--t-base); line-height: 1.7; color: var(--ink); }
 .assistant__foot { margin: 0; }
+
+/* A numbered "here is what happens" list, used where a screen is about to ask
+   for a permission or start something the reader should understand first. */
+.steplist { list-style: none; counter-reset: s; margin: var(--s-4) 0; padding: 0; display: grid; gap: var(--s-3); }
+.steplist li {
+  counter-increment: s;
+  display: grid; grid-template-columns: 22px 1fr; gap: var(--s-3);
+  font-size: var(--t-sm); line-height: 1.6; color: var(--ink-muted);
+}
+.steplist li::before {
+  content: counter(s);
+  display: grid; place-items: center;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  font-family: var(--font-mono);
+  font-size: var(--t-2xs);
+  color: var(--ink-faint);
+}
+.live-lang { display: grid; gap: 6px; max-width: 360px; margin-bottom: var(--s-2); }
+.live-lang .field { max-width: 260px; }
+
+/* Faint ink on a tinted row measures under AA for the same reason it does
+   inside an alert: the tint lifts the background luminance. The primary
+   helpline row is the one place this appears outside `.alert`. */
+.emergency-line[data-priority="primary"] .faint,
+.emergency-line[data-priority="primary"] .small { color: var(--ink-muted); }

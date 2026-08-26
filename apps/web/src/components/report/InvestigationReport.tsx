@@ -29,6 +29,7 @@ import {
 import * as api from "@/lib/api";
 import type { AnalysisResult, VerifyResult } from "@/lib/api";
 import { ScamMap } from "@/components/map/ScamMap";
+import { RiskDial } from "@/components/ui/RiskDial";
 import { pretty, stageColor } from "@/lib/stages";
 
 export const VERDICT_COPY: Record<string, string> = {
@@ -115,25 +116,42 @@ export function InvestigationReport({
             </div>
           </div>
         )}
+        {/* The dial and the sentence sit side by side, because they answer the
+            same question at two resolutions: the reading, and what it means.
+            The score used to be a bare number floated to the right of the
+            headline, which gave no sense of where it sat on the scale.
+
+            Confidence rides with the dial rather than living in its own
+            section four scrolls down — "92, and we are 80% sure" is one
+            thought, and splitting it let the first half travel alone. */}
         <div className="verdict" data-v={result.verdict}>
-          <div className="verdict__head">
-            <span className="verdict__label">
-              <AlertTriangle size={16} style={{ marginRight: 6, verticalAlign: -2 }} />
-              {VERDICT_COPY[result.verdict] ?? result.verdict}
-            </span>
-            <span className="verdict__score">{Math.round(result.score)}</span>
+          <div className="verdict__dial">
+            <RiskDial
+              score={result.score}
+              level={result.level}
+              confidence={confidence.pct / 100}
+              size={148}
+            />
           </div>
-          <p className="verdict__summary">{result.summary}</p>
-          <div className="row" style={{ gap: 6, marginTop: "var(--s-3)" }}>
-            <span className="chip" data-risk={result.level}>
-              {result.level}
-            </span>
-            {result.stage !== "BENIGN" && <span className="chip">Stage: {result.stage.replace(/_/g, " ").toLowerCase()}</span>}
-            {result.intel.known_infrastructure && (
-              <span className="chip" data-tone="bad">
-                ⚠ Known fraud infrastructure
+          <div className="verdict__body">
+            <h2 className="verdict__label">
+              <AlertTriangle size={18} aria-hidden="true" />
+              {VERDICT_COPY[result.verdict] ?? result.verdict}
+            </h2>
+            <p className="verdict__summary">{result.summary}</p>
+            <div className="row" style={{ gap: 6, marginTop: "var(--s-3)" }}>
+              <span className="chip chip--caps" data-risk={result.level}>
+                {result.level}
               </span>
-            )}
+              {result.stage !== "BENIGN" && (
+                <span className="chip">Stage: {result.stage.replace(/_/g, " ").toLowerCase()}</span>
+              )}
+              {result.intel.known_infrastructure && (
+                <span className="chip" data-tone="bad">
+                  Known fraud infrastructure
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </section>
@@ -183,16 +201,19 @@ export function InvestigationReport({
         </div>
       </section>
 
-      {/* 3. How confident are we? */}
+      {/* 3. What the confidence figure is made of.
+           The percentage itself now rides with the dial in section 1 — this
+           section is the breakdown behind it, which is the part that needs
+           the room. */}
       <section id="confidence" data-reveal>
         <div className="card confidence-card">
           <h2 className="card__title">
-            <CheckCircle2 size={16} /> How confident are we?
+            <CheckCircle2 size={16} /> What our confidence rests on
           </h2>
-          <div className="confidence-card__pct mono">{confidence.pct}%</div>
           <p className="small muted" style={{ marginTop: 0 }}>
-            {confidence.signals.filter((s) => s.met).length} of {confidence.signals.length} independent signals agree —
-            this reflects how many separate checks corroborate each other, separate from the verdict score above.
+            {confidence.signals.filter((s) => s.met).length} of {confidence.signals.length} independent signals agree.
+            This is how many separate checks corroborate each other — a different
+            question from how bad the thing is, which is the score above.
           </p>
           <ul className="confidence-signals">
             {confidence.signals.map((s) => (
@@ -220,8 +241,11 @@ export function InvestigationReport({
             <>
               {result.intel.matched_entities.length > 0 && (
                 <div className="row" style={{ gap: 6, marginBottom: result.intel.clusters.length ? "var(--s-3)" : 0 }}>
-                  {result.intel.matched_entities.map((e) => (
-                    <span key={`${e.kind}-${e.value}`} className="chip" data-tone="bad">
+                  {/* The index is part of the key: the same entity can be
+                      matched by more than one cluster, so `kind-value` alone
+                      collided and React warned about duplicate children. */}
+                  {result.intel.matched_entities.map((e, i) => (
+                    <span key={`${e.kind}-${e.value}-${i}`} className="chip" data-tone="bad">
                       {e.kind}: {e.value} · {e.case_count} case{e.case_count === 1 ? "" : "s"}
                     </span>
                   ))}

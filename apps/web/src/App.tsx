@@ -13,7 +13,7 @@
  * `StateFrame`, animating off discrete events rather than diffing frames.
  */
 
-import { lazy, Suspense, useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, type ReactNode } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -23,6 +23,7 @@ import "@/styles/global.css";
 import "@/styles/console.css";
 import "@/styles/app.css";
 import "@/styles/modules.css";
+import "@/styles/primitives.css";
 
 const Login = lazy(() => import("@/pages/Login").then((m) => ({ default: m.Login })));
 const CitizenHome = lazy(() => import("@/pages/CitizenHome").then((m) => ({ default: m.CitizenHome })));
@@ -65,6 +66,35 @@ const TITLES: Record<string, string> = {
   "/model": "Model card · AegisAI",
 };
 
+/** Routes that are a fixed instrument viewport rather than a scrolling
+ *  document. Everything else — including the landing and the login screen,
+ *  which render outside the AppShell — is a document. */
+const FIXED_ROUTES = ["/analyst/console", "/console"];
+
+/**
+ * Layout mode, set for *every* route.
+ *
+ * This used to live in the AppShell, which could only ever speak for the
+ * routes it wrapped: the landing and login rendered outside it, so they never
+ * got a mode at all, and leaving the console for the landing left the previous
+ * "fixed" behind. Both directions are fixed by hoisting the switch to the
+ * router.
+ *
+ * useLayoutEffect, not useEffect, and it matters: React runs child effects
+ * before parent effects, so with useEffect a page's own entrance animations
+ * initialise while the document is still at viewport height. GSAP ScrollTrigger
+ * then caches start positions against a page that cannot scroll, and every
+ * scroll-triggered reveal stays at opacity 0 forever.
+ */
+function LayoutMode() {
+  const { pathname } = useLocation();
+  useLayoutEffect(() => {
+    const fixed = FIXED_ROUTES.some((r) => pathname.startsWith(r));
+    document.documentElement.dataset.layout = fixed ? "fixed" : "flow";
+  }, [pathname]);
+  return null;
+}
+
 function RouteTitle() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -75,9 +105,19 @@ function RouteTitle() {
 
 function Loading() {
   return (
-    <div className="routeloading">
-      <span className="spinner" /> Loading…
+    <div className="routeloading" role="status" aria-live="polite">
+      <span className="spinner" aria-hidden="true" /> Loading…
     </div>
+  );
+}
+
+/** First thing in the tab order on every route: a keyboard user should not
+ *  have to walk the whole sidebar to reach the page they just opened. */
+function SkipLink() {
+  return (
+    <a className="skiplink" href="#main">
+      Skip to content
+    </a>
   );
 }
 
@@ -125,7 +165,9 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+          <LayoutMode />
           <RouteTitle />
+          <SkipLink />
           <Suspense fallback={<Loading />}>
             <Routes>
               <Route path="/" element={<Home />} />

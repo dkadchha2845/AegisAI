@@ -37,6 +37,8 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/States";
 import * as api from "@/lib/api";
 import type { Hotspot, VerifyResult } from "@/lib/api";
 import { CITY_OPTIONS } from "@/lib/stages";
@@ -241,17 +243,16 @@ export function Shield() {
   };
 
   return (
-    <div className="page shield">
-      <header className="page__head">
-        <h1 className="page__title">Analyze something</h1>
-        <p className="page__lede">
-          Got a call or message that feels off? We'll investigate it the way
-          an analyst would — a verdict, why we think so, and exactly what to
-          do next. Nothing you enter leaves your control.
-        </p>
-      </header>
+    /* The page widens once there is a verdict to show. Before that it is a
+       form, and a form stretched across 1480px is harder to fill in, not
+       easier. */
+    <div className={`page shield ${result || investigating ? "page--wide" : ""}`}>
+      <PageHeader
+        title="Analyze something"
+        lede="Got a call or message that feels off? We'll investigate it the way an analyst would — a verdict, why we think so, and exactly what to do next. Nothing you enter leaves your control."
+      />
 
-      <div className="shield-grid">
+      <div className="shield-grid" data-has-result={result || investigating ? "" : undefined}>
         {/* input */}
         <div className="card">
           {entry === "picker" && (
@@ -424,9 +425,12 @@ export function Shield() {
         {/* result */}
         <div className="stack">
           {!investigating && !result && (
-            <div className="card shield-empty">
-              <ShieldCheck size={30} />
-              <p className="muted">Your verdict and next steps will appear here.</p>
+            <div className="card">
+              <EmptyState
+                icon={<ShieldCheck size={20} />}
+                title="No verdict yet"
+                body="Once you send something over, this is where the answer lands — how risky it is, the signals behind that, and exactly what to do next."
+              />
             </div>
           )}
 

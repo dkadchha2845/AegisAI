@@ -72,6 +72,19 @@
   --t-med: 320ms;
   --t-slow: 620ms;
 
+  /* ---- Measure & containers -------------------------------------------
+     Every route used to invent its own width, so the same H1 landed at a
+     different x on each screen. Three widths, chosen by content shape:
+     `--w-doc` for prose-led pages, `--w-app` for the standard workspace,
+     `--w-wide` for graph/table screens that need the room. */
+  --w-doc: 820px;
+  --w-app: 1180px;
+  --w-wide: 1480px;
+
+  /* ---- Focus --------------------------------------------------------- */
+  --focus-ring: 2px;
+  --focus-offset: 2px;
+
   /* ---- Z ---------------------------------------------------------------- */
   --z-base: 1;
   --z-sticky: 50;
@@ -96,9 +109,16 @@ html[data-theme="dark"] {
   --line: rgba(255, 255, 255, 0.07);   /* hairline borders */
   --line-strong: rgba(255, 255, 255, 0.13);
 
-  --ink: #e8eaed;          /* primary text */
-  --ink-muted: #9198a3;    /* secondary */
-  --ink-faint: #5f6672;    /* tertiary, axis labels */
+  /* Three inks, and all three are legible. The tertiary was #5f6672, which
+     measures 3.22:1 on `--panel` — under the 4.5:1 WCAG AA floor for normal
+     text, and it carries every caption, stat label and micro-label in the
+     product, so the failure was everywhere at once rather than in one corner.
+     #7d8492 measures 4.96:1 on panel and 5.30:1 on bg and still reads as the
+     quietest of the three. */
+  --ink: #e8eaed;          /* primary text                     — 15.4:1 on panel */
+  --ink-muted: #9198a3;    /* secondary                        —  6.4:1 on panel */
+  --ink-faint: #7d8492;    /* tertiary, captions, axis labels  —  5.0:1 on panel */
+  --ink-ghost: #5f6672;    /* non-text only: hairlines, disabled glyphs */
 
   /* Single UI accent — steel blue. Used for focus, active states, the
      forecast chip. Never for threat. */
@@ -123,6 +143,23 @@ html[data-theme="dark"] {
   --safe: var(--calm);
   --danger: var(--critical);
 
+  /* Text-on-tint variants.
+     A ramp colour has two jobs: it fills things (meter arcs, bars, map
+     bubbles) and it *writes* things (an 11px chip label on a 12% wash of
+     itself). Those two jobs want different luminance, and on a light ground
+     they want it badly enough that one value cannot serve both — a fill that
+     reads correctly on white is 3:1 as text, and text dark enough to pass is
+     a muddy fill.
+
+     On near-black the two coincide, so here the writing variants simply are
+     the ramp. The light theme overrides them. */
+  --calm-ink: var(--calm);
+  --watch-ink: var(--watch);
+  --elevated-ink: var(--elevated);
+  --high-ink: var(--high);
+  --critical-ink: color-mix(in srgb, var(--critical) 86%, white);
+  --accent-ink: var(--accent);
+
   /* Shadows: tight and dark. No coloured glows. */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
@@ -146,26 +183,52 @@ html[data-theme="light"] {
   --line-strong: rgba(15, 23, 42, 0.18);
 
   --ink: #16181d;
-  --ink-muted: #5b6472;
-  --ink-faint: #8a93a1;
+  --ink-muted: #5b6472;    /* 6.0:1 on white */
+  --ink-faint: #666e7d;    /* was #8a93a1 — 3.1:1, under AA. Now 5.1:1. */
+  --ink-ghost: #8a93a1;
 
-  --accent: #2f6fe4;
-  --accent-dim: rgba(47, 111, 228, 0.12);
+  /* The ramp, deepened for paper.
+     A colour that reads well as a glow on near-black does not read at all as
+     11px text on white: measured against `--panel-hover` (#f1f3f6, the darkest
+     surface any of these sits on), the previous set came in at calm 3.2,
+     watch 2.9, elevated 3.0, high 3.9 and accent 4.4 — every one of them under
+     the 4.5:1 AA floor, which meant every status chip, every risk badge and
+     the degraded pill in the sidebar failed in light mode. These clear 4.55:1
+     on that same darkest surface and better than 5:1 on white, while staying
+     recognisably the same five steps.
 
-  --calm: #1e9e6f;
-  --watch: #8f9a24;
-  --elevated: #c4841d;
-  --high: #d7502c;
-  --critical: #d92b23;
+     They are darker than a designer would pick by eye on white, and that is
+     the point: this theme exists for a projector in a bright room, where the
+     ambient wash costs more contrast than the numbers here suggest. */
+  --accent: #2d69d9;       /* 5.1:1 on white */
+  --accent-dim: rgba(45, 105, 217, 0.12);
 
-  --calm-dim: rgba(30, 158, 111, 0.12);
-  --watch-dim: rgba(143, 154, 36, 0.12);
-  --elevated-dim: rgba(196, 132, 29, 0.12);
-  --high-dim: rgba(215, 80, 44, 0.12);
-  --critical-dim: rgba(217, 43, 35, 0.13);
+  --calm: #187d58;         /* 5.1:1 */
+  --watch: #6b731b;        /* 5.1:1 */
+  --elevated: #956416;     /* 5.1:1 */
+  --high: #bf4727;         /* 5.1:1 */
+  --critical: #d22a22;     /* 5.1:1 */
+
+  --calm-dim: rgba(24, 125, 88, 0.12);
+  --watch-dim: rgba(107, 115, 27, 0.12);
+  --elevated-dim: rgba(149, 100, 22, 0.12);
+  --high-dim: rgba(191, 71, 39, 0.12);
+  --critical-dim: rgba(210, 42, 34, 0.13);
 
   --safe: var(--calm);
   --danger: var(--critical);
+
+  /* Text-on-tint, deepened again. These are measured against the worst case
+     the interface actually produces — the colour's own 12% wash over
+     `--panel-hover` — and clear 4.6:1 there and better than 6:1 on white.
+     They are used only where the ramp writes; the fill values above are
+     unchanged, so meters and map bubbles keep their saturation. */
+  --calm-ink: #156d4d;
+  --watch-ink: #5e6618;
+  --elevated-ink: #835813;
+  --high-ink: #a83e22;
+  --critical-ink: #b6241d;
+  --accent-ink: #275cbd;
 
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
   --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.10);

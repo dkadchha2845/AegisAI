@@ -49,7 +49,7 @@
 }
 .scam-map__segbtn:last-child { border-right: 0; }
 .scam-map__segbtn:hover { color: var(--ink); background: var(--panel-hover); }
-.scam-map__segbtn[data-on] { color: var(--accent); background: var(--accent-dim); }
+.scam-map__segbtn[data-on] { color: var(--accent-ink); background: var(--accent-dim); }
 
 .scam-map__locate {
   margin-left: auto;
@@ -59,7 +59,7 @@
   font: inherit;
   font-size: var(--t-xs);
   padding: 5px 12px;
-  color: var(--accent);
+  color: var(--accent-ink);
   background: var(--accent-dim);
   border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
   border-radius: var(--r-sm);

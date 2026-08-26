@@ -7,8 +7,15 @@
 .shell {
   height: 100%;
   display: grid;
+  /* `minmax(0, 1fr)`, not the implicit `auto`. An auto-sized grid column is
+     as wide as its widest item's min-content, so one row of nowrap transport
+     buttons made the whole console 441px wide inside a 375px viewport — and
+     because the fixed layout clips rather than scrolls, everything past the
+     edge was gone rather than merely off-screen. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr;
   position: relative;
+  min-width: 0;
   will-change: transform;
 }
 
@@ -32,22 +39,19 @@
   align-items: center;
   gap: var(--s-5);
   padding: var(--s-3) var(--s-5);
+  min-width: 0;
   border-bottom: 1px solid var(--line);
   background: var(--bg-raised);
 }
 
-.brand { display: flex; align-items: baseline; gap: var(--s-3); }
-.brand__mark {
-  width: 9px; height: 9px; border-radius: 2px;
-  background: var(--threat-color);
-  transition: background var(--t-med) var(--ease-out);
-  align-self: center;
-}
+.brand { display: flex; align-items: center; gap: var(--s-2); }
 .brand__name {
+  margin: 0;
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  font-weight: 900;
+  letter-spacing: 0.12em;
   font-size: var(--t-sm);
+  text-transform: uppercase;
 }
 .brand__tag { font-size: var(--t-xs); color: var(--ink-faint); }
 
@@ -82,7 +86,7 @@
 }
 .btn:hover { color: var(--ink); border-color: var(--line-strong); background: var(--panel-hover); }
 .btn--ghost { background: transparent; min-width: 34px; }
-.btn[data-active] { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+/* .btn and its active state live in primitives.css. */
 
 /* -------------------------------- grid ---------------------------------- */
 
@@ -92,6 +96,7 @@
   gap: var(--s-4);
   padding: var(--s-4) var(--s-5);
   min-height: 0;             /* lets children scroll instead of the page */
+  min-width: 0;              /* ...and lets the grid shrink below its content */
 }
 .col { display: flex; flex-direction: column; gap: var(--s-4); min-height: 0; }
 .col--left { overflow: hidden; }
@@ -104,7 +109,7 @@
 .pad { padding: var(--s-4); }
 
 @media (max-width: 1100px) {
-  .grid { grid-template-columns: 1fr 1fr; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .col--left { grid-column: 1 / -1; max-height: 40vh; }
 }
 
@@ -316,4 +321,89 @@
   color: var(--ink-faint); white-space: nowrap;
   transition: color var(--t-fast);
 }
-.scrub__mark:hover { color: var(--accent); }
+.scrub__mark:hover { color: var(--accent-ink); }
+
+/* ==========================================================================
+   Responsive — the console below 1100px, and on a phone.
+
+   The audit found this screen unusable on a 375px viewport: 90 elements
+   overflowed the right edge with `.content` clipping in fixed layout, so the
+   transport controls, the scrubber marks and the whole right column were not
+   merely cramped but *unreachable*. The three-column instrument was simply
+   being squeezed, which is the one thing a responsive pass must not do.
+
+   Below 900px it stops being a fixed viewport and becomes a document: the
+   columns stack in reading order (transcript → meter → intelligence), each
+   panel sizes to its content, and the page scrolls. An instrument that fits
+   three columns of dense readout on a desk does not fit them in a hand, and
+   pretending otherwise costs the reader the readout.
+   ========================================================================== */
+
+/* The middle and right columns scroll independently on the desktop layout,
+   with the scrollbar hidden — which left ~100px of the narration panel and
+   the coercion spark silently below the fold at a 720px viewport, with no
+   affordance saying so. A hairline fade at the bottom edge is the affordance:
+   it appears only while there is more to reach. */
+.col--mid, .col--right {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+.col--mid::-webkit-scrollbar, .col--right::-webkit-scrollbar { width: 6px; }
+.col--mid::-webkit-scrollbar-thumb, .col--right::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: var(--r-pill);
+}
+
+@media (max-width: 900px) {
+  /* The desktop half of this switch is scoped to min-width: 901px in app.css,
+     so nothing here has to undo anything — the two never both apply. */
+  .shell { height: auto; }
+
+  .topbar {
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-3);
+    padding: var(--s-3) var(--s-4);
+  }
+  .brand { flex: 1 1 100%; min-width: 0; flex-wrap: wrap; }
+  .callmeta { margin-left: 0; flex: 1 1 100%; min-width: 0; }
+  .callmeta__time { margin-left: auto; }
+  /* The transport controls scroll horizontally inside their own row instead
+     of running off the screen. */
+  .controls {
+    flex: 1 1 100%;
+    min-width: 0;            /* without this a flex item refuses to shrink */
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .controls .btn { flex: none; }
+  .controls::-webkit-scrollbar { height: 0; }
+
+  .scrub { padding: var(--s-2) var(--s-4) var(--s-4); }
+  /* Beat labels overlap badly under ~600px of track; the slider itself still
+     works, and the beats are reachable by dragging it. */
+  .scrub__marks { display: none; }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--s-4);
+    gap: var(--s-4);
+  }
+  /* Reading order on a phone: what was said, how bad it is, why. */
+  .col--left { grid-column: auto; max-height: 60vh; order: 1; }
+  .col--mid { order: 2; }
+  .col--right { order: 3; }
+  .col, .col--mid, .col--right {
+    overflow: visible;      /* the document scrolls now, not the column */
+    max-height: none;
+  }
+  .transcript__list { max-height: 44vh; }
+}
+
+@media (max-width: 560px) {
+  .topbar { padding: var(--s-3); }
+  .brand__name { font-size: var(--t-xs); }
+  .callmeta { font-size: var(--t-2xs); flex-wrap: wrap; }
+  .grid { padding: var(--s-3); }
+  .meter__svg { max-width: 190px; }
+}

@@ -23,6 +23,8 @@ import {
   ScanLine,
   Sparkles,
 } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/States";
 import * as api from "@/lib/api";
 import type { AnalysisResult } from "@/lib/api";
 import { pretty, stageColor } from "@/lib/stages";
@@ -137,15 +139,10 @@ export function Analyzer() {
 
   return (
     <div className="page">
-      <header className="page__head">
-        <p className="label">Investigate</p>
-        <h1 className="page__title">Analyzer</h1>
-        <p className="page__lede">
-          Paste a message, a call transcript, or a UPI ID — or drop a transcript
-          file. You get a score, the signals behind it, per-line stage labels,
-          and the sources every claim rests on.
-        </p>
-      </header>
+      <PageHeader
+        title="Analyzer"
+        lede="Paste a message, a call transcript, or a UPI ID — or drop a transcript file. You get a score, the signals behind it, per-line stage labels, and the sources every claim rests on."
+      />
 
       <div className="analyzer">
         <section className="stack">
@@ -228,6 +225,7 @@ export function Analyzer() {
                 <textarea
                   className="field"
                   rows={mode === "upi" ? 3 : 10}
+                  aria-label={mode === "upi" ? "UPI ID or payment payload" : "Message or transcript"}
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   placeholder={
@@ -241,21 +239,23 @@ export function Analyzer() {
 
             {mode !== "file" && mode !== "image" && (
               <>
-                <div className="row" style={{ marginTop: "var(--s-4)" }}>
-                  <label className="small faint" style={{ flex: "1 1 220px" }}>
-                    Who do they claim to be? (optional — enables the strongest
-                    UPI check)
+                {/* Both fields label in one line and sit on one baseline. The
+                    left label used to wrap to two lines while "Channel" stayed
+                    on one, which put the two inputs at different heights. */}
+                <div className="row row--fields" style={{ marginTop: "var(--s-4)" }}>
+                  <label className="fieldpair" style={{ flex: "1 1 220px" }}>
+                    <span className="fieldlabel">Who do they claim to be?</span>
                     <input
                       className="field"
-                      style={{ marginTop: 6 }}
                       value={claimed}
                       onChange={(e) => setClaimed(e.target.value)}
                       placeholder="e.g. RBI, SBI, Delhi Cyber Crime"
                     />
+                    <span className="fieldhint">Optional — enables the strongest UPI check.</span>
                   </label>
                   {mode === "text" && (
-                    <label className="small faint" style={{ flex: "0 1 160px" }}>
-                      Channel
+                    <label className="fieldpair" style={{ flex: "0 1 180px" }}>
+                      <span className="fieldlabel">Channel</span>
                       <select
                         className="field"
                         style={{ marginTop: 6 }}
@@ -338,10 +338,14 @@ export function Analyzer() {
 
           {!result && !error && (
             <div className="card">
-              <p className="muted small" style={{ margin: 0 }}>
-                Results appear here. Nothing is uploaded anywhere but your own
-                local analysis service — there is no third-party call in this
-                path unless you tick the plain-language explanation.
+              <EmptyState
+                icon={<ScanLine size={20} />}
+                title="No analysis yet"
+                body="Paste something on the left and the raw detector output lands here — the score, every driver weight behind it, and the per-line stage labels."
+              />
+              <p className="small faint" style={{ margin: 0, textAlign: "center" }}>
+                Nothing leaves your own analysis service on this path unless you tick
+                the plain-language explanation.
               </p>
             </div>
           )}

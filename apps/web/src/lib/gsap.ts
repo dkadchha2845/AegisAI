@@ -8,12 +8,20 @@
  */
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motionIsReduced } from "@/hooks/useMotionPreference";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export const prefersReducedMotion =
-  typeof window !== "undefined" &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+/**
+ * Whether to animate at all.
+ *
+ * Reads the app's own preference as well as the OS media query, because a
+ * person can want the system default globally and want *this* interface still
+ * — and on a borrowed machine they cannot change the OS setting at all.
+ * `applyStoredMotionPreference()` runs before React mounts, so the attribute
+ * is already on `<html>` when this module is first imported.
+ */
+export const prefersReducedMotion = motionIsReduced();
 
 /** How long an entrance is allowed to take before the failsafe forces it.
  *  Comfortably longer than the longest stagger (~1.1s) and short enough that

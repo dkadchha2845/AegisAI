@@ -1,34 +1,48 @@
 /**
- * Persistent chrome: top bar, collapsible sidebar, command palette, outlet.
+ * Persistent chrome: sidebar, top bar, command palette, outlet.
  *
- * The shell owns two things worth calling out:
+ * The shell owns four things worth calling out:
  *
  * **Live status is global.** Whether the API is reachable, and what is
- * degraded, is shown in the top bar on every screen rather than being
- * discovered per-page. A user who does not know the classifier fell back to
- * the lexical model will read its output as if it were the good one.
+ * degraded, is shown on every screen rather than being discovered per-page. A
+ * user who does not know the classifier fell back to the lexical model will
+ * read its output as if it were the good one. It sits in the sidebar footer
+ * rather than the top bar because the top bar's right-hand cluster had to
+ * hide it below 620px — the viewport where a degraded backend is *most*
+ * likely, since that is the phone someone reaches for mid-call.
  *
- * **The console route opts out of scrolling.** It is a fixed instrument
- * viewport; everything else is a document. Rather than fighting
- * `body { overflow: hidden }` from global.css, the shell sets a data attribute
- * and the stylesheet keys off it.
+ * **The sidebar owns the left column outright**, top to bottom, so the logo
+ * has one home and the page title gets the top bar's leading edge. Previously
+ * the brand sat in the top bar next to a tagline and the page's own H1
+ * repeated the location two rows below it.
+ *
+ * **Navigation is role-aware.** `navGroups` returns one group for a citizen
+ * and two for an analyst, so an analyst's tools are in their navigation
+ * instead of behind a link on the Profile page.
+ *
+ * **Layout mode is not the shell's business.** The console is a fixed
+ * instrument viewport and everything else is a document, but the landing and
+ * the login screen render *outside* this component — so a shell-owned switch
+ * could never speak for them, and never unset itself on the way out. It lives
+ * in `LayoutMode` (App.tsx), one level up, where it covers every route.
  */
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   AlertTriangle,
   CircleDot,
-  Command,
   LogOut,
   Menu,
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
+  Search,
   Sun,
   X,
 } from "lucide-react";
-import { NAV } from "./nav";
+import { Logo, LogoMark } from "@/components/brand/Logo";
+import { navAll, navGroups, type NavRole } from "./nav";
 import { CommandPalette } from "./CommandPalette";
 import { RouteBoundary } from "./RouteBoundary";
 import { useTheme } from "@/context/ThemeContext";
@@ -36,16 +50,30 @@ import { useAuth } from "@/context/AuthContext";
 import { useHealth } from "@/hooks/useHealth";
 import { armFailsafe } from "@/lib/gsap";
 
-const FIXED_ROUTES = ["/analyst/console", "/console"];
+const COLLAPSE_KEY = "aegis:sidebar-collapsed";
 
 export function AppShell() {
   const location = useLocation();
   const { theme, toggle } = useTheme();
   const health = useHealth();
   const auth = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(
+    () => typeof localStorage !== "undefined" && localStorage.getItem(COLLAPSE_KEY) === "1",
+  );
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const burgerRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
+
+  const role = auth.user?.role as NavRole | undefined;
+  const groups = navGroups(role, auth.authed);
+  const here = navAll(role, auth.authed).find(
+    (i) => location.pathname === i.to || location.pathname.startsWith(`${i.to}/`),
+  );
+
+  useEffect(() => {
+    localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0");
+  }, [collapsed]);
 
   // Re-armed per route, not once per app load: each screen starts its own
   // entrance animation, so a failsafe that only ran at boot would not protect
@@ -61,30 +89,31 @@ export function AppShell() {
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [location.pathname]);
 
-  // Fixed-viewport routes vs scrolling document routes.
-  //
-  // useLayoutEffect, not useEffect, and it matters: React runs child effects
-  // before parent effects, so with useEffect a page's own entrance animations
-  // initialise while the document is still `overflow: hidden` at viewport
-  // height. GSAP ScrollTrigger then caches start positions against a page that
-  // cannot scroll, and every scroll-triggered reveal on Home stayed at
-  // opacity 0 forever. Setting the attribute during the layout phase means the
-  // document is already scrollable when children measure it.
-  useLayoutEffect(() => {
-    const fixed = FIXED_ROUTES.some((r) => location.pathname.startsWith(r));
-    document.documentElement.dataset.layout = fixed ? "fixed" : "flow";
-  }, [location.pathname]);
-
   // Close the mobile drawer on navigation — leaving it open over the page the
   // user just chose is the classic drawer bug.
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
 
+  // The drawer is a modal surface on mobile: the page behind it must not
+  // scroll, Escape must close it, and focus must land inside it and come back
+  // to the button that opened it.
   useEffect(() => {
-    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const first = drawerRef.current?.querySelector<HTMLElement>("a, button");
+    first?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileOpen(false);
+        burgerRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
     };
   }, [mobileOpen]);
 
@@ -103,96 +132,136 @@ export function AppShell() {
 
   return (
     <div className="shell2" data-collapsed={collapsed || undefined}>
+      <aside
+        className="sidebar"
+        ref={drawerRef}
+        data-open={mobileOpen || undefined}
+        aria-label="Main navigation"
+        aria-hidden={undefined}
+      >
+        <div className="sidebar__brand">
+          <NavLink to="/" className="sidebar__logo" aria-label="AegisAI home">
+            {collapsed ? <LogoMark size={22} /> : <Logo size={22} />}
+          </NavLink>
+          <button
+            className="iconbtn sidebar__collapse"
+            onClick={() => setCollapsed((c) => !c)}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-pressed={collapsed}
+          >
+            {collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
+          </button>
+        </div>
+
+        <nav className="sidebar__nav">
+          {groups.map((group) => (
+            <div className="sidebar__group" key={group.id}>
+              <p className="label sidebar__grouplabel">{group.label}</p>
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) => `sidenav ${isActive ? "sidenav--active" : ""}`}
+                  data-tooltip={`${item.label} — ${item.blurb}`}
+                >
+                  <item.icon size={17} className="sidenav__icon" aria-hidden="true" />
+                  <span className="sidenav__text">
+                    <span className="sidenav__label">{item.label}</span>
+                    <span className="sidenav__blurb">{item.blurb}</span>
+                  </span>
+                </NavLink>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        <div className="sidebar__foot">
+          <StatusPill loading={health.loading} online={!!health.data} degraded={degraded} />
+
+          {auth.authed && auth.user ? (
+            <div className="userchip">
+              <span className="userchip__avatar" aria-hidden="true">
+                {auth.user.email.slice(0, 1).toUpperCase()}
+              </span>
+              <span className="userchip__text">
+                <span className="userchip__email" data-tooltip={auth.user.email}>
+                  {auth.user.email}
+                </span>
+                {/* Both lines ellipsize in a 248px rail, so the full values
+                    ride along as tooltips rather than being lost. */}
+                <span
+                  className="userchip__role"
+                  data-tooltip={`${auth.user.role}${auth.org?.name ? ` · ${auth.org.name}` : ""}`}
+                >
+                  {auth.user.role}
+                  {auth.org?.name ? ` · ${auth.org.name}` : ""}
+                </span>
+              </span>
+              <button className="iconbtn userchip__out" onClick={auth.logout} aria-label="Sign out">
+                <LogOut size={15} />
+              </button>
+            </div>
+          ) : (
+            <NavLink className="btn2 btn2--sm btn2--block" to="/login">
+              Sign in to the console
+            </NavLink>
+          )}
+
+          <p className="sidebar__helpline">
+            Fraud in progress? Call <strong className="mono">1930</strong> or file at{" "}
+            <a href="https://cybercrime.gov.in" target="_blank" rel="noreferrer">
+              cybercrime.gov.in
+            </a>
+            .
+          </p>
+        </div>
+      </aside>
+
       <header className="topbar2">
         <button
           className="iconbtn topbar2__burger"
+          ref={burgerRef}
           onClick={() => setMobileOpen((o) => !o)}
           aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
+          aria-expanded={mobileOpen}
         >
           {mobileOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
 
-        <button
-          className="iconbtn topbar2__collapse"
-          onClick={() => setCollapsed((c) => !c)}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-        </button>
-
-        <NavLink to="/" className="brand2">
-          <span className="brand2__mark" aria-hidden="true" />
-          <span className="brand2__name">AegisAI</span>
-          <span className="brand2__tag">Your shield against scam calls</span>
+        {/* On mobile the sidebar is off-canvas, so the brand needs a home in
+            the bar; on desktop the sidebar already shows it and repeating it
+            here is the duplication this restructure removed. */}
+        <NavLink to="/" className="topbar2__brand" aria-label="AegisAI home">
+          <Logo size={19} />
         </NavLink>
 
+        <nav className="crumbs" aria-label="Breadcrumb">
+          <span className="crumbs__here">{here?.label ?? "AegisAI"}</span>
+          {here?.blurb && <span className="crumbs__blurb">{here.blurb}</span>}
+        </nav>
+
+        <button className="paletteHint" onClick={() => setPaletteOpen(true)}>
+          <Search size={14} aria-hidden="true" />
+          <span>Search or jump to…</span>
+          <kbd aria-hidden="true">⌘K</kbd>
+        </button>
+
         <div className="topbar2__right">
-          <button className="paletteHint" onClick={() => setPaletteOpen(true)}>
-            <Command size={13} />
-            <span>Jump to…</span>
-            <kbd>⌘K</kbd>
-          </button>
-
-          <StatusPill loading={health.loading} online={!!health.data} degraded={degraded} />
-
-          {auth.authed && auth.user && (
-            <span className="userchip" title={`${auth.user.email} · ${auth.org?.name ?? ""}`}>
-              <span className="userchip__role">{auth.user.role}</span>
-              <span className="userchip__email">{auth.user.email}</span>
-              <button
-                className="userchip__out"
-                onClick={auth.logout}
-                aria-label="Sign out"
-                title="Sign out"
-              >
-                <LogOut size={13} />
-              </button>
-            </span>
-          )}
-
-          <button className="iconbtn" onClick={toggle} aria-label="Toggle theme">
+          <button
+            className="iconbtn"
+            onClick={toggle}
+            aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+          >
             {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
           </button>
         </div>
       </header>
 
-      <aside className="sidebar" data-open={mobileOpen || undefined}>
-        <nav aria-label="Sections">
-          <div className="sidebar__group">
-            {NAV.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) => `sidenav ${isActive ? "sidenav--active" : ""}`}
-                title={collapsed ? `${item.label} — ${item.blurb}` : undefined}
-              >
-                <item.icon size={17} className="sidenav__icon" />
-                <span className="sidenav__text">
-                  <span className="sidenav__label">{item.label}</span>
-                  <span className="sidenav__blurb">{item.blurb}</span>
-                </span>
-              </NavLink>
-            ))}
-          </div>
-        </nav>
-
-        <div className="sidebar__foot">
-          <p className="label">Report fraud</p>
-          <p className="sidebar__helpline">
-            Call <strong className="mono">1930</strong> or file at{" "}
-            <a href="https://cybercrime.gov.in" target="_blank" rel="noreferrer">
-              cybercrime.gov.in
-            </a>
-            . Reporting within the first few hours is what gets money frozen.
-          </p>
-        </div>
-      </aside>
-
       {mobileOpen && (
         <div className="scrim" onClick={() => setMobileOpen(false)} aria-hidden="true" />
       )}
 
-      <main className="content">
+      <main className="content" id="main" tabIndex={-1}>
         {/* Scoped to the outlet: a page that throws costs you that page,
             not the navigation you would use to get away from it. */}
         <RouteBoundary resetKey={location.pathname}>
@@ -200,11 +269,20 @@ export function AppShell() {
         </RouteBoundary>
       </main>
 
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        items={navAll(role, auth.authed)}
+      />
     </div>
   );
 }
 
+/**
+ * The one place the product says out loud what is and is not working.
+ * `title` carries the specific tags (`clf:lexical_fallback`) so "3 degraded"
+ * is a starting point rather than the whole answer.
+ */
 function StatusPill({
   loading,
   online,
@@ -217,34 +295,35 @@ function StatusPill({
   if (loading) {
     return (
       <span className="statuspill" data-state="pending">
-        <CircleDot size={13} /> checking
+        <span className="statuspill__dot" aria-hidden="true" />
+        Checking systems
       </span>
     );
   }
   if (!online) {
     return (
       <span
-        className="statuspill"
+        className="statuspill tt"
         data-state="offline"
-        title="Start it with: .venv/bin/uvicorn services.api.main:app --port 8000"
+        data-tooltip="Start it with: .venv/bin/uvicorn services.api.main:app --port 8000"
       >
-        <AlertTriangle size={13} /> API offline
+        <AlertTriangle size={13} aria-hidden="true" />
+        API offline
       </span>
     );
   }
   if (degraded.length) {
-    // Naming the degradation rather than showing a generic warning. "Reduced"
-    // with a tooltip listing `clf:lexical_fallback` tells the user which half
-    // of the system is the weaker one.
     return (
-      <span className="statuspill" data-state="degraded" title={degraded.join("\n")}>
-        <AlertTriangle size={13} /> {degraded.length} degraded
+      <span className="statuspill tt" data-state="degraded" data-tooltip={degraded.join("\n")}>
+        <AlertTriangle size={13} aria-hidden="true" />
+        {degraded.length} running degraded
       </span>
     );
   }
   return (
     <span className="statuspill" data-state="ok">
-      <CircleDot size={13} /> all systems live
+      <CircleDot size={13} aria-hidden="true" />
+      All systems live
     </span>
   );
 }

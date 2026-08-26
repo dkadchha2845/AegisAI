@@ -11,7 +11,9 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { BookOpen, Search, Sparkles } from "lucide-react";
+import { BookOpen, ChevronDown, Search, Sparkles } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Skeleton } from "@/components/ui/States";
 import * as api from "@/lib/api";
 import type { KnowledgeAnswer } from "@/lib/api";
 
@@ -19,9 +21,42 @@ import type { KnowledgeAnswer } from "@/lib/api";
  *  it. The citation above the body already shows that heading, so printing it
  *  again reads as a duplication bug. */
 function stripHeading(text: string, source: string): string {
-  const heading = source.split("§").pop()?.trim();
+  const heading = sectionTitle(source);
   const [first, ...rest] = text.split("\n");
   return heading && first.trim() === heading ? rest.join("\n").trim() : text;
+}
+
+/**
+ * A citation id is `rbi-advisories.md § No agency conducts a "digital arrest"`.
+ * The half after the § is a sentence a person can read; the half before it is
+ * a filename in our repository.
+ *
+ * The audit found this page — the *citizen education* page — rendering the
+ * whole id in monospace as the headline of every row, so what someone
+ * frightened by a phone call actually saw was a list of
+ * `scam-playbooks.md § PAYMENT_EXECUTION`. The heading leads now and the
+ * filename becomes provenance underneath, which is what it is. It is not
+ * dropped: a citation you cannot trace is not a citation, and the same id is
+ * still what `stripHeading` and the retrieval layer key on.
+ */
+function sectionTitle(source: string): string {
+  const tail = source.split("§").pop()?.trim() ?? source;
+  if (tail === "intro") return "Overview";
+  // Stage labels arrive as contract constants (PAYMENT_EXECUTION).
+  if (/^[A-Z][A-Z_]+$/.test(tail)) {
+    const words = tail.toLowerCase().replace(/_/g, " ");
+    return words.charAt(0).toUpperCase() + words.slice(1);
+  }
+  return tail;
+}
+
+/** `rbi-advisories.md` → `RBI advisories`. Presentation only. */
+function docTitle(name: string): string {
+  const base = name.replace(/\.md$/, "").replace(/[-_]/g, " ");
+  const titled = base.charAt(0).toUpperCase() + base.slice(1);
+  return titled
+    .replace(/\brbi\b/gi, "RBI")
+    .replace(/\bupi\b/gi, "UPI");
 }
 
 const EXAMPLES = [
@@ -68,15 +103,11 @@ export function Knowledge() {
   }, []);
 
   return (
-    <div className="page">
-      <header className="page__head">
-        <h1 className="page__title">Learn</h1>
-        <p className="page__lede">
-          Ask anything about how these scams work and how real banks, police, and
-          government offices actually operate. Every answer is drawn from trusted
-          advisories and shows exactly where it came from — so you can trust it.
-        </p>
-      </header>
+    <div className="page page--doc">
+      <PageHeader
+        title="Learn"
+        lede="Ask anything about how these scams work and how real banks, police, and government offices actually operate. Every answer is drawn from trusted advisories and shows exactly where it came from — so you can check it."
+      />
 
       <div className="card">
         <div className="row" style={{ gap: "var(--s-2)" }}>
@@ -85,7 +116,12 @@ export function Knowledge() {
             style={{ flex: 1, gap: "var(--s-2)", minWidth: 240, flexWrap: "nowrap" }}
           >
             <Search size={16} className="faint" style={{ flex: "none" }} />
+            {/* A placeholder is not a label: it is gone the moment there is a
+                value, which is exactly when someone re-checking the field
+                needs to know what it is. */}
+            <label className="vh" htmlFor="kb-ask">Ask a question about these scams</label>
             <input
+              id="kb-ask"
               className="field"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -162,8 +198,9 @@ export function Knowledge() {
           <div className="stack">
             {result.citations.map((hit) => (
               <article className="kbhit" key={hit.source}>
-                <div className="kbhit__src">{hit.source}</div>
+                <div className="kbhit__head">{sectionTitle(hit.source)}</div>
                 <p className="kbhit__text">{stripHeading(hit.text, hit.source)}</p>
+                <div className="kbhit__src mono">{hit.source}</div>
               </article>
             ))}
             {!result.citations.length && (
@@ -177,27 +214,37 @@ export function Knowledge() {
       )}
 
       {!result && docs.length > 0 && (
-        <section style={{ marginTop: "var(--s-6)" }}>
+        <section style={{ marginTop: "var(--s-6)" }} aria-label="Guides">
           {docs.map((doc) => (
-            <div key={doc.name} style={{ marginBottom: "var(--s-6)" }}>
-              <p className="label row" style={{ gap: 8, marginBottom: "var(--s-3)" }}>
-                <BookOpen size={13} /> {doc.name} · {doc.sections.length} sections
+            <div key={doc.name} className="guide">
+              <h2 className="guide__title">
+                <BookOpen size={16} aria-hidden="true" /> {docTitle(doc.name)}
+              </h2>
+              <p className="guide__meta">
+                {doc.sections.length} section{doc.sections.length === 1 ? "" : "s"} ·
+                human-reviewed · cited by every verdict
               </p>
-              <div className="stack">
+              <div className="guide__list">
                 {doc.sections.map((section) => (
-                  <details className="kbhit" key={section.source}>
-                    <summary className="kbhit__src" style={{ cursor: "pointer" }}>
-                      {section.source}
+                  <details className="guide__item" key={section.source}>
+                    <summary>
+                      <span className="guide__q">{sectionTitle(section.source)}</span>
+                      <ChevronDown size={15} aria-hidden="true" className="guide__chev" />
                     </summary>
-                    <p className="kbhit__text">
-                      {stripHeading(section.text, section.source)}
-                    </p>
+                    <p className="guide__a">{stripHeading(section.text, section.source)}</p>
+                    <p className="guide__src mono">{section.source}</p>
                   </details>
                 ))}
               </div>
             </div>
           ))}
         </section>
+      )}
+
+      {!result && !docs.length && !error && (
+        <div style={{ marginTop: "var(--s-6)" }}>
+          <Skeleton lines={5} label="Loading guides" />
+        </div>
       )}
     </div>
   );

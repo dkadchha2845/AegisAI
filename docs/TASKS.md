@@ -107,6 +107,53 @@ references them, no cases are attached — but they are yours to delete if you
 want a clean slate:
 `rm aegis.db` (it reseeds on next boot; there are 0 case records).
 
+---
+
+## Out of band — UI/UX audit and redesign, 2026-08-26
+
+Not a numbered task: a full-product interface audit requested directly, run
+against the running application on every route, in both themes, at desktop and
+phone widths. Findings, measurements and the redesign are written up in
+[`docs/UI_AUDIT.md`](UI_AUDIT.md).
+
+The two that would have shown up in a demo:
+
+- **The landing page and the login screen could not scroll.** `body` was
+  `overflow: hidden` for the console's benefit, and the opt-out attribute was
+  set by `AppShell` — which neither of those two routes renders inside. Every
+  section below the hero was unreachable in any browser, and on a 720px
+  viewport the login card's bottom 59px — nearly the Sign in button — was cut
+  off. The layout switch moved to the router and the default inverted, so a
+  route that forgets to declare itself is merely ordinary rather than broken.
+- **The live console was unreachable on a phone.** 90 elements past the right
+  edge of a 375px viewport, clipped rather than scrollable. Root cause was
+  grid tracks that cannot shrink (`1fr` is `minmax(auto, 1fr)`); 25 of those
+  across the stylesheets are now `minmax(0, 1fr)`, and below 900px the console
+  becomes a scrolling document instead of a fixed instrument viewport.
+
+Also: `--ink-faint` measured 3.22:1 and the entire light-theme ramp measured
+under 4.5:1, so WCAG AA was failing on every screen at once; form controls
+were rendering in Arial because nothing in the reset said `font: inherit`;
+tenant administration was rendering on the citizen "My Reports" page *and*
+duplicated on `/admin`; and the citizen education page was listing our own
+repository filenames. One design-system layer (`styles/primitives.css`) now
+owns one implementation per component, replacing five button systems, three
+segmented controls, two table styles and four brand marks.
+
+**Verified:** instrumented sweep over 15 routes × 2 themes × 2 widths — zero
+unreachable overflow, zero AA contrast failures, zero unlabelled fields, one
+`<h1>` per route, two font families. Analysis and investigation flows
+exercised against the real API. Four gates green: 495 passed / 23 skipped,
+contract consistent, typecheck clean, build succeeds.
+
+**Not verified here:** scroll-driven behaviour on the landing page — the
+browser pane used for the audit does not composite frames while hidden, so
+`scroll` events and `IntersectionObserver` callbacks never fire. The
+scroll-triggered reveals, the pipeline rail and the header's settle transition
+typecheck and are written correctly, but want one pass by hand.
+
+---
+
 ### Legend
 
 | Mark | Meaning |

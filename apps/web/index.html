@@ -3,7 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>AegisAI — AI for Digital Public Safety</title>
+    <meta
+      name="description"
+      content="AegisAI investigates digital threats before they become real-world damage — multimodal evidence, a graph of intelligent agents, and reasoning you can audit line by line."
+    />
+
+    <!-- The brand mark. Same geometry as components/brand/Logo.tsx; the tab
+         strip had no icon at all before, which is the one place every browser
+         shows a product to a user who has not opened it yet. -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Paints the browser chrome to match the app's ground on mobile, so the
+         status bar does not sit as a white band above a near-black page. Both
+         themes are declared; the OS picks. -->
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#08090b" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f8fa" />
+
+    <!-- The two font hosts, dialled before the CSS that requests them. A cold
+         connection to Fontshare costs ~300ms on venue wifi, and that is time
+         spent looking at a fallback stack. -->
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </head>
   <body>
     <div id="root"></div>

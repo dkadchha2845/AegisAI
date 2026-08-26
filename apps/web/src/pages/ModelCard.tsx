@@ -10,6 +10,7 @@
 
 import { AlertTriangle, Cpu, GitBranch } from "lucide-react";
 import { useEffect, useState } from "react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import * as api from "@/lib/api";
 import type { ModelCard as Card } from "@/lib/api";
 import { useHealth } from "@/hooks/useHealth";
@@ -29,14 +30,10 @@ export function ModelCard() {
 
   return (
     <div className="page">
-      <header className="page__head">
-        <p className="label">Understand</p>
-        <h1 className="page__title">Model card</h1>
-        <p className="page__lede">
-          Read live from the running service, so this describes the model that
-          is actually loaded rather than the one that was intended.
-        </p>
-      </header>
+      <PageHeader
+        title="Model card"
+        lede="Read live from the running service, so this describes the model that is actually loaded rather than the one that was intended."
+      />
 
       {error && (
         <div className="banner banner--bad">

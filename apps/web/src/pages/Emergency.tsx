@@ -10,6 +10,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertTriangle, ArrowRight, Phone } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import * as api from "@/lib/api";
 import type { Helpline } from "@/lib/api";
 
@@ -33,13 +34,10 @@ export function Emergency() {
 
   return (
     <div className="page">
-      <header className="page__head">
-        <h1 className="page__title">Emergency help</h1>
-        <p className="page__lede">
-          If money is being moved right now, act first and read later. Call the
-          helpline — reporting within the first hour is what gets a payment frozen.
-        </p>
-      </header>
+      <PageHeader
+        title="Emergency help"
+        lede="If money is being moved right now, act first and read later. Call the helpline — reporting within the first hour is what gets a payment frozen."
+      />
 
       <div className="emergency-lines">
         {helplines.map((h) => (

@@ -19,6 +19,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Radio, Send, SkipForward, Wifi, WifiOff, Mic, MicOff } from "lucide-react";
+import { LogoMark } from "@/components/brand/Logo";
 import { gsap, prefersReducedMotion } from "@/lib/gsap";
 import { useReveal } from "@/hooks/useReveal";
 import { useStreamPlayer } from "@/hooks/useStreamPlayer";
@@ -154,8 +155,11 @@ export function LiveConsole() {
 
       <header className="topbar">
         <div className="brand">
-          <span className="brand__mark" aria-hidden="true" />
-          <span className="brand__name">LIVE CALL</span>
+          <LogoMark size={16} live />
+          {/* The document's only h1. Every other route has one; this screen
+              had none, so a screen reader's heading list stopped at the
+              panel titles and never named the page. */}
+          <h1 className="brand__name">Live call</h1>
           <span className={`chip`} data-tone={connectionChip.tone}>
             {connectionChip.icon} {connectionChip.text}
           </span>

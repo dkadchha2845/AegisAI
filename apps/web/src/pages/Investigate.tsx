@@ -50,8 +50,10 @@ import {
   Phone,
   ShieldQuestion,
   Trash2,
-  X,
 } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState, ErrorState } from "@/components/ui/States";
+import { RiskDial } from "@/components/ui/RiskDial";
 import * as api from "@/lib/api";
 import type { AcceptedInvestigation, StreamEnd } from "@/lib/api";
 import type {
@@ -255,13 +257,22 @@ export function Investigate() {
   };
 
   return (
-    <div className="page">
-      <h1 className="page__title">Investigate</h1>
-      <p className="page__lede">
-        Submit evidence and watch the agent graph work through it. Every step
-        below is reported by the server as it actually completes — nothing here
-        is a progress animation.
-      </p>
+    <div className={phase === "compose" ? "page page--doc" : "page page--wide"}>
+      <PageHeader
+        title="Investigate"
+        lede={
+          phase === "compose"
+            ? "Submit evidence and watch the agent graph work through it. Every step is reported by the server as it actually completes — nothing here is a progress animation."
+            : "Every step below is reported by the server as it actually completes."
+        }
+        actions={
+          phase !== "compose" ? (
+            <button type="button" className="btn2 btn2--ghost" onClick={reset}>
+              Investigate something else
+            </button>
+          ) : undefined
+        }
+      />
 
       {phase === "compose" && (
         <Compose
@@ -280,20 +291,99 @@ export function Investigate() {
         />
       )}
 
+      {/* Once a run is under way the page becomes a workspace: what was
+          submitted on the left, what the graph is doing in the middle, what it
+          concluded on the right. Stacked, the verdict landed two scrolls below
+          the evidence it was about. */}
       {phase !== "compose" && accepted && (
-        <>
-          <ProgressPanel
-            accepted={accepted}
-            progress={progress}
-            phase={phase}
-            note={streamNote}
-          />
-          {phase === "done" && (
-            <Outcome state={final} caseId={accepted.case_id} error={error} onReset={reset} />
-          )}
-        </>
+        <div className="workspace">
+          <div className="workspace__col">
+            <EvidencePanel text={text} files={files} kind={kind} state={final} />
+          </div>
+
+          <div className="workspace__col">
+            <ProgressPanel
+              accepted={accepted}
+              progress={progress}
+              phase={phase}
+              note={streamNote}
+            />
+          </div>
+
+          <div className="workspace__col workspace__col--verdict">
+            <Outcome
+              state={final}
+              caseId={accepted.case_id}
+              error={error}
+              onReset={reset}
+              pending={phase !== "done"}
+            />
+          </div>
+        </div>
       )}
     </div>
+  );
+}
+
+/* --------------------------------------------------------------- evidence */
+
+/** What was actually submitted, kept on screen for the whole run.
+ *
+ *  `input_types` is what the classifier decided the bytes are; the declared
+ *  kind is what the person said they were. Both are shown, because their
+ *  disagreement is the signal the submit copy promises to record. */
+function EvidencePanel({
+  text,
+  files,
+  kind,
+  state,
+}: {
+  text: string;
+  files: File[];
+  kind: PasteKind;
+  state: InvestigationState | null;
+}) {
+  const detected = state?.input_types ?? [];
+  return (
+    <section className="card" aria-labelledby="inv-evidence">
+      <h2 className="card__title" id="inv-evidence">Evidence</h2>
+
+      {text.trim() ? (
+        <>
+          <p className="label">Submitted as {kind}</p>
+          <blockquote className="inv__quote">{text.trim()}</blockquote>
+        </>
+      ) : null}
+
+      {files.length > 0 && (
+        <>
+          <p className="label" style={{ marginTop: "var(--s-4)" }}>Attachments</p>
+          <ul className="inv__files">
+            {files.map((file) => (
+              <li key={`${file.name}:${file.size}`}>
+                <span className="inv__filename">{file.name}</span>
+                <span className="mono faint">{formatBytes(file.size)}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {!text.trim() && files.length === 0 && (
+        <EmptyState inline title="No evidence recorded" body="This case was submitted empty." />
+      )}
+
+      {detected.length > 0 && (
+        <>
+          <p className="label" style={{ marginTop: "var(--s-4)" }}>Detected from the bytes</p>
+          <div className="row" style={{ gap: 6 }}>
+            {detected.map((t) => (
+              <span className="chip" key={t}>{t}</span>
+            ))}
+          </div>
+        </>
+      )}
+    </section>
   );
 }
 
@@ -456,9 +546,10 @@ function Compose(props: ComposeProps) {
       </section>
 
       {props.error && (
-        <p className="banner banner--bad" role="alert">
-          <AlertTriangle size={16} aria-hidden="true" /> {props.error}
-        </p>
+        <div className="alert" data-tone="bad" role="alert">
+          <AlertTriangle size={16} aria-hidden="true" />
+          <span>{props.error}</span>
+        </div>
       )}
 
       <div className="actions">
@@ -574,9 +665,10 @@ function ProgressPanel({ accepted, progress, phase, note }: ProgressPanelProps) 
       )}
 
       {progress.error && (
-        <p className="banner banner--bad" role="alert">
-          <AlertTriangle size={16} aria-hidden="true" /> {progress.error}
-        </p>
+        <div className="alert" data-tone="bad" role="alert">
+          <AlertTriangle size={16} aria-hidden="true" />
+          <span>{progress.error}</span>
+        </div>
       )}
 
       {note && <p className="inv__note">{note}</p>}
@@ -615,47 +707,53 @@ function Outcome({
   caseId,
   error,
   onReset,
+  pending,
 }: {
   state: InvestigationState | null;
   caseId: string;
   error: string | null;
   onReset: () => void;
+  pending: boolean;
 }) {
   const scored = state?.risk_score != null && state?.risk_level != null;
+
+  // While the graph is still running there is no verdict to draw, and drawing
+  // an empty dial that later fills in would imply the score was climbing.
+  // It was not: it arrives once, at the end, from the judgement tier.
+  if (pending) {
+    return (
+      <section className="card" aria-labelledby="inv-outcome">
+        <h2 className="card__title" id="inv-outcome">Verdict</h2>
+        <EmptyState
+          inline
+          title="Still investigating"
+          body="The verdict appears here once every agent has reported. It arrives as one reading — it does not climb while you watch."
+        />
+      </section>
+    );
+  }
+
   return (
     <section className="card" aria-labelledby="inv-outcome">
-      <h2 className="card__title" id="inv-outcome">Result</h2>
+      <h2 className="card__title" id="inv-outcome">Verdict</h2>
 
-      {error && (
-        <p className="banner banner--bad" role="alert">
-          <X size={16} aria-hidden="true" /> {error}
-        </p>
-      )}
+      {error && <ErrorState inline title="This run did not finish" detail={error} onRetry={onReset} retryLabel="Start over" />}
 
       {state && (
         <>
-          <p className="inv__verdict">
-            {scored ? (
-              <>
-                <strong>{state.risk_level}</strong>{" "}
-                <span className="mono">{state.risk_score?.toFixed(1)}</span>
-              </>
-            ) : (
-              // Not "0.0". An investigation the judgement tier has not scored is
-              // unscored, and rendering that as a risk of zero would be the one
-              // lie this whole contract is arranged to prevent.
-              <span className="faint">
-                Not scored — the judgement tier has no agents yet (tasks 4.6 and 4.7).
-                Everything below it ran, and its findings are on the report.
-              </span>
-            )}
-          </p>
-          <dl className="kv">
+          <RiskDial
+            score={state.risk_score ?? null}
+            level={state.risk_level ?? null}
+            caption={
+              scored
+                ? undefined
+                : "The judgement tier has no agents yet (tasks 4.6 and 4.7). Everything below it ran, and its findings are on the report."
+            }
+          />
+          <dl className="kv" style={{ marginTop: "var(--s-4)" }}>
             <dt>Status</dt><dd className="mono">{state.status}</dd>
             <dt>Agents</dt><dd className="mono">{state.agent_results.length}</dd>
             <dt>Evidence items</dt><dd className="mono">{state.inputs.length}</dd>
-            <dt>Detected types</dt>
-            <dd className="mono">{state.input_types.join(", ") || "—"}</dd>
             {state.degraded.length > 0 && (
               <>
                 <dt>Degraded</dt>
@@ -666,19 +764,16 @@ function Outcome({
         </>
       )}
 
-      <div className="actions">
+      <div className="actions" style={{ marginTop: "var(--s-4)" }}>
         <a
-          className="btn2"
+          className="btn2 btn2--block"
           href={api.investigationReportPdfUrl(caseId)}
           target="_blank"
           rel="noreferrer"
         >
-          Report (PDF)
+          Download report (PDF)
         </a>
-        <Link className="btn2" to="/reports">My reports</Link>
-        <button type="button" className="btn2 btn2--ghost" onClick={onReset}>
-          Investigate something else
-        </button>
+        <Link className="btn2 btn2--block" to="/reports">Open in My Reports</Link>
       </div>
     </section>
   );
