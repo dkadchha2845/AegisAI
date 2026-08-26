@@ -12,13 +12,19 @@
  * than an illustration: it has to survive at 16px in a browser tab, which
  * anything with interior detail does not.
  *
- * Colour: the mark is `currentColor` by default so it inherits from whatever
- * chrome it sits in. It deliberately does *not* follow `--threat-color`.
- * Tying the logo to the threat ramp meant a CRITICAL call turned the brand
- * red, which spends the ramp's most urgent colour on something that carries
- * no reading — the same reason the sidebar's active state uses the accent.
- * The one exception is `live`, which the console opts into: there, a pulsing
- * threat-coloured mark *is* a status readout the analyst is watching for.
+ * Colour: two tones, both from tokens. The shield takes `currentColor`, so it
+ * inherits the ink of whatever chrome holds it; the instrument line and its
+ * dot take `--accent`. The pairing is the same one the interface uses
+ * everywhere else, and it is what makes the mark legible as *this* mark at
+ * 16px in a tab strip rather than as a generic shield glyph.
+ *
+ * It deliberately does *not* follow `--threat-color`. Tying the logo to the
+ * threat ramp meant a CRITICAL call turned the brand red, which spends the
+ * ramp's most urgent colour on something that carries no reading — the same
+ * reason the sidebar's active state uses the accent. The one exception is
+ * `live`, which the console opts into: there, a pulsing threat-coloured mark
+ * *is* a status readout the analyst is watching for, and it overrides both
+ * tones so the mark reads as one signal.
  */
 
 import type { CSSProperties } from "react";
@@ -52,24 +58,27 @@ export function LogoMark({ size = 20, live = false, className, style }: Omit<Log
       focusable="false"
     >
       {/* Shield silhouette. Flat top, tapered base — reads as protection at
-          16px where a crest with shoulders turns to mush. */}
+          16px where a crest with shoulders turns to mush. Takes the ink of
+          whatever chrome it sits in. */}
       <path
+        className="logo__shield"
         d="M12 2.2 20.2 5.1v6.6c0 4.7-3.2 8.6-8.2 10.1-5-1.5-8.2-5.4-8.2-10.1V5.1L12 2.2Z"
-        stroke="currentColor"
         strokeWidth="1.6"
         strokeLinejoin="round"
       />
-      {/* The instrument line: one diagonal cut, rising left to right. Two
-          weights so it reads as a measurement, not a decoration. */}
+      {/* The instrument line: one diagonal cut, rising left to right, carrying
+          the accent. Two colours rather than one because the mark then says
+          both halves of the name — the shield is Aegis, the reading inside it
+          is the AI — and because a single-weight monochrome glyph at 16px is
+          indistinguishable from every other shield icon in a tab strip. */}
       <path
+        className="logo__spark"
         d="M8.1 14.4 11 11.2l2.1 2.3 3.1-4"
-        stroke="currentColor"
         strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.95"
       />
-      <circle cx="16.2" cy="9.5" r="1.35" fill="currentColor" />
+      <circle className="logo__dot" cx="16.2" cy="9.5" r="1.35" />
     </svg>
   );
 }

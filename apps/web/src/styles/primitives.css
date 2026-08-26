@@ -643,9 +643,23 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   min-width: 0;
 }
 .logo__mark { flex: none; color: var(--ink); }
-.logo__mark--live {
-  color: var(--threat-color, var(--accent));
-  transition: color var(--t-med) var(--ease-out);
+/* Two tones, set here rather than inline so the `live` variant can override
+   both from one rule. The shield takes the surrounding ink; the reading
+   inside it takes the accent. */
+.logo__shield { stroke: currentColor; fill: none; }
+.logo__spark { stroke: var(--accent); fill: none; }
+.logo__dot { fill: var(--accent); }
+/* The console's status variant: both tones collapse to the threat colour,
+   because there the mark is reporting one thing, not identifying two. */
+.logo__mark--live { color: var(--threat-color, var(--accent)); }
+.logo__mark--live .logo__spark { stroke: var(--threat-color, var(--accent)); }
+.logo__mark--live .logo__dot { fill: var(--threat-color, var(--accent)); }
+@media (prefers-reduced-motion: no-preference) {
+  .logo__mark--live,
+  .logo__mark--live .logo__spark,
+  .logo__mark--live .logo__dot {
+    transition: color var(--t-med) var(--ease-out), stroke var(--t-med) var(--ease-out), fill var(--t-med) var(--ease-out);
+  }
 }
 .logo__word {
   font-family: var(--font-display);

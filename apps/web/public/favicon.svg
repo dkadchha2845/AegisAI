@@ -1,22 +1,40 @@
 <!--
-  The AegisAI mark, as a favicon.
+  The AegisAI mark, as a favicon. Same geometry as components/brand/Logo.tsx.
 
-  Same geometry as components/brand/Logo.tsx, drawn on its own ground because
-  a tab strip has no theme to inherit from — it sits on whatever chrome the
-  browser paints, so the mark carries its own dark plate rather than relying
-  on `currentColor` the way the in-app component does.
+  No background plate. The plate was there to guarantee the white shield had
+  something to sit on, which solved the wrong problem: a browser tab strip is
+  light in a light OS theme and dark in a dark one, so the mark needs to adapt
+  rather than carry its own ground everywhere. SVG favicons honour
+  `prefers-color-scheme` in Chrome, Edge and Firefox, so the ink flips with the
+  tab strip and the accent stays constant — the same ink/accent pairing the
+  interface uses, on transparent.
 
   Stroke weights are heavier than the component's: at 16px the 1.6px strokes
   that read correctly at 20px disappear.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-  <rect width="24" height="24" rx="5" fill="#0c0e11"/>
+  <style>
+    /* Light tab strip: near-black shield, deep accent — the light theme's
+       own --ink and --accent. */
+    .shield { stroke: #16181d; }
+    .spark  { stroke: #2d69d9; }
+    .dot    { fill:   #2d69d9; }
+
+    /* Dark tab strip: the dark theme's pair. */
+    @media (prefers-color-scheme: dark) {
+      .shield { stroke: #e8eaed; }
+      .spark  { stroke: #4d8dff; }
+      .dot    { fill:   #4d8dff; }
+    }
+  </style>
+
   <path
-    d="M12 3.6 18.9 6.05v5.6c0 3.98-2.7 7.28-6.9 8.55-4.2-1.27-6.9-4.57-6.9-8.55v-5.6L12 3.6Z"
-    fill="none" stroke="#e8eaed" stroke-width="1.7" stroke-linejoin="round"/>
+    class="shield"
+    d="M12 2.6 19.9 5.4v6.4c0 4.55-3.1 8.3-7.9 9.75-4.8-1.45-7.9-5.2-7.9-9.75V5.4L12 2.6Z"
+    fill="none" stroke-width="1.9" stroke-linejoin="round"/>
   <path
-    d="M8.9 13.7 11.2 11.1l1.7 1.85 2.5-3.2"
-    fill="none" stroke="#4d8dff" stroke-width="1.9"
-    stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="15.4" cy="9.75" r="1.15" fill="#4d8dff"/>
+    class="spark"
+    d="M8.1 14.3 11 11.1l2.1 2.3 3.05-3.95"
+    fill="none" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle class="dot" cx="16.2" cy="9.5" r="1.5"/>
 </svg>

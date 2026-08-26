@@ -519,10 +519,18 @@
   color: var(--ink);
 }
 .brandlock__desc {
-  margin: var(--s-4) 0 0;
+  /* The wordmark runs at line-height 0.92, so its box crops tight to the
+     glyphs and a 16px margin measured off that box read as roughly 8px of
+     air under the baseline — the descriptor looked stuck to the name. The
+     spacing is measured optically, from the baseline, not from the box, so
+     it is larger than it looks in the declaration. */
+  margin: var(--s-6) 0 0;
   font-size: var(--t-sm);
   font-weight: 500;
   letter-spacing: 0.18em;
+  /* The tracking adds a trailing space after the last letter, which pushes
+     the centred line left by half of it. Nudged back. */
+  text-indent: 0.18em;
   text-transform: uppercase;
   color: var(--ink-muted);
 }
@@ -541,7 +549,7 @@
   content: "";
   width: 56px;
   height: 1px;
-  margin-top: var(--s-4);
+  margin-top: var(--s-5);
   background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
 }
 
