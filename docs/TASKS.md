@@ -10,8 +10,8 @@
 > benign false positive that 1.7's tests could not see because they ran without
 > the served checkpoint; 1.7b is why a run now says which model it proved.
 > Awaiting your go-ahead for Phase 2.**
-> Last updated 2026-08-25 · branch `main`
-> · 439 tests · all four gates green · ruff + mypy clean
+> Last updated 2026-08-26 · branch `main`
+> · 518 tests · 76.1% backend coverage · all four gates green · ruff + mypy clean
 
 ---
 
