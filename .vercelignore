@@ -1,0 +1,39 @@
+# Vercel builds the SPA and nothing else. The backend is deployed separately to
+# Render (see render.yaml).
+#
+# This file exists because of a real failure, not tidiness: with the Project's
+# Root Directory left at the repo root, Vercel's framework detection found
+# `pyproject.toml`, decided this was a Python project, and refused the build
+# with "No python entrypoint found in default locations". Not uploading the
+# Python tree means there is nothing to detect, and the explicit
+# install/build/output in vercel.json means nothing is guessed at either.
+#
+# Excluding these does not affect the SPA build: it reads only apps/web.
+
+services/
+packages/
+ml/
+research/
+schema/
+infra/
+scripts/
+docs/
+attached_assets/
+ui-design/
+Skills/
+
+pyproject.toml
+alembic.ini
+Makefile
+requirements*.txt
+*.db
+.venv/
+.env
+
+# Build scratch that would only slow the upload.
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage

@@ -110,10 +110,19 @@ https://aegisai-api.onrender.com/api/health
 
 1. [vercel.com](https://vercel.com) → sign in with GitHub → **Add New → Project**
    → import `AegisAI`.
-2. **Root Directory: `apps/web`.** This is the one setting people miss — the
-   repo is a monorepo and Vercel defaults to the root, where there is no
-   `package.json`. Framework, build command and output directory come from
-   `apps/web/vercel.json`.
+2. **Leave Root Directory at the repo root.** The root `vercel.json` names the
+   install command, the build command and the output directory outright, and
+   `.vercelignore` keeps the Python tree out of the upload — so there is no
+   dashboard setting to get wrong and nothing for framework detection to guess
+   at.
+
+   > Left to guess, Vercel finds `pyproject.toml` at the root, decides this is
+   > a Python project, and fails with *"No python entrypoint found in default
+   > locations"* — it is trying to deploy the backend as a serverless function,
+   > which is Render's job. Both files exist to stop that.
+
+   Setting Root Directory to `apps/web` also works; `apps/web/vercel.json`
+   covers that case with the same rewrites and headers.
 3. **Environment Variables** → add:
 
    | Key | Value |
