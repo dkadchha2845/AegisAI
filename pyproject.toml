@@ -7,6 +7,10 @@ target-version = "py311"
 extend-exclude = [
     ".venv", "ml/.venv", "ml/artifacts", "node_modules",
     "apps/web", "docs/archive", "ui-design", "attached_assets",
+    # Vendored third-party skill packages, checked in whole. Not ours to lint
+    # or to fix: 424 findings, none of them in code this project wrote, and a
+    # gate that reports 424 known-irrelevant errors is a gate nobody reads.
+    "Skills",
     # Jupyter: cell-scoped rules (import placement, semicolons) do not
     # describe notebook style, and the notebook is Colab-executed anyway.
     "*.ipynb",
