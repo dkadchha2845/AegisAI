@@ -9,22 +9,23 @@
  * (RSSIE / FIGAE / CFSRP) still power everything underneath; they are simply
  * never surfaced as places a person has to navigate between.
  *
- * **Groups, and why the analyst tools moved.** These used to live only as a
- * list of links on the Profile page, which meant a signed-in analyst's primary
- * navigation showed them none of their own tools and the Dashboard route
- * duplicated the sidebar as a grid of cards to compensate. They are a second
- * *group* now, rendered only for the roles that can reach them, so one nav
- * answers "where can I go" for both audiences and the card grid is redundant.
+ * **Gated by permission, not by role name.** These used to be filtered by a
+ * `minRole` compared against a rank, which cannot express the two roles the
+ * ladder could not: a citizen who may investigate but not read the graph, and a
+ * researcher who may read metrics and no case at all. Each item now names the
+ * capability the page behind it actually needs, and the answer comes from the
+ * server's own grant list on `/api/auth/me`.
  *
- * `minRole` mirrors the route gate in App.tsx, which mirrors the check the
- * backend already enforces. It is UX — don't show someone a door that 403s —
- * not the security boundary.
+ * It is still UX, not the boundary — don't show someone a door that 403s. The
+ * route gate in `App.tsx` and the `require_permission` on the API behind it are
+ * the two independent checks that matter.
  */
 
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   BookOpen,
+  FlaskConical,
   FolderArchive,
   Gauge,
   Home as HomeIcon,
@@ -36,8 +37,7 @@ import {
   UserCircle,
   Radio,
 } from "lucide-react";
-
-export type NavRole = "viewer" | "analyst" | "admin" | "owner";
+import type { PermissionCode } from "@/lib/api";
 
 export interface NavItem {
   to: string;
@@ -47,8 +47,9 @@ export interface NavItem {
   blurb: string;
   /** Longer copy for cards / palette detail. */
   detail: string;
-  /** Lowest role that may see this item. Absent means everyone. */
-  minRole?: Exclude<NavRole, "viewer">;
+  /** Every code must be held for this destination to appear. Absent means
+   *  everyone, including a signed-out visitor. */
+  needs?: PermissionCode[];
 }
 
 export interface NavGroup {
@@ -58,6 +59,9 @@ export interface NavGroup {
   items: NavItem[];
 }
 
+/** Everything a person can do about their own safety. No permission on the
+ *  first six: the citizen shield is open to a visitor with no account, which
+ *  the sign-in screen says out loud. */
 export const NAV: NavItem[] = [
   {
     to: "/home",
@@ -110,27 +114,33 @@ export const NAV: NavItem[] = [
     label: "Profile",
     icon: UserCircle,
     blurb: "Account and settings",
-    detail: "Your account, appearance, privacy and data-retention settings.",
+    detail: "Your account, password, appearance, privacy and data-retention settings.",
   },
 ];
 
-/** The analyst console. Same shape as NAV, gated by role. */
+/** Everyone who is signed in has a dashboard; which one they land on is
+ *  decided by `RoleDashboard` from their permissions. It belongs in the group
+ *  everybody sees, not in the investigator group — putting it there labelled a
+ *  citizen's own dashboard "Investigator tools". */
+export const DASHBOARD: NavItem = {
+  to: "/dashboard",
+  label: "Dashboard",
+  icon: Gauge,
+  blurb: "Your cases and what needs attention",
+  detail: "What you have investigated, what is going around, and what needs you.",
+};
+
+/** The investigator's console. Gated as a whole on `GRAPH_READ`, which is the
+ *  capability that separates an investigator from a citizen: entity-level
+ *  intelligence about specific accounts. */
 export const ANALYST_NAV: NavItem[] = [
-  {
-    to: "/dashboard",
-    label: "Operations",
-    icon: Gauge,
-    blurb: "System state and live metrics",
-    detail: "What every part of the build is doing, and what is running degraded.",
-    minRole: "analyst",
-  },
   {
     to: "/investigate",
     label: "Investigate",
     icon: ScanSearch,
     blurb: "Submit evidence to the agent graph",
     detail: "Submit evidence and watch each agent node complete against the real API.",
-    minRole: "analyst",
+    needs: ["INVESTIGATION_CREATE", "GRAPH_READ"],
   },
   {
     to: "/analyst/console",
@@ -138,7 +148,7 @@ export const ANALYST_NAV: NavItem[] = [
     icon: Radio,
     blurb: "Threat meter, twin, manipulation map",
     detail: "The full instrument view of a call in progress.",
-    minRole: "analyst",
+    needs: ["LIVE_SESSION_USE", "GRAPH_READ"],
   },
   {
     to: "/intel",
@@ -146,7 +156,7 @@ export const ANALYST_NAV: NavItem[] = [
     icon: Network,
     blurb: "Knowledge graph and hotspots",
     detail: "The fraud graph, its clusters, and the geospatial analytics over them.",
-    minRole: "analyst",
+    needs: ["GRAPH_READ"],
   },
   {
     to: "/guardian",
@@ -154,7 +164,7 @@ export const ANALYST_NAV: NavItem[] = [
     icon: ShieldCheck,
     blurb: "Intervention and circuit breaker",
     detail: "The intervention console — hold a payment, alert a registered contact.",
-    minRole: "analyst",
+    needs: ["LIVE_SESSION_USE", "GRAPH_READ"],
   },
   {
     to: "/analyzer",
@@ -162,7 +172,7 @@ export const ANALYST_NAV: NavItem[] = [
     icon: SlidersHorizontal,
     blurb: "Raw detector output",
     detail: "Line-by-line detector output with the driver weights behind each score.",
-    minRole: "analyst",
+    needs: ["GRAPH_READ"],
   },
   {
     to: "/model",
@@ -170,34 +180,63 @@ export const ANALYST_NAV: NavItem[] = [
     icon: BookOpen,
     blurb: "Architecture, training data, limits",
     detail: "Read from the running service, so it describes the model actually loaded.",
-    minRole: "analyst",
-  },
-  {
-    to: "/admin",
-    label: "Administration",
-    icon: UserCircle,
-    blurb: "Organisations, users, audit log",
-    detail: "Tenants, access control, and the audit trail across the platform.",
-    minRole: "admin",
+    needs: ["GRAPH_READ"],
   },
 ];
 
-const RANK: Record<NavRole, number> = { viewer: 0, analyst: 1, admin: 2, owner: 3 };
+/** Research and administration — the two surfaces that are not investigation. */
+export const OVERSIGHT_NAV: NavItem[] = [
+  {
+    to: "/research/dashboard",
+    label: "Research",
+    icon: FlaskConical,
+    blurb: "Datasets, model evaluation, fraud trends",
+    detail:
+      "Aggregated statistics and measured model performance. No case-level data "
+      + "and no personally identifying information.",
+    needs: ["RESEARCH_READ"],
+  },
+  {
+    to: "/admin/dashboard",
+    label: "Administration",
+    icon: UserCircle,
+    blurb: "Organisations, users, roles, audit log",
+    detail: "Tenants, access control, and the audit trail across the platform.",
+    needs: ["USER_MANAGE"],
+  },
+];
+
+function visible(items: NavItem[], held: readonly string[]): NavItem[] {
+  return items.filter((i) => !i.needs || i.needs.every((c) => held.includes(c)));
+}
 
 /**
- * The sidebar's groups for a given role. A viewer or a signed-out citizen sees
- * one group and never learns the second exists; an analyst sees both.
+ * The sidebar's groups for the permissions the current identity holds.
+ *
+ * A signed-out visitor sees one group and never learns the others exist. A
+ * citizen sees the same one — every destination in it is open to them, and
+ * nothing in the other two is. An investigator sees two; an administrator or a
+ * researcher sees the third.
  */
-export function navGroups(role: NavRole | undefined, authed: boolean): NavGroup[] {
-  const groups: NavGroup[] = [{ id: "protect", label: "Protection", items: NAV }];
-  const rank = RANK[role ?? "viewer"] ?? 0;
-  if (!authed || rank < RANK.analyst) return groups;
-  const items = ANALYST_NAV.filter((i) => rank >= RANK[i.minRole ?? "analyst"]);
-  if (items.length) groups.push({ id: "analyst", label: "Analyst tools", items });
+export function navGroups(held: readonly string[], authed: boolean): NavGroup[] {
+  // Signed in, the dashboard leads; signed out there is no dashboard to lead
+  // with and the first thing anyone wants is Home.
+  const protect = authed ? [DASHBOARD, ...NAV] : NAV;
+  const groups: NavGroup[] = [{ id: "protect", label: "Protection", items: protect }];
+  if (!authed) return groups;
+
+  const analyst = visible(ANALYST_NAV, held);
+  if (analyst.length) {
+    groups.push({ id: "analyst", label: "Investigator tools", items: analyst });
+  }
+  const oversight = visible(OVERSIGHT_NAV, held);
+  if (oversight.length) {
+    groups.push({ id: "oversight", label: "Oversight", items: oversight });
+  }
   return groups;
 }
 
 /** Flat list for the command palette — every destination the user can reach. */
-export function navAll(role: NavRole | undefined, authed: boolean): NavItem[] {
-  return navGroups(role, authed).flatMap((g) => g.items);
+export function navAll(held: readonly string[], authed: boolean): NavItem[] {
+  return navGroups(held, authed).flatMap((g) => g.items);
 }

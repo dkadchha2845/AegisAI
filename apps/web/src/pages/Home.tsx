@@ -53,6 +53,7 @@ import {
   Sun,
 } from "lucide-react";
 import { Logo, LogoMark } from "@/components/brand/Logo";
+import { UserMenu } from "@/components/layout/UserMenu";
 import { ThreatField } from "@/components/three/ThreatField";
 import { STAGE_BLURB, STAGE_ORDER, pretty, stageColor } from "@/lib/stages";
 import { gsap, ScrollTrigger, prefersReducedMotion, armFailsafe } from "@/lib/gsap";
@@ -302,6 +303,10 @@ export function Home() {
           <a href="#research">Research</a>
           <a href="#security">Security</a>
         </nav>
+        {/* §20/§21: the right-hand cluster is a Sign in / Get started pair for a
+            visitor and the authenticated profile for everyone else. One
+            component decides which, shared with the app shell, so the two
+            surfaces cannot disagree about whether you are signed in. */}
         <div className="lhead__right">
           <button
             className="iconbtn"
@@ -310,12 +315,7 @@ export function Home() {
           >
             {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
           </button>
-          <Link className="btn2 btn2--sm lhead__signin" to="/login">
-            Sign in
-          </Link>
-          <Link className="btn2 btn2--primary btn2--sm" to="/analyze">
-            Get started <ArrowRight size={14} aria-hidden="true" />
-          </Link>
+          <UserMenu tone="landing" />
         </div>
       </header>
 

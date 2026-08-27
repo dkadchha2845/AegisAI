@@ -1,16 +1,32 @@
 """
 The investigation lifecycle API — task 1.6.
 
-Six routes, and between them the whole arc of a case: submit evidence, watch it
-being investigated, read the report, read the trace, erase it.
+Seven routes, and between them the whole arc of a case: submit evidence, watch
+it being investigated, read the report, read the trace, list what you have,
+erase it.
 
-    POST   /api/investigations              JSON body or multipart upload
+    POST   /api/investigations               JSON body or multipart upload
+    GET    /api/investigations               the case list you are allowed to see
     GET    /api/investigations/{id}          the InvestigationState
     GET    /api/investigations/{id}/stream   SSE, one event per completed node
     GET    /api/investigations/{id}/report   the human-readable package
     GET    /api/investigations/{id}/report.pdf
     GET    /api/investigations/{id}/trace    spans, and where the time went
     DELETE /api/investigations/{id}          erasure: rows, blobs and journal
+
+Ownership
+---------
+Tenancy answers "which organisation is this case in". It does not answer "may
+*you* read it", and once citizens have accounts those are different questions: a
+hundred citizens share the default organisation and must not read each other's
+cases. So every read here passes through `_load`, which applies a second
+narrowing after the tenant one — a caller holding only `INVESTIGATION_READ_OWN`
+may read a case whose `created_by` is their own email, and nothing else.
+
+That check is on `created_by`, the field the contract already carries, rather
+than on a new owner column. `InvestigationState.created_by` is the email that
+submitted the case and `users.email` is unique, so the contract already names
+the owner and a second column would only be a way for the two to disagree.
 
 Tenancy
 -------
@@ -64,7 +80,7 @@ from sqlalchemy.orm import Session
 from schema.models import InvestigationState, InvestigationStatus, utc_now_iso
 
 from .. import audit
-from ..auth import require_role
+from ..auth import require_permission, user_permissions
 from ..config import settings
 from ..db import get_db
 from ..engine.report_pdf import pdf_available
@@ -163,23 +179,35 @@ def _scope(user: User) -> str:
     return scope
 
 
+def _may_read_any(user: User) -> bool:
+    """Whether this caller reads the whole organisation's case book, or only
+    the cases they created."""
+    held = user_permissions(user)
+    return "INVESTIGATION_READ_ALL" in held or "INVESTIGATION_READ_ASSIGNED" in held
+
+
 def _load(user: User, db: Session, case_id: str) -> InvestigationState:
-    """The freshest view of one case, or 404.
+    """The freshest view of one case the caller may read, or 404.
 
     A run still in flight is read from the runner rather than the database. The
     durable row is written when the graph finishes, so serving it mid-run would
     report QUEUED to a client that is simultaneously being streamed the third
     node's results — two endpoints on the same server disagreeing about the same
-    case. 404 rather than 403 for another tenant's id, which is the same
-    non-answer `routes/reports.py` gives, so a case id cannot be probed for
-    existence from outside the organisation that owns it.
+    case.
+
+    404 rather than 403 for a case the caller may not read — another tenant's,
+    or another person's within the same tenant. This is the same non-answer
+    `routes/reports.py` gives, and it is the right one: a 403 confirms the id
+    exists, which turns the endpoint into an oracle for enumerating case ids.
+    The ownership check is applied to the in-flight run as well as to the stored
+    row, because a case is at its most interesting while it is still running.
     """
     scope = _scope(user)
     run = runner.get(scope, case_id)
-    if run is not None:
-        return run.state
-    state = EvidenceStore(db, scope).load(case_id)
+    state = run.state if run is not None else EvidenceStore(db, scope).load(case_id)
     if state is None:
+        raise HTTPException(status_code=404, detail=f"No investigation {case_id}")
+    if not _may_read_any(user) and (state.created_by or "") != user.email:
         raise HTTPException(status_code=404, detail=f"No investigation {case_id}")
     return state
 
@@ -261,7 +289,7 @@ async def create_investigation(
     request: Request,
     files: List[UploadFile] = File(default=[], description="evidence files (multipart only)"),
     text: Optional[str] = Form(default=None, description="pasted evidence (multipart only)"),
-    user: User = Depends(require_role("analyst")),
+    user: User = Depends(require_permission("INVESTIGATION_CREATE")),
     db: Session = Depends(get_db),
 ) -> AcceptedInvestigation:
     scope = _scope(user)
@@ -324,6 +352,51 @@ async def create_investigation(
 
 
 @router.get(
+    "",
+    summary="The investigations you can see",
+    description=(
+        "Newest first. A caller who holds only `INVESTIGATION_READ_OWN` gets "
+        "the cases they created; one who holds `INVESTIGATION_READ_ALL` or "
+        "`INVESTIGATION_READ_ASSIGNED` gets their organisation's. Summaries, "
+        "not full states — a case list that loads every agent result and trace "
+        "span to render twelve rows is unusable at a thousand cases."
+    ),
+)
+def list_investigations(
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    status: Optional[str] = Query(
+        default=None, max_length=32, description="filter by InvestigationStatus"
+    ),
+    user: User = Depends(require_permission("INVESTIGATION_READ_OWN")),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    """The case list — "My Investigations" for a citizen, the queue for an
+    investigator, and the same endpoint for both.
+
+    The ownership narrowing is passed *into* the store as a filter rather than
+    applied to the rows it returns. Post-filtering a page of 50 would silently
+    return fewer than 50 rows and page incorrectly, and it would mean the
+    process had loaded rows the caller may not see — which is one refactor away
+    from rendering them.
+    """
+    scope = _scope(user)
+    store = EvidenceStore(db, scope)
+    mine_only = not _may_read_any(user)
+    cases = store.list_cases(
+        limit=limit,
+        offset=offset,
+        status=status,
+        created_by=user.email if mine_only else None,
+    )
+    return {
+        "investigations": cases,
+        "total": store.count(created_by=user.email if mine_only else None),
+        "scope": "own" if mine_only else "organisation",
+    }
+
+
+@router.get(
     "/{case_id}",
     response_model=InvestigationState,
     summary="Read one investigation",
@@ -334,7 +407,7 @@ async def create_investigation(
 )
 def get_investigation(
     case_id: str,
-    user: User = Depends(require_role("viewer")),
+    user: User = Depends(require_permission("INVESTIGATION_READ_OWN")),
     db: Session = Depends(get_db),
 ) -> InvestigationState:
     return _load(user, db, case_id)
@@ -351,7 +424,7 @@ def get_investigation(
 )
 def get_report(
     case_id: str,
-    user: User = Depends(require_role("viewer")),
+    user: User = Depends(require_permission("INVESTIGATION_READ_OWN")),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
     return build_report(_load(user, db, case_id))
@@ -369,7 +442,7 @@ def get_report(
 )
 def get_report_pdf(
     case_id: str,
-    user: User = Depends(require_role("viewer")),
+    user: User = Depends(require_permission("INVESTIGATION_READ_OWN")),
     db: Session = Depends(get_db),
 ) -> Response:
     state = _load(user, db, case_id)
@@ -406,7 +479,7 @@ def get_report_pdf(
 )
 def get_trace(
     case_id: str,
-    user: User = Depends(require_role("viewer")),
+    user: User = Depends(require_permission("INVESTIGATION_READ_OWN")),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
     state = _load(user, db, case_id)
@@ -461,7 +534,7 @@ async def stream_investigation(
     after: Optional[int] = Query(
         default=None, ge=0, description="fallback for Last-Event-ID; the header wins"
     ),
-    user: User = Depends(require_role("viewer")),
+    user: User = Depends(require_permission("INVESTIGATION_READ_OWN")),
     db: Session = Depends(get_db),
 ) -> StreamingResponse:
     scope = _scope(user)
@@ -535,7 +608,7 @@ async def stream_investigation(
 )
 async def delete_investigation(
     case_id: str,
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_permission("INVESTIGATION_DELETE")),
     db: Session = Depends(get_db),
 ) -> ErasureResult:
     scope = _scope(user)

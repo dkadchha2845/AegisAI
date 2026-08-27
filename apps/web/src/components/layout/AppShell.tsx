@@ -42,7 +42,8 @@ import {
   X,
 } from "lucide-react";
 import { Logo, LogoMark } from "@/components/brand/Logo";
-import { navAll, navGroups, type NavRole } from "./nav";
+import { navAll, navGroups } from "./nav";
+import { UserMenu } from "./UserMenu";
 import { CommandPalette } from "./CommandPalette";
 import { RouteBoundary } from "./RouteBoundary";
 import { useTheme } from "@/context/ThemeContext";
@@ -65,9 +66,10 @@ export function AppShell() {
   const burgerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
 
-  const role = auth.user?.role as NavRole | undefined;
-  const groups = navGroups(role, auth.authed);
-  const here = navAll(role, auth.authed).find(
+  // Navigation is filtered by permission, not by role name: `nav.ts` asks
+  // "can you do this" and the answer comes from the server's own grant list.
+  const groups = navGroups(auth.permissions, auth.authed);
+  const here = navAll(auth.permissions, auth.authed).find(
     (i) => location.pathname === i.to || location.pathname.startsWith(`${i.to}/`),
   );
 
@@ -181,11 +183,11 @@ export function AppShell() {
           {auth.authed && auth.user ? (
             <div className="userchip">
               <span className="userchip__avatar" aria-hidden="true">
-                {auth.user.email.slice(0, 1).toUpperCase()}
+                {(auth.user.display_name || auth.user.email).slice(0, 1).toUpperCase()}
               </span>
               <span className="userchip__text">
                 <span className="userchip__email" data-tooltip={auth.user.email}>
-                  {auth.user.email}
+                  {auth.user.display_name}
                 </span>
                 {/* Both lines ellipsize in a 248px rail, so the full values
                     ride along as tooltips rather than being lost. */}
@@ -197,13 +199,17 @@ export function AppShell() {
                   {auth.org?.name ? ` · ${auth.org.name}` : ""}
                 </span>
               </span>
-              <button className="iconbtn userchip__out" onClick={auth.logout} aria-label="Sign out">
+              <button
+                className="iconbtn userchip__out"
+                onClick={() => void auth.logout()}
+                aria-label="Sign out"
+              >
                 <LogOut size={15} />
               </button>
             </div>
           ) : (
             <NavLink className="btn2 btn2--sm btn2--block" to="/login">
-              Sign in to the console
+              Sign in
             </NavLink>
           )}
 
@@ -254,6 +260,11 @@ export function AppShell() {
           >
             {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
           </button>
+          {/* The same identity control the landing page carries. The sidebar
+              footer's chip is the desktop rail's version of it and is hidden on
+              mobile, where the rail is off-canvas — this is the one that is
+              always reachable. */}
+          <UserMenu />
         </div>
       </header>
 
@@ -272,7 +283,7 @@ export function AppShell() {
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
-        items={navAll(role, auth.authed)}
+        items={navAll(auth.permissions, auth.authed)}
       />
     </div>
   );

@@ -20,9 +20,21 @@ httpx>=0.27
 
 # Persistence & auth. SQLAlchemy is pure-Python and needs no server for the
 # default in-memory mode, so it does not require any setup to run the demo —
-# it only enables durable storage when DATABASE_URL is configured. Auth (pbkdf2
-# password hashing + HS256 tokens) uses the standard library, no extra dep.
+# it only enables durable storage when DATABASE_URL is configured. Auth (HS256
+# tokens, and pbkdf2 password hashing when the line below is not installed)
+# uses the standard library, no extra dep.
 SQLAlchemy>=2.0
+
+# Optional, and preferred when present: argon2id password hashing instead of
+# pbkdf2-hmac-sha256. Argon2id is the memory-hard KDF and the one to use where
+# it can be installed; pbkdf2 at 240 000 iterations is a sound standard KDF
+# (NIST SP 800-132) and is what keeps the offline, clean-clone path working on a
+# machine that cannot build a wheel. Both verify forever — the stored string
+# says which wrote it — and a password checked against the older scheme is
+# re-hashed with the newer one on the way through login, so installing this
+# upgrades every account as its owner next signs in, with no migration and no
+# password reset. /api/health reports which one is actually serving.
+# argon2-cffi>=23.1
 
 # Schema migrations for the evidence store (task 1.5). REQUIRED, not optional:
 # a durable deployment has no other way to move an existing database forward,

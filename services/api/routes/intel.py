@@ -3,9 +3,18 @@ FIGAE routes (Module 2) — the investigator dashboard's backend.
 
 Read-only intelligence over the fraud graph: live stats, clusters, one cluster's
 network subgraph, geospatial hotspots, centrality, link predictions, entity
-search, and the AI investigation report for a cluster. Everything is scoped
-viewer-level — an investigator dashboard is exactly what a viewer role is for —
-and every response is derived from the cached graph, so a poll is cheap.
+search, and the AI investigation report for a cluster. Every response is derived
+from the cached graph, so a poll is cheap.
+
+**The surface splits in two, and the split is the whole access-control story
+here.** `THREAT_INTEL_READ` covers the *aggregate* views — counts, state-level
+totals, city-level dots — which carry no identifier belonging to any person and
+are what the landing page and a citizen's home have always shown everybody.
+`GRAPH_READ` covers the *entity-level* views — clusters and their members,
+centrality over reused phone numbers and UPI IDs, link prediction, entity
+search, the raw graph — which are personal data about specific accounts and
+belong to investigators. A citizen holds the first and not the second, which is
+a distinction the old uniform `require_role("viewer")` could not make.
 
 The one write path is implicit: saving a Module 1 case (in `routes/reports.py`)
 rebuilds the graph, so this surface reflects new detections without its own
@@ -20,7 +29,7 @@ from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from ..auth import require_role
+from ..auth import require_permission
 from ..intel import get_intel
 from ..intel.report import enhance_narrative, investigation_report
 from ..models_db import User
@@ -29,14 +38,14 @@ router = APIRouter(prefix="/api/intel", tags=["intel"])
 
 
 @router.get("/stats")
-def intel_stats(_: User = Depends(require_role("viewer"))) -> Dict[str, Any]:
+def intel_stats(_: User = Depends(require_permission("THREAT_INTEL_READ"))) -> Dict[str, Any]:
     """Live statistics for the dashboard header: active clusters, campaigns,
     total cases, linked entities, exposure."""
     return get_intel().graph().stats()
 
 
 @router.get("/clusters")
-def list_clusters(_: User = Depends(require_role("viewer"))) -> Dict[str, Any]:
+def list_clusters(_: User = Depends(require_permission("GRAPH_READ"))) -> Dict[str, Any]:
     """All fraud clusters, worst-risk first."""
     g = get_intel().graph()
     return {"clusters": [c.as_dict() for c in g.clusters]}
@@ -44,7 +53,7 @@ def list_clusters(_: User = Depends(require_role("viewer"))) -> Dict[str, Any]:
 
 @router.get("/clusters/{cluster_id}")
 def cluster_detail(
-    cluster_id: str, _: User = Depends(require_role("viewer"))
+    cluster_id: str, _: User = Depends(require_permission("GRAPH_READ"))
 ) -> Dict[str, Any]:
     """One cluster: its summary, its network subgraph, and the AI investigation
     report."""
@@ -65,7 +74,7 @@ def cluster_detail(
 
 @router.get("/clusters/{cluster_id}/report")
 def cluster_report(
-    cluster_id: str, _: User = Depends(require_role("viewer"))
+    cluster_id: str, _: User = Depends(require_permission("GRAPH_READ"))
 ) -> Dict[str, Any]:
     """Just the AI investigation report for a cluster (the FC-021 exemplar)."""
     g = get_intel().graph()
@@ -80,7 +89,7 @@ def cluster_report(
 
 
 @router.get("/geo")
-def geospatial(_: User = Depends(require_role("viewer"))) -> Dict[str, Any]:
+def geospatial(_: User = Depends(require_permission("THREAT_INTEL_READ"))) -> Dict[str, Any]:
     """State / district / city hotspots for the command-centre map."""
     from ..intel.geo import hotspots
 
@@ -89,7 +98,7 @@ def geospatial(_: User = Depends(require_role("viewer"))) -> Dict[str, Any]:
 
 
 @router.get("/points")
-def geo_points(_: User = Depends(require_role("viewer"))) -> Dict[str, Any]:
+def geo_points(_: User = Depends(require_permission("THREAT_INTEL_READ"))) -> Dict[str, Any]:
     """Per-case map points — the granular layer under the aggregated hotspots.
 
     Each case that resolves to a known city becomes one dated, geo-located
@@ -131,13 +140,13 @@ def geo_points(_: User = Depends(require_role("viewer"))) -> Dict[str, Any]:
 
 
 @router.get("/centrality")
-def centrality(_: User = Depends(require_role("viewer"))) -> Dict[str, Any]:
+def centrality(_: User = Depends(require_permission("GRAPH_READ"))) -> Dict[str, Any]:
     """Most-reused fraud entities — the freeze-first choke points."""
     return {"entities": get_intel().graph().centrality()}
 
 
 @router.get("/links")
-def link_predictions(_: User = Depends(require_role("viewer"))) -> Dict[str, Any]:
+def link_predictions(_: User = Depends(require_permission("GRAPH_READ"))) -> Dict[str, Any]:
     """Predicted hidden links: numbers joined through a shared payment account."""
     return {"predictions": get_intel().graph().link_predictions()}
 
@@ -145,7 +154,7 @@ def link_predictions(_: User = Depends(require_role("viewer"))) -> Dict[str, Any
 @router.get("/search")
 def entity_search(
     q: str = Query(min_length=2, max_length=128),
-    _: User = Depends(require_role("viewer")),
+    _: User = Depends(require_permission("GRAPH_READ")),
 ) -> Dict[str, Any]:
     """Search by phone / UPI / wallet / email / case id."""
     return get_intel().search(q)
@@ -154,7 +163,7 @@ def entity_search(
 @router.get("/graph")
 def full_graph(
     limit: int = Query(default=300, le=1200),
-    _: User = Depends(require_role("viewer")),
+    _: User = Depends(require_permission("GRAPH_READ")),
 ) -> Dict[str, Any]:
     """A capped view of the whole knowledge graph for the overview visualisation.
 

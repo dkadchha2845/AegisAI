@@ -859,6 +859,262 @@
 .login__foot { margin: var(--s-4) 0 0; text-align: center; }
 .login__foot a { color: var(--accent); }
 
+/* The form itself is one reveal target, not eight: `login__content > [data-reveal]`
+   staggers direct children, and the fields live inside <form>. Wrapping them
+   keeps the entrance and gives the browser a real form to autofill and submit
+   on Enter — which is what a password manager looks for. */
+.login__form { display: block; }
+.login__form .fieldlabel { display: block; margin-top: var(--s-3); }
+.login__form .fieldlabel:first-child { margin-top: 0; }
+.login__pwdrow {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--s-3); margin-top: var(--s-3);
+}
+.login__pwdrow .fieldlabel { margin-top: 0; }
+.login__forgot { font-size: var(--t-xs); color: var(--accent); }
+.login__switch { margin: var(--s-4) 0 0; text-align: center; color: var(--ink-muted); }
+.login__switch a { color: var(--accent); font-weight: 600; }
+
+/* --- sign-up: two columns, brand beside form ---------------------------- */
+.login--split { place-items: stretch; }
+@media (min-width: 900px) {
+  .login--split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
+    align-items: center;
+    gap: var(--s-7);
+    max-width: 1160px; margin-inline: auto;
+  }
+}
+.signup__aside {
+  position: relative; z-index: 1;
+  align-self: center;
+  padding: var(--s-5) 0;
+  max-width: 46ch;
+}
+/* Below the split breakpoint the argument still reads first, above the form —
+   an aside that disappears on a phone is an aside nobody on a phone ever sees. */
+@media (max-width: 899px) {
+  .signup__aside { margin-inline: auto; padding-bottom: var(--s-3); }
+}
+.signup__brand { display: inline-flex; align-items: center; gap: var(--s-3); }
+.signup__brandname {
+  font-family: var(--font-display); font-weight: 700; font-size: var(--t-lg);
+  letter-spacing: var(--tracking-tight); color: var(--ink);
+}
+.signup__pitch {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(1.5rem, 3.2vw, 2.1rem); line-height: 1.18;
+  letter-spacing: var(--tracking-tight);
+  margin: var(--s-5) 0 var(--s-4);
+}
+.signup__points { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
+.signup__points li {
+  display: flex; gap: var(--s-2); align-items: flex-start;
+  font-size: var(--t-sm); line-height: 1.6; color: var(--ink-muted);
+}
+.signup__points svg { color: var(--calm); flex: none; margin-top: 3px; }
+.signup__points strong { color: var(--ink); }
+.signup__note { margin: var(--s-5) 0 0; line-height: 1.6; }
+.signup__panel { align-self: center; justify-self: end; width: min(460px, 94vw); }
+@media (max-width: 899px) { .signup__panel { justify-self: center; } }
+
+/* --- password strength meter -------------------------------------------- */
+.pwmeter { margin-top: var(--s-2); }
+.pwmeter__bar {
+  height: 4px; border-radius: 999px; background: var(--line); overflow: hidden;
+}
+.pwmeter__bar i {
+  display: block; height: 100%; width: 100%;
+  background: var(--critical); transform-origin: left center;
+  transition: transform var(--t-med), background var(--t-med);
+}
+.pwmeter__bar i[data-level="getting-there"] { background: var(--elevated); }
+.pwmeter__bar i[data-level="strong"] { background: var(--calm); }
+.pwmeter__list { list-style: none; margin: var(--s-2) 0 0; padding: 0; display: grid; gap: 3px; }
+.pwmeter__list li {
+  display: flex; align-items: center; gap: var(--s-2);
+  font-size: var(--t-2xs); color: var(--ink-faint);
+}
+.pwmeter__list li svg { flex: none; }
+.pwmeter__list li[data-ok] { color: var(--calm); }
+
+/* --- terms acknowledgement ---------------------------------------------- */
+.checkrow {
+  display: flex; gap: var(--s-2); align-items: flex-start;
+  margin-top: var(--s-4); cursor: pointer; line-height: 1.55;
+}
+.checkrow input { margin-top: 3px; flex: none; accent-color: var(--accent); }
+
+/* --- the development-only reset block ----------------------------------- */
+/* Loud on purpose. This block only appears when AEGIS_DEV_PASSWORD_RESET is on
+   and enforcement is off, and it must never be mistaken for a production flow. */
+.devblock {
+  margin: var(--s-4) 0;
+  padding: var(--s-4);
+  border-radius: var(--r-sm);
+  border: 1px dashed color-mix(in srgb, var(--elevated) 55%, transparent);
+  background: var(--elevated-dim);
+}
+.devblock__head {
+  display: flex; align-items: center; gap: var(--s-2);
+  margin: 0 0 var(--s-2);
+  font-family: var(--font-display); font-weight: 700; font-size: var(--t-xs);
+  text-transform: uppercase; letter-spacing: var(--tracking-label);
+  color: var(--elevated);
+}
+.devblock__token {
+  display: block; margin: var(--s-3) 0;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm); background: var(--bg-raised);
+  border: 1px solid var(--line);
+  font-family: var(--font-mono); font-size: var(--t-2xs);
+  overflow-wrap: anywhere;
+}
+
+/* ======================================================================== *
+ *  USER MENU — the signed-in identity, shared by the landing and the shell
+ * ======================================================================== */
+.usermenu { position: relative; }
+.usermenu__signedout { display: flex; align-items: center; gap: var(--s-2); }
+/* Below 520px "Sign in" and "Get started" both fit only by shrinking the
+   primary action below a touch target. The secondary one goes; /signup carries
+   a link back to /login. */
+@media (max-width: 520px) {
+  .usermenu__signedout .btn2:not(.btn2--primary) { display: none; }
+}
+.usermenu__skeleton {
+  display: inline-block; width: 92px; height: 32px;
+  border-radius: var(--r-sm); background: var(--line);
+  opacity: 0.45;
+}
+.usermenu__trigger {
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  padding: 4px 8px 4px 4px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg-raised);
+  color: var(--ink); font: inherit; cursor: pointer;
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+.usermenu__trigger:hover { border-color: var(--line-strong); background: var(--panel-hover); }
+.usermenu__trigger[aria-expanded="true"] { border-color: var(--accent); }
+.usermenu__trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.usermenu__avatar {
+  display: inline-grid; place-items: center; flex: none;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent-dim); color: var(--accent);
+  font-family: var(--font-display); font-weight: 700; font-size: var(--t-xs);
+}
+.usermenu__avatar--lg { width: 38px; height: 38px; font-size: var(--t-sm); }
+.usermenu__id {
+  display: flex; flex-direction: column; align-items: flex-start;
+  min-width: 0; line-height: 1.15;
+}
+.usermenu__name {
+  font-size: var(--t-xs); font-weight: 600; max-width: 14ch;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.usermenu__role {
+  font-size: 10px; color: var(--ink-faint); text-transform: capitalize;
+  letter-spacing: var(--tracking-label);
+}
+.usermenu__chev { color: var(--ink-faint); flex: none; }
+/* On a narrow viewport the trigger collapses to the avatar. The name and role
+   are the first thing inside the open panel, so nothing is lost. */
+@media (max-width: 620px) {
+  .usermenu__id, .usermenu__chev { display: none; }
+  .usermenu__trigger { padding: 3px; border-radius: 50%; }
+}
+
+/* The panel is portalled to <body> and positioned from the trigger's rect —
+   `.topbar2` has a backdrop-filter, which makes it the containing block for
+   every `position: fixed` descendant, so an in-place panel resolved its insets
+   against a 56px header instead of the viewport. `top` / `right` come from the
+   component as inline styles. */
+.usermenu__scrim { display: none; }
+.usermenu__panel {
+  position: fixed; z-index: 60;
+  width: 264px;
+  padding: var(--s-2);
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  box-shadow: var(--shadow-lg);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .usermenu__panel { animation: menuIn 0.14s var(--ease-out) both; }
+}
+@keyframes menuIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.usermenu__head {
+  display: flex; gap: var(--s-3); align-items: center;
+  padding: var(--s-3) var(--s-3) var(--s-2);
+}
+.usermenu__headtext { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.usermenu__headtext strong { font-size: var(--t-sm); }
+.usermenu__headtext .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.usermenu__badge { align-self: flex-start; margin-top: 3px; }
+.usermenu__org {
+  margin: 0; padding: 0 var(--s-3) var(--s-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.usermenu__group { border-top: 1px solid var(--line); padding-top: var(--s-1); margin-top: var(--s-1); }
+.usermenu__item {
+  display: flex; align-items: center; gap: var(--s-3);
+  width: 100%; padding: var(--s-2) var(--s-3);
+  border: none; background: transparent; border-radius: var(--r-sm);
+  color: var(--ink-muted); font: inherit; font-size: var(--t-sm);
+  text-align: left; cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.usermenu__item:hover, .usermenu__item:focus-visible {
+  background: var(--panel-hover); color: var(--ink); outline: none;
+}
+.usermenu__item:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+.usermenu__item svg { color: var(--ink-faint); flex: none; }
+.usermenu__item:hover svg, .usermenu__item:focus-visible svg { color: var(--accent); }
+.usermenu__item--danger:hover, .usermenu__item--danger:focus-visible { color: var(--critical); }
+.usermenu__item--danger:hover svg, .usermenu__item--danger:focus-visible svg { color: var(--critical); }
+
+/* Bottom sheet on a phone: a 264px panel hanging off a 32px avatar is not a
+   touch target, and on a 375px viewport it would be clipped by the viewport
+   edge as often as not. */
+@media (max-width: 640px) {
+  .usermenu__scrim {
+    display: block; position: fixed; inset: 0; z-index: 59;
+    background: rgba(0, 0, 0, 0.45);
+  }
+  /* `!important` earns its place exactly once: the inline `top` / `right` the
+     component measures are right for a dropdown and wrong for a sheet, and an
+     inline style cannot be beaten any other way. */
+  .usermenu__panel {
+    inset: auto 0 0 0 !important;
+    top: auto !important;
+    width: auto; border-radius: var(--r-lg) var(--r-lg) 0 0;
+    padding: var(--s-3) var(--s-3) max(var(--s-5), env(safe-area-inset-bottom));
+  }
+  .usermenu__item { padding: var(--s-3); font-size: var(--t-md); }
+  @media (prefers-reduced-motion: no-preference) {
+    .usermenu__panel { animation: sheetIn 0.18s var(--ease-out) both; }
+  }
+}
+@keyframes sheetIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* An inline select inside a table cell — the role dropdown on the roster. */
+.field--inline {
+  padding: 4px var(--s-2); height: auto; font-size: var(--t-xs);
+  min-width: 9ch;
+}
+/* A failed action in the audit log is dimmed and struck through in the action
+   column, not coloured red across the whole row — the row is still a record
+   that has to be read. */
+.cb-table tr[data-failed] td:first-child { opacity: 0.75; }
+
 /* ======================================================================== *
  *  KNOWLEDGE ASSISTANT — grounded answer card
  * ======================================================================== */

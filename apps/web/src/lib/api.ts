@@ -23,13 +23,35 @@ export type ApiResult<T> =
   | { ok: false; error: string; status?: number };
 
 // --- session token ---------------------------------------------------------
-// Persisted so a reload keeps you signed in. Auth is off by default on the
-// server (open mode), so an absent token is the normal case, not an error.
+//
+// The token is a *handle* to a session, not the session itself. The server
+// holds a `user_sessions` row per issued token and refuses one whose row is
+// missing or revoked, so signing out ends the session for real and this
+// localStorage entry is a cache of a credential rather than the source of
+// truth for anything: identity, role and permissions are read from
+// `/api/auth/me` on every load, never from here.
+//
+// It is persisted (rather than kept in memory or in sessionStorage) so a reload
+// and a second tab both stay signed in, which §34 asks for. The residual risk —
+// a token readable by injected script — is written down in docs/AUTH.md and
+// bounded by the server-side revocation above and a 12-hour expiry.
 const TOKEN_KEY = "aegis.token";
-export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
+export const getToken = (): string | null => {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    // Private mode, or storage disabled. Treat it as signed out rather than
+    // throwing out of every call site that asks.
+    return null;
+  }
+};
 export const setToken = (token: string | null): void => {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
-  else localStorage.removeItem(TOKEN_KEY);
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* nothing to persist to; the session lives for this page only */
+  }
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
@@ -407,11 +429,38 @@ export const getReport = (sessionId: string) =>
 export interface AuthUser {
   id: number;
   email: string;
-  role: "viewer" | "analyst" | "admin" | "owner";
+  full_name: string | null;
+  /** Name if we have one, else the email's local part. Server-derived so the
+   *  client never has to reimplement the fallback. */
+  display_name: string;
+  phone: string | null;
+  avatar_url: string | null;
+  role: RoleName;
+  role_id: number | null;
   org_id: number | null;
   disabled: boolean;
+  email_verified: boolean;
   created_at: string | null;
+  updated_at: string | null;
+  last_login_at: string | null;
 }
+
+/** Every role the server knows about. Kept in step with `permissions.py` by
+ *  `/api/auth/roles`, which is what the admin UI renders from — this union is
+ *  for the handful of places that need a compile-time name. */
+export type RoleName =
+  | "citizen"
+  | "viewer"
+  | "researcher"
+  | "analyst"
+  | "police"
+  | "admin"
+  | "owner";
+
+/** A permission code. Not a closed union: the server owns the catalogue, and a
+ *  client that has to be redeployed to learn a new permission is a client that
+ *  will be out of date. `can()` compares strings. */
+export type PermissionCode = string;
 
 export interface Organization {
   id: number;
@@ -422,27 +471,165 @@ export interface Organization {
   cases?: number;
 }
 
-export interface MeResponse {
+/**
+ * The one shape the server returns for "who you are" — from login, signup,
+ * refresh, /me and PATCH /me alike. `permissions` is what `can()` reads and
+ * `home` is where this role's dashboard lives, both served rather than
+ * re-derived in TypeScript so there is one definition of each.
+ */
+export interface SessionResponse {
   user: AuthUser;
   org: Organization | null;
+  permissions: PermissionCode[];
+  home: string;
   auth_enforced: boolean;
+  token?: string;
+  expires_in?: number;
 }
 
+/** What the sign-in screen needs before anyone has signed in. */
+export interface AuthStatus {
+  enforced: boolean;
+  mode: string;
+  signup_enabled: boolean;
+  password_hash: string;
+  min_password_length: number;
+  token_ttl_s: number;
+}
+
+export interface RoleInfo {
+  name: RoleName;
+  description: string;
+  rank: number;
+  home: string;
+  permissions: PermissionCode[];
+  self_service: boolean;
+}
+
+export interface DemoAccount {
+  email: string;
+  role: RoleName;
+  name: string;
+  description: string;
+  org: string;
+}
+
+export interface SignupPayload {
+  full_name: string;
+  email: string;
+  phone?: string | null;
+  password: string;
+  confirm_password: string;
+  accept_terms: boolean;
+}
+
+export const getAuthStatus = () => request<AuthStatus>("/api/auth/status");
+
 export const login = (email: string, password: string) =>
-  request<{ token: string; user: AuthUser }>("/api/auth/login", {
+  request<SessionResponse>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
 
-export const getMe = () => request<MeResponse>("/api/auth/me");
+export const signup = (payload: SignupPayload) =>
+  request<SessionResponse>("/api/auth/signup", {
+    method: "POST",
+    body: JSON.stringify({ ...payload, phone: payload.phone || null }),
+  });
+
+export const logoutRequest = () =>
+  request<{ ok: boolean; revoked: boolean }>("/api/auth/logout", { method: "POST" });
+
+export const refreshSession = () =>
+  request<SessionResponse>("/api/auth/refresh", { method: "POST" });
+
+export const getMe = () => request<SessionResponse>("/api/auth/me");
+
+export const updateMe = (patch: { full_name?: string; phone?: string }) =>
+  request<SessionResponse>("/api/auth/me", {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
+
+export interface UserSession {
+  id: number;
+  created_at: string | null;
+  expires_at: string | null;
+  last_seen_at: string | null;
+  revoked: boolean;
+  ip: string | null;
+  user_agent: string | null;
+}
+
+export const listMySessions = () =>
+  request<{ sessions: UserSession[] }>("/api/auth/sessions");
+
+export const signOutEverywhere = () =>
+  request<{ revoked: number }>("/api/auth/sessions", { method: "DELETE" });
+
+export const changePassword = (
+  current_password: string,
+  new_password: string,
+  confirm_password: string,
+) =>
+  request<{ ok: boolean; other_sessions_ended: number }>("/api/auth/password/change", {
+    method: "POST",
+    body: JSON.stringify({ current_password, new_password, confirm_password }),
+  });
+
+export const forgotPassword = (email: string) =>
+  request<{ ok: boolean; message: string; dev_token?: string; dev_only?: boolean }>(
+    "/api/auth/password/forgot",
+    { method: "POST", body: JSON.stringify({ email }) },
+  );
+
+export const resetPassword = (
+  token: string,
+  new_password: string,
+  confirm_password: string,
+) =>
+  request<{ ok: boolean; sessions_ended: number }>("/api/auth/password/reset", {
+    method: "POST",
+    body: JSON.stringify({ token, new_password, confirm_password }),
+  });
+
+export const listRoles = () =>
+  request<{
+    roles: RoleInfo[];
+    permissions: { code: string; description: string }[];
+    signup_role: RoleName;
+  }>("/api/auth/roles");
+
+export const listDemoAccounts = () =>
+  request<{ open_mode: boolean; password: string | null; accounts: DemoAccount[] }>(
+    "/api/auth/demo-accounts",
+  );
 
 export const listUsers = () => request<{ users: AuthUser[] }>("/api/auth/users");
 
-export const createUser = (email: string, password: string, role: string, orgId?: number) =>
+export const createUser = (payload: {
+  email: string;
+  password: string;
+  role: string;
+  full_name?: string;
+  orgId?: number;
+}) =>
   request<{ user: AuthUser }>("/api/auth/users", {
     method: "POST",
-    body: JSON.stringify({ email, password, role, org_id: orgId ?? null }),
+    body: JSON.stringify({
+      email: payload.email,
+      password: payload.password,
+      role: payload.role,
+      full_name: payload.full_name || null,
+      org_id: payload.orgId ?? null,
+    }),
   });
+
+export const updateUser = (id: number, patch: { role?: string; disabled?: boolean }) =>
+  request<{ user: AuthUser; changed: string[]; sessions_ended?: number }>(
+    `/api/auth/users/${id}`,
+    { method: "PATCH", body: JSON.stringify(patch) },
+  );
 
 export const listOrgs = () =>
   request<{ organizations: Organization[] }>("/api/orgs");
@@ -482,13 +669,96 @@ export interface AuditEvent {
   id: number;
   ts: string | null;
   actor: string | null;
+  actor_user_id: number | null;
   action: string;
+  resource_type: string | null;
+  resource_id: string | null;
   target: string | null;
+  success: boolean;
+  ip: string | null;
+  user_agent: string | null;
   detail: string | null;
 }
 
 export const getAudit = (action?: string) =>
   request<{ events: AuditEvent[] }>(`/api/audit${action ? `?action=${action}` : ""}`);
+
+// ---------------------------------------------------------------------------
+// Investigations — the case list, scoped by the server to what you may see
+// ---------------------------------------------------------------------------
+
+export interface InvestigationSummary {
+  case_id: string;
+  org_id: string;
+  status: string;
+  mode: string;
+  created_by: string;
+  created_at: string;
+  completed_at: string | null;
+  risk_score: number | null;
+  risk_level: string | null;
+  confidence: number | null;
+  classification: string | null;
+}
+
+export const listInvestigations = (opts: { limit?: number; status?: string } = {}) => {
+  const q = new URLSearchParams();
+  if (opts.limit) q.set("limit", String(opts.limit));
+  if (opts.status) q.set("status", opts.status);
+  const qs = q.toString();
+  return request<{
+    investigations: InvestigationSummary[];
+    total: number;
+    /** "own" when the server narrowed this to the caller's own cases. Rendered,
+     *  not assumed — a citizen and an investigator see different lists from the
+     *  same endpoint and the page should say which it is showing. */
+    scope: "own" | "organisation";
+  }>(`/api/investigations${qs ? `?${qs}` : ""}`);
+};
+
+// ---------------------------------------------------------------------------
+// Research (§27) — aggregates and model evaluation, never a case
+// ---------------------------------------------------------------------------
+
+export interface ResearchOverview {
+  dataset: {
+    cases: number;
+    clusters: number;
+    campaigns: number;
+    linked_entities: number;
+    graph_nodes: number;
+    graph_edges: number;
+    total_loss_inr: number;
+  };
+  model: {
+    task: string;
+    base_model: string;
+    serving: string;
+    checkpoint_backed: boolean;
+    serving_best: boolean;
+    selection_reason: string;
+  };
+  evaluation: {
+    protocol: string;
+    measured: boolean;
+    scores: Record<string, { macro_f1: number }>;
+  };
+  /** `support` is per stage — `{GREETING: 68, …}` — not a single number.
+   *  Typed as the map it is: a `number` here rendered as "[object Object]". */
+  twin: { kind: string; fitted: boolean; stages: string[]; support: Record<string, number> };
+  trends: {
+    scam_type: string;
+    scam_name: string;
+    clusters: number;
+    cases: number;
+    loss_inr: number;
+    mean_threat: number;
+  }[];
+  privacy: { min_cluster_size: number; clusters_withheld: number; note: string };
+}
+
+export const getResearchOverview = () =>
+  request<ResearchOverview>("/api/research/overview");
 
 // ---------------------------------------------------------------------------
 // Module 2 — FIGAE (fraud intelligence & geospatial)

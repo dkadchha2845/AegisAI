@@ -337,11 +337,18 @@ class EvidenceStore:
     def exists(self, case_id: str) -> bool:
         return self._case_row(case_id) is not None
 
-    def count(self) -> int:
-        """How many investigations this organisation has. Never anyone else's."""
-        return int(
-            self.db.query(Investigation).filter(Investigation.org_id == self.org_id).count()
-        )
+    def count(self, *, created_by: Optional[str] = None) -> int:
+        """How many investigations this organisation has. Never anyone else's.
+
+        `created_by` narrows further, to the cases one person submitted — the
+        count beside a citizen's own case list. It is a filter on the query for
+        the same reason `list_cases`'s is: a total computed by counting rows
+        the caller may not see is a total that leaks how many there are.
+        """
+        q = self.db.query(Investigation).filter(Investigation.org_id == self.org_id)
+        if created_by:
+            q = q.filter(Investigation.created_by == created_by)
+        return int(q.count())
 
     def list_cases(
         self,
@@ -349,16 +356,24 @@ class EvidenceStore:
         limit: int = 50,
         offset: int = 0,
         status: Optional[str] = None,
+        created_by: Optional[str] = None,
     ) -> list[dict[str, Any]]:
         """Summaries for a case list, newest first.
 
         Deliberately not `list[InvestigationState]`: a case list that loads every
         agent result and trace span to render twelve rows is the kind of thing
         that is fine in a demo and unusable at a thousand cases.
+
+        `created_by` is the ownership narrowing a caller with only
+        `INVESTIGATION_READ_OWN` gets. It lives here, in the one class that owns
+        every query against these tables, rather than in the route — the same
+        reason `org_id` does.
         """
         q = self.db.query(Investigation).filter(Investigation.org_id == self.org_id)
         if status:
             q = q.filter(Investigation.status == status)
+        if created_by:
+            q = q.filter(Investigation.created_by == created_by)
         rows = (
             q.order_by(Investigation.created_at.desc(), Investigation.id.desc())
             .limit(max(1, min(limit, 500)))

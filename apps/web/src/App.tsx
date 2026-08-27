@@ -26,11 +26,23 @@ import "@/styles/modules.css";
 import "@/styles/primitives.css";
 
 const Login = lazy(() => import("@/pages/Login").then((m) => ({ default: m.Login })));
+const Signup = lazy(() => import("@/pages/Signup").then((m) => ({ default: m.Signup })));
+const ForgotPassword = lazy(() =>
+  import("@/pages/PasswordReset").then((m) => ({ default: m.ForgotPassword })),
+);
+const ResetPassword = lazy(() =>
+  import("@/pages/PasswordReset").then((m) => ({ default: m.ResetPassword })),
+);
+const RoleDashboard = lazy(() =>
+  import("@/pages/RoleDashboard").then((m) => ({ default: m.RoleDashboard })),
+);
+const ResearchDashboard = lazy(() =>
+  import("@/pages/ResearchDashboard").then((m) => ({ default: m.ResearchDashboard })),
+);
 const CitizenHome = lazy(() => import("@/pages/CitizenHome").then((m) => ({ default: m.CitizenHome })));
 const Emergency = lazy(() => import("@/pages/Emergency").then((m) => ({ default: m.Emergency })));
 const Profile = lazy(() => import("@/pages/Profile").then((m) => ({ default: m.Profile })));
 const LiveProtection = lazy(() => import("@/pages/LiveProtection").then((m) => ({ default: m.LiveProtection })));
-const Dashboard = lazy(() => import("@/pages/Dashboard").then((m) => ({ default: m.Dashboard })));
 const LiveConsole = lazy(() => import("@/pages/LiveConsole").then((m) => ({ default: m.LiveConsole })));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
 const Analyzer = lazy(() => import("@/pages/Analyzer").then((m) => ({ default: m.Analyzer })));
@@ -47,6 +59,9 @@ const ModelCard = lazy(() => import("@/pages/ModelCard").then((m) => ({ default:
 const TITLES: Record<string, string> = {
   "/": "AegisAI — Your shield against scam calls",
   "/login": "Sign in · AegisAI",
+  "/signup": "Create an account · AegisAI",
+  "/forgot-password": "Reset your password · AegisAI",
+  "/reset-password": "Choose a new password · AegisAI",
   // Citizen destinations
   "/home": "Home · AegisAI",
   "/analyze": "Analyze · AegisAI",
@@ -56,8 +71,11 @@ const TITLES: Record<string, string> = {
   "/emergency": "Emergency · AegisAI",
   "/profile": "Profile · AegisAI",
   // Analyst tools (reachable from Profile)
-  "/admin": "Admin · AegisAI",
+  "/admin": "Administration · AegisAI",
+  "/admin/dashboard": "Administration · AegisAI",
   "/dashboard": "Dashboard · AegisAI",
+  "/police/dashboard": "Case queue · AegisAI",
+  "/research/dashboard": "Research · AegisAI",
   "/analyst/console": "Live console (analyst) · AegisAI",
   "/investigate": "Investigate · AegisAI",
   "/intel": "Fraud intel · AegisAI",
@@ -122,11 +140,10 @@ function SkipLink() {
 }
 
 /**
- * Route gate. The console (analyst tools) is reachable only after a deliberate
- * sign-in in this browser — even though the demo server runs open — so loading
- * the site lands on the public landing, and "Enter console" routes through
- * /login first. The citizen shield stays outside this gate: citizens have no
- * account, which the login screen says out loud.
+ * Route gate. Everything past the citizen shield is reachable only after a
+ * deliberate sign-in in this browser — even though the demo server runs open —
+ * so loading the site lands on the public landing and every protected
+ * destination routes through /login first, remembering where you were headed.
  *
  * `authed` is a client fact (a token is held), not the server's open-mode
  * identity, so this never traps a real deployment either: enforce auth and the
@@ -143,20 +160,25 @@ function RequireAuth({ children }: { children?: ReactNode }) {
 }
 
 /**
- * Role gate, layered on top of RequireAuth. The backend already enforces the
- * same `admin`+ requirement on every /api/auth/users and admin route, so this is
- * defence-in-depth and UX (don't show a citizen a 403), not the security
- * boundary itself. `owner` outranks `admin`, so both pass.
+ * Permission gate, layered on RequireAuth.
+ *
+ * **This is UX and defence in depth, not the boundary.** The API behind every
+ * one of these routes declares the same `require_permission`, and that check is
+ * the one that decides. This exists so a citizen who types /admin/dashboard
+ * sees their own dashboard instead of a screen of failed requests — and because
+ * §28 asks for both halves while being explicit that "FRONTEND PROTECTION ≠
+ * SECURITY".
+ *
+ * A signed-in identity that lacks the permission is sent to *its own* home
+ * rather than to a fixed route, so nobody is bounced somewhere they also cannot
+ * use.
  */
-const ROLE_RANK: Record<string, number> = { viewer: 0, analyst: 1, admin: 2, owner: 3 };
-function RequireRole({ min }: { min: "analyst" | "admin" }) {
-  const { authed, user, loading } = useAuth();
+function RequirePermission({ needs }: { needs: string[] }) {
+  const { authed, loading, can, home } = useAuth();
   const location = useLocation();
   if (loading) return <Loading />;
   if (!authed) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
-  if ((ROLE_RANK[user?.role ?? "viewer"] ?? 0) < ROLE_RANK[min]) {
-    return <Navigate to="/home" replace />;
-  }
+  if (!can(...needs)) return <Navigate to={home} replace />;
   return <Outlet />;
 }
 
@@ -172,6 +194,9 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route element={<AppShell />}>
                 {/* Citizen destinations — task-oriented, no account required.
                     The three research modules power these underneath; a person
@@ -191,22 +216,40 @@ export default function App() {
                 <Route path="/cases" element={<Navigate to="/reports" replace />} />
                 <Route path="/knowledge" element={<Navigate to="/learn" replace />} />
 
-                {/* Analyst tools — reachable from Profile, off the citizen nav,
-                    and still behind a deliberate sign-in. */}
+                {/* Every signed-in identity has a dashboard; which one it is
+                    is decided by capability inside RoleDashboard, so §23's four
+                    role dashboards are four named entrances rather than four
+                    duplicated pages. */}
                 <Route element={<RequireAuth />}>
-                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/dashboard" element={<RoleDashboard />} />
+                </Route>
+
+                {/* Investigator tools. Gated on the capability the page behind
+                    each one actually needs, which is also what the API asks
+                    for — a citizen who types the URL lands back on their own
+                    dashboard rather than on a page of 403s. */}
+                <Route element={<RequirePermission needs={["GRAPH_READ"]} />}>
+                  <Route path="/police/dashboard" element={<RoleDashboard />} />
                   <Route path="/analyst/console" element={<LiveConsole />} />
-                  <Route path="/investigate" element={<Investigate />} />
                   <Route path="/guardian" element={<Guardian />} />
                   <Route path="/analyzer" element={<Analyzer />} />
                   <Route path="/intel" element={<Intel />} />
                   <Route path="/model" element={<ModelCard />} />
                 </Route>
-
-                {/* Admin-only — the platform-operator dashboard. */}
-                <Route element={<RequireRole min="admin" />}>
-                  <Route path="/admin" element={<AdminDashboard />} />
+                <Route element={<RequirePermission needs={["INVESTIGATION_CREATE"]} />}>
+                  <Route path="/investigate" element={<Investigate />} />
                 </Route>
+
+                {/* Research — aggregates and model evaluation, no case data. */}
+                <Route element={<RequirePermission needs={["RESEARCH_READ"]} />}>
+                  <Route path="/research/dashboard" element={<ResearchDashboard />} />
+                </Route>
+
+                {/* Administration — users, roles, tenants, audit log. */}
+                <Route element={<RequirePermission needs={["USER_MANAGE"]} />}>
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                </Route>
+                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="*" element={<Navigate to="/home" replace />} />
               </Route>
             </Routes>

@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from .. import audit
-from ..auth import get_current_user
+from ..auth import require_permission
 from ..config import settings
 from ..db import get_db
 from ..engine.report import build_evidence_package
@@ -108,7 +108,7 @@ def guardian_ack(session_id: str, name: Optional[str] = None) -> Dict[str, Any]:
 def attempt_payment(
     session_id: str,
     req: PaymentRequest,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_permission("LIVE_SESSION_USE")),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
     session = _require(session_id)
@@ -124,7 +124,7 @@ def attempt_payment(
 @router.post("/{session_id}/payment/cancel")
 def cancel_payment(
     session_id: str,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_permission("LIVE_SESSION_USE")),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
     session = _require(session_id)
@@ -136,7 +136,7 @@ def cancel_payment(
 @router.post("/{session_id}/payment/approve")
 def approve_payment(
     session_id: str,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_permission("LIVE_SESSION_USE")),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
     session = _require(session_id)

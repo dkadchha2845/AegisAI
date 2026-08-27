@@ -49,6 +49,14 @@ EVIDENCE_TABLES = {
     "entities",
     "case_entities",
 }
+#: Added by 0003 — the role catalogue, revocable sessions, password resets.
+RBAC_TABLES = {
+    "roles",
+    "permissions",
+    "role_permissions",
+    "user_sessions",
+    "password_resets",
+}
 
 
 def _config(url: str) -> Config:
@@ -111,6 +119,54 @@ def test_migrations_run_forward_and_back_and_forward(db):
 
     command.upgrade(cfg, "head")
     assert _tables(engine) == set(Base.metadata.tables)
+
+
+def test_head_creates_the_rbac_tables(db):
+    """0003's five tables exist at head, and the columns it adds are on the
+    tables it adds them to. `test_head_matches_the_models` already proves there
+    is no drift; this states what the revision is *for*, so a future edit that
+    quietly drops one fails with a name rather than a diff."""
+    url, engine = db
+    command.upgrade(_config(url), "head")
+    assert _tables(engine) >= RBAC_TABLES
+    users = {c["name"] for c in inspect(engine).get_columns("users")}
+    assert {"role_id", "full_name", "phone", "email_verified", "last_login_at"} <= users
+    events = {c["name"] for c in inspect(engine).get_columns("audit_events")}
+    assert {"actor_user_id", "resource_type", "resource_id", "success", "ip"} <= events
+
+
+def test_downgrading_the_auth_revision_leaves_the_users_alone(db):
+    """Rolling back 0003 takes the RBAC tables and the columns it added, and
+    leaves every user row where it was — the rollback plan for this change, run
+    rather than described."""
+    url, engine = db
+    cfg = _config(url)
+    command.upgrade(cfg, "head")
+
+    from sqlalchemy import text
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO organizations (id, slug, name, created_at) "
+                "VALUES (1, 'aegis', 'AegisAI', '2026-08-26 00:00:00')"
+            )
+        )
+        conn.execute(
+            text(
+                "INSERT INTO users (id, email, password_hash, role, org_id, disabled, "
+                "created_at, email_verified, updated_at) VALUES "
+                "(1, 'keep@aegis.local', 'x', 'owner', 1, 0, '2026-08-26 00:00:00', 0, "
+                "'2026-08-26 00:00:00')"
+            )
+        )
+
+    command.downgrade(cfg, "0002")
+    remaining = _tables(engine)
+    assert not (RBAC_TABLES & remaining)
+    assert remaining >= PLATFORM_TABLES
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT email FROM users")).scalar() == "keep@aegis.local"
 
 
 def test_downgrading_the_evidence_revision_leaves_the_platform_alone(db):
@@ -186,4 +242,4 @@ def test_every_revision_is_reachable_from_head(db):
     heads = script.get_heads()
     assert len(heads) == 1, f"branched migration history: {heads}"
     revisions = [r.revision for r in script.walk_revisions()]
-    assert revisions == ["0002", "0001"], revisions
+    assert revisions == ["0003", "0002", "0001"], revisions

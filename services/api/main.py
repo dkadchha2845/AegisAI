@@ -24,7 +24,7 @@ from . import agents as _agents  # noqa: F401  (registers the built-in agents)
 from . import db as db_mod
 from . import llm
 from .agents import registry
-from .auth import auth_enabled, seed_admin
+from .auth import auth_enabled, kdf_name, purge_expired_sessions, seed_admin
 from .config import settings
 from .db import SessionLocal, init_db
 from .engine import classifier as classifier_mod
@@ -37,7 +37,17 @@ from .jobs.journal import dead_letters
 from .orchestration.graph import graph_summary
 from .rag.coach import get_coach
 from .rag.store import get_kb
-from .routes import analyze, auth, intel, investigations, orgs, reports, session, shield
+from .routes import (
+    analyze,
+    auth,
+    intel,
+    investigations,
+    orgs,
+    reports,
+    research,
+    session,
+    shield,
+)
 from .security import RateLimitMiddleware, SecurityHeadersMiddleware
 from .stores import blobs as blob_store
 from .stores import probe as store_probe
@@ -103,6 +113,7 @@ app.include_router(reports.router)
 app.include_router(intel.router)
 app.include_router(shield.router)
 app.include_router(orgs.router)
+app.include_router(research.router)
 
 
 def warm() -> None:
@@ -132,6 +143,11 @@ def warm() -> None:
 
         records = [r.package_json for r in _db.query(CaseRecord).all()]
         get_intel().rebuild(extra_records=records)
+        # Session rows that expired more than a week ago can no longer
+        # authenticate anything. Cleared at boot rather than on a timer: it is
+        # the one moment a sweep costs nobody a request, and the audit trail of
+        # who signed in lives in `audit_events`, which is never touched.
+        purge_expired_sessions(_db)
     finally:
         _db.close()
 
@@ -179,6 +195,14 @@ def health() -> Dict[str, Any]:
             # In open mode the API acts as the seeded admin; say so rather than
             # implying a login happened.
             "mode": "enforced" if auth_enabled() else "open (demo)",
+            # Which KDF is actually hashing passwords in this process. Reported
+            # rather than assumed, for the same reason `classifier.backend` is:
+            # argon2id is preferred and pbkdf2 is the offline fallback, and
+            # "which one is serving" is a question with a checkable answer.
+            "password_hash": kdf_name(),
+            # Sessions are revocable — a signed-out token stops working here,
+            # not just in the browser that dropped it.
+            "sessions": "revocable",
         },
         "database": {
             # Names the engine rather than filing everything that is not SQLite

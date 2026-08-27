@@ -12,7 +12,7 @@ PY        := .venv/bin/python
 WEB       := --prefix apps/web
 
 .DEFAULT_GOAL := help
-.PHONY: help gates check lint types cov audit test contract typecheck build up down reset status logs api worker dlq web install serving verify-checkpoint eval graph graph-summary migrate migrate-status
+.PHONY: help gates check lint types cov audit test contract typecheck build up down reset status logs api worker dlq web install serving verify-checkpoint eval graph graph-summary migrate migrate-status seed users set-password db-shell
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -58,6 +58,20 @@ migrate: ## Apply schema migrations to DATABASE_URL (the durable store only)
 migrate-status: ## Which revision DATABASE_URL is on, and what is available
 	.venv/bin/alembic current
 	.venv/bin/alembic history --indicate-current
+
+seed: ## Seed roles, permissions, the default org, the owner and the demo roster (idempotent)
+	@[ -n "$$DATABASE_URL" ] || (echo "Set DATABASE_URL first — the ephemeral DB is deleted when this command exits."; exit 1)
+	$(PY) -m services.api.seed seed
+
+users: ## List accounts and their roles
+	$(PY) -m services.api.seed users
+
+set-password: ## Reset a development credential:  make set-password EMAIL=citizen@aegis.local
+	@[ -n "$$EMAIL" ] || (echo "usage: make set-password EMAIL=someone@aegis.local"; exit 1)
+	$(PY) -m services.api.seed set-password "$$EMAIL"
+
+db-shell: ## Open a SQL console on DATABASE_URL (sqlite3 or psql, whichever it names)
+	@$(PY) -m services.api.dbshell
 
 graph: ## Render the investigation graph as Mermaid
 	$(PY) -m services.api.orchestration

@@ -1,54 +1,68 @@
 /**
- * Login — the dedicated authentication screen and the gate into the console.
+ * Sign in — the doorway into the product.
  *
  * The server runs open by default (the demo needs no *provisioning*), but the
- * client still gates the console behind a deliberate sign-in, so this screen is
- * the real doorway rather than a formality. It works in two modes and says which
- * it is in: when enforcement is off it offers a one-tap continue-as-owner plus a
- * role switcher (so RBAC is demonstrable); when enforcement is on it simply gates.
- * Either way a successful sign-in mints a token, updates the whole app, and
- * returns the user to wherever they were headed.
+ * client still gates everything behind a deliberate sign-in, so this screen is
+ * the real doorway rather than a formality. It works in two modes and says
+ * which it is in: when enforcement is off it offers a role switcher, so a judge
+ * can watch access control change between one account and the next; when
+ * enforcement is on it simply gates, and the switcher is not merely hidden —
+ * `/api/auth/demo-accounts` returns nothing, because a deployment that enforces
+ * auth must not have an endpoint that advertises credentials.
  *
- * Visually it shares the landing's WebGL backdrop and adds an entrance animation
- * and a 3D tilt on the card, so the product feels like one thing from the first
- * screen rather than a login bolted onto an app.
+ * **The demo roster is fetched, not written here.** It used to be a literal
+ * array of four emails in this file, which is a second copy of the seed that
+ * drifts the first time someone adds an account — and §43's "do not hard-code
+ * users in React", read narrowly. The list, the password and whether to show
+ * either all come from the server.
+ *
+ * Visually it shares the landing's WebGL backdrop and the same brand lockup as
+ * the sign-up screen beside it, so the auth flow reads as part of AegisAI
+ * rather than a template bolted on.
  */
 
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowRight, Eye, EyeOff, Lock, ShieldCheck, User } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ArrowRight, Eye, EyeOff, Lock, Mail, ShieldCheck, UserRound } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { ThreatField } from "@/components/three/ThreatField";
 import { useAuth } from "@/context/AuthContext";
 import { useTilt } from "@/hooks/useTilt";
-
-/** The seeded demo roster — one per role, so a judge can watch access change. */
-const DEMO_ACCOUNTS: { role: string; email: string; blurb: string }[] = [
-  { role: "owner", email: "admin@aegis.local", blurb: "Platform owner — every org, user management" },
-  { role: "admin", email: "supervisor@aegis.local", blurb: "Org admin — users + audit log for their cell" },
-  { role: "analyst", email: "analyst@aegis.local", blurb: "Analyst — save & read cases, no user admin" },
-  { role: "viewer", email: "viewer@aegis.local", blurb: "Viewer — read-only" },
-];
-const DEMO_PASSWORD = "changeme";
+import * as api from "@/lib/api";
+import type { DemoAccount } from "@/lib/api";
 
 export function Login() {
   const auth = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from ?? "/dashboard";
+  const from = (location.state as { from?: string } | null)?.from ?? null;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [demo, setDemo] = useState<{ password: string | null; accounts: DemoAccount[] }>({
+    password: null,
+    accounts: [],
+  });
 
   const panelRef = useTilt<HTMLDivElement>({ max: 5, lift: 4 });
 
-  // Already signed in and somehow back on /login → skip straight in.
+  // Already signed in and somehow back on /login → skip straight in, to the
+  // page they were headed for or to their own role's dashboard.
   useEffect(() => {
-    if (auth.authed && !auth.loading) navigate(from, { replace: true });
-  }, [auth.authed, auth.loading, from, navigate]);
+    if (auth.authed && !auth.loading) navigate(from ?? auth.home, { replace: true });
+  }, [auth.authed, auth.loading, auth.home, from, navigate]);
+
+  useEffect(() => {
+    void (async () => {
+      const res = await api.listDemoAccounts();
+      if (res.ok && res.data.open_mode) {
+        setDemo({ password: res.data.password, accounts: res.data.accounts });
+      }
+    })();
+  }, []);
 
   // Entrance motion is a pure CSS keyframe (see .login__content [data-reveal]),
   // not a GSAP tween. That is deliberate for the one screen you cannot afford to
@@ -56,9 +70,9 @@ export function Login() {
   // to completion, so — unlike a JS tween whose ticker sleeps when the tab is
   // backgrounded — the fields can never freeze at opacity 0 with no way in.
 
-  const go = (res: { ok: boolean; error?: string }) => {
+  const go = (res: { ok: boolean; error?: string; home?: string }) => {
     setBusy(false);
-    if (res.ok) navigate(from, { replace: true });
+    if (res.ok) navigate(from ?? res.home ?? auth.home, { replace: true });
     else setError(res.error ?? "Sign-in failed");
   };
 
@@ -73,11 +87,12 @@ export function Login() {
   };
 
   const signInAs = async (acctEmail: string) => {
+    if (!demo.password) return;
     setBusy(true);
     setError(null);
     setEmail(acctEmail);
-    setPassword(DEMO_PASSWORD);
-    go(await auth.login(acctEmail, DEMO_PASSWORD));
+    setPassword(demo.password);
+    go(await auth.login(acctEmail, demo.password));
   };
 
   return (
@@ -87,114 +102,119 @@ export function Login() {
       </div>
       <div className="login__panel" ref={panelRef}>
         <div className="login__content">
-          <div className="login__brand" data-reveal>
+          <Link to="/" className="login__brand" data-reveal aria-label="AegisAI home">
             <Logo size={24} />
-          </div>
-          <h1 className="login__title" data-reveal>Sign in to the console</h1>
+          </Link>
+          <h1 className="login__title" data-reveal>Sign in</h1>
           <p className="login__sub" data-reveal>
-            Access the analyst tools, fraud intelligence, and case book.
+            Your investigations, your reports, and the tools your role gives you.
           </p>
 
-          {!auth.enforced && (
-            <div className="login__note" data-reveal>
-              <ShieldCheck size={15} />
-              <div>
-                <strong>Open demo mode.</strong> Pick a role below to see access
-                control in action, or sign in with{" "}
-                <span className="mono">admin@aegis.local</span> /{" "}
-                <span className="mono">changeme</span>.
+          {demo.accounts.length > 0 && (
+            <>
+              <div className="login__note" data-reveal>
+                <ShieldCheck size={15} />
+                <div>
+                  <strong>Open demo mode.</strong> Pick a role to see access control
+                  in action — each one lands somewhere different and can do
+                  different things.
+                </div>
               </div>
-            </div>
+
+              <div className="login__roles" data-reveal>
+                {demo.accounts.map((a) => (
+                  <button
+                    key={a.email}
+                    type="button"
+                    className="login__role"
+                    onClick={() => signInAs(a.email)}
+                    disabled={busy}
+                    title={`${a.description} — ${a.org}`}
+                  >
+                    <UserRound size={13} aria-hidden="true" />
+                    <span className="login__rolename">{a.role}</span>
+                    <span className="login__rolemail mono">{a.email}</span>
+                  </button>
+                ))}
+              </div>
+            </>
           )}
 
-          {!auth.enforced && (
-            <div className="login__roles" data-reveal>
-              {DEMO_ACCOUNTS.map((a) => (
-                <button
-                  key={a.email}
-                  className="login__role"
-                  onClick={() => signInAs(a.email)}
-                  disabled={busy}
-                  title={a.blurb}
-                >
-                  <User size={13} />
-                  <span className="login__rolename">{a.role}</span>
-                  <span className="login__rolemail mono">{a.email}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          <label className="fieldlabel" data-reveal>Email</label>
-          <input
-            className="field"
-            data-reveal
-            type="email"
-            autoComplete="username"
-            placeholder="you@agency.gov.in"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && submit()}
-          />
-          <label className="fieldlabel" data-reveal style={{ marginTop: "var(--s-3)" }}>
-            Password
-          </label>
-          <div className="login__pwd" data-reveal>
-            <Lock size={14} className="login__pwd-lock" />
-            <input
-              className="field"
-              type={showPw ? "text" : "password"}
-              autoComplete="current-password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && submit()}
-            />
-            <button
-              type="button"
-              className="login__pwd-toggle"
-              onClick={() => setShowPw((v) => !v)}
-              aria-label={showPw ? "Hide password" : "Show password"}
-              aria-pressed={showPw}
-              tabIndex={-1}
-            >
-              {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
-            </button>
-          </div>
-
-          {error && (
-            <div className="banner banner--bad" style={{ marginTop: "var(--s-3)" }}>
-              <div className="small">{error}</div>
-            </div>
-          )}
-
-          <button
-            className="btn2 btn2--primary login__submit"
-            data-reveal
-            onClick={submit}
-            disabled={busy}
+          <form
+            className="login__form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void submit();
+            }}
           >
-            {busy ? "Signing in…" : "Sign in"} <ArrowRight size={15} />
-          </button>
+            <label className="fieldlabel" htmlFor="login-email" data-reveal>Email</label>
+            <div className="login__pwd" data-reveal>
+              <Mail size={14} className="login__pwd-lock" aria-hidden="true" />
+              <input
+                id="login-email"
+                className="field"
+                type="email"
+                autoComplete="username"
+                placeholder="you@agency.gov.in"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
 
-          {!auth.enforced && (
+            <div className="login__pwdrow" data-reveal>
+              <label className="fieldlabel" htmlFor="login-password">Password</label>
+              <Link className="login__forgot" to="/forgot-password">
+                Forgot password?
+              </Link>
+            </div>
+            <div className="login__pwd" data-reveal>
+              <Lock size={14} className="login__pwd-lock" aria-hidden="true" />
+              <input
+                id="login-password"
+                className="field"
+                type={showPw ? "text" : "password"}
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="login__pwd-toggle"
+                onClick={() => setShowPw((v) => !v)}
+                aria-label={showPw ? "Hide password" : "Show password"}
+                aria-pressed={showPw}
+                tabIndex={-1}
+              >
+                {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            </div>
+
+            {error && (
+              <div className="banner banner--bad" role="alert" style={{ marginTop: "var(--s-3)" }}>
+                <div className="small">{error}</div>
+              </div>
+            )}
+
             <button
-              className="btn2 btn2--ghost login__skip"
+              className="btn2 btn2--primary login__submit"
               data-reveal
-              onClick={async () => {
-                setBusy(true);
-                setError(null);
-                go(await auth.continueAsDemo());
-              }}
+              type="submit"
               disabled={busy}
             >
-              Continue as owner →
+              {busy ? "Signing in…" : "Sign in"} <ArrowRight size={15} aria-hidden="true" />
             </button>
+          </form>
+
+          {auth.status?.signup_enabled !== false && (
+            <p className="login__switch small" data-reveal>
+              Don't have an account? <Link to="/signup">Create one</Link>
+            </p>
           )}
 
           <p className="login__foot small faint" data-reveal>
-            Citizens don't need an account —{" "}
-            <a href="/home">AegisAI</a> is open to everyone.
+            Fraud in progress? Call <strong className="mono">1930</strong> — you don't
+            need an account for that.
           </p>
         </div>
       </div>

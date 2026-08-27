@@ -56,6 +56,7 @@ conversation-analysis agent.
 | 🏗️ [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Agent graph, `InvestigationState` contract, scoring architecture, security design |
 | ✅ [`docs/TASKS.md`](./docs/TASKS.md) | The phased task backlog with acceptance criteria, timeline and critical path |
 | 🤝 [`CLAUDE.md`](./CLAUDE.md) | Contributor working rules: invariants, quality gates, and the definition of done |
+| 🔐 [`docs/AUTH.md`](./docs/AUTH.md) | Accounts, roles, permissions, sessions, seeding, and how to open the database |
 | 📚 [`docs/DATASETS.md`](./docs/DATASETS.md) | AIFC corpus strategy, splits, annotation, ethics |
 | 🔬 [`docs/RESEARCH.md`](./docs/RESEARCH.md) | Contributions, experiments, ablations, paper plan |
 | 📐 [`docs/adr/`](./docs/adr/) | Architecture decision records — every deviation, justified |
@@ -249,14 +250,50 @@ npm run dev --prefix apps/web
 # → http://localhost:5173
 ```
 
-### 3. Verify
+### 3. Sign in
+
+The demo runs **open** by default: the API acts as the seeded owner for any
+request with no token, so nothing needs provisioning to look around. To watch
+access control actually work, sign in as one of the seeded roles — the sign-in
+screen lists them, and each one lands somewhere different and can do different
+things.
+
+| Account | Role | Lands on |
+|---|---|---|
+| `admin@aegis.local` | owner | `/admin/dashboard` |
+| `supervisor@aegis.local` | admin | `/admin/dashboard` |
+| `police@aegis.local` | police | `/police/dashboard` |
+| `analyst@aegis.local` | analyst | `/dashboard` |
+| `researcher@aegis.local` | researcher | `/research/dashboard` |
+| `citizen@aegis.local` | citizen | `/dashboard` |
+| `viewer@aegis.local` | viewer | `/dashboard` |
+
+All of them share `AEGIS_DEMO_PASSWORD` — `changeme` unless you set it. **None
+of these accounts exist when `AEGIS_AUTH=1`**, so a real deployment ships no
+known-password accounts. Anyone can also create a citizen account from
+**Get started**.
+
+To persist accounts, cases and the audit log across restarts, set
+`DATABASE_URL` (and `AEGIS_EVIDENCE_DIR`), then:
+
+```bash
+make migrate   # apply the schema
+make seed      # roles, permissions, the default org, the owner, the demo roster
+make users     # who exists, and with what role
+```
+
+[`docs/AUTH.md`](./docs/AUTH.md) covers the roles, the permission catalogue,
+resetting a development credential, and how to open the database in pgAdmin or a
+SQL console.
+
+### 4. Verify
 
 ```bash
 curl http://localhost:8000/api/health
 # All systems live — or honest degraded status per component
 ```
 
-### 4. Optional: Enable Gemini explanations
+### 5. Optional: Enable Gemini explanations
 
 ```bash
 cp .env.example .env
@@ -320,7 +357,16 @@ The web app renders from a mock stream if the API is down. The API answers witho
 | `/api/shield/verify` | POST | Citizen threat verification (public) |
 | `/api/shield/coach` | GET | Stage-aware coaching lines (public) |
 | `/api/cases` | GET/POST | Case book (auth required) |
-| `/api/auth/login` | POST | Authenticate, receive HS256 token |
+| `/api/investigations` | GET/POST | Submit a case; list the ones you may see |
+| `/api/research/overview` | GET | Anonymised datasets and model evaluation (`RESEARCH_READ`) |
+| `/api/auth/login` | POST | Authenticate, receive a session token |
+| `/api/auth/signup` | POST | Create a citizen account |
+| `/api/auth/logout` | POST | Revoke this session server-side |
+| `/api/auth/me` | GET/PATCH | Identity, role, permissions; edit your own profile |
+| `/api/auth/roles` | GET | The role catalogue and what each role can do |
+
+Every protected route declares the permission it needs, and refuses the request
+when the caller does not hold it — see [`docs/AUTH.md`](./docs/AUTH.md).
 
 ---
 

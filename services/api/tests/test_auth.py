@@ -10,6 +10,7 @@ which is the one seam the routes read.
 
 from __future__ import annotations
 
+import itertools
 import time
 
 import pytest
@@ -128,9 +129,9 @@ def test_viewer_cannot_reach_admin_route(enforced):
     enforced.post(
         "/api/auth/users",
         headers={"Authorization": f"Bearer {admin}"},
-        json={"email": "viewer@aegis.local", "password": "viewerpass1", "role": "viewer"},
+        json={"email": "viewer@aegis.local", "password": "quiet-harbour-73", "role": "viewer"},
     )
-    viewer = _login(enforced, "viewer@aegis.local", "viewerpass1").json()["token"]
+    viewer = _login(enforced, "viewer@aegis.local", "quiet-harbour-73").json()["token"]
     resp = enforced.get("/api/auth/users", headers={"Authorization": f"Bearer {viewer}"})
     assert resp.status_code == 403
 
@@ -141,3 +142,122 @@ def test_open_mode_me_needs_no_token():
     r = client.get("/api/auth/me")
     assert r.status_code == 200
     assert r.json()["auth_enforced"] is False
+
+
+# --- sessions: the controls have to be real in open mode too ----------------
+#
+# Every test below is a regression for one defect, found by running the flow
+# rather than by the suite: in open mode a *refused* token fell through to the
+# open-mode identity, so signing out, rotating a token and being demoted all
+# left the dead token working — as the seeded **owner**, which is who the
+# open-mode fallback returns. Enforced-mode tests could not see it, because the
+# fallback does not exist there.
+
+
+#: A password strong enough for `password_problem`, shared by the accounts the
+#: fixture below provisions.
+_SESSION_PW = "quiet-harbour-73"
+_serial = itertools.count()
+
+
+@pytest.fixture
+def open_client():
+    """A client in the default open (demo) mode, with a seeded database.
+
+    The accounts are provisioned by this fixture rather than taken from the demo
+    roster, and given unique addresses. The ephemeral database is one temp file
+    shared by the whole session, so a fixed address collides with whatever
+    another test did to that account — including the `viewer@aegis.local` that
+    `test_viewer_cannot_reach_admin_route` above creates with its own password.
+    """
+    init_db()
+    db = SessionLocal()
+    try:
+        auth_mod.seed_admin(db)
+    finally:
+        db.close()
+    return TestClient(app)
+
+
+def _account(role: str = "analyst") -> str:
+    """Provision one account directly and return its email."""
+    email = f"session{next(_serial)}.{role}@aegis.test"
+    db = SessionLocal()
+    try:
+        auth_mod.create_user(db, email, _SESSION_PW, role=role)
+    finally:
+        db.close()
+    return email
+
+
+def _open_login(client, email):
+    r = client.post("/api/auth/login", json={"email": email, "password": _SESSION_PW})
+    assert r.status_code == 200, r.text
+    return r.json()["token"]
+
+
+def test_open_mode_still_needs_no_credential_at_all(open_client):
+    """The demo's whole premise. A request with no Authorization header is the
+    seeded owner, exactly as before."""
+    r = open_client.get("/api/auth/me")
+    assert r.status_code == 200
+    assert r.json()["auth_enforced"] is False
+    assert r.json()["user"]["role"] == "owner"
+
+
+def test_open_mode_logout_ends_the_session(open_client):
+    token = _open_login(open_client, _account("analyst"))
+    hdr = {"Authorization": f"Bearer {token}"}
+    assert open_client.get("/api/auth/me", headers=hdr).json()["user"]["role"] == "analyst"
+    assert open_client.post("/api/auth/logout", headers=hdr).status_code == 200
+    assert open_client.get("/api/auth/me", headers=hdr).status_code == 401
+
+
+def test_a_refused_token_is_never_upgraded_to_the_open_mode_owner(open_client):
+    """The escalation this fixed, stated directly.
+
+    A dead token must be refused, not silently promoted to the highest-privilege
+    account in the system.
+    """
+    token = _open_login(open_client, _account("analyst"))
+    hdr = {"Authorization": f"Bearer {token}"}
+    open_client.post("/api/auth/logout", headers=hdr)
+
+    for path in ("/api/auth/me", "/api/auth/users", "/api/orgs", "/api/audit"):
+        r = open_client.get(path, headers=hdr)
+        assert r.status_code == 401, f"{path} answered {r.status_code} to a revoked token"
+
+
+def test_open_mode_rejects_a_garbage_token_rather_than_ignoring_it(open_client):
+    r = open_client.get("/api/auth/me", headers={"Authorization": "Bearer not-a-token"})
+    assert r.status_code == 401
+
+
+def test_open_mode_refresh_retires_the_old_token(open_client):
+    old = _open_login(open_client, _account("viewer"))
+    new = open_client.post(
+        "/api/auth/refresh", headers={"Authorization": f"Bearer {old}"}
+    ).json()["token"]
+    assert new != old
+    assert open_client.get(
+        "/api/auth/me", headers={"Authorization": f"Bearer {new}"}
+    ).status_code == 200
+    assert open_client.get(
+        "/api/auth/me", headers={"Authorization": f"Bearer {old}"}
+    ).status_code == 401
+
+
+def test_open_mode_sign_out_everywhere_keeps_the_calling_session(open_client):
+    email = _account("citizen")
+    first = _open_login(open_client, email)
+    second = _open_login(open_client, email)
+    revoked = open_client.delete(
+        "/api/auth/sessions", headers={"Authorization": f"Bearer {second}"}
+    ).json()["revoked"]
+    assert revoked >= 1
+    assert open_client.get(
+        "/api/auth/me", headers={"Authorization": f"Bearer {second}"}
+    ).status_code == 200
+    assert open_client.get(
+        "/api/auth/me", headers={"Authorization": f"Bearer {first}"}
+    ).status_code == 401

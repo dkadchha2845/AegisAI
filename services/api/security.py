@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import threading
 import time
+import weakref
 from collections import defaultdict, deque
 from typing import Deque, Dict, Tuple
 
@@ -75,10 +76,23 @@ _LIMITS: Dict[str, Tuple[int, float]] = {
 }
 
 
+#: Credential-handling routes, all held to the tightest bucket. Login was the
+#: only one when this list was a single `startswith`; sign-up, the password
+#: flows and the token refresh are every bit as attractive to a script — a
+#: reset-token guesser and a sign-up flood are the same shape of attack as a
+#: password guesser, and were previously landing in the generous `write` bucket.
+_AUTH_PATHS = (
+    "/api/auth/login",
+    "/api/auth/signup",
+    "/api/auth/refresh",
+    "/api/auth/password/",
+)
+
+
 def _route_class(request: Request) -> str:
     path = request.url.path
     method = request.method
-    if path.startswith("/api/auth/login"):
+    if path.startswith(_AUTH_PATHS):
         return "auth"
     if path.startswith("/api/analyze"):
         return "analyze"
@@ -89,6 +103,12 @@ def _route_class(request: Request) -> str:
     return "read"
 
 
+#: Every live limiter in this process, so `reset_limits()` can reach them.
+#: Weak, so a middleware belonging to a discarded app is not kept alive by a
+#: bookkeeping list.
+_LIMITERS: "weakref.WeakSet[RateLimitMiddleware]" = weakref.WeakSet()
+
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Fixed-window-ish sliding limiter. In-process, per (ip, route-class)."""
 
@@ -97,6 +117,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.enabled = enabled
         self._hits: Dict[Tuple[str, str], Deque[float]] = defaultdict(deque)
         self._lock = threading.Lock()
+        _LIMITERS.add(self)
+
+    def reset(self) -> None:
+        """Forget every recorded hit."""
+        with self._lock:
+            self._hits.clear()
 
     async def dispatch(self, request: Request, call_next) -> Response:
         if not self.enabled:
@@ -165,3 +191,20 @@ def record_login_attempt(email: str, ip: str, *, success: bool) -> None:
             _LOGIN_FAILS.pop(key, None)
         else:
             _LOGIN_FAILS[key].append(now)
+
+
+def reset_limits() -> None:
+    """Clear every rate-limit bucket and every login-failure history.
+
+    Two callers, and both are real. An operator whose whole office sits behind
+    one NAT address can trip a per-IP limiter that was sized for one person, and
+    the alternative to a documented reset is an API restart. The test suite is
+    the other: `app` is a module singleton, so the ~10 auth-class requests one
+    test file makes are counted against the same bucket as every other file's,
+    and a suite whose green depends on how many sign-ins ran before it is not
+    green. The conftest fixture calls this between tests.
+    """
+    for limiter in list(_LIMITERS):
+        limiter.reset()
+    with _LOGIN_LOCK:
+        _LOGIN_FAILS.clear()

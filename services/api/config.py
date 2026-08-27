@@ -26,10 +26,10 @@ could not:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
+from typing import Annotated, Optional
 
 from pydantic import AliasChoices, Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ML_DIR = REPO_ROOT / "ml"
@@ -122,6 +122,42 @@ class Settings(BaseSettings):
     token_ttl_s: int = Field(default=12 * 3600, ge=60, validation_alias=_alias("TOKEN_TTL"))
     default_admin_email: str = Field(default="admin@aegis.local", validation_alias=_alias("ADMIN_EMAIL"))
     default_admin_password: str = Field(default="changeme", validation_alias=_alias("ADMIN_PASSWORD"))
+    demo_password: str = Field(
+        default="changeme",
+        validation_alias=_alias("DEMO_PASSWORD"),
+        description="Shared password for the seeded demo roster (open mode only; "
+                    "none of those accounts exist when AEGIS_AUTH=1). Configurable "
+                    "so a shared demo box is not running on a password that is "
+                    "written in the source, and defaulted to the value the sign-in "
+                    "screen has always shown so nothing that worked stops working.",
+    )
+    signup_enabled: bool = Field(
+        default=True,
+        validation_alias=_alias("SIGNUP"),
+        description="Whether POST /api/auth/signup accepts new public accounts. "
+                    "A sign-up always creates a CITIZEN — the role is never taken "
+                    "from the request — so this is a capacity/abuse switch, not a "
+                    "privilege one. Off closes the route with a 403 that names the "
+                    "setting.",
+    )
+    password_reset_ttl_s: int = Field(
+        default=3600,
+        ge=300,
+        le=24 * 3600,
+        validation_alias=_alias("PASSWORD_RESET_TTL"),
+        description="How long a password-reset token stays redeemable.",
+    )
+    dev_password_reset: bool = Field(
+        default=False,
+        validation_alias=_alias("DEV_PASSWORD_RESET"),
+        description="Return the password-reset token in the API response instead "
+                    "of only printing it to the server log. There is no mail "
+                    "transport configured in this project, so without one of the "
+                    "two a reset cannot be completed at all — and handing the "
+                    "token back over HTTP is exactly the thing you must never do "
+                    "in production, which is why it is off by default, refused "
+                    "outright when AEGIS_AUTH=1, and labelled in the response.",
+    )
 
     # --- Backing stores (infra/compose/dev.yml) ----------------------------
     # Host/port only: liveness-probe targets for /api/health, not connection
@@ -182,7 +218,30 @@ class Settings(BaseSettings):
     )
 
     # --- Transport & hardening ---------------------------------------------
-    cors_origins: tuple[str, ...] = ("http://localhost:5173", "http://127.0.0.1:5173")
+    cors_origins: Annotated[tuple[str, ...], NoDecode] = Field(
+        default=("http://localhost:5173", "http://127.0.0.1:5173"),
+        validation_alias=_alias("CORS_ORIGINS"),
+        description="Browser origins allowed to call this API, comma-separated. "
+                    "The two defaults are Vite's. An explicit allow-list rather "
+                    "than `*` because `allow_credentials=True` and a wildcard "
+                    "are not a combination any browser will honour, and should "
+                    "not be one this service asks for.",
+    )
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _split_origins(cls, v: object) -> object:
+        """Accept `a,b` from the environment as well as a real sequence.
+
+        `NoDecode` on the annotation is what makes this reachable: without it
+        pydantic-settings JSON-decodes a complex field straight out of the
+        environment and never calls a validator, so
+        `AEGIS_CORS_ORIGINS=http://localhost:5199` took the whole startup down
+        with a parse error about JSON when the mistake was a missing bracket.
+        """
+        if isinstance(v, str):
+            return tuple(part.strip() for part in v.split(",") if part.strip())
+        return v
     rate_limit_enabled: bool = Field(default=True, validation_alias=_alias("RATELIMIT"))
     frame_hz: float = Field(
         default=4.0, gt=0, le=60,

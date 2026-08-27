@@ -9,9 +9,11 @@
 > occupies a worker slot and a `kill -9` mid-job loses nothing. 1.7a fixed a
 > benign false positive that 1.7's tests could not see because they ran without
 > the served checkpoint; 1.7b is why a run now says which model it proved.
-> Awaiting your go-ahead for Phase 2.**
-> Last updated 2026-08-26 · branch `main`
-> · 518 tests · 76.1% backend coverage · all four gates green · ruff + mypy clean
+> Out of band since: the product has real accounts — sign-up, seven roles, a
+> permission model, revocable sessions and per-owner case visibility. Awaiting
+> your go-ahead for Phase 2.**
+> Last updated 2026-08-27 · branch `claude/aegisai-auth-rbac-560a8c`
+> · 575 tests (23 skipped) · 75.0% backend coverage · all four gates green · ruff + mypy clean
 
 ---
 
@@ -151,6 +153,101 @@ browser pane used for the audit does not composite frames while hidden, so
 `scroll` events and `IntersectionObserver` callbacks never fire. The
 scroll-triggered reveals, the pipeline rail and the header's settle transition
 typecheck and are written correctly, but want one pass by hand.
+
+---
+
+## Out of band — authentication, database and RBAC, 2026-08-27
+
+Not a numbered task: a full authentication and access-control implementation
+requested directly, against a written specification. The developer summary is
+[`docs/AUTH.md`](AUTH.md); this is what changed and what running it proved.
+
+**The shape of it.** Roles stopped being a ladder and became a permission
+catalogue, because two new roles could not be ranked. A citizen may create an
+investigation and read their own and no one else's — simultaneously above and
+below `viewer`. A researcher may read aggregate statistics and model evaluation
+and must never read a case — beside the ladder, not on it. `models_db.py` had
+predicted exactly this: *"when a capability appears that does not fit the ladder,
+this becomes a permissions table."* `ROLE_RANK` survives for the one genuinely
+ordinal question, who may promote whom.
+
+Everything that existed still works. The four inherited roles hold **exactly**
+the capability set the ladder gave them — asserted, not assumed — and every
+seeded account signs in with the same password and the same role.
+
+| | |
+|---|---|
+| Database | PostgreSQL / SQLite, unchanged. No second store introduced. |
+| Migration | `0003_auth_rbac` — 5 new tables, 7 columns on `users`, 6 on `audit_events`; up, down and up again on every test run |
+| Roles | 4 inherited + `citizen`, `police`, `researcher` |
+| Permissions | 22 codes, one explicit map, refusing to import if a code is granted to nobody or granted and undefined |
+| Password hashing | argon2id where `argon2-cffi` is installed, pbkdf2-hmac-sha256 (240k) otherwise; older hashes upgraded during login |
+| Sessions | `user_sessions` row per token; logout, rotation, demotion and disablement all revoke server-side |
+| Tests | +80 (`test_permissions.py`, `test_rbac.py`, and the open-mode session regressions in `test_auth.py`) |
+
+### What running it found that the suite could not
+
+Three defects, all caught by exercising the real application, none visible to a
+green test run at the time.
+
+**1. A revoked token was silently promoted to platform owner.** In open mode —
+the default — `get_current_user` fell through to the open-mode identity when a
+presented token was refused, and that identity is the seeded **owner**. So
+logging out, rotating a token, being demoted and being disabled all left the dead
+token working, with *more* privilege than it started with. Every session control
+in the module was cosmetic in the default configuration. Enforced-mode tests
+could not see it because the fallback does not exist there. A presented-and-
+refused credential is now a 401 in both modes; a request with no `Authorization`
+header at all still acts as the owner, so the demo is unaffected. Pinned by
+`test_a_refused_token_is_never_upgraded_to_the_open_mode_owner`.
+
+**2. A citizen's own dashboard was filed under "Investigator tools."** The nav
+group appeared whenever it had more than one visible item, and a citizen holds
+`INVESTIGATION_CREATE`, so it did. The dashboard moved into the group everyone
+sees and the investigator group now requires `GRAPH_READ` — the capability that
+actually separates the two audiences.
+
+**3. The mobile profile sheet rendered off the top of the page.** `.topbar2`
+carries `backdrop-filter: blur(14px)`, and a filtered element becomes the
+containing block for every `position: fixed` descendant — so `inset: auto 0 0 0`
+resolved against a 56px header instead of the 812px viewport, leaving one row of
+the menu visible above the logo. The panel is portalled to `document.body` and
+anchored from the trigger's measured rect, which also means no future ancestor
+with a transform or `contain` can move it again.
+
+### Verified, against the running application
+
+API on a durable SQLite database with the checkpoint present, so
+`/api/health` reported `degraded: []` — a checkpoint-backed classifier
+(`fused (muril + lexical): measured better (0.767 vs 0.375)`), a persistent
+database and a durable evidence store.
+
+| Check | Result |
+|---|---|
+| Sign-up | Citizen created; a `role: admin` in the body ignored; lands on `/dashboard` |
+| Sign-up refusals | Weak / common / mismatched / no-terms → 422; duplicate → 409 |
+| The seven roles | Each signs in, gets its own permission set and its own `home` |
+| Route matrix | 7 roles × 7 routes, live: citizen 403s on the graph, research, users, audit and orgs; researcher 403s on investigations; only the owner reaches `/api/orgs` |
+| Ownership | Citizen A's case is a **404** for citizen B — same organisation, so tenancy alone would have let it through — and a 200 for police |
+| Logout | Token dead on `/me`, `/investigations`, `/auth/users`, `/orgs` |
+| Refresh | Rotates; old token 401s |
+| Sign out everywhere | Caller's session survives, the other dies |
+| Demotion | analyst → citizen revokes the session; signing in again 403s on the graph |
+| Disablement | Session revoked; next sign-in 403s with a message that says why |
+| Escalation | admin cannot create an owner *or another admin*, cannot promote themselves; `PATCH /me` with `role: owner` smuggled in returns `role: citizen` |
+| Password reset | Identical response for a known and an unknown address; single use; replay 400s; old password stops working |
+| Audit log | 9 action types recorded, 5 failures among them; no password, token or hash anywhere in the payload |
+| Browser | Sign-up → citizen dashboard → menu → landing shows the profile → sign out → landing shows Sign in / Get started; back button and direct `/admin/dashboard` both bounce to `/login`; console clean |
+| Mobile | 375×812 — trigger collapses to the avatar, menu is a bottom sheet with a scrim |
+| Keyboard | ArrowDown opens and moves; Escape closes and returns focus to the trigger |
+
+**Not verified here:** email delivery (there is no mail transport — the reset
+token goes to the server log, and `AEGIS_DEV_PASSWORD_RESET=1` returns it for
+local work), `INVESTIGATION_READ_ASSIGNED` against a real assignment table
+(there is none yet; it currently behaves as organisation-wide read for `police`),
+and the flow against PostgreSQL rather than SQLite — the migration runs both
+ways on SQLite in the suite, as task 1.5's note about batch mode already warns.
+Both are listed under Limitations in `docs/AUTH.md`.
 
 ---
 

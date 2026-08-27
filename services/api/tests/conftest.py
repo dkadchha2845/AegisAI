@@ -81,6 +81,27 @@ def _builtin_agents():
     yield
 
 
+@pytest.fixture(autouse=True)
+def _fresh_rate_limits():
+    """Every test starts with empty rate-limit buckets and no login backoff.
+
+    `services.api.main.app` is a module singleton, so its limiter is shared by
+    every test in the session, and the auth bucket is deliberately the tightest
+    one in the service — ten credential requests per minute per IP. Every
+    TestClient reports the same client host, so the sign-ins in one file are
+    counted against the sign-ins in every other, and a suite that adds an
+    eleventh starts failing somewhere unrelated with a 429.
+
+    Resetting in setup rather than teardown, for the same reason `_builtin_agents`
+    does: a test that deliberately fills a bucket (`test_security.py`) still
+    gets to, because its own work happens after this has run.
+    """
+    from services.api.security import reset_limits
+
+    reset_limits()
+    yield
+
+
 # ---------------------------------------------------------------------------
 # What this run proves (task 1.7b)
 # ---------------------------------------------------------------------------

@@ -4,8 +4,17 @@ Case book — saved evidence packages and the audit log.
 Saving a report is the point at which a live, ephemeral session becomes a
 durable case file: the package is persisted verbatim and the export is written
 to the audit log, so "who escalated this call, and when" has an answer that
-survives the process. Listing and reading are viewer-level; saving is an
-analyst action; the audit log is admin-only.
+survives the process.
+
+**Two scopes, not one.** `REPORT_READ_ALL` sees every case file in the
+organisation — that is what an analyst, an investigator and an administrator
+have always had. A citizen holds only `REPORT_READ_OWN`, and `_visible()` below
+narrows their query to the rows they created. The narrowing happens in the
+query, never in a post-filter over rows already loaded: filtering after the fact
+is how an off-by-one in a template leaks the row it should not have fetched.
+
+A case id that belongs to someone else 404s rather than 403s, so a report id
+cannot be probed for existence from outside the scope that owns it.
 
 With the default in-memory database these live for the process like everything
 else; point DATABASE_URL at a file or Postgres and they persist for real.
@@ -20,7 +29,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from .. import audit
-from ..auth import require_role
+from ..auth import require_permission, user_permissions
 from ..db import get_db
 from ..engine.report import build_evidence_package
 from ..engine.session import registry
@@ -33,7 +42,7 @@ router = APIRouter(tags=["reports"])
 @router.post("/api/session/{session_id}/report/save", status_code=201)
 def save_report(
     session_id: str,
-    user: User = Depends(require_role("analyst")),
+    user: User = Depends(require_permission("REPORT_CREATE")),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
     """Build the evidence package and persist it as a case record."""
@@ -80,27 +89,41 @@ def save_report(
     return {"record": record.as_summary(), "package": package}
 
 
+def _visible(db: Session, user: User):
+    """The case-record query this user is allowed to run.
+
+    Two narrowings, applied in order. `scope_query` restricts to the user's
+    organisation (an owner is platform-wide). Then, unless they hold
+    `REPORT_READ_ALL`, the rows are narrowed again to the ones they created —
+    which is what makes "a citizen sees only their own reports" a property of
+    the SQL rather than of the page that renders it.
+    """
+    q = scope_query(db.query(CaseRecord), CaseRecord, user)
+    if "REPORT_READ_ALL" not in user_permissions(user):
+        q = q.filter(CaseRecord.created_by == user.email)
+    return q
+
+
 @router.get("/api/reports")
 def list_reports(
-    user: User = Depends(require_role("viewer")),
+    user: User = Depends(require_permission("REPORT_READ_OWN")),
     db: Session = Depends(get_db),
 ) -> Dict[str, List[Dict[str, Any]]]:
-    # Tenant-scoped: a viewer sees only their own org's cases; an owner sees all.
-    q = scope_query(db.query(CaseRecord), CaseRecord, user)
-    records = q.order_by(CaseRecord.created_at.desc()).limit(200).all()
+    records = _visible(db, user).order_by(CaseRecord.created_at.desc()).limit(200).all()
     return {"reports": [r.as_summary() for r in records]}
 
 
 @router.get("/api/reports/{report_id}")
 def get_report(
     report_id: str,
-    user: User = Depends(require_role("viewer")),
+    user: User = Depends(require_permission("REPORT_READ_OWN")),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
-    # Object-level scoping too — a report id from another org 404s rather than
-    # leaking, which is the IDOR the audit called out.
-    q = scope_query(db.query(CaseRecord), CaseRecord, user)
-    record = q.filter(CaseRecord.report_id == report_id).first()
+    # Object-level scoping too — a report id from another org, or another
+    # person's report where the caller may only read their own, 404s rather
+    # than leaking. That is the IDOR the audit called out, now closed against
+    # a second reader as well as a second tenant.
+    record = _visible(db, user).filter(CaseRecord.report_id == report_id).first()
     if record is None:
         raise HTTPException(status_code=404, detail=f"No saved report {report_id}")
     return {"record": record.as_summary(), "package": json.loads(record.package_json)}
@@ -110,7 +133,7 @@ def get_report(
 def audit_log(
     action: Optional[str] = None,
     limit: int = 200,
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_permission("AUDIT_READ")),
     db: Session = Depends(get_db),
 ) -> Dict[str, List[Dict[str, Any]]]:
     from ..models_db import AuditEvent

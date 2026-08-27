@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from .. import audit
-from ..auth import get_current_user, require_role
+from ..auth import get_current_user, require_permission
 from ..db import get_db
 from ..models_db import CaseRecord, Organization, User
 from ..orgs import create_org, get_org
@@ -32,7 +32,7 @@ class NewOrgRequest(BaseModel):
 
 @router.get("")
 def list_orgs(
-    _: User = Depends(require_role("owner")),
+    _: User = Depends(require_permission("ORG_MANAGE")),
     db: Session = Depends(get_db),
 ) -> Dict[str, List[Dict[str, Any]]]:
     """Every organisation, with a member and case count — the platform view."""
@@ -48,7 +48,7 @@ def list_orgs(
 @router.post("", status_code=201)
 def new_org(
     req: NewOrgRequest,
-    owner: User = Depends(require_role("owner")),
+    owner: User = Depends(require_permission("ORG_MANAGE")),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
     """Create a tenant. Owner-only."""
