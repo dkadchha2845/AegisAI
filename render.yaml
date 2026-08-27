@@ -1,0 +1,73 @@
+# Render blueprint for the AegisAI API.
+#
+#   Render dashboard -> New -> Blueprint -> pick this repository.
+#
+# Render then watches the branch and redeploys on every push. See
+# docs/DEPLOYMENT.md for the full walkthrough, including the Vercel half and
+# the GoDaddy DNS records.
+#
+# Only the API lives here. The SPA is static and goes to Vercel — putting it
+# behind the same free web service would mean the whole site sleeps when the
+# API does.
+
+services:
+  - type: web
+    name: aegisai-api
+    runtime: python
+    plan: free
+    # Free-tier regions are Oregon, Ohio, Virginia, Frankfurt and Singapore.
+    # Singapore is the closest to India; change it if your users are elsewhere.
+    region: singapore
+    branch: main
+
+    # `-e ./packages/aegis_core` in requirements.txt installs the shared domain
+    # package from the repo. psycopg is the PostgreSQL driver — SQLAlchemy loads
+    # a driver for the URL it is given and there is none in the base
+    # requirements, so DATABASE_URL fails at startup without it. argon2-cffi
+    # upgrades password hashing from pbkdf2 to argon2id.
+    #
+    # The migration runs here rather than at startup: `create_all` (the
+    # zero-setup path) adds tables and never columns, so a schema that has moved
+    # on must come forward through Alembic before the app opens a session.
+    buildCommand: >-
+      pip install --upgrade pip &&
+      pip install -r services/api/requirements.txt &&
+      pip install 'psycopg[binary]>=3.2' 'argon2-cffi>=23.1' &&
+      alembic upgrade head
+
+    startCommand: uvicorn services.api.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+
+    # Render polls this until it answers before routing traffic to a new deploy.
+    # The lifespan hook warms the classifier, the retriever and every agent
+    # first, so this is also what makes a deploy wait for a warm process rather
+    # than handing the first visitor a cold one.
+    healthCheckPath: /api/health
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+
+      # Generated once by Render and then held. Without a stable key the API
+      # mints a new one per process and every session is signed out on deploy.
+      - key: AEGIS_SECRET_KEY
+        generateValue: true
+
+      # The line that matters most. Without it the API acts as the seeded owner
+      # for any request carrying no token. Setting it also stops the demo roster
+      # being seeded, so nothing ships with a known password.
+      - key: AEGIS_AUTH
+        value: "1"
+
+      # Set these four in the dashboard — they are secrets or site-specific.
+      #   DATABASE_URL          your Postgres URL (Neon, Supabase, or Render)
+      #   AEGIS_CORS_ORIGINS    https://yourdomain.in,https://www.yourdomain.in
+      #   AEGIS_ADMIN_EMAIL     the first administrator
+      #   AEGIS_ADMIN_PASSWORD  its password — change it after the first sign-in
+      - key: DATABASE_URL
+        sync: false
+      - key: AEGIS_CORS_ORIGINS
+        sync: false
+      - key: AEGIS_ADMIN_EMAIL
+        sync: false
+      - key: AEGIS_ADMIN_PASSWORD
+        sync: false
