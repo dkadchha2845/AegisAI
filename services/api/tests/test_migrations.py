@@ -243,3 +243,107 @@ def test_every_revision_is_reachable_from_head(db):
     assert len(heads) == 1, f"branched migration history: {heads}"
     revisions = [r.revision for r in script.walk_revisions()]
     assert revisions == ["0003", "0002", "0001"], revisions
+
+
+# ---------------------------------------------------------------------------
+# A durable database that is behind the code
+# ---------------------------------------------------------------------------
+#
+# `create_all` adds tables and never columns, so a durable database written
+# before a revision that alters one comes back up looking fine and then fails on
+# the first query with `no such column`, far from the cause. That is the shape of
+# the rename defect the Working agreement in docs/TASKS.md records, and the shape
+# a fresh-ephemeral-database test suite is structurally unable to see — so these
+# build the stale database explicitly.
+
+
+def _at_revision(url: str, revision: str) -> None:
+    command.upgrade(_config(url), revision)
+
+
+def test_boot_refuses_a_database_older_than_the_models(db, monkeypatch):
+    """Upgrade to 0002, drop the history as `create_all` would have left it,
+    then boot 0003's code against it.
+
+    Three assertions, and the third is the one that took a second attempt:
+    it raises, the message names both the missing columns and the command that
+    fixes them, and **the database is untouched** — an earlier version warned
+    and carried on, which let `create_all` create 0003's new tables while its
+    new columns stayed missing, and `alembic upgrade` then failed on
+    `table roles already exists`.
+    """
+    from sqlalchemy import text
+
+    from services.api import db as db_mod
+    from services.api.db import StaleSchema
+
+    url, engine = db
+    _at_revision(url, "0002")
+    with engine.begin() as conn:
+        conn.execute(text("DROP TABLE alembic_version"))
+
+    before = _tables(engine)
+    monkeypatch.setattr(db_mod, "engine", engine)
+    monkeypatch.setattr(db_mod, "EPHEMERAL", False)
+
+    with pytest.raises(StaleSchema) as exc:
+        db_mod.init_db()
+
+    message = str(exc.value)
+    assert "role_id" in message and "full_name" in message
+    assert "alembic stamp 0002" in message
+    assert _tables(engine) == before, "init_db must not half-create the new schema"
+
+
+def test_the_advice_that_refusal_gives_actually_works(db):
+    """Follow the printed command on a stale database and it comes forward with
+    every row intact — the rollout plan for this revision, executed."""
+    from sqlalchemy import text
+
+    url, engine = db
+    _at_revision(url, "0002")
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO organizations (id, slug, name, created_at) "
+                "VALUES (1, 'aegis', 'AegisAI', '2026-01-01 00:00:00')"
+            )
+        )
+        conn.execute(
+            text(
+                "INSERT INTO users (id, email, password_hash, role, org_id, disabled, "
+                "created_at) VALUES (1, 'keep@aegis.local', 'x', 'owner', 1, 0, "
+                "'2026-01-01 00:00:00')"
+            )
+        )
+        conn.execute(
+            text(
+                "INSERT INTO audit_events (id, ts, org_id, actor, action) VALUES "
+                "(1, '2026-01-01 00:00:00', 1, 'keep@aegis.local', 'login'), "
+                "(2, '2026-01-01 00:01:00', 1, 'ghost@x.com', 'login.failed')"
+            )
+        )
+        conn.execute(text("DROP TABLE alembic_version"))
+
+    cfg = _config(url)
+    command.stamp(cfg, "0002")
+    command.upgrade(cfg, "head")
+
+    assert _tables(engine) >= RBAC_TABLES
+    with engine.connect() as conn:
+        row = conn.execute(
+            text("SELECT email, role, role_id, email_verified FROM users WHERE id = 1")
+        ).one()
+        assert row[0] == "keep@aegis.local"
+        assert row[1] == "owner"
+        # Backfilled by seed_rbac on the next boot, not by the DDL — the roles
+        # rows it points at are seeded by the application, not by a migration.
+        assert row[2] is None
+        assert not row[3]
+
+        # `success` is backfilled from what the action means: everything that was
+        # recorded before this revision had already happened, except the one
+        # action that is a failure by definition.
+        outcomes = dict(conn.execute(text("SELECT action, success FROM audit_events")).all())
+        assert outcomes["login"]
+        assert not outcomes["login.failed"]

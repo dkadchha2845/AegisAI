@@ -39,6 +39,30 @@ export DATABASE_URL=sqlite:///aegis.db
 temp file so a clean clone boots with no setup at all, and `/api/health` reports
 `db:ephemeral` so nothing pretends to be durable that is not.
 
+### Upgrading a database you already have
+
+**A durable database created before revision 0003 must be migrated before the
+API will start on it.** `create_all` adds missing *tables* and never adds a
+*column* to a table that already exists, so booting on one would give you an API
+that answers 500 to every request that reads a user. `init_db` checks for that
+and refuses, naming the fix:
+
+```bash
+# a database Alembic already knows about
+make migrate
+
+# a database built by create_all, with no revision history
+.venv/bin/alembic stamp 0002 && make migrate
+```
+
+Then start the API again. Every row survives: accounts keep their ids, emails
+and roles and gain a `role_id` on the next boot; audit rows keep their history,
+with `success` backfilled to true except for `login.failed`, which is a failure
+by definition. Pinned by
+`test_migrations.py::test_the_advice_that_refusal_gives_actually_works`.
+
+For a throwaway development database, deleting it is faster — it reseeds.
+
 > Set `AEGIS_EVIDENCE_DIR` whenever you set `DATABASE_URL`. Otherwise the case
 > outlives its own uploaded screenshots, and `/api/health` raises
 > `blobs:ephemeral` for exactly that mismatch.

@@ -95,10 +95,85 @@ def init_db() -> None:
     head and asserts the result is exactly `Base.metadata`, which is what
     `create_all` would have produced.
     """
-    from . import models_db  # noqa: F401  (register models on Base.metadata)
+    from . import models_db
     from .stores import models as _store_models  # noqa: F401  (task 1.5 tables)
 
+    # Before `create_all`, deliberately — see the docstring below.
+    _refuse_if_stale(models_db)
     Base.metadata.create_all(bind=engine)
+
+
+class StaleSchema(RuntimeError):
+    """A durable database whose schema is behind the code. See `_refuse_if_stale`."""
+
+
+def _refuse_if_stale(models_db) -> None:  # type: ignore[no-untyped-def]
+    """Refuse to start on a durable database that predates the current models.
+
+    `create_all` adds missing **tables**. It does not add a **column** to a
+    table that already exists — so a durable database created before a revision
+    that alters one comes back up looking fine and then fails on the first query
+    with `no such column`, somewhere far from the cause.
+
+    This is not hypothetical here. The rename to AegisAI broke demo login on
+    every pre-existing database for exactly this shape of reason, and no test
+    saw it because tests seed a fresh ephemeral database where the problem
+    cannot occur (see the Working agreement in docs/TASKS.md). One column check
+    at boot turns a confusing runtime error into a message that names the fix.
+
+    **This raises rather than warning, and it runs before `create_all`.** Both
+    halves matter, and both were learned by getting them wrong:
+
+      * Warning and carrying on lets `create_all` create the revision's new
+        *tables* while its new *columns* stay missing. `alembic upgrade` then
+        fails on `table roles already exists` — the correct and loud failure
+        `0001_platform_baseline.py` documents — and the operator is worse off
+        than before they read the warning.
+      * Booting anyway produces an API that answers 500 to every request that
+        touches a user. Refusing to start, with the fix in the message, is the
+        same choice `migrations/env.py` already makes when `DATABASE_URL` is
+        unset: a deployment error should fail where it happened.
+
+    The zero-setup path is untouched — an ephemeral database has no prior
+    version to be behind — and a database this cannot inspect is not one it
+    should refuse to start on.
+    """
+    if EPHEMERAL:
+        return
+    try:
+        from sqlalchemy import inspect
+
+        inspector = inspect(engine)
+        if "users" not in inspector.get_table_names():
+            return
+        columns = {c["name"] for c in inspector.get_columns("users")}
+        missing = {c.name for c in models_db.User.__table__.columns} - columns
+        if not missing:
+            return
+        on_alembic = "alembic_version" in inspector.get_table_names()
+        bring_forward = (
+            "    make migrate"
+            if on_alembic
+            # A database built by `create_all` has no revision history, so it
+            # must be stamped at the revision it already matches rather than
+            # upgraded from nothing — 0001's docstring is the long version.
+            else "    .venv/bin/alembic stamp 0002 && make migrate"
+        )
+        message = (
+            "This database is older than the current schema — `users` is missing "
+            f"{', '.join(sorted(missing))}.\n"
+            "`create_all` adds tables, never columns, so every request that reads "
+            "a user would fail.\n\n"
+            "Bring the database forward, then start again:\n\n"
+            f"{bring_forward}\n\n"
+            "Or, for a throwaway development database, delete it and let it reseed."
+        )
+    except StaleSchema:
+        raise
+    except Exception:
+        # An inspection failure is not a reason to refuse to boot.
+        return
+    raise StaleSchema(message)
 
 
 def get_db() -> Iterator[Session]:
