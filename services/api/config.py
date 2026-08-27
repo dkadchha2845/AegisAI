@@ -37,6 +37,15 @@ KNOWLEDGE_DIR = Path(__file__).resolve().parent / "knowledge"
 DATA_DIR = ML_DIR / "data"
 
 
+#: Origins the API allows regardless of `AEGIS_CORS_ORIGINS`. See
+#: `Settings._split_origins` for why this exception to environment-only
+#: configuration exists, and what a fork should do with it.
+ALWAYS_ALLOW: tuple[str, ...] = (
+    "https://aegisai.co.in",
+    "https://www.aegisai.co.in",
+)
+
+
 def _alias(name: str) -> AliasChoices:
     """Accept `AEGIS_NAME`, falling back to the pre-rename `PRESAGE_NAME`."""
     return AliasChoices(f"AEGIS_{name}", f"PRESAGE_{name}")
@@ -231,17 +240,39 @@ class Settings(BaseSettings):
     @field_validator("cors_origins", mode="before")
     @classmethod
     def _split_origins(cls, v: object) -> object:
-        """Accept `a,b` from the environment as well as a real sequence.
-        
-        Always includes the production domains to prevent deployment CORS issues.
+        """Accept `a,b` from the environment as well as a real sequence, and
+        always include the production domains.
+
+        `NoDecode` on the annotation is what makes this reachable: without it
+        pydantic-settings JSON-decodes a complex field straight out of the
+        environment and never calls a validator, so
+        `AEGIS_CORS_ORIGINS=http://localhost:5199` took the whole startup down
+        with a parse error about JSON when the mistake was a missing bracket.
+
+        `ALWAYS_ALLOW` is belt-and-braces for the deployment this project
+        actually runs: a missing or fat-fingered environment variable then costs
+        a confusing browser error rather than a dead site. It is a deliberate
+        exception to "configuration lives in the environment", and it is safe
+        because an allow-list entry only ever permits a browser on *that* origin
+        to make credentialed calls — it grants nothing to anyone else. A fork
+        deploying elsewhere should edit this list, or drop it and rely on the
+        variable.
+
+        Order is preserved and duplicates removed, rather than `set(...)`:
+        Python randomises string hashing per process, so a set made this tuple
+        different on every restart. Nothing in CORS cares about order, but
+        configuration that changes when nothing changed is a bad thing to have
+        to reason about — and it makes any test or health readout of this value
+        flaky for no reason.
         """
-        always_allow = ["https://aegisai.co.in", "https://www.aegisai.co.in"]
         if isinstance(v, str):
             parts = [part.strip().strip("\"'") for part in v.split(",") if part.strip()]
-            return tuple(set(always_allow + parts))
-        if isinstance(v, (list, tuple)):
-            return tuple(set(always_allow + list(v)))
-        return tuple(always_allow)
+        elif isinstance(v, (list, tuple)):
+            parts = [str(part).strip() for part in v]
+        else:
+            parts = []
+        # dict.fromkeys is an order-preserving dedupe.
+        return tuple(dict.fromkeys([*ALWAYS_ALLOW, *parts]))
     rate_limit_enabled: bool = Field(default=True, validation_alias=_alias("RATELIMIT"))
     frame_hz: float = Field(
         default=4.0, gt=0, le=60,
