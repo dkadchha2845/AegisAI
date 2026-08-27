@@ -98,13 +98,18 @@ instead of you filling in a form.
 4. **Apply**. First build takes 3–5 minutes: it installs the requirements,
    `psycopg`, `argon2-cffi`, and runs `alembic upgrade head` against Neon.
 
-You get a URL like `https://aegisai-api.onrender.com`. Check it:
+Render gives the service its own hostname, shown at the top of its page. It is
+**not** necessarily `aegisai-api.onrender.com` — that subdomain is global and is
+already taken by an unrelated application. Copy whatever yours says, and check
+it:
 
 ```
-https://aegisai-api.onrender.com/api/health
+https://<your-service>.onrender.com/api/health
 ```
 
-`auth.enforced` must be `true` and `database.persistent` must be `true`.
+`auth.enforced` must be `true` and `database.persistent` must be `true`. A
+`{"detail":"Not Found"}` here means you are talking to a different application
+than you think — recheck the hostname.
 
 ## 3. The SPA on Vercel
 
@@ -144,16 +149,22 @@ Two records. **GoDaddy → My Products → your domain → DNS → Manage Zones.
 
 | Type | Name | Value | What it is |
 |---|---|---|---|
-| `A` | `@` | `76.76.21.21` | the apex → Vercel |
-| `CNAME` | `www` | `cname.vercel-dns.com` | www → Vercel |
-| `CNAME` | `api` | `aegisai-api.onrender.com` | the API → Render |
+| `A` | `@` | *the IP Vercel shows you* | the apex → Vercel |
+| `CNAME` | `www` | *the target Vercel shows you* | www → Vercel |
+| `CNAME` | `api` | **your own** `xxxxx.onrender.com` | the API → Render |
+
+**Read all three values from the dashboards, and do not copy them from here.**
+Render subdomains are globally unique: if `aegisai-api` was already taken by
+somebody else — and it is — your service was given a different hostname, and
+pointing `api` at the name you expected sends your traffic to a stranger's
+application. Your real one is at the top of your Render service page.
+
+The `api` record is a **CNAME to Render**. It must not be an `A` record, and it
+must not point anywhere near Vercel — if it does, Vercel answers your API
+subdomain with `DEPLOYMENT_NOT_FOUND` and every request from your site fails.
 
 Delete GoDaddy's parking records on `@` and `www` first, and **leave Domain
 Forwarding off** — it answers before your records do and silently wins.
-
-Vercel and Render both print the exact target to use when you add the domain in
-their dashboards; prefer what they show you over the values above, since they
-do change.
 
 Then tell each platform the domain is theirs:
 

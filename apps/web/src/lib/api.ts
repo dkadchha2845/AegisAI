@@ -95,10 +95,25 @@ async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T
     }
     return { ok: true, data: (await res.json()) as T };
   } catch {
+    // A rejected `fetch` is a network-layer failure — the API is unreachable,
+    // DNS is wrong, or the browser blocked the response for CORS. It is never a
+    // status code, so there is nothing more specific to report from here.
+    //
+    // The advice has to depend on where the API is supposed to be. Telling
+    // someone on a deployed site to "start it with uvicorn --port 8000" sent a
+    // real user hunting for a local server when their `api.` subdomain was
+    // pointed at the wrong host — the message was confidently wrong about a
+    // situation it had not checked.
+    const local = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(API_BASE);
     return {
       ok: false,
-      error:
-        "Cannot reach the analysis service. Start it with `.venv/bin/uvicorn services.api.main:app --port 8000`.",
+      error: local
+        ? "Cannot reach the analysis service. Start it with `.venv/bin/uvicorn services.api.main:app --port 8000`."
+        : `Cannot reach the analysis service at ${API_BASE || window.location.origin}. `
+          + "It may be starting up — free hosting sleeps when idle, so the first "
+          + "request after a quiet spell can take up to a minute. If it persists, "
+          + "check that the API is running and that this site's address is in its "
+          + "allowed origins.",
     };
   }
 }
