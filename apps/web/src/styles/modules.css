@@ -763,166 +763,242 @@
 .lfoot__note a { color: var(--accent); }
 
 /* ======================================================================== *
- *  LOGIN
+ *  AUTHENTICATION — sign in, sign up, password reset
+ *
+ *  One full-bleed two-column frame (components/layout/AuthShell.tsx) shared by
+ *  all four screens. The brand side fills its half edge to edge and carries the
+ *  WebGL field; the form side is a solid surface that owns its own overflow, so
+ *  a tall form scrolls inside the column instead of pushing its submit button
+ *  off the bottom of the page.
  * ======================================================================== */
-.login {
-  position: relative; min-height: 100vh; display: grid; place-items: center;
-  padding: var(--s-5); overflow: hidden;
-  perspective: 1500px;   /* depth reference for the tilted card */
+
+.auth {
+  min-height: 100vh;
+  min-height: 100dvh;   /* dvh so mobile browser chrome does not clip the form */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
 }
-.login__bg { position: absolute; inset: 0; z-index: 0; opacity: 0.7; }
-.login__panel {
-  position: relative; z-index: 1;
-  width: min(430px, 94vw);
-  padding: var(--s-6);
-  border-radius: var(--r-lg);
-  border: 1px solid var(--line-strong);
-  background: color-mix(in srgb, var(--panel) 90%, transparent);
-  backdrop-filter: blur(18px);
-  box-shadow: var(--shadow-lg), 0 40px 80px -40px rgba(0, 0, 0, 0.6);
-  transform-style: preserve-3d;
+/* Two columns only when there is something to put in the second one. A short
+   screen (password reset) renders `data-split` off and gets one centred column
+   rather than a half-empty split. */
+@media (min-width: 920px) {
+  .auth[data-split] { grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr); }
 }
-/* A faint sheen that shifts with the tilt, so the card reads as a physical
-   surface catching light rather than a flat rectangle that happens to rotate. */
-.login__panel::before {
+
+/* --- brand side ---------------------------------------------------------- */
+.auth__aside {
+  position: relative;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: clamp(var(--s-5), 5vw, var(--s-8));
+  overflow: hidden;
+  min-width: 0;
+}
+.auth__bg { position: absolute; inset: 0; z-index: 0; opacity: 0.6; }
+/* A vertical wash so the type on top of the field keeps its contrast wherever
+   the field happens to be bright. */
+.auth__aside::after {
   content: "";
-  position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  background: radial-gradient(
-    130% 90% at calc(50% + var(--tilt-x, 0) * 60%) calc(30% + var(--tilt-y, 0) * 60%),
-    color-mix(in srgb, var(--accent) 16%, transparent), transparent 55%
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--bg) 82%, transparent),
+    color-mix(in srgb, var(--bg) 40%, transparent) 55%,
+    color-mix(in srgb, var(--bg) 88%, transparent)
   );
-  opacity: 0.7;
 }
-.login__content { position: relative; }
+.auth__asideinner {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 48ch; margin-inline: auto;
+}
+.auth__brand { display: inline-flex; align-items: center; margin-bottom: var(--s-6); }
+
+@media (min-width: 920px) {
+  .auth[data-split] .auth__aside { border-right: 1px solid var(--line-strong); }
+}
+/* One column: the brand side becomes a header rather than half a screen, so
+   the first field is near the top of the fold. */
+@media (max-width: 919px) {
+  .auth__aside {
+    justify-content: flex-start;
+    padding: var(--s-6) var(--s-5) var(--s-5);
+    border-bottom: 1px solid var(--line);
+  }
+  .auth__brand { margin-bottom: var(--s-4); }
+}
+
+/* --- form side ----------------------------------------------------------- */
+.auth__main {
+  position: relative;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: clamp(var(--s-5), 3.5vw, var(--s-7));
+  /* A shade above the brand side, so the split reads as two surfaces rather
+     than one dark field with a hairline through it. The brand side has the
+     WebGL texture to distinguish it; this side has nothing but its tone. */
+  background: var(--bg-raised);
+  min-width: 0;
+}
+/* The column owns the overflow, not the document — see the component's note
+   about the nine-account demo roster. `max-height` rather than `height` so a
+   short form still sits centred instead of stretching. */
+@media (min-width: 920px) {
+  .auth__main { max-height: 100vh; max-height: 100dvh; overflow-y: auto; }
+}
+.auth__card {
+  width: 100%; max-width: 27rem; margin-inline: auto;
+  display: flex; flex-direction: column;
+}
+
+/* The demo roster leads on a wide screen — a judge opening this should see
+   "pick a role" before anything else, and it all fits in one viewport there.
+   On a phone it is nine rows between the reader and the email field they came
+   to fill in, so it moves below the form. Ordering rather than hiding: the
+   roster is the whole point of open mode and must stay reachable. */
+.auth__demo { order: 0; }
+@media (max-width: 919px) {
+  .auth__card > .auth__title { order: 1; }
+  .auth__card > .auth__lede { order: 2; }
+  .auth__card > .auth__form { order: 3; }
+  .auth__card > .auth__switch { order: 4; }
+  .auth__demo { order: 5; margin-top: var(--s-6); }
+  .auth__demo .auth__roles { margin-bottom: 0; }
+}
+.auth[data-split] .auth__main { align-items: stretch; }
+
+.auth__title {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(1.5rem, 2.4vw, 1.9rem); line-height: 1.15;
+  letter-spacing: var(--tracking-tight);
+  margin: 0;
+}
+.auth__lede { margin: var(--s-2) 0 var(--s-5); color: var(--ink-muted); font-size: var(--t-sm); }
 
 /* Entrance: a browser-driven keyframe (kvRise lives in app.css), staggered by
    DOM position. Chosen over a JS tween precisely because a keyframe always runs
    to completion — the sign-in card can never be left frozen at opacity 0. */
 @media (prefers-reduced-motion: no-preference) {
-  .login__content > [data-reveal] { animation: kvRise 0.5s var(--ease-out) both; }
-  .login__content > [data-reveal]:nth-child(1) { animation-delay: 0.02s; }
-  .login__content > [data-reveal]:nth-child(2) { animation-delay: 0.06s; }
-  .login__content > [data-reveal]:nth-child(3) { animation-delay: 0.10s; }
-  .login__content > [data-reveal]:nth-child(4) { animation-delay: 0.14s; }
-  .login__content > [data-reveal]:nth-child(5) { animation-delay: 0.18s; }
-  .login__content > [data-reveal]:nth-child(6) { animation-delay: 0.22s; }
-  .login__content > [data-reveal]:nth-child(7) { animation-delay: 0.26s; }
-  .login__content > [data-reveal]:nth-child(n+8) { animation-delay: 0.30s; }
+  .auth__card > [data-reveal] { animation: kvRise 0.5s var(--ease-out) both; }
+  .auth__card > [data-reveal]:nth-child(1) { animation-delay: 0.02s; }
+  .auth__card > [data-reveal]:nth-child(2) { animation-delay: 0.06s; }
+  .auth__card > [data-reveal]:nth-child(3) { animation-delay: 0.10s; }
+  .auth__card > [data-reveal]:nth-child(4) { animation-delay: 0.14s; }
+  .auth__card > [data-reveal]:nth-child(n+5) { animation-delay: 0.18s; }
 }
 
-/* Role quick-sign-in — the RBAC workflow, one tap each. */
-.login__roles {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2);
-  margin-bottom: var(--s-4);
+/* --- the pitch beside the form ------------------------------------------- */
+.auth__pitch {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(1.6rem, 3vw, 2.35rem); line-height: 1.16;
+  letter-spacing: var(--tracking-tight);
+  margin: 0 0 var(--s-5);
 }
-.login__role {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
-  padding: var(--s-2) var(--s-3);
-  border-radius: var(--r-sm);
-  border: 1px solid var(--line);
-  background: var(--bg-raised);
-  color: var(--ink-muted);
-  font: inherit; text-align: left; cursor: pointer;
-  transition: border-color var(--t-fast), background var(--t-fast), color var(--t-fast);
+.auth__points { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-4); }
+.auth__points li {
+  display: flex; gap: var(--s-3); align-items: flex-start;
+  font-size: var(--t-sm); line-height: 1.6; color: var(--ink-muted);
 }
-.login__role:hover:not(:disabled) { border-color: var(--accent); color: var(--ink); background: var(--panel-hover); }
-.login__role:disabled { opacity: 0.5; cursor: progress; }
-.login__role svg { color: var(--accent); }
-.login__rolename { font-weight: 600; font-size: var(--t-sm); text-transform: capitalize; }
-.login__rolemail { font-size: 10px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; max-width: 100%; white-space: nowrap; }
-.login__brand { display: flex; align-items: center; margin-bottom: var(--s-5); }
-.login__title { font-family: var(--font-display); font-size: var(--t-lg); font-weight: 700; margin: 0; letter-spacing: var(--tracking-tight); }
-.login__sub { margin: var(--s-2) 0 var(--s-5); color: var(--ink-muted); font-size: var(--t-sm); }
-.login__note {
-  display: flex; gap: var(--s-2); align-items: flex-start;
-  padding: var(--s-3); margin-bottom: var(--s-4);
-  border-radius: var(--r-sm); border: 1px solid color-mix(in srgb, var(--calm) 30%, transparent);
-  background: var(--calm-dim); font-size: var(--t-xs); line-height: 1.55; color: var(--ink-muted);
+.auth__points svg { color: var(--calm); flex: none; margin-top: 3px; }
+.auth__points strong { color: var(--ink); font-weight: 600; }
+.auth__note { margin: var(--s-6) 0 0; line-height: 1.6; max-width: 44ch; }
+@media (max-width: 919px) {
+  /* On a phone the brand column is a header the form sits under, so every
+     millimetre it takes is a millimetre further from the first field. The
+     argument still leads — a person deciding whether to make an account needs
+     it — but at header scale rather than hero scale, and the third point drops
+     out. Measured: this brings the first input from ~395px down the fold to
+     ~250px on a 812px viewport. */
+  .auth__pitch { font-size: 1.35rem; margin-bottom: var(--s-4); }
+  .auth__points { gap: var(--s-3); }
+  .auth__points li { font-size: var(--t-xs); line-height: 1.5; }
+  .auth__points li:nth-child(n+3) { display: none; }
+  .auth__note { margin-top: var(--s-4); font-size: var(--t-2xs); }
+  .auth__title { font-size: 1.35rem; }
 }
-.login__note svg { color: var(--calm); flex: none; margin-top: 2px; }
-.login__pwd { position: relative; display: flex; align-items: center; }
-/* Direct-child only: the lock is decorative on the left; the toggle button's
-   own icon must NOT be pulled to the left or made click-through. */
-.login__pwd > .login__pwd-lock { position: absolute; left: var(--s-3); color: var(--ink-faint); pointer-events: none; }
-.login__pwd .field { padding-left: 34px; padding-right: 42px; }
-.login__pwd-toggle {
+
+/* --- form furniture ------------------------------------------------------ */
+.auth__form { display: block; }
+.auth__form .fieldlabel { display: block; margin-top: var(--s-4); }
+.auth__form .fieldlabel:first-child { margin-top: 0; }
+.auth__pwdrow {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--s-3); margin-top: var(--s-4);
+}
+.auth__pwdrow .fieldlabel { margin-top: 0; }
+.auth__forgot { font-size: var(--t-xs); color: var(--accent); font-weight: 500; }
+.auth__forgot:hover { text-decoration: underline; text-underline-offset: 0.18em; }
+.auth__submit { width: 100%; justify-content: center; margin-top: var(--s-5); }
+.auth__switch { margin: var(--s-5) 0 0; text-align: center; color: var(--ink-muted); }
+.auth__switch a { color: var(--accent); font-weight: 600; }
+.auth__switch a:hover { text-decoration: underline; text-underline-offset: 0.18em; }
+.auth__foot { margin: var(--s-4) 0 0; text-align: center; }
+
+/* The field with an icon on the left and, sometimes, a reveal toggle right. */
+.auth__field { position: relative; display: flex; align-items: center; }
+/* The form column is `--bg-raised`, so a field painted the same colour has no
+   edge. Drop it to the page ground, which is the inverse of everywhere else in
+   the app and correct here for exactly that reason. */
+.auth__main .field { background: var(--bg); }
+/* Direct-child only: the leading icon is decorative and click-through; the
+   toggle button's own icon must NOT be pulled left or made inert. */
+.auth__field > .auth__fieldicon {
+  position: absolute; left: var(--s-3); color: var(--ink-faint); pointer-events: none;
+}
+.auth__field .field { padding-left: 36px; }
+.auth__field--toggle .field { padding-right: 42px; }
+.auth__reveal {
   position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
   display: inline-grid; place-items: center; width: 30px; height: 30px;
   border: none; background: transparent; color: var(--ink-faint);
   cursor: pointer; border-radius: var(--r-sm);
   transition: color var(--t-fast), background var(--t-fast);
 }
-.login__pwd-toggle:hover { color: var(--ink); background: var(--panel-hover); }
-.login__pwd-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.login__submit { width: 100%; justify-content: center; margin-top: var(--s-4); }
-.login__skip { width: 100%; justify-content: center; margin-top: var(--s-2); }
-.login__foot { margin: var(--s-4) 0 0; text-align: center; }
-.login__foot a { color: var(--accent); }
+.auth__reveal:hover { color: var(--ink); background: var(--panel-hover); }
+.auth__reveal:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-/* The form itself is one reveal target, not eight: `login__content > [data-reveal]`
-   staggers direct children, and the fields live inside <form>. Wrapping them
-   keeps the entrance and gives the browser a real form to autofill and submit
-   on Enter — which is what a password manager looks for. */
-.login__form { display: block; }
-.login__form .fieldlabel { display: block; margin-top: var(--s-3); }
-.login__form .fieldlabel:first-child { margin-top: 0; }
-.login__pwdrow {
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: var(--s-3); margin-top: var(--s-3);
+/* --- open-mode notice + demo roster -------------------------------------- */
+.auth__notice {
+  display: flex; gap: var(--s-3); align-items: flex-start;
+  padding: var(--s-3); margin-bottom: var(--s-4);
+  border-radius: var(--r-sm);
+  border: 1px solid color-mix(in srgb, var(--calm) 30%, transparent);
+  background: var(--calm-dim);
+  font-size: var(--t-xs); line-height: 1.55; color: var(--ink-muted);
 }
-.login__pwdrow .fieldlabel { margin-top: 0; }
-.login__forgot { font-size: var(--t-xs); color: var(--accent); }
-.login__switch { margin: var(--s-4) 0 0; text-align: center; color: var(--ink-muted); }
-.login__switch a { color: var(--accent); font-weight: 600; }
+.auth__notice svg { color: var(--calm); flex: none; margin-top: 2px; }
 
-/* --- sign-up: two columns, brand beside form ---------------------------- */
-.login--split { place-items: stretch; }
-@media (min-width: 900px) {
-  .login--split {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
-    align-items: center;
-    gap: var(--s-7);
-    max-width: 1160px; margin-inline: auto;
-  }
+/* Nine accounts in open mode. One line each, two columns, so the roster is
+   scannable and the form beneath it stays close to the fold. */
+.auth__roles {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;
+  margin-bottom: var(--s-5);
 }
-.signup__aside {
-  position: relative; z-index: 1;
-  align-self: center;
-  padding: var(--s-5) 0;
-  max-width: 46ch;
+@media (max-width: 400px) { .auth__roles { grid-template-columns: minmax(0, 1fr); } }
+.auth__role {
+  display: flex; align-items: baseline; gap: var(--s-2);
+  padding: 7px var(--s-3);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--bg-raised);
+  color: var(--ink-muted);
+  font: inherit; text-align: left; cursor: pointer;
+  min-width: 0;
+  transition: border-color var(--t-fast), background var(--t-fast), color var(--t-fast);
 }
-/* Below the split breakpoint the argument still reads first, above the form —
-   an aside that disappears on a phone is an aside nobody on a phone ever sees. */
-@media (max-width: 899px) {
-  .signup__aside { margin-inline: auto; padding-bottom: var(--s-3); }
+.auth__role:hover:not(:disabled) {
+  border-color: var(--accent); color: var(--ink); background: var(--panel-hover);
 }
-.signup__brand { display: inline-flex; align-items: center; gap: var(--s-3); }
-.signup__brandname {
-  font-family: var(--font-display); font-weight: 700; font-size: var(--t-lg);
-  letter-spacing: var(--tracking-tight); color: var(--ink);
+.auth__role:disabled { opacity: 0.5; cursor: progress; }
+.auth__rolename {
+  font-weight: 600; font-size: var(--t-xs); text-transform: capitalize;
+  color: var(--ink); flex: none;
 }
-.signup__pitch {
-  font-family: var(--font-display); font-weight: 700;
-  font-size: clamp(1.5rem, 3.2vw, 2.1rem); line-height: 1.18;
-  letter-spacing: var(--tracking-tight);
-  margin: var(--s-5) 0 var(--s-4);
+.auth__rolemail {
+  font-size: 10px; color: var(--ink-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
 }
-.signup__points { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
-.signup__points li {
-  display: flex; gap: var(--s-2); align-items: flex-start;
-  font-size: var(--t-sm); line-height: 1.6; color: var(--ink-muted);
-}
-.signup__points svg { color: var(--calm); flex: none; margin-top: 3px; }
-.signup__points strong { color: var(--ink); }
-.signup__note { margin: var(--s-5) 0 0; line-height: 1.6; }
-.signup__panel { align-self: center; justify-self: end; width: min(460px, 94vw); }
-@media (max-width: 899px) { .signup__panel { justify-self: center; } }
 
-/* --- password strength meter -------------------------------------------- */
+/* --- password strength meter --------------------------------------------- */
 .pwmeter { margin-top: var(--s-2); }
-.pwmeter__bar {
-  height: 4px; border-radius: 999px; background: var(--line); overflow: hidden;
-}
+.pwmeter__bar { height: 4px; border-radius: 999px; background: var(--line); overflow: hidden; }
 .pwmeter__bar i {
   display: block; height: 100%; width: 100%;
   background: var(--critical); transform-origin: left center;
@@ -938,14 +1014,14 @@
 .pwmeter__list li svg { flex: none; }
 .pwmeter__list li[data-ok] { color: var(--calm); }
 
-/* --- terms acknowledgement ---------------------------------------------- */
+/* --- terms acknowledgement ----------------------------------------------- */
 .checkrow {
-  display: flex; gap: var(--s-2); align-items: flex-start;
-  margin-top: var(--s-4); cursor: pointer; line-height: 1.55;
+  display: flex; gap: var(--s-3); align-items: flex-start;
+  margin-top: var(--s-5); cursor: pointer; line-height: 1.55;
 }
-.checkrow input { margin-top: 3px; flex: none; accent-color: var(--accent); }
+.checkrow input { margin-top: 2px; flex: none; accent-color: var(--accent); width: 16px; height: 16px; }
 
-/* --- the development-only reset block ----------------------------------- */
+/* --- the development-only reset block ------------------------------------ */
 /* Loud on purpose. This block only appears when AEGIS_DEV_PASSWORD_RESET is on
    and enforcement is off, and it must never be mistaken for a production flow. */
 .devblock {

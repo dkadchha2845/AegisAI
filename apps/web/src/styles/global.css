@@ -47,6 +47,60 @@ button, input, select, textarea, optgroup {
 }
 button { background: none; border: none; }
 
+/* Links do not underline, and take their colour from context.
+ *
+ * The browser's default is an underlined blue, which is right for a link in a
+ * paragraph and wrong for every other use of <a> in an application: a logo, a
+ * nav row, a card, a menu item, a button-shaped call to action. This codebase
+ * had no rule at all, so each of those opted out individually with
+ * `text-decoration: none` — eighteen times across four stylesheets — and any
+ * new link was underlined until someone noticed. The brand mark in the sign-in
+ * header is what noticed it.
+ *
+ * Inverting the default is the fix: nothing underlines, and prose opts back
+ * *in* via `.prose a` below, where an underline is the affordance rather than
+ * an accident. Hover still gets one on prose links, and `:focus-visible` still
+ * draws the global outline ring on every link, so keyboard users lose nothing. */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Running text — the one place a link should look like a link. Anything inside
+   a card body, a fact list, a settings description or a page lede. */
+.prose a,
+p a,
+li a,
+dd a,
+.small a,
+.setting__desc a,
+.factlist a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  transition: text-decoration-color var(--t-fast);
+}
+.prose a:hover,
+p a:hover,
+li a:hover,
+dd a:hover,
+.small a:hover,
+.setting__desc a:hover,
+.factlist a:hover { text-decoration-color: currentColor; }
+
+/* …except where the prose selectors above would catch a link that is really a
+   control. A button, a nav row and a menu item are all <a> inside a <p> or an
+   <li> somewhere. */
+p a.btn2, li a.btn2, .small a.btn2,
+p a.btn, li a.btn, .small a.btn,
+a.sidenav, a.home-task, a.usermenu__item, a.task, a.pipestep__link,
+a.login__brand, a.signup__brand, a.lhead__brand, a.sidebar__logo, a.topbar2__brand {
+  text-decoration: none;
+  color: inherit;
+}
+
 /* Tabular figures everywhere numbers change in place, so digits don't
    jitter the layout as they count. This is the single biggest thing that
    makes a readout look like an instrument. */

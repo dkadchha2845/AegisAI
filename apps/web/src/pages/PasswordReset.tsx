@@ -20,27 +20,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowRight, Eye, EyeOff, KeyRound, Lock, Mail, TerminalSquare } from "lucide-react";
-import { Logo } from "@/components/brand/Logo";
-import { ThreatField } from "@/components/three/ThreatField";
+import { AuthShell } from "@/components/layout/AuthShell";
 import * as api from "@/lib/api";
-
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="login">
-      <div className="login__bg">
-        <ThreatField />
-      </div>
-      <div className="login__panel">
-        <div className="login__content">
-          <Link to="/" className="login__brand" data-reveal aria-label="AegisAI home">
-            <Logo size={24} />
-          </Link>
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -59,10 +40,7 @@ export function ForgotPassword() {
 
   if (sent) {
     return (
-      <Shell>
-        <h1 className="login__title">Check your email</h1>
-        <p className="login__sub">{sent.message}</p>
-
+      <AuthShell title="Check your email" lede={sent.message}>
         {sent.devToken && (
           <div className="devblock" role="note">
             <p className="devblock__head">
@@ -84,29 +62,33 @@ export function ForgotPassword() {
           </div>
         )}
 
-        <p className="login__switch small">
+        <p className="auth__switch small">
           <Link to="/login">Back to sign in</Link>
         </p>
-      </Shell>
+      </AuthShell>
     );
   }
 
   return (
-    <Shell>
-      <h1 className="login__title">Reset your password</h1>
-      <p className="login__sub">
-        Enter the email on your account and we'll issue a single-use reset link.
-      </p>
+    <AuthShell
+      title="Reset your password"
+      lede="Enter the email on your account and we'll issue a single-use reset link."
+      footer={
+        <p className="auth__switch small">
+          Remembered it? <Link to="/login">Sign in</Link>
+        </p>
+      }
+    >
       <form
-        className="login__form"
+        className="auth__form"
         onSubmit={(e) => {
           e.preventDefault();
           void submit();
         }}
       >
         <label className="fieldlabel" htmlFor="fp-email">Email</label>
-        <div className="login__pwd">
-          <Mail size={14} className="login__pwd-lock" aria-hidden="true" />
+        <div className="auth__field">
+          <Mail size={14} className="auth__fieldicon" aria-hidden="true" />
           <input
             id="fp-email"
             className="field"
@@ -123,14 +105,11 @@ export function ForgotPassword() {
             <div className="small">{error}</div>
           </div>
         )}
-        <button className="btn2 btn2--primary login__submit" type="submit" disabled={busy}>
+        <button className="btn2 btn2--primary auth__submit" type="submit" disabled={busy}>
           {busy ? "Sending…" : "Send reset link"} <ArrowRight size={15} aria-hidden="true" />
         </button>
       </form>
-      <p className="login__switch small">
-        Remembered it? <Link to="/login">Sign in</Link>
-      </p>
-    </Shell>
+    </AuthShell>
   );
 }
 
@@ -167,30 +146,33 @@ export function ResetPassword() {
 
   if (done) {
     return (
-      <Shell>
-        <h1 className="login__title">Password changed</h1>
-        <p className="login__sub">
-          Every other session on this account has been signed out. Sign in with your
-          new password.
-        </p>
+      <AuthShell
+        title="Password changed"
+        lede="Every other session on this account has been signed out. Sign in with your new password."
+      >
         <button
-          className="btn2 btn2--primary login__submit"
+          className="btn2 btn2--primary auth__submit"
           onClick={() => navigate("/login", { replace: true })}
         >
           Sign in <ArrowRight size={15} aria-hidden="true" />
         </button>
-      </Shell>
+      </AuthShell>
     );
   }
 
   return (
-    <Shell>
-      <h1 className="login__title">Choose a new password</h1>
-      <p className="login__sub">
-        Reset links are single use and expire — if this one has, request another.
-      </p>
+    <AuthShell
+      title="Choose a new password"
+      lede="Reset links are single use and expire — if this one has, request another."
+      footer={
+        <p className="auth__switch small">
+          <Link to="/forgot-password">Request a new link</Link> ·{" "}
+          <Link to="/login">Sign in</Link>
+        </p>
+      }
+    >
       <form
-        className="login__form"
+        className="auth__form"
         onSubmit={(e) => {
           e.preventDefault();
           void submit();
@@ -199,8 +181,8 @@ export function ResetPassword() {
         {!tokenFromUrl && (
           <>
             <label className="fieldlabel" htmlFor="rp-token">Reset token</label>
-            <div className="login__pwd">
-              <KeyRound size={14} className="login__pwd-lock" aria-hidden="true" />
+            <div className="auth__field">
+              <KeyRound size={14} className="auth__fieldicon" aria-hidden="true" />
               <input
                 id="rp-token"
                 className="field mono"
@@ -214,8 +196,8 @@ export function ResetPassword() {
         )}
 
         <label className="fieldlabel" htmlFor="rp-pw">New password</label>
-        <div className="login__pwd">
-          <Lock size={14} className="login__pwd-lock" aria-hidden="true" />
+        <div className="auth__field auth__field--toggle">
+          <Lock size={14} className="auth__fieldicon" aria-hidden="true" />
           <input
             id="rp-pw"
             className="field"
@@ -228,7 +210,7 @@ export function ResetPassword() {
           />
           <button
             type="button"
-            className="login__pwd-toggle"
+            className="auth__reveal"
             onClick={() => setShowPw((v) => !v)}
             aria-label={showPw ? "Hide password" : "Show password"}
             aria-pressed={showPw}
@@ -239,8 +221,8 @@ export function ResetPassword() {
         </div>
 
         <label className="fieldlabel" htmlFor="rp-confirm">Confirm new password</label>
-        <div className="login__pwd">
-          <Lock size={14} className="login__pwd-lock" aria-hidden="true" />
+        <div className="auth__field">
+          <Lock size={14} className="auth__fieldicon" aria-hidden="true" />
           <input
             id="rp-confirm"
             className="field"
@@ -259,14 +241,10 @@ export function ResetPassword() {
           </div>
         )}
 
-        <button className="btn2 btn2--primary login__submit" type="submit" disabled={busy}>
+        <button className="btn2 btn2--primary auth__submit" type="submit" disabled={busy}>
           {busy ? "Saving…" : "Set new password"} <ArrowRight size={15} aria-hidden="true" />
         </button>
       </form>
-      <p className="login__switch small">
-        <Link to="/forgot-password">Request a new link</Link> ·{" "}
-        <Link to="/login">Sign in</Link>
-      </p>
-    </Shell>
+    </AuthShell>
   );
 }
