@@ -1,0 +1,33 @@
+# systemd unit for the Celery worker (task 1.8). OPTIONAL.
+#
+# Without it the API runs the agent graph in its own process and reports
+# `execution.mode: in-process` on /api/health — identical results, one
+# investigation at a time, and a restart mid-run loses that run. Install it when
+# you want investigations off the request path.
+#
+#   sudo cp infra/deploy/aegis-worker.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now aegis-worker
+
+[Unit]
+Description=AegisAI investigation worker
+After=network-online.target redis-server.service
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=aegis
+Group=aegis
+WorkingDirectory=/srv/aegisai/app
+EnvironmentFile=/srv/aegisai/app/.env
+ExecStart=/srv/aegisai/app/.venv/bin/celery -A services.worker.celery_app worker \
+    -Q fast,slow,sandbox -c 4 --loglevel=info
+Restart=always
+RestartSec=5
+TimeoutStartSec=300
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

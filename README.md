@@ -57,6 +57,7 @@ conversation-analysis agent.
 | ✅ [`docs/TASKS.md`](./docs/TASKS.md) | The phased task backlog with acceptance criteria, timeline and critical path |
 | 🤝 [`CLAUDE.md`](./CLAUDE.md) | Contributor working rules: invariants, quality gates, and the definition of done |
 | 🔐 [`docs/AUTH.md`](./docs/AUTH.md) | Accounts, roles, permissions, sessions, seeding, and how to open the database |
+| 🚀 [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) | Putting the frontend and backend on one domain with TLS — DNS, Postgres, systemd, Caddy |
 | 📚 [`docs/DATASETS.md`](./docs/DATASETS.md) | AIFC corpus strategy, splits, annotation, ethics |
 | 🔬 [`docs/RESEARCH.md`](./docs/RESEARCH.md) | Contributions, experiments, ablations, paper plan |
 | 📐 [`docs/adr/`](./docs/adr/) | Architecture decision records — every deviation, justified |

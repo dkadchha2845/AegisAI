@@ -1,0 +1,66 @@
+# AegisAI — one host, one origin, TLS on automatically.
+#
+# Replace aegisai.in with your domain. Caddy obtains and renews a Let's Encrypt
+# certificate on its own; there is no certbot step and no cron job.
+#
+# Why one origin rather than a separate api. subdomain: the SPA and the API
+# share a scheme and host, so every request the browser makes is same-origin.
+# That removes CORS from the deployment entirely (no AEGIS_CORS_ORIGINS to keep
+# in step), it removes the preflight round trip from every write, and it means
+# the bearer token is never sent cross-site. Build the SPA with
+# VITE_API_BASE= (empty) and it talks to /api on whatever host served it.
+
+aegisai.in, www.aegisai.in {
+	encode zstd gzip
+
+	# --- the API ---------------------------------------------------------
+	# Everything under /api goes to uvicorn. Caddy proxies WebSocket upgrades
+	# without any extra configuration, which the live-session socket needs.
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8000 {
+			# Server-sent events: the investigation progress stream pushes one
+			# event per completed agent node over a connection that stays open
+			# for the length of the run. Without these two the proxy buffers the
+			# whole response and the client sees nothing until the graph
+			# finishes — the stream still "works" and is entirely pointless.
+			flush_interval -1
+			transport http {
+				response_header_timeout 24h
+			}
+		}
+	}
+
+	# --- the SPA ---------------------------------------------------------
+	# `try_files` sends unknown paths to index.html, because the router is
+	# client-side: a visitor who bookmarks /admin/dashboard and comes back to it
+	# must get the app, not a 404 from the file server.
+	handle {
+		root * /srv/aegisai/web
+		try_files {path} /index.html
+		file_server
+	}
+
+	# --- headers ---------------------------------------------------------
+	# The API sets its own strict CSP (services/api/security.py, default-src
+	# 'none') because it serves only JSON and PDFs. These are for the SPA,
+	# which needs to load its own scripts, styles and fonts.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), camera=(), payment=()"
+		-Server
+	}
+
+	# Hashed assets are immutable; index.html must never be cached or a deploy
+	# leaves people on the old bundle until they hard-refresh.
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+	@index path / /index.html
+	header @index Cache-Control "no-cache"
+
+	log {
+		output file /var/log/caddy/aegisai.log
+	}
+}

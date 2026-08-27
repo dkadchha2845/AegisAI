@@ -15,6 +15,19 @@ import type {
   StateFrame,
 } from "@/types/contract";
 
+/**
+ * Where the API is.
+ *
+ * Three shapes, all supported:
+ *
+ *   * unset — `http://localhost:8000`, the dev default.
+ *   * an absolute origin (`https://api.example.in`) — a split deployment where
+ *     the SPA and the API are on different hosts. Needs that origin in
+ *     `AEGIS_CORS_ORIGINS` on the server.
+ *   * **empty string** — same origin. The SPA is served by the same host that
+ *     proxies `/api` to uvicorn, so every request is relative and there is no
+ *     CORS involved at all. This is what `docs/DEPLOYMENT.md` recommends.
+ */
 export const API_BASE =
   (import.meta.env.VITE_API_BASE as string | undefined) ?? "http://localhost:8000";
 
@@ -387,8 +400,27 @@ export const investigateSession = (sessionId: string, city?: string | null) =>
     { method: "POST" },
   );
 
-export const socketUrl = (sessionId: string) =>
-  `${API_BASE.replace(/^http/, "ws")}/api/session/ws/${sessionId}`;
+/**
+ * The live-session WebSocket URL.
+ *
+ * `new WebSocket()` requires an **absolute** `ws://` or `wss://` URL — it
+ * throws a SyntaxError on a relative one. A simple `API_BASE.replace(/^http/,
+ * "ws")` is therefore correct for an absolute base and silently broken for the
+ * empty base that a same-origin deployment uses: it produces
+ * `/api/session/ws/…`, and Live Protection dies the moment anyone opens it
+ * behind a reverse proxy. So when the base is relative, the scheme and host come
+ * from the page — which is exactly what "same origin" means, and which also
+ * gets `wss:` for free on an HTTPS site.
+ */
+export const socketUrl = (sessionId: string) => {
+  const path = `/api/session/ws/${sessionId}`;
+  if (/^https?:\/\//i.test(API_BASE)) {
+    return `${API_BASE.replace(/^http/i, "ws")}${path}`;
+  }
+  const scheme = window.location.protocol === "https:" ? "wss:" : "ws:";
+  // `API_BASE` may still be a path prefix (`/gateway`), so it is kept.
+  return `${scheme}//${window.location.host}${API_BASE}${path}`;
+};
 
 // ---------------------------------------------------------------------------
 // Evidence package (escalation artifact)
