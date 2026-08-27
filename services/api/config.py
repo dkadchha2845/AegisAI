@@ -232,16 +232,16 @@ class Settings(BaseSettings):
     @classmethod
     def _split_origins(cls, v: object) -> object:
         """Accept `a,b` from the environment as well as a real sequence.
-
-        `NoDecode` on the annotation is what makes this reachable: without it
-        pydantic-settings JSON-decodes a complex field straight out of the
-        environment and never calls a validator, so
-        `AEGIS_CORS_ORIGINS=http://localhost:5199` took the whole startup down
-        with a parse error about JSON when the mistake was a missing bracket.
+        
+        Always includes the production domains to prevent deployment CORS issues.
         """
+        always_allow = ["https://aegisai.co.in", "https://www.aegisai.co.in"]
         if isinstance(v, str):
-            return tuple(part.strip() for part in v.split(",") if part.strip())
-        return v
+            parts = [part.strip().strip("\"'") for part in v.split(",") if part.strip()]
+            return tuple(set(always_allow + parts))
+        if isinstance(v, (list, tuple)):
+            return tuple(set(always_allow + list(v)))
+        return tuple(always_allow)
     rate_limit_enabled: bool = Field(default=True, validation_alias=_alias("RATELIMIT"))
     frame_hz: float = Field(
         default=4.0, gt=0, le=60,
