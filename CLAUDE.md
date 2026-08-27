@@ -139,6 +139,11 @@ panel. Then run the four gates.
   false-positive discipline. It stays behind `AEGIS_DENSE_SCRIPTS`.
 - **English scam scoring is borderline on short inputs**; Hindi/Hinglish is
   strong. The aggregate score rewards accumulated pressure over many turns.
+- **A migration proven on SQLite is not proven.** The migration tests default
+  to SQLite, which has no boolean type and accepts `SET flag = 0` against one
+  that PostgreSQL refuses. Revision 0003 shipped that way: green suite, failed
+  deploy. Run `make up` before touching `migrations/`, and read the `postgres:`
+  line the run prints — it says SQLite ONLY when nothing was proven.
 - **Env vars are `AEGIS_*`.** The old `PRESAGE_*` names still work via a
   fallback in `config.py`; don't add new `PRESAGE_*` names.
 - **`uvicorn --reload-dir`** is required in dev, or reloads wipe the ephemeral DB.

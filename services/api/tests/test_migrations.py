@@ -347,3 +347,150 @@ def test_the_advice_that_refusal_gives_actually_works(db):
         outcomes = dict(conn.execute(text("SELECT action, success FROM audit_events")).all())
         assert outcomes["login"]
         assert not outcomes["login.failed"]
+
+
+# ---------------------------------------------------------------------------
+# The same revisions, against a real PostgreSQL
+# ---------------------------------------------------------------------------
+#
+# Everything above runs on SQLite, and SQLite is not what anyone deploys to.
+# The gap is not theoretical: revision 0003 shipped with
+# `UPDATE audit_events SET success = 0`, which SQLite accepts (it has no boolean
+# type) and PostgreSQL refuses with `column "success" is of type boolean but
+# expression is of type integer`. Every test in this file passed and the first
+# real deploy failed in its build step.
+#
+# So the revisions now run against a real PostgreSQL when one is reachable, and
+# **say so when it is not** — a test that silently skips is the shape task 1.7b
+# is about, and this file is now the proof of that.
+
+
+def _pg_url() -> "str | None":
+    """A PostgreSQL this test session may create a scratch database on.
+
+    `AEGIS_TEST_PG_URL` wins; otherwise the compose stack's dev credentials,
+    which are in `.env.example` and are not a secret. Returns None when nothing
+    answers, so the caller can skip with a reason rather than erroring.
+    """
+    import os
+
+    url = os.environ.get(
+        "AEGIS_TEST_PG_URL",
+        "postgresql+psycopg://aegis:aegis_dev_only@127.0.0.1:5432/aegis",
+    )
+    try:
+        from sqlalchemy import create_engine, text
+
+        engine = create_engine(url, connect_args={"connect_timeout": 2})
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        engine.dispose()
+        return url
+    except Exception:
+        return None
+
+
+PG_URL = _pg_url()
+PG_WHY = "no PostgreSQL reachable (set AEGIS_TEST_PG_URL, or run `make up`)"
+needs_pg = pytest.mark.skipif(PG_URL is None, reason=PG_WHY)
+
+
+@pytest.fixture
+def pg(monkeypatch):
+    """A scratch PostgreSQL database, dropped afterwards."""
+    import uuid
+
+    from sqlalchemy import create_engine, text
+
+    admin = create_engine(PG_URL, isolation_level="AUTOCOMMIT")
+    name = f"aegis_mig_{uuid.uuid4().hex[:10]}"
+    with admin.connect() as conn:
+        conn.execute(text(f'CREATE DATABASE "{name}"'))
+
+    url = PG_URL.rsplit("/", 1)[0] + "/" + name
+    monkeypatch.setenv("DATABASE_URL", url)
+    engine = create_engine(url)
+    try:
+        yield url, engine
+    finally:
+        engine.dispose()
+        with admin.connect() as conn:
+            # Bound parameter, not interpolation: `name` is ours, but a
+            # scratch-database helper is exactly the kind of thing that gets
+            # copied somewhere the value is not.
+            conn.execute(
+                text(
+                    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+                    "WHERE datname = :db AND pid <> pg_backend_pid()"
+                ),
+                {"db": name},
+            )
+            conn.execute(text(f'DROP DATABASE IF EXISTS "{name}"'))
+        admin.dispose()
+
+
+@needs_pg
+def test_head_matches_the_models_on_postgres(pg):
+    """No drift on the real store either.
+
+    `compare_type=True` is what makes this worth running separately: SQLite
+    collapses several types that PostgreSQL keeps distinct, so a column whose
+    type is wrong can look identical on SQLite and differ here.
+    """
+    url, engine = pg
+    command.upgrade(_config(url), "head")
+    with engine.connect() as conn:
+        ctx = MigrationContext.configure(conn, opts={"compare_type": True})
+        diff = compare_metadata(ctx, Base.metadata)
+    assert diff == [], f"migrations have drifted from the models on PostgreSQL: {diff}"
+
+
+@needs_pg
+def test_migrations_run_forward_and_back_on_postgres(pg):
+    url, engine = pg
+    cfg = _config(url)
+    command.upgrade(cfg, "head")
+    assert _tables(engine) >= RBAC_TABLES
+    command.downgrade(cfg, "base")
+    assert _tables(engine) == set()
+    command.upgrade(cfg, "head")
+    assert _tables(engine) == set(Base.metadata.tables)
+
+
+@needs_pg
+def test_the_audit_backfill_is_typed_correctly_on_postgres(pg):
+    """The regression, named.
+
+    `SET success = 0` against a boolean column is a `DatatypeMismatch` on
+    PostgreSQL and a silent success on SQLite. This asserts the values, which
+    only exist if the statement ran — and the statement only runs if its literal
+    is rendered for the right dialect.
+    """
+    from sqlalchemy import text
+
+    url, engine = pg
+    cfg = _config(url)
+    command.upgrade(cfg, "0002")
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO organizations (id, slug, name, created_at) "
+                "VALUES (1, 'aegis', 'AegisAI', now())"
+            )
+        )
+        conn.execute(
+            text(
+                "INSERT INTO audit_events (id, ts, org_id, actor, action) VALUES "
+                "(1, now(), 1, 'a@b.in', 'login'), "
+                "(2, now(), 1, 'ghost@x.com', 'login.failed'), "
+                "(3, now(), 1, 'a@b.in', 'report.export')"
+            )
+        )
+
+    command.upgrade(cfg, "head")
+
+    with engine.connect() as conn:
+        outcomes = dict(conn.execute(text("SELECT action, success FROM audit_events")).all())
+    assert outcomes["login"] is True
+    assert outcomes["report.export"] is True
+    assert outcomes["login.failed"] is False

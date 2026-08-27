@@ -525,6 +525,27 @@ none were seeded and `/api/auth/demo-accounts` returns an empty list.
 
 ---
 
+## Before you ship a migration
+
+The migration tests run on SQLite by default, and SQLite is not what you deploy
+to. Prove the revision against a real PostgreSQL first:
+
+```bash
+make up                                    # starts the compose Postgres
+.venv/bin/python -m pytest services/api/tests/test_migrations.py -q
+```
+
+The last line of the run says which store it proved:
+
+```
+postgres: 127.0.0.1:5432/aegis answered — migrations proven on PostgreSQL too
+```
+
+If it says **SQLite ONLY**, the revision is unproven where it matters. Revision
+0003 shipped with `SET success = 0` against a boolean column — accepted by
+SQLite, refused by PostgreSQL — and the whole suite was green while the first
+Render deploy failed in its build step.
+
 ## Deploying a change
 
 ```bash

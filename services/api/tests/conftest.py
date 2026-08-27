@@ -123,7 +123,7 @@ def pytest_report_header() -> str:
     """
     from services.api.serving import describe
 
-    return "\n".join([describe(), _queue_line()])
+    return "\n".join([describe(), _queue_line(), _postgres_line()])
 
 
 def pytest_terminal_summary(terminalreporter) -> None:  # type: ignore[no-untyped-def]
@@ -140,6 +140,25 @@ def pytest_terminal_summary(terminalreporter) -> None:  # type: ignore[no-untype
 
     terminalreporter.write_line(describe())
     terminalreporter.write_line(_queue_line())
+    terminalreporter.write_line(_postgres_line())
+
+
+def _postgres_line() -> str:
+    """Whether the migrations were proven against a real PostgreSQL.
+
+    They run on SQLite by default, and SQLite is not what anyone deploys to.
+    Revision 0003 shipped with `SET success = 0` against a boolean column —
+    accepted by SQLite, refused by PostgreSQL — and the whole suite was green
+    while the first real deploy failed in its build step. The run now states
+    which store it proved, for the same reason it states which classifier.
+    """
+    from services.api.tests.test_migrations import PG_URL
+
+    if PG_URL is None:
+        return ("postgres: none reachable — migrations proven on SQLite ONLY "
+                "(set AEGIS_TEST_PG_URL, or `make up`)")
+    where = PG_URL.rsplit("@", 1)[-1]
+    return f"postgres: {where} answered — migrations proven on PostgreSQL too"
 
 
 def _queue_line() -> str:

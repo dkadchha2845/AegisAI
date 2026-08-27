@@ -175,7 +175,23 @@ def upgrade() -> None:
 
     # The one historical action that was a failure by definition. Every other
     # pre-existing row records something that had already happened.
-    op.execute("UPDATE audit_events SET success = 0 WHERE action = 'login.failed'")
+    #
+    # Written through the SQLAlchemy expression layer rather than as raw SQL,
+    # so the boolean literal is rendered per dialect. `SET success = 0` is
+    # accepted by SQLite, which has no boolean type, and rejected by PostgreSQL
+    # with `column "success" is of type boolean but expression is of type
+    # integer` — a migration that passes every test in this repository and
+    # fails on the only database anyone deploys to. This file's own tests run
+    # on SQLite and say so; that is what let it through.
+    audit = sa.table(
+        "audit_events",
+        sa.column("success", sa.Boolean),
+        sa.column("action", sa.String),
+    )
+    op.execute(
+        audit.update().where(audit.c.action == op.inline_literal("login.failed"))
+        .values(success=op.inline_literal(False))
+    )
 
     with op.batch_alter_table("audit_events") as batch:
         batch.alter_column("success", server_default=None)
