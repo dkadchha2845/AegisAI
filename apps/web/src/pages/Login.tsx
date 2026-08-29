@@ -161,7 +161,7 @@ export function Login() {
                 title={`${a.description} — ${a.org}`}
               >
                 <span className="auth__rolename">{a.role}</span>
-                <span className="auth__rolemail mono">{a.email}</span>
+                <span className="auth__rolemail dm-sans">{a.email}</span>
               </button>
             ))}
           </div>

@@ -399,14 +399,16 @@
 .whatnext__eta { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
 
 /* --- Admin dashboard -------------------------------------------------------- */
-.admin-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-4); margin-bottom: var(--s-4); }
+.admin-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-4); }
 @media (max-width: 820px) { .admin-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.admin-kpi { display: flex; flex-direction: column; gap: 4px; }
+.admin-kpis > .card { margin-top: 0; }
+.admin-kpi { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
 .admin-kpi__icon { color: var(--accent); }
 .admin-kpi__v { font-family: var(--font-display); font-size: var(--t-xl); font-weight: 700; letter-spacing: -0.02em; }
 
-.admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-4); margin-bottom: var(--s-4); }
+.admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-4); }
 @media (max-width: 820px) { .admin-grid { grid-template-columns: minmax(0, 1fr); } }
+.admin-grid > .card { display: flex; flex-direction: column; margin-top: 0; }
 
 .admin-status { list-style: none; margin: var(--s-2) 0 0; padding: 0; display: grid; gap: var(--s-2); }
 .admin-status__row { display: grid; grid-template-columns: 10px 120px 1fr; gap: var(--s-2); align-items: center; }
@@ -558,6 +560,39 @@
   font-size: clamp(1.9rem, 4.4vw, 3.2rem);
   margin: var(--s-5) 0 var(--s-4);
 }
+
+/* The word-by-word pitch. Every word is its own inline-block so it can be
+   rotated on its baseline; the perspective lives on the paragraph so they
+   all swing on the same vanishing point rather than fourteen separate ones.
+   No overflow mask: `.hero__title` runs at line-height 1.02, so a mask cut
+   to the line box would take the descender off "say". */
+.herotitle { perspective: 700px; }
+.herotitle__line { display: block; }
+.herotitle__word {
+  display: inline-block;
+  transform-style: preserve-3d;
+  /* Adjacent JSX expressions have no whitespace between them to collapse
+     into a word space, so the gap is declared rather than inherited. */
+  margin-left: 0.26em;
+}
+.herotitle__line > .herotitle__word:first-child { margin-left: 0; }
+/* `--charge` is animated 0..1 by the hero timeline and is the single input
+   to both halves of the pulse. At 0 this is exactly the accent colour with
+   no shadow, which is also what a reduced-motion visitor gets, since nothing
+   ever moves it off 0. */
+.herotitle__word--accent {
+  --charge: 0;
+  color: color-mix(in srgb, #fff calc(var(--charge) * 100%), var(--accent));
+  text-shadow: 0 0 calc(28px * var(--charge))
+    color-mix(in srgb, var(--accent) calc(var(--charge) * 70%), transparent);
+}
+
+/* The entrance tweens `filter`, which promotes each word to its own layer;
+   handing back the hint afterwards keeps fourteen layers from outliving the
+   1.2s they are needed for. */
+@media (prefers-reduced-motion: no-preference) {
+  .herotitle__word { will-change: transform, filter; }
+}
 .hero__pills { display: flex; gap: var(--s-3); justify-content: center; flex-wrap: wrap; margin-top: var(--s-5); }
 .hero__pills span {
   padding: 6px var(--s-3); border-radius: var(--r-pill);
@@ -619,12 +654,16 @@
 .surface__item:hover svg { color: var(--accent); }
 
 /* --- Solution: the three modules ---------------------------------------- */
-.pipeline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); position: relative; }
+/* The gap is a variable because the connector between cards is positioned
+   from it. At 16px a 24px arrow glyph had nowhere to sit: it overhung both
+   neighbours by 3px and read as crowding rather than connection. */
+.pipeline { --pipe-gap: var(--s-6); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--pipe-gap); position: relative; }
 @media (max-width: 860px) { .pipeline { grid-template-columns: minmax(0, 1fr); } }
 .pipestep {
+  --pipe-border: 1px;
   position: relative;
   padding: var(--s-5);
-  border: 1px solid var(--line);
+  border: var(--pipe-border) solid var(--line);
   border-top: 2px solid var(--line-strong);
   border-radius: var(--r-md);
   background: var(--panel);
@@ -641,7 +680,27 @@
 .pipestep__name { font-size: var(--t-xs); color: var(--ink-faint); letter-spacing: 0.1em; }
 .pipestep__body { margin: var(--s-3) 0; color: var(--ink-muted); font-size: var(--t-sm); line-height: 1.65; }
 .pipestep__link { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); text-decoration: none; font-size: var(--t-sm); }
-.pipestep__arrow { position: absolute; right: calc(var(--s-4) * -1 - 5px); top: 50%; transform: translateY(-50%); color: var(--ink-faint); font-size: var(--t-lg); z-index: 1; }
+/* Centred in the gap by arithmetic rather than by a nudge: `left: 100%` puts
+   it on the card's right edge, then it is pushed out half the gap and pulled
+   back half its own width. Clearance is then equal on both sides at any gap.
+
+   The border term is not a fudge. An absolutely positioned box resolves
+   `left` against its containing block's *padding* box, so `100%` lands a
+   border's width inside the card's outer edge and left the arrow sitting
+   6.8px/8.8px in a 32px gap. Adding the border back makes it 7.8/7.8. */
+.pipestep__arrow {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translate(
+    calc(var(--pipe-gap) / 2 + var(--pipe-border) - 50%),
+    -50%
+  );
+  color: var(--ink-faint);
+  font-size: var(--t-md);
+  line-height: 1;
+  z-index: 1;
+}
 @media (max-width: 860px) { .pipestep__arrow { display: none; } }
 
 /* --- How it thinks ------------------------------------------------------ */

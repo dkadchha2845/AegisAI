@@ -84,11 +84,11 @@
   gap: var(--s-2);
   height: var(--btn-h);
   padding: 0 var(--btn-px);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-pill);
   border: 1px solid var(--line-strong);
   background: var(--panel);
   color: var(--ink);
-  font: inherit;
+  font-family: "DM Sans", sans-serif;
   font-size: var(--t-sm);
   font-weight: 500;
   line-height: 1;
@@ -102,6 +102,12 @@
     transform var(--t-instant);
 }
 .btn { --btn-h: 30px; --btn-px: var(--s-3); font-size: var(--t-xs); }
+
+/* A magnetic control's transform belongs to GSAP, which writes it every
+   frame; leaving the CSS transition on the same property stacks a second
+   ease on top of the tween and the control lags the cursor. `useMagnetic`
+   sets this attribute, and takes over the press state it costs us. */
+[data-magnetic] { transition-property: background, border-color, color; }
 
 .btn2:hover:not(:disabled),
 .btn:hover:not(:disabled) {

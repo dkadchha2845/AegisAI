@@ -164,7 +164,7 @@ export function AppShell() {
                   key={item.to}
                   to={item.to}
                   className={({ isActive }) => `sidenav ${isActive ? "sidenav--active" : ""}`}
-                  data-tooltip={`${item.label} — ${item.blurb}`}
+                  data-tooltip={collapsed ? `${item.label} — ${item.blurb}` : undefined}
                 >
                   <item.icon size={17} className="sidenav__icon" aria-hidden="true" />
                   <span className="sidenav__text">
@@ -178,6 +178,15 @@ export function AppShell() {
         </nav>
 
         <div className="sidebar__foot">
+          {collapsed && (
+            <button
+              className="iconbtn sidebar__expand"
+              onClick={() => setCollapsed(false)}
+              aria-label="Expand sidebar"
+            >
+              <PanelLeftOpen size={17} />
+            </button>
+          )}
           <StatusPill loading={health.loading} online={!!health.data} degraded={degraded} />
 
           {auth.authed && auth.user ? (
@@ -186,7 +195,7 @@ export function AppShell() {
                 {(auth.user.display_name || auth.user.email).slice(0, 1).toUpperCase()}
               </span>
               <span className="userchip__text">
-                <span className="userchip__email" data-tooltip={auth.user.email}>
+                <span className="userchip__email dm-sans" data-tooltip={auth.user.email}>
                   {auth.user.display_name}
                 </span>
                 {/* Both lines ellipsize in a 248px rail, so the full values

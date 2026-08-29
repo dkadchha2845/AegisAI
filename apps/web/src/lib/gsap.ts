@@ -60,6 +60,12 @@ export function armFailsafe() {
           gsap.killTweensOf(el);
           el.style.opacity = "1";
           el.style.transform = "none";
+          // `filter` too, and for the same reason as `transform`: the hero
+          // pitch pulls each word out of a blur, so an entrance stopped
+          // half-way leaves legible-but-blurred text that no later tween
+          // ever clears. Forcing opacity alone made that *worse* — the words
+          // were pinned at full opacity and permanently out of focus.
+          el.style.filter = "none";
           el.classList.add("fx-revealed");
         }
       });

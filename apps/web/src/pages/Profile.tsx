@@ -62,7 +62,7 @@ export function Profile() {
           <>
             <dl className="kv" style={{ marginTop: "var(--s-2)" }}>
               <dt>Signed in as</dt>
-              <dd>{user.email}</dd>
+              <dd className="dm-sans">{user.email}</dd>
               <dt>Role</dt>
               <dd style={{ textTransform: "capitalize" }}>{user.role}</dd>
               {org?.name && (

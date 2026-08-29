@@ -154,7 +154,7 @@ export function AuditLog() {
               {rows.map((e) => (
                 <tr key={e.id} data-failed={!e.success || undefined}>
                   <td className="small muted">{fmt(e.ts)}</td>
-                  <td className="mono">{e.actor ?? "—"}</td>
+                  <td className="dm-sans">{e.actor ?? "—"}</td>
                   <td>
                     {/* Failure is a first-class outcome here. A log that only
                         records successes cannot answer the question an audit
@@ -302,7 +302,7 @@ export function Users() {
                   <tr key={u.id}>
                     <td className="mono small">#{u.id}</td>
                     <td>{u.full_name ?? <span className="faint">—</span>}</td>
-                    <td className="mono">{u.email}</td>
+                    <td className="dm-sans">{u.email}</td>
                     <td>
                       {editable ? (
                         <select

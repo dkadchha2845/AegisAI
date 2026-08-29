@@ -190,12 +190,20 @@ const MODULES = [
   },
 ];
 
+/* The pitch, as data. Two lines; the second is the accent half. Splitting it
+   here rather than walking text nodes at runtime keeps the markup something
+   you can read, and means the animation has a stable list to stagger over. */
+const HERO_PITCH: { text: string; accent: boolean }[] = [
+  { text: "It knows what the scammer", accent: false },
+  { text: "will say next.", accent: true },
+];
+
 /* ------------------------------------------------------------------ page */
 
 export function Home() {
   const root = useRef<HTMLDivElement>(null);
   const { theme, toggle } = useTheme();
-  const primaryCta = useMagnetic<HTMLAnchorElement>(0.4);
+  const primaryCta = useMagnetic<HTMLAnchorElement>(0.3);
   const [stats, setStats] = useState<{ clusters: number; cases: number; entities: number } | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -245,6 +253,64 @@ export function Home() {
         ease: "power3.out",
         stagger: 0.09,
       });
+
+      // The pitch assembles itself. Each word swings up out of the page on
+      // its own hinge — `rotateX` from below with the origin at its baseline,
+      // pulled through a blur — so the line resolves into focus instead of
+      // sliding in. `gsap.from` on purpose: the finished state is whatever
+      // the stylesheet already says, so nothing here has to be undone, and
+      // the words carry `data-reveal` so the failsafe can force them visible
+      // if the tween is ever interrupted mid-flight.
+      const words = gsap.utils.toArray<HTMLElement>("[data-hero-word]");
+      const pitch = gsap.timeline({ delay: 0.12 });
+      pitch.from(words, {
+        opacity: 0,
+        yPercent: 105,
+        rotateX: -82,
+        filter: "blur(10px)",
+        transformOrigin: "50% 100% -12px",
+        // Timed to land well inside the 2.5s reveal failsafe: the last word
+        // settles at ~1.65s, so a slow frame or two never leaves the headline
+        // to be rescued rather than animated.
+        duration: 0.95,
+        ease: "power4.out",
+        stagger: 0.045,
+      });
+
+      // Then the promise half takes the charge: a bright pulse running word
+      // by word and settling back to the accent. It is the sentence's claim,
+      // so it is the thing that lights up.
+      //
+      // One numeric custom property drives it, rather than tweening `color`
+      // and `textShadow` directly: the settled values are `var(--accent)` and
+      // a `color-mix()`, neither of which GSAP's colour parser can read, so
+      // tweening them would hand back a literal string instead of easing to
+      // it. `--charge` is a plain 0..1 that the stylesheet turns into both
+      // the brightness and the glow, and it stays theme-correct for free.
+      const accent = gsap.utils.toArray<HTMLElement>("[data-accent-word]");
+      const charge = (tl: gsap.core.Timeline) =>
+        tl
+          .to(accent, {
+            "--charge": 1,
+            duration: 0.24,
+            ease: "power2.out",
+            stagger: 0.07,
+          })
+          .to(
+            accent,
+            {
+              "--charge": 0,
+              duration: 0.7,
+              ease: "power2.inOut",
+              stagger: 0.07,
+            },
+            "<0.12",
+          );
+      charge(pitch);
+
+      // And once settled it re-fires slowly, so a page left open keeps a
+      // pulse without ever becoming the thing you are watching.
+      charge(gsap.timeline({ repeat: -1, repeatDelay: 6.5, delay: 7 }));
       gsap.utils.toArray<HTMLElement>("[data-scroll-reveal]").forEach((el) => {
         gsap.from(el, {
           opacity: 0,
@@ -340,10 +406,36 @@ export function Home() {
             </div>
 
             {/* Still the pitch, still the most important sentence on the page —
-                just no longer pretending to be the page's title. */}
-            <p className="hero__title hero__title--xl" data-hero-reveal data-reveal>
-              It knows what the scammer<br />
-              <em>will say next.</em>
+                just no longer pretending to be the page's title.
+
+                Split into words so the line can assemble itself rather than
+                fade in as a block. The pieces are `aria-hidden` behind one
+                `aria-label`: a screen reader gets the sentence, not fourteen
+                fragments. It carries `data-reveal` but not `data-hero-reveal`
+                — the word tween is its entrance, and stacking the generic
+                block fade on top of it only muddies both. */}
+            <p
+              className="hero__title hero__title--xl herotitle"
+              data-reveal
+              aria-label={HERO_PITCH.map((l) => l.text).join(" ")}
+            >
+              {HERO_PITCH.map((line) => (
+                <span className="herotitle__line" key={line.text} aria-hidden="true">
+                  {line.text.split(" ").map((word, i) => (
+                    <span
+                      className={
+                        line.accent ? "herotitle__word herotitle__word--accent" : "herotitle__word"
+                      }
+                      key={`${word}-${i}`}
+                      data-hero-word
+                      data-accent-word={line.accent || undefined}
+                      data-reveal
+                    >
+                      {word}
+                    </span>
+                  ))}
+                </span>
+              ))}
             </p>
             <p className="hero__sub" data-hero-reveal data-reveal>
               AegisAI investigates digital threats before they become real-world damage.

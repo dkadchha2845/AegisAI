@@ -376,6 +376,7 @@
 /* At 60px there is no room for prose; the helpline stays reachable from the
    Emergency route, which is one click away in the rail above. */
 .shell2[data-collapsed] .sidebar__foot { padding: var(--s-2); }
+.shell2[data-collapsed] .sidebar__expand { margin: 0 auto var(--s-3); display: flex; }
 .shell2[data-collapsed] .sidebar__helpline,
 .shell2[data-collapsed] .userchip__text,
 .shell2[data-collapsed] .statuspill span:not(.statuspill__dot) { display: none; }
@@ -409,6 +410,7 @@
   .sidebar[data-open] { transform: none; box-shadow: var(--shadow-lg); }
   /* Collapse is a desktop affordance; the drawer is always full width. */
   .shell2[data-collapsed] .sidebar { --sidebar-w: auto; }
+  .shell2[data-collapsed] .sidebar__expand { display: none; }
   .shell2[data-collapsed] .sidenav { justify-content: flex-start; padding: var(--s-2) var(--s-3); }
   .shell2[data-collapsed] .sidenav__text,
   .shell2[data-collapsed] .sidebar__helpline,
@@ -488,12 +490,20 @@
    tile that breaks its own number across two lines reads as broken data. */
 .statband { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--s-4); }
 @media (max-width: 560px) { .statband { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Stacked cards in normal flow. A grid spaces its children with `gap`, so
+   inside one this margin is not just redundant: the item is stretched to its
+   row, so the margin comes out of its height — every card but the first ends
+   up 16px shorter than the one beside it and sitting 16px lower. */
 .card + .card { margin-top: var(--s-4); }
+.grid2 > .card + .card,
+.stack > .card + .card { margin-top: 0; }
 
 .grid2 { display: grid; gap: var(--s-4); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
 /* Exactly two columns — for card sets of four, where auto-fit's 3+1 split
    reads as a mistake rather than a layout. Collapses to one column narrow. */
-.grid2--pairs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* `1fr` rows, not `auto`: every card is the height of the tallest, so the set
+   reads as one block of six rather than three rows of drifting edges. */
+.grid2--pairs { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; }
 @media (max-width: 720px) { .grid2--pairs { grid-template-columns: minmax(0, 1fr); } }
 /* .stack, .row, .btn2, .field and the text utilities live in primitives.css. */
 
@@ -656,6 +666,8 @@
 .finding__label { font-size: var(--t-sm); font-weight: 600; }
 .finding__detail { margin: 4px 0 0; font-size: var(--t-xs); color: var(--ink-muted); line-height: 1.6; }
 .finding__src { margin-top: 6px; font-family: var(--font-mono); font-size: var(--t-2xs); color: var(--ink-faint); }
+.faint { color: var(--ink-faint); }
+.dm-sans { font-family: "DM Sans", sans-serif !important; }
 
 .lines { display: grid; gap: var(--s-2); max-height: 420px; overflow-y: auto; }
 .linerow { display: grid; grid-template-columns: 76px 1fr auto; gap: var(--s-3); align-items: baseline; padding: var(--s-2) 0; border-bottom: 1px solid var(--line); }

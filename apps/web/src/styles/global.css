@@ -1,13 +1,10 @@
 @import "./tokens.css";
 
 /* ---------------------------------------------------------------------------
-   Fonts — Fontshare (Satoshi) + Google (JetBrains Mono). Both free.
-   NOTE: vendored locally before the demo (see task #10). A CDN font that
-   fails on venue wifi silently falls back to a system stack and the whole
-   thing looks like a different, worse product.
---------------------------------------------------------------------------- */
+   Typography 
+   Fonts — Fontshare (Satoshi). Free.
+*/
 @import url("https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap");
 
 *, *::before, *::after { box-sizing: border-box; }
 

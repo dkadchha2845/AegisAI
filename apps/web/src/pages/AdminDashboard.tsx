@@ -82,135 +82,137 @@ export function AdminDashboard() {
         }
       />
 
-      {/* KPI row */}
-      <div className="admin-kpis">
-        {kpis.map((k) => (
-          <div key={k.label} className="card admin-kpi">
-            <k.icon size={18} className="admin-kpi__icon" />
-            <strong className="admin-kpi__v">{k.value}</strong>
-            <span className="small faint">{k.label}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="admin-grid">
-        {/* System monitoring */}
-        <div className="card">
-          <h2 className="card__title">
-            <Activity size={16} /> System monitoring
-          </h2>
-          {health ? (
-            <ul className="admin-status">
-              <StatusRow
-                label="Classifier"
-                value={health.classifier.backend}
-                ok={health.classifier.serving_best}
-                detail={health.classifier.reason}
-              />
-              <StatusRow
-                label="Retrieval (RAG)"
-                value={`${health.retrieval.backend} · ${health.retrieval.chunks} chunks`}
-                ok={health.retrieval.chunks > 0}
-              />
-              <StatusRow
-                label="Digital twin"
-                value={health.twin.fitted ? "fitted" : "unfitted"}
-                ok={health.twin.fitted}
-              />
-              <StatusRow
-                label="LLM explainer"
-                value={health.llm.configured ? `${health.llm.backend}` : "not configured"}
-                ok={health.llm.configured}
-              />
-              {health.database && (
-                <StatusRow
-                  label="Database"
-                  value={health.database.backend}
-                  ok={health.database.persistent}
-                  detail={health.database.persistent ? "persistent" : "in-memory"}
-                />
-              )}
-              <StatusRow
-                label="Degradations"
-                value={health.degraded.length ? health.degraded.join(", ") : "none"}
-                ok={health.degraded.length === 0}
-              />
-            </ul>
-          ) : (
-            <p className="small muted">Loading…</p>
-          )}
-        </div>
-
-        {/* AI model stats */}
-        <div className="card">
-          <h2 className="card__title">
-            <BrainCircuit size={16} /> AI model
-          </h2>
-          {card ? (
-            <div className="stack" style={{ gap: 8 }}>
-              <div className="row" style={{ justifyContent: "space-between" }}>
-                <span className="small muted">Serving</span>
-                <span className="chip" data-tone="ok">{card.active_backend}</span>
-              </div>
-              <div className="row" style={{ justifyContent: "space-between" }}>
-                <span className="small muted">Base model</span>
-                <span className="small mono">{card.base_model}</span>
-              </div>
-              {Object.keys(scores).length > 0 && (
-                <div className="admin-scores">
-                  <span className="label">Held-out macro-F1</span>
-                  {Object.entries(scores).map(([name, sc]) => (
-                    <div key={name} className="admin-score">
-                      <span className="small">{name}</span>
-                      <span className="admin-score__bar" aria-hidden="true">
-                        <i style={{ transform: `scaleX(${Math.min(1, sc.macro_f1)})` }} />
-                      </span>
-                      <span className="small mono">{sc.macro_f1.toFixed(3)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {card.limitations?.length > 0 && (
-                <details className="admin-limits">
-                  <summary className="small">Known limitations ({card.limitations.length})</summary>
-                  <ul className="small muted" style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-                    {card.limitations.slice(0, 6).map((l, i) => (
-                      <li key={i}>{l}</li>
-                    ))}
-                  </ul>
-                </details>
-              )}
+      <div className="stack" style={{ gap: "var(--s-6)" }}>
+        {/* KPI row */}
+        <div className="admin-kpis">
+          {kpis.map((k) => (
+            <div key={k.label} className="card admin-kpi">
+              <k.icon size={18} className="admin-kpi__icon" />
+              <strong className="admin-kpi__v">{k.value}</strong>
+              <span className="small faint">{k.label}</span>
             </div>
+          ))}
+        </div>
+
+        <div className="admin-grid">
+          {/* System monitoring */}
+          <div className="card">
+            <h2 className="card__title">
+              <Activity size={16} /> System monitoring
+            </h2>
+            {health ? (
+              <ul className="admin-status">
+                <StatusRow
+                  label="Classifier"
+                  value={health.classifier.backend}
+                  ok={health.classifier.serving_best}
+                  detail={health.classifier.reason}
+                />
+                <StatusRow
+                  label="Retrieval (RAG)"
+                  value={`${health.retrieval.backend} · ${health.retrieval.chunks} chunks`}
+                  ok={health.retrieval.chunks > 0}
+                />
+                <StatusRow
+                  label="Digital twin"
+                  value={health.twin.fitted ? "fitted" : "unfitted"}
+                  ok={health.twin.fitted}
+                />
+                <StatusRow
+                  label="LLM explainer"
+                  value={health.llm.configured ? `${health.llm.backend}` : "not configured"}
+                  ok={health.llm.configured}
+                />
+                {health.database && (
+                  <StatusRow
+                    label="Database"
+                    value={health.database.backend}
+                    ok={health.database.persistent}
+                    detail={health.database.persistent ? "persistent" : "in-memory"}
+                  />
+                )}
+                <StatusRow
+                  label="Degradations"
+                  value={health.degraded.length ? health.degraded.join(", ") : "none"}
+                  ok={health.degraded.length === 0}
+                />
+              </ul>
+            ) : (
+              <p className="small muted">Loading…</p>
+            )}
+          </div>
+
+          {/* AI model stats */}
+          <div className="card">
+            <h2 className="card__title">
+              <BrainCircuit size={16} /> AI model
+            </h2>
+            {card ? (
+              <div className="stack" style={{ gap: 8 }}>
+                <div className="row" style={{ justifyContent: "space-between" }}>
+                  <span className="small muted">Serving</span>
+                  <span className="chip" data-tone="ok">{card.active_backend}</span>
+                </div>
+                <div className="row" style={{ justifyContent: "space-between" }}>
+                  <span className="small muted">Base model</span>
+                  <span className="small mono">{card.base_model}</span>
+                </div>
+                {Object.keys(scores).length > 0 && (
+                  <div className="admin-scores">
+                    <span className="label">Held-out macro-F1</span>
+                    {Object.entries(scores).map(([name, sc]) => (
+                      <div key={name} className="admin-score">
+                        <span className="small">{name}</span>
+                        <span className="admin-score__bar" aria-hidden="true">
+                          <i style={{ transform: `scaleX(${Math.min(1, sc.macro_f1)})` }} />
+                        </span>
+                        <span className="small mono">{sc.macro_f1.toFixed(3)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {card.limitations?.length > 0 && (
+                  <details className="admin-limits">
+                    <summary className="small">Known limitations ({card.limitations.length})</summary>
+                    <ul className="small muted" style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                      {card.limitations.slice(0, 6).map((l, i) => (
+                        <li key={i}>{l}</li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            ) : (
+              <p className="small muted">Loading…</p>
+            )}
+          </div>
+        </div>
+
+        {/* Hotspot monitoring */}
+        <div className="card">
+          <h2 className="card__title">
+            <MapPin size={16} /> Fraud hotspot monitoring
+          </h2>
+          {points.length > 0 ? (
+            <ScamMap
+              points={points}
+              scamTypes={scamTypes}
+              height={440}
+              enableFilters
+              showUserLocation
+            />
           ) : (
-            <p className="small muted">Loading…</p>
+            <p className="small muted">Loading map…</p>
           )}
         </div>
-      </div>
 
-      {/* Hotspot monitoring */}
-      <div className="card">
-        <h2 className="card__title">
-          <MapPin size={16} /> Fraud hotspot monitoring
-        </h2>
-        {points.length > 0 ? (
-          <ScamMap
-            points={points}
-            scamTypes={scamTypes}
-            height={440}
-            enableFilters
-            showUserLocation
-          />
-        ) : (
-          <p className="small muted">Loading map…</p>
-        )}
+        {/* Tenancy — organisations, users, audit trail. One implementation,
+            shared with nothing else: `/reports` used to render a second user
+            table with a second add-user form beside this one. */}
+        <Organizations />
+        <UserRoster />
+        <AuditLog />
       </div>
-
-      {/* Tenancy — organisations, users, audit trail. One implementation,
-          shared with nothing else: `/reports` used to render a second user
-          table with a second add-user form beside this one. */}
-      <Organizations />
-      <UserRoster />
-      <AuditLog />
     </div>
   );
 }
