@@ -45,8 +45,12 @@ test: ## Backend test suite
 contract: ## Pydantic <-> TypeScript contract check
 	$(PY) schema/check_contract.py
 
-typecheck: ## Frontend typecheck
+typecheck: ## Frontend typecheck, and the landing's transcription check
 	npm run typecheck $(WEB)
+	# The landing quotes the recorded session as literals rather than shipping
+	# the 48-frame stream to render a marketing page. This proves the literals
+	# still agree with the recording — see the script's own note.
+	node apps/web/scripts/check-landing-session.mjs
 
 build: ## Frontend production build
 	npm run build $(WEB)

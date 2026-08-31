@@ -14,7 +14,17 @@ export default defineConfig({
         // user already downloaded, and the landing can stream them in parallel.
         manualChunks: {
           three: ["three"],
-          gsap: ["gsap", "gsap/ScrollTrigger"],
+          // Every GSAP plugin the landing registers, not just the two the
+          // console used: left out, they land in the app chunk and a one-line
+          // copy edit busts 60 kB of animation engine the visitor already has.
+          gsap: [
+            "gsap",
+            "gsap/ScrollTrigger",
+            "gsap/SplitText",
+            "gsap/DrawSVGPlugin",
+            "gsap/MotionPathPlugin",
+            "gsap/CustomEase",
+          ],
           vendor: ["react", "react-dom", "react-router-dom"],
         },
       },

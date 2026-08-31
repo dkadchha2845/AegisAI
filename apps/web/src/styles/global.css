@@ -92,8 +92,8 @@ dd a:hover,
    <li> somewhere. */
 p a.btn2, li a.btn2, .small a.btn2,
 p a.btn, li a.btn, .small a.btn,
-a.sidenav, a.home-task, a.usermenu__item, a.task, a.pipestep__link,
-a.login__brand, a.signup__brand, a.lhead__brand, a.sidebar__logo, a.topbar2__brand {
+a.sidenav, a.home-task, a.usermenu__item, a.task, a.lp-btn, a.lp-nav__brand,
+a.login__brand, a.signup__brand, a.sidebar__logo, a.topbar2__brand {
   text-decoration: none;
   color: inherit;
 }

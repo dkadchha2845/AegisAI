@@ -2079,6 +2079,80 @@ English-first).
 Vitest + Testing Library for logic, Playwright for the three critical flows
 (submit → report, live call, graph explore).
 
+### ✅ 7.11 — Landing page: cinematic redesign
+
+**Done 2026-08-31.** The landing was a good document and a poor argument: a
+scrolling page of cards that described the product in the same voice as every
+other security site. It is now its own surface — twelve sections that walk one
+investigation from arrival to action, with a motion language shared across all
+of them and a pinned, scrubbed sequence at its centre where the engine actually
+runs.
+
+**Everything on it is still read from the recording.** The threat figures are
+the real trajectory from `mock/stream.json` — 6.3 → 38.7 → 61.6 → 72 → 88 → 97,
+including the two places it goes *down*, because a stage transition resets part
+of the stage term and hiding that would make the curve prettier and the product
+less honest. The transcript is verbatim Hinglish. The trust passport, the three
+threat drivers and the number-intelligence verdict are the frame at t=36 s.
+Nothing here was written to look plausible.
+
+**That is now a gate, not a convention.** The eleven numbers and seven sentences
+live in `components/landing/session.ts` as literals — shipping the 48-frame
+stream to render a marketing page would put the largest asset on the site on its
+critical path — and `apps/web/scripts/check-landing-session.mjs` re-derives every
+one of them from `stream.json` and fails `make typecheck` if a single value has
+moved. Writing it caught two defects on its first run: a quote at t=72 had been
+stitched from two non-adjacent fragments, and one at t=18 had lost a clause from
+its middle. Both read identically to the eye and were quietly different
+sentences from the ones the caller said. The check now requires every quote to
+be one contiguous run of the transcript.
+
+**Structure.** `pages/Home.tsx` composes twelve components under
+`components/landing/`; `styles/landing.css` is the whole surface, scoped under
+`.lp`, and the 373 lines of landing rules in `modules.css` went with it —
+every one of them was used by `Home.tsx` and nothing else. `lib/landing-motion.ts`
+registers SplitText, DrawSVG, MotionPath and CustomEase, defines the two easing
+curves and the five reveal primitives every section shares, and holds the
+reduced-motion and refresh helpers.
+
+**The landing no longer loads three.js.** The hero's WebGL field was replaced by
+a 2D-canvas atmosphere — grid, cursor-tracked light, a lattice of data points —
+which costs nothing and means the 502 kB three chunk is no longer on the first
+screen of the site. The app chunk fell to 144 kB and every GSAP plugin moved
+into the long-cached vendor chunk.
+
+**Verified against the running application 2026-08-31**, in a real browser:
+
+| Acceptance criterion | Measured |
+|---|---|
+| the pinned sequence plays and lands | driven through all seven stages: panel 3 measured at `opacity 1.00` with its four cited checks legible; the rail fills to 97.8% and the risk figure reaches **97** — the recorded end of the trajectory, not a number chosen for the page |
+| every scrubbed section reaches its end state | risk `88` with the ramp clipped to `inset(0 12% 0 0)`; live-call figure `88` with the tactic meters at full scale; the system track fully lit (`inset(0px)`); the closing wash at opacity 1 |
+| nothing is left stuck invisible | swept all nine content sections with motion on and found **zero** elements in view below 0.9 opacity or holding a residual blur |
+| no horizontal overflow at any width | 390 / 768 / 1024 / 1920 px — `scrollWidth === innerWidth` at every one, and no element crossing either edge |
+| reduced motion is a complete page, not a degraded one | with `data-motion="reduced"` the pin is replaced by seven stacked panels, every count-up renders its settled figure rather than the zero it would have started from, and no entrance runs at all |
+| the mobile sheet works | opens on the burger (`aria-expanded`, `data-open`, `inert` cleared, body scroll locked) and closes on Escape, restoring all four |
+| light theme | the whole page inverted, including the card surface — on paper a "lifted" card is *darker* than the ground, which reads as a hole, so light mode raises it to white with a shadow instead |
+| console | clean |
+
+**Two bugs found by building it, both worth recording.** The pinned timeline
+originally appended a dwell tween after each stage, which grew the timeline as
+it was built and left the stage labels — at fixed times 0..6 — drifting further
+from the playhead at every stage; by stage four the outgoing panel was fading
+while the incoming one was still arriving. Stages are now fixed-length units
+with every tween placed against the unit's label. And the investigation stage
+now defaults to `flow` in the markup and opts *in* to `pinned`: the pinned mode
+hides six of seven panels in CSS, so defaulting to it meant any failure that
+stopped the effect from running would have hidden six sections of content.
+
+**Four gates green — 577 passed, 26 skipped**, plus the landing session check:
+*8 trajectory points, 4 utterances, 4 passport checks, 3 contributions — all
+match mock/stream.json*.
+
+**Not verified here:** the entrance animations were confirmed by measurement
+(trigger progress, computed styles) rather than by watching them, because the
+automated browser throttles `requestAnimationFrame` and GSAP's ticker sleeps
+with it. Timing and easing are a judgement call that wants a human pass.
+
 ---
 
 # PHASE 8 — Datasets & Model Training
