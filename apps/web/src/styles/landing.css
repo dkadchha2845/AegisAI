@@ -1,0 +1,2064 @@
+/* ===========================================================================
+   AegisAI — the landing surface.
+
+   Everything in this file is scoped under `.lp`. That is not tidiness: the
+   landing is the one screen in this product whose job is persuasion rather
+   than operation, and it wants a different type scale, a different rhythm and
+   a much darker ground than the console. Scoping means it can have all three
+   without a single rule leaking into a route where a 6rem headline or a
+   near-black panel would be wrong.
+
+   It inherits the product's tokens rather than restating them — the accent is
+   still `--accent`, the threat ramp is still the threat ramp — and adds only
+   what a cinematic page needs on top: a deeper ground, a second and third
+   accent used sparingly for structure, a display scale, and one motion
+   vocabulary shared by every section.
+
+   THE COLOUR RULE, restated because this is where it is easiest to break:
+   the threat ramp appears only where a threat is being reported. On this page
+   that is four places — the live-call section, the risk engine, the pinned
+   investigation's verdict, and the fusion conclusion. Everywhere else the
+   page is graphite and one blue. A landing that glows red throughout has
+   spent the colour that has to mean something two screens later.
+   =========================================================================== */
+
+.lp {
+  /* ---- Ground -------------------------------------------------------- */
+  /* Deeper than the app's `--bg`. The console is a lit instrument panel; the
+     landing is the room it sits in, and the contrast between the two is what
+     makes the product screens look bright when you finally reach them. */
+  --lp-void: #050608;
+  --lp-deep: #07080b;
+  --lp-raise: #0b0d11;
+
+  --lp-surface: rgba(255, 255, 255, 0.022);
+  --lp-surface-2: rgba(255, 255, 255, 0.045);
+  --lp-hair: rgba(255, 255, 255, 0.075);
+  --lp-hair-2: rgba(255, 255, 255, 0.14);
+
+  --lp-ink: #eceef2;
+  --lp-ink-2: #969db0;      /* 6.9:1 on --lp-deep */
+  --lp-ink-3: #6f7789;      /* 4.6:1 — captions and micro-labels only */
+
+  /* ---- Accents --------------------------------------------------------
+     One primary, two structural. Cyan carries *evidence* (things entering the
+     system), indigo carries *agents* (things reasoning about it), and the
+     product blue carries everything the reader is meant to act on. Three hues
+     is the most a page can hold and still have them mean anything; the fourth
+     would be decoration. */
+  --lp-accent: var(--accent);
+  --lp-cyan: #49cfdd;
+  --lp-indigo: #8b7bff;
+  --lp-accent-soft: color-mix(in srgb, var(--lp-accent) 16%, transparent);
+  --lp-cyan-soft: color-mix(in srgb, var(--lp-cyan) 14%, transparent);
+  --lp-indigo-soft: color-mix(in srgb, var(--lp-indigo) 14%, transparent);
+
+  /* Every panel on the page is one of these two, so the light theme can
+     invert the whole surface treatment in two declarations. On a dark ground
+     a card is a *lift* — slightly brighter than the room. On paper the same
+     logic makes it slightly darker, which reads as a hole rather than a card,
+     so light mode raises it to white and gives it a shadow instead. */
+  --lp-card-bg: linear-gradient(180deg, var(--lp-surface-2), var(--lp-surface));
+  --lp-card-shadow: none;
+
+  /* ---- Type -----------------------------------------------------------
+     A genuine monospace for readouts. `--font-mono` in the product tokens is
+     DM Sans with tabular figures, which is right inside a dense console where
+     a monospace would fight the UI type — but on a page whose argument is
+     "this is an instrument", a real fixed-pitch face is doing the arguing.
+     System stack, so it costs nothing and cannot fail to load. */
+  --lp-mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo,
+    Consolas, monospace;
+
+  --lp-d1: clamp(2.35rem, 4.5vw, 5rem);     /* hero */
+  --lp-d2: clamp(2rem, 4.4vw, 3.6rem);      /* section headline */
+  --lp-d3: clamp(1.45rem, 2.4vw, 2.05rem);  /* sub-head */
+  --lp-lead: clamp(1rem, 0.62vw + 0.86rem, 1.17rem);
+  --lp-micro: 0.6875rem;
+
+  /* ---- Rhythm ---------------------------------------------------------
+     One gutter and one section step, both fluid. Every section uses them, so
+     the page has a single vertical cadence instead of twelve. */
+  --lp-gut: clamp(20px, 5vw, 68px);
+  --lp-max: 1240px;
+  --lp-narrow: 900px;
+  --lp-step: clamp(84px, 11vw, 168px);
+  --lp-nav-h: 74px;
+
+  position: relative;
+  background: var(--lp-void);
+  color: var(--lp-ink);
+  /* The atmosphere layer is `position: fixed`; an ancestor with a filter or a
+     transform would become its containing block and pin it to this element
+     instead of the viewport. Nothing here creates one — this note is the
+     guard rail for the next person who reaches for a page-wide blur. */
+  isolation: isolate;
+  overflow-x: clip;
+}
+
+/* --- Light theme ---------------------------------------------------------
+   The same page with the ground inverted, for a projector in a bright room.
+   The accents deepen because a 5:1 electric blue on near-black is a 2:1 blue
+   on paper; the ramp is untouched because it is already the light-theme ramp
+   from tokens.css. */
+html[data-theme="light"] .lp {
+  --lp-void: #f6f7f9;
+  --lp-deep: #fbfbfd;
+  --lp-raise: #ffffff;
+
+  --lp-surface: rgba(15, 23, 42, 0.02);
+  --lp-surface-2: rgba(15, 23, 42, 0.045);
+  --lp-hair: rgba(15, 23, 42, 0.1);
+  --lp-hair-2: rgba(15, 23, 42, 0.18);
+
+  --lp-ink: #12141a;
+  --lp-ink-2: #545c6b;
+  --lp-ink-3: #6a7280;
+
+  --lp-cyan: #0d7f8e;
+  --lp-indigo: #5b4bd6;
+
+  --lp-card-bg: #ffffff;
+  --lp-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+/* =========================================================================
+   Layout primitives
+   ========================================================================= */
+
+.lp-main { position: relative; z-index: 1; }
+
+.lp-section {
+  position: relative;
+  padding: var(--lp-step) var(--lp-gut);
+}
+.lp-shell { width: 100%; max-width: var(--lp-max); margin-inline: auto; }
+.lp-shell--narrow { max-width: var(--lp-narrow); }
+
+/* The section label: a number, a hairline and a word. It is the page's
+   wayfinding — twelve sections is a lot to scroll through without one. */
+.lp-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 clamp(20px, 2.6vw, 34px);
+  font-family: var(--lp-mono);
+  font-size: var(--lp-micro);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--lp-ink-3);
+}
+.lp-eyebrow::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  max-width: 120px;
+  background: linear-gradient(90deg, var(--lp-hair-2), transparent);
+}
+.lp-eyebrow__n { color: var(--lp-accent); }
+
+.lp-h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--lp-d2);
+  font-weight: 900;
+  line-height: 1.03;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.lp-h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--lp-d3);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+/* The accent half of a headline. Used once per section at most: it marks the
+   clause that carries the claim, which stops working the moment it is on
+   every line. */
+.lp-h2 em,
+.lp-h3 em { font-style: normal; color: var(--lp-accent); }
+.lp-h2 i { font-style: normal; color: var(--lp-ink-3); }
+
+.lp-lede {
+  margin: clamp(18px, 2vw, 26px) 0 0;
+  max-width: 62ch;
+  font-size: var(--lp-lead);
+  line-height: 1.66;
+  color: var(--lp-ink-2);
+}
+.lp-note {
+  margin: 20px 0 0;
+  font-size: var(--t-xs);
+  line-height: 1.6;
+  color: var(--lp-ink-3);
+  max-width: 68ch;
+}
+.lp-note strong { color: var(--lp-ink-2); font-weight: 600; }
+
+.lp-mono {
+  font-family: var(--lp-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* SplitText's generated wrappers. `overflow: clip` on the mask rather than
+   `hidden` so a masked line cannot become a scroll container — a masked
+   headline that scrolls sideways by 2px is a horizontal scrollbar on the
+   whole document, and it took a while to find the last time. */
+.lp .lp-line { will-change: transform; }
+.lp [data-splitmask] { overflow: clip; }
+
+/* =========================================================================
+   Controls — the landing's own buttons.
+
+   `.btn2` is the product's control and stays that way inside the app. The
+   landing needs a taller, more deliberate button with a light sweep and a
+   press that feels like a press, and it needs it on a much darker ground.
+   ========================================================================= */
+
+.lp-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 50px;
+  padding: 0 26px;
+  border: 1px solid var(--lp-hair-2);
+  border-radius: 999px;
+  background: var(--lp-surface-2);
+  color: var(--lp-ink);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    border-color var(--t-fast) var(--ease-out),
+    background var(--t-fast) var(--ease-out),
+    color var(--t-fast) var(--ease-out),
+    transform var(--t-instant) var(--ease-out);
+}
+.lp-btn:hover { border-color: var(--lp-hair-2); background: var(--lp-surface-2); color: var(--lp-ink); }
+.lp-btn:active { transform: scale(0.975); }
+.lp-btn:focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 3px; }
+.lp-btn svg { flex: none; }
+
+/* The sweep. A single skewed highlight that crosses the face on hover — one
+   transform on one pseudo-element, so it costs a composite and nothing else.
+   It is the only "shine" on the page, and it is on the control the page most
+   wants pressed. */
+.lp-btn::after {
+  content: "";
+  position: absolute;
+  inset: -40% -60%;
+  z-index: -1;
+  background: linear-gradient(
+    100deg,
+    transparent 42%,
+    rgba(255, 255, 255, 0.16) 50%,
+    transparent 58%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.62s var(--ease-out);
+  pointer-events: none;
+}
+.lp-btn:hover::after { transform: translateX(100%); }
+
+.lp-btn--primary {
+  background: var(--lp-accent);
+  border-color: var(--lp-accent);
+  color: #04070f;
+}
+html[data-theme="light"] .lp-btn--primary { color: #fff; }
+.lp-btn--primary:hover {
+  background: color-mix(in srgb, var(--lp-accent) 88%, white);
+  border-color: color-mix(in srgb, var(--lp-accent) 88%, white);
+  color: #04070f;
+}
+html[data-theme="light"] .lp-btn--primary:hover { color: #fff; }
+
+.lp-btn--ghost {
+  background: transparent;
+  border-color: var(--lp-hair);
+  color: var(--lp-ink-2);
+}
+.lp-btn--ghost:hover { border-color: var(--lp-hair-2); color: var(--lp-ink); }
+
+.lp-btn--sm { height: 38px; padding: 0 18px; font-size: 0.83rem; }
+
+/* A magnetic control's transform is written every frame by GSAP; leaving the
+   CSS transition on the same property stacks a second ease on the tween and
+   the button lags the cursor. `useMagnetic` sets the attribute. */
+.lp [data-magnetic] { transition-property: border-color, background, color; }
+
+/* A text link that behaves like one: the arrow leads, the rule follows. */
+.lp-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--lp-accent);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+.lp-link svg { transition: transform var(--t-fast) var(--ease-out); }
+.lp-link:hover svg { transform: translateX(4px); }
+
+/* =========================================================================
+   Surfaces — one card, three intensities. Everything on the page that holds
+   content is one of these, which is what keeps twelve sections from inventing
+   twelve borders.
+   ========================================================================= */
+
+.lp-card {
+  position: relative;
+  padding: clamp(20px, 2.4vw, 28px);
+  border: 1px solid var(--lp-hair);
+  border-radius: 16px;
+  background: var(--lp-card-bg);
+  box-shadow: var(--lp-card-shadow);
+  transition:
+    border-color var(--t-med) var(--ease-out),
+    transform var(--t-med) var(--ease-out),
+    background var(--t-med) var(--ease-out);
+}
+.lp-card--hover:hover {
+  border-color: color-mix(in srgb, var(--lp-accent) 42%, transparent);
+  transform: translateY(-3px);
+}
+.lp-card__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--lp-ink);
+}
+.lp-card__body {
+  margin: 10px 0 0;
+  font-size: var(--t-sm);
+  line-height: 1.68;
+  color: var(--lp-ink-2);
+}
+
+/* The micro-label that names a readout. Three uses on the page and no more:
+   above a number, above a list of evidence, above a transcript. */
+.lp-label {
+  margin: 0;
+  font-family: var(--lp-mono);
+  font-size: var(--lp-micro);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lp-ink-3);
+}
+
+/* A hairline that means "these two things are connected", used between the
+   stages of anything sequential. Drawn with a gradient so it fades at both
+   ends rather than butting into its neighbours. */
+.lp-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--lp-hair-2), transparent);
+  border: 0;
+  margin: 0;
+}
+
+/* =========================================================================
+   Atmosphere — the living background.
+
+   One fixed canvas behind everything, plus one static grain tile. Both sit
+   below `.lp-main`'s stacking context and neither takes pointer events. The
+   canvas paints a technical grid, a cursor-tracked light field and a slow
+   drift of data points; the section that needs more than that draws its own.
+   ========================================================================= */
+
+.lp-atmos {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.lp-atmos__canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* A vignette, so the corners of a 32" monitor do not read as empty. */
+.lp-atmos__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 88% at 50% 42%,
+    transparent 38%,
+    color-mix(in srgb, var(--lp-void) 78%, transparent) 100%
+  );
+}
+
+/* The grain tile is generated once in JS and handed here as a data URI. Very
+   low alpha and `overlay` so it lifts texture out of the ground without
+   changing its colour — the thing that stops a large flat dark area reading
+   as a dead pixel field on an OLED. */
+.lp-atmos__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.026;
+  mix-blend-mode: overlay;
+  background-repeat: repeat;
+}
+html[data-theme="light"] .lp-atmos__grain { opacity: 0.05; }
+
+/* =========================================================================
+   Navigation
+   ========================================================================= */
+
+.lp-nav {
+  /* The five values the scroll scrubs. Declared here as the settled-at-top
+     state so the bar is correct on the first paint, before GSAP has run —
+     and so a reduced-motion visitor, who gets a step rather than a scrub,
+     starts from somewhere sensible too. */
+  --nav-pad: 26px;
+  --nav-bg: 0;
+  --nav-blur: 0px;
+  --nav-line: 0;
+  --nav-lift: 0;
+
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 90;
+  padding: var(--nav-pad) var(--lp-gut);
+  transition: padding var(--t-med) var(--ease-out);
+}
+/* The step form, for reduced motion. Same destination, no journey. */
+.lp-nav[data-settled] { --nav-pad: 12px; --nav-bg: 0.82; --nav-blur: 18px; --nav-line: 1; --nav-lift: 1; }
+
+/* The surface is its own element so the blur and the tint can be animated
+   without putting a `backdrop-filter` on the element that contains the menu —
+   a filtered ancestor becomes the containing block for every fixed descendant
+   inside it, which is exactly how a mobile sheet ends up anchored to a 60px
+   header instead of the viewport. */
+.lp-nav__surface {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--lp-void) calc(var(--nav-bg) * 100%), transparent);
+  backdrop-filter: blur(var(--nav-blur)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(1.4);
+  border-bottom: 1px solid color-mix(in srgb, var(--lp-hair-2) calc(var(--nav-line) * 100%), transparent);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, calc(var(--nav-lift) * 0.34));
+  pointer-events: none;
+}
+
+.lp-nav__inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 3vw, 44px);
+  max-width: var(--lp-max);
+  margin-inline: auto;
+}
+.lp-nav__brand { display: inline-flex; align-items: center; }
+.lp-nav__brand:focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 6px; border-radius: 6px; }
+
+.lp-nav__links { display: flex; align-items: center; gap: clamp(14px, 2vw, 30px); }
+@media (max-width: 1000px) { .lp-nav__links { display: none; } }
+
+.lp-nav__link {
+  position: relative;
+  padding: 6px 2px;
+  font-size: 0.855rem;
+  font-weight: 500;
+  color: var(--lp-ink-2);
+  transition: color var(--t-fast) var(--ease-out);
+}
+/* The label lifts a hair on hover. Two pixels — enough that the pointer feels
+   acknowledged, not enough to read as a jump. */
+.lp-nav__link span {
+  display: inline-block;
+  transition: transform var(--t-fast) var(--ease-out);
+}
+.lp-nav__link:hover span,
+.lp-nav__link[data-current] span { transform: translateY(-2px); }
+
+/* The indicator grows from the left on hover and sits permanently under the
+   section you are actually in. `scaleX` on a 1px rule: one composite, no
+   layout, and it is the same gesture as the page's other reveals. */
+.lp-nav__link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--lp-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--t-med) var(--ease-out);
+}
+.lp-nav__link:hover { color: var(--lp-ink); }
+.lp-nav__link:hover::after { transform: scaleX(1); }
+.lp-nav__link[data-current] { color: var(--lp-ink); }
+.lp-nav__link[data-current]::after { transform: scaleX(1); }
+.lp-nav__link:focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 4px; border-radius: 4px; }
+
+.lp-nav__right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+.lp-nav__icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  color: var(--lp-ink-2);
+  cursor: pointer;
+  transition: color var(--t-fast), background var(--t-fast), border-color var(--t-fast);
+}
+.lp-nav__icon:hover { color: var(--lp-ink); background: var(--lp-surface-2); border-color: var(--lp-hair); }
+.lp-nav__icon:focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 2px; }
+.lp-nav__burger { display: none; }
+@media (max-width: 1000px) { .lp-nav__burger { display: grid; } }
+
+/* The shared `<UserMenu>` wears the landing's clothes here rather than being
+   forked. Only the signed-out pair needs restating; the signed-in trigger
+   already reads correctly on a dark ground. */
+.lp-nav .usermenu__signedout { gap: 8px; }
+.lp-nav .usermenu__signedout .btn2 {
+  height: 38px;
+  padding: 0 18px;
+  font-family: var(--font-display);
+  font-size: 0.84rem;
+  font-weight: 600;
+  border-color: var(--lp-hair);
+  background: transparent;
+  color: var(--lp-ink-2);
+}
+.lp-nav .usermenu__signedout .btn2:hover { background: var(--lp-surface-2); color: var(--lp-ink); border-color: var(--lp-hair-2); }
+.lp-nav .usermenu__signedout .btn2--primary {
+  background: var(--lp-accent);
+  border-color: var(--lp-accent);
+  color: #04070f;
+}
+html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #fff; }
+.lp-nav .usermenu__signedout .btn2--primary:hover {
+  background: color-mix(in srgb, var(--lp-accent) 88%, white);
+  border-color: color-mix(in srgb, var(--lp-accent) 88%, white);
+  color: #04070f;
+}
+@media (max-width: 620px) { .lp-nav .usermenu__signedout .btn2:not(.btn2--primary) { display: none; } }
+/* The primary action survives as far down as it fits. Below 374px the bar is
+   logo + toggle + burger and nothing else — the sheet still opens on
+   "Start an investigation", so the action is one tap away rather than gone. */
+@media (max-width: 374px) { .lp-nav .usermenu__signedout .btn2--primary { display: none; } }
+
+/* --- the mobile sheet ---------------------------------------------------- */
+.lp-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 88;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
+  padding: 96px var(--lp-gut) var(--lp-gut);
+  background: color-mix(in srgb, var(--lp-void) 88%, transparent);
+  backdrop-filter: blur(26px) saturate(1.3);
+  -webkit-backdrop-filter: blur(26px) saturate(1.3);
+  opacity: 0;
+  clip-path: inset(0 0 100% 0);
+  visibility: hidden;
+}
+.lp-sheet[data-open] { visibility: visible; }
+.lp-sheet__nav { display: grid; gap: 4px; }
+.lp-sheet__link {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--lp-hair);
+  font-family: var(--font-display);
+  font-size: clamp(1.55rem, 7vw, 2.2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--lp-ink);
+}
+.lp-sheet__n { font-size: 0.72rem; color: var(--lp-accent); letter-spacing: 0.1em; }
+.lp-sheet__foot { display: flex; }
+.lp-sheet__foot .lp-btn { width: 100%; }
+
+/* =========================================================================
+   The veil
+   ========================================================================= */
+
+.lp-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  background: var(--lp-void);
+  clip-path: inset(0 0 0 0);
+}
+.lp-boot__stage { display: grid; justify-items: center; gap: 22px; }
+.lp-boot__mark { position: relative; overflow: hidden; padding: 4px; }
+.lp-boot__shield { stroke: var(--lp-ink); }
+.lp-boot__spark { stroke: var(--lp-accent); }
+.lp-boot__dot { fill: var(--lp-accent); }
+/* The scan. A hairline with a wash behind it, crossing the mark once. */
+.lp-boot__scan {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  top: 50%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--lp-accent), transparent);
+  box-shadow: 0 0 22px 4px color-mix(in srgb, var(--lp-accent) 40%, transparent);
+}
+.lp-boot__word {
+  display: flex;
+  gap: 0.42em;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  color: var(--lp-ink-2);
+}
+
+/* =========================================================================
+   Hero
+   ========================================================================= */
+
+.lp-hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: calc(var(--lp-nav-h) + clamp(18px, 3.4vh, 48px)) var(--lp-gut) clamp(44px, 6vh, 80px);
+}
+.lp-hero__grid {
+  width: 100%;
+  max-width: var(--lp-max);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  gap: clamp(24px, 4vw, 64px);
+  align-items: center;
+}
+@media (max-width: 980px) {
+  .lp-hero__grid { grid-template-columns: minmax(0, 1fr); gap: clamp(28px, 6vw, 48px); }
+}
+
+.lp-hero__col { min-width: 0; }
+
+.lp-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 clamp(16px, 2.2vw, 26px);
+  padding: 7px 14px 7px 11px;
+  border: 1px solid var(--lp-hair);
+  border-radius: 999px;
+  background: var(--lp-surface-2);
+  font-family: var(--lp-mono);
+  font-size: var(--lp-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lp-ink-2);
+}
+.lp-hero__eyebrow b { font-weight: inherit; }
+/* The one live indicator in the chrome. It is the product's own idiom — the
+   console has the same dot — so it reads as a status light rather than as a
+   decoration that happens to blink. */
+.lp-hero__live {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lp-accent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--lp-accent) 60%, transparent);
+  animation: lp-ping 2.6s var(--ease-in-out) infinite;
+}
+@keyframes lp-ping {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--lp-accent) 55%, transparent); }
+  60% { box-shadow: 0 0 0 7px transparent; }
+}
+
+.lp-hero__h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--lp-d1);
+  font-weight: 900;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  color: var(--lp-ink);
+  text-wrap: balance;
+}
+/* `--charge` runs 0..1 on the hero timeline and is the single input to both
+   halves of the pulse. At 0 this is exactly the accent with no glow, which is
+   also what a reduced-motion visitor gets, because nothing ever moves it. */
+/* Authored line breaks, not measured ones: "before it becomes" must never be
+   orphaned from "damage". Block-level, so SplitText's line detection agrees
+   with the typography rather than with the viewport. */
+.lp-hero__hline { display: block; }
+
+.lp-hero__h1 em {
+  --charge: 0;
+  font-style: normal;
+  color: color-mix(in srgb, #fff calc(var(--charge) * 62%), var(--lp-accent));
+  text-shadow: 0 0 calc(34px * var(--charge))
+    color-mix(in srgb, var(--lp-accent) calc(var(--charge) * 62%), transparent);
+}
+
+.lp-hero__sub {
+  margin: clamp(18px, 2vw, 24px) 0 0;
+  max-width: 50ch;
+  font-size: var(--lp-lead);
+  line-height: 1.62;
+  color: var(--lp-ink-2);
+}
+
+.lp-hero__act {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: clamp(22px, 2.6vw, 32px);
+}
+
+.lp-hero__flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px clamp(14px, 2vw, 26px);
+  margin: clamp(24px, 2.8vw, 36px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-hero__flow li {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--lp-mono);
+  font-size: var(--lp-micro);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--lp-ink-3);
+}
+.lp-hero__flow li > span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--lp-accent);
+  /* Each node a step brighter than the last: the strip is a gradient of
+     confidence, which is what the pipeline it names actually is. */
+  opacity: calc(0.3 + var(--i) * 0.17);
+}
+.lp-hero__flow li + li::before {
+  content: "";
+  position: absolute;
+  left: calc(clamp(14px, 2vw, 26px) * -1);
+  width: clamp(8px, 1.4vw, 16px);
+  height: 1px;
+  background: var(--lp-hair-2);
+}
+/* The connectors are drawn from each item's own left edge, so a wrapped row
+   starts its line with a dash hanging in the margin. Below the breakpoint
+   where the strip is guaranteed to wrap, the dots carry the sequence alone. */
+@media (max-width: 620px) {
+  .lp-hero__flow li + li::before { display: none; }
+  .lp-hero__flow { gap: 8px 16px; }
+}
+
+.lp-hero__figs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin-top: clamp(22px, 2.4vw, 32px);
+  padding-top: clamp(14px, 1.6vw, 20px);
+  border-top: 1px solid var(--lp-hair);
+}
+.lp-hero__figs p { flex: 1 1 210px; margin: 0; max-width: 30ch; font-size: var(--t-xs); line-height: 1.5; color: var(--lp-ink-3); }
+/* The figure inline with its attribution rather than stacked above it: two
+   stacked pairs cost 40px of hero height, and the hero has to fit on a
+   1280×720 projector without the primary action falling below the fold. */
+.lp-hero__figs b { margin-right: 0.4em; font-size: 0.95rem; font-weight: 700; color: var(--lp-ink); letter-spacing: -0.02em; }
+
+.lp-hero__visual { position: relative; min-width: 0; }
+@media (max-width: 980px) {
+  /* Below the fold on a phone rather than squeezed beside the type: the
+     diagram is support for the claim, and a 300px-wide version of it supports
+     nothing. */
+  .lp-hero__visual { max-width: 460px; margin-inline: auto; width: 100%; }
+}
+@media (max-width: 560px) { .lp-hero__visual { display: none; } }
+/* "AegisAI ·" is redundant on a phone — the wordmark is 40px above it in the
+   bar — and it is what pushes the eyebrow onto two ragged lines. */
+@media (max-width: 560px) { .lp-hero__eyebrow b { display: none; } }
+
+.lp-hero__scroll {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(18px, 3vh, 32px);
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--lp-mono);
+  font-size: var(--lp-micro);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--lp-ink-3);
+  transition: color var(--t-fast);
+}
+.lp-hero__scroll:hover { color: var(--lp-ink-2); }
+.lp-hero__scroll svg { animation: lp-nudge 2.4s var(--ease-in-out) infinite; }
+@keyframes lp-nudge {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(4px); opacity: 1; }
+}
+@media (max-width: 980px) { .lp-hero__scroll { display: none; } }
+
+/* =========================================================================
+   The hero network
+   ========================================================================= */
+
+.lp-net {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  /* The cursor parallax is one GSAP transform on this wrapper, so the pointer
+     moves the whole picture as a single object rather than nudging thirteen
+     elements independently. */
+  will-change: transform;
+}
+.lp-net__svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.lp-net__nodes { position: absolute; inset: 0; }
+
+.lp-net__ring { fill: none; stroke: var(--lp-hair-2); stroke-width: 1; }
+.lp-net__ring--outer { stroke: var(--lp-hair); }
+.lp-net__spoke { stroke: color-mix(in srgb, var(--lp-accent) 34%, transparent); stroke-width: 1; }
+.lp-net__edge {
+  fill: none;
+  stroke: color-mix(in srgb, var(--lp-cyan) 26%, transparent);
+  stroke-width: 1;
+}
+.lp-net__packet {
+  fill: var(--lp-cyan);
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--lp-cyan) 70%, transparent));
+}
+
+/* Every node is positioned by its computed centre and pulled back by half of
+   itself, so the DOM layer and the SVG layer agree about where a thing is
+   without either of them knowing the other's units. */
+.lp-net__pillar,
+.lp-net__node,
+.lp-net__hub {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.lp-net__pillar {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+}
+.lp-net__pdot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--lp-accent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--lp-accent) 60%, transparent);
+}
+.lp-net__plabel {
+  font-family: var(--lp-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--lp-ink-2);
+}
+
+.lp-net__node {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px 6px 9px;
+  border: 1px solid var(--lp-hair);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lp-raise) 88%, transparent);
+  backdrop-filter: blur(6px);
+  white-space: nowrap;
+  color: var(--lp-cyan);
+}
+.lp-net__nlabel {
+  font-family: var(--lp-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lp-ink-2);
+}
+
+.lp-net__hub {
+  left: 50%;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1px;
+  width: 118px;
+  height: 118px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--lp-accent) 40%, transparent);
+  background:
+    radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--lp-accent) 16%, transparent), transparent 68%),
+    color-mix(in srgb, var(--lp-raise) 92%, transparent);
+  box-shadow:
+    0 0 44px color-mix(in srgb, var(--lp-accent) 16%, transparent),
+    inset 0 0 30px color-mix(in srgb, var(--lp-accent) 8%, transparent);
+}
+.lp-net__hubring {
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--lp-accent) 16%, transparent);
+}
+.lp-net__hubname {
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: var(--lp-ink);
+}
+.lp-net__hubsub {
+  font-family: var(--lp-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--lp-accent);
+}
+
+/* =========================================================================
+   The problem — the threat web
+   ========================================================================= */
+
+.lp-web {
+  position: relative;
+  margin-top: clamp(36px, 5vw, 64px);
+  aspect-ratio: 1000 / 520;
+  width: 100%;
+}
+/* `preserveAspectRatio: none` on the SVG plus percentage positions on the DOM
+   layer: both stretch with the box in the same way, so a line always ends
+   exactly under the chip it belongs to at any width. */
+.lp-web__svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lp-web__edge {
+  stroke: color-mix(in srgb, var(--lp-accent) 32%, transparent);
+  stroke-width: 1;
+  stroke-opacity: 0.45;
+  vector-effect: non-scaling-stroke;
+}
+.lp-web__nodes { position: absolute; inset: 0; }
+
+.lp-web__chip {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--lp-hair);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lp-raise) 92%, transparent);
+  backdrop-filter: blur(8px);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--lp-ink-2);
+  transition: border-color var(--t-fast), color var(--t-fast), transform var(--t-med) var(--ease-out);
+}
+.lp-web__chip svg { color: var(--lp-ink-3); transition: color var(--t-fast); }
+.lp-web__chip:hover { border-color: color-mix(in srgb, var(--lp-accent) 46%, transparent); color: var(--lp-ink); }
+.lp-web__chip:hover svg { color: var(--lp-accent); }
+
+.lp-web__core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 18px 30px;
+  border: 1px solid color-mix(in srgb, var(--lp-accent) 40%, transparent);
+  border-radius: 14px;
+  background:
+    radial-gradient(90% 120% at 50% 0%, color-mix(in srgb, var(--lp-accent) 14%, transparent), transparent 70%),
+    color-mix(in srgb, var(--lp-raise) 94%, transparent);
+  box-shadow: 0 0 50px color-mix(in srgb, var(--lp-accent) 14%, transparent);
+  text-align: center;
+}
+.lp-web__coren {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--lp-ink);
+}
+.lp-web__cores {
+  font-family: var(--lp-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--lp-accent);
+}
+
+/* Below the tablet break the ellipse stops being a shape and starts being a
+   pile. The chips become an ordinary wrapping row, the lines go, and the
+   centre becomes the row's caption — the same argument, made typographically
+   because the geometry no longer has room to make it. */
+@media (max-width: 720px) {
+  .lp-web { aspect-ratio: auto; }
+  .lp-web__svg { display: none; }
+  .lp-web__nodes { position: static; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .lp-web__chip { position: static; transform: none; }
+  .lp-web__core { position: static; transform: none; width: 100%; margin-top: 12px; }
+}
+
+/* =========================================================================
+   Evidence
+   ========================================================================= */
+
+/* One step up from the section headline, for the two places on the page where
+   the typography is meant to dominate the viewport rather than label a
+   section: this one and the closing call to action. */
+.lp-h2--big { font-size: clamp(2.4rem, 6.2vw, 5.2rem); line-height: 0.98; }
+
+.lp-eg {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(14px, 1.6vw, 22px);
+  margin-top: clamp(40px, 5vw, 72px);
+}
+/* The irregular rhythm. Cards in the even columns sit lower, so the set reads
+   as a scatter of objects rather than as a table of features — and the eye
+   has to travel through it instead of scanning a row. */
+.lp-eg__cell { display: flex; min-width: 0; }
+.lp-eg__card { flex: 1; }
+.lp-eg__cell:nth-child(2n) { transform: translateY(clamp(12px, 2.4vw, 34px)); }
+.lp-eg__cell:nth-child(4n) { transform: translateY(clamp(24px, 4.4vw, 62px)); }
+@media (max-width: 1080px) {
+  .lp-eg { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lp-eg__cell:nth-child(4n) { transform: translateY(clamp(12px, 2.4vw, 34px)); }
+}
+@media (max-width: 620px) {
+  .lp-eg { grid-template-columns: minmax(0, 1fr); }
+  /* The offsets are a desktop composition. On one column they are just an
+     inconsistent amount of vertical noise. */
+  .lp-eg__cell,
+  .lp-eg__cell:nth-child(2n),
+  .lp-eg__cell:nth-child(4n) { transform: none; }
+}
+
+.lp-eg__icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 16px;
+  border: 1px solid color-mix(in srgb, var(--lp-cyan) 26%, transparent);
+  border-radius: 11px;
+  background: var(--lp-cyan-soft);
+  color: var(--lp-cyan);
+}
+
+/* =========================================================================
+   The pinned investigation
+   ========================================================================= */
+
+/* The section's own padding stops above the pin: a pinned element inside a
+   padded box leaves the padding stranded at the top of the pinned frame. */
+.lp-section--flush { padding-bottom: 0; }
+
+.lp-pin { position: relative; }
+
+.lp-inv {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  gap: clamp(24px, 4vw, 64px);
+  align-items: center;
+  min-height: 100svh;
+  padding: calc(var(--lp-nav-h) + 24px) var(--lp-gut) clamp(40px, 6vh, 72px);
+}
+
+/* --- the rail ------------------------------------------------------------ */
+.lp-inv__steps { position: relative; list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(8px, 1.4vh, 18px); }
+.lp-inv__rail {
+  position: absolute;
+  left: 15px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--lp-hair);
+}
+/* Two layers, not one: the track is always there so the list reads as a
+   sequence even before it starts, and the fill is the only thing that moves. */
+.lp-inv__rail i {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: linear-gradient(180deg, var(--lp-accent), color-mix(in srgb, var(--lp-accent) 25%, transparent));
+  transform-origin: top;
+}
+
+.lp-inv__step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  opacity: 0.34;
+  transition: opacity var(--t-med) var(--ease-out);
+}
+/* The marker is the first grid column and the rail runs down its centre, so
+   the two line up by construction rather than by a negative margin that has
+   to be re-derived every time the type changes. */
+.lp-inv__icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--lp-hair-2);
+  border-radius: 50%;
+  background: var(--lp-void);
+  color: var(--lp-accent);
+}
+.lp-inv__n { font-size: 0.625rem; color: var(--lp-ink-3); margin-right: 8px; }
+.lp-inv__step b { display: block; font-size: 0.94rem; font-weight: 700; letter-spacing: -0.015em; color: var(--lp-ink); }
+.lp-inv__step em { display: block; margin-top: 3px; font-style: normal; font-size: var(--t-xs); line-height: 1.55; color: var(--lp-ink-3); }
+
+/* --- the panel stage ----------------------------------------------------- */
+/* Pinned: all seven panels occupy the same box, top-aligned, and the timeline
+   cross-fades between them. They are anchored top rather than stretched to
+   `inset: 0` so a panel with more rows in it grows downward instead of being
+   clipped, and the reserved height keeps the shortest one from letting the
+   composition collapse. */
+.lp-inv__stage { position: relative; min-width: 0; }
+.lp-inv[data-mode="pinned"] .lp-inv__stage { min-height: clamp(420px, 56vh, 560px); }
+.lp-inv[data-mode="pinned"] .lp-inv__panel {
+  position: absolute;
+  inset: 0 0 auto 0;
+}
+.lp-inv[data-mode="pinned"] .lp-inv__panel + .lp-inv__panel { opacity: 0; }
+/* Unpinned (handheld, reduced motion): the same panels, one after another. */
+.lp-inv[data-mode="flow"] { grid-template-columns: minmax(0, 1fr); min-height: 0; padding-top: 0; }
+.lp-inv[data-mode="flow"] .lp-inv__step { opacity: 1; }
+.lp-inv[data-mode="flow"] .lp-inv__stage { display: grid; gap: 16px; margin-top: 32px; }
+.lp-inv[data-mode="flow"] .lp-inv__rail i { transform: none; }
+
+.lp-inv__panel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--lp-hair);
+  border-radius: 18px;
+  background: var(--lp-card-bg);
+  box-shadow: var(--lp-card-shadow);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+.lp-inv__phead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--lp-hair);
+  background: color-mix(in srgb, var(--lp-raise) 60%, transparent);
+}
+.lp-inv__phead h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.lp-inv__phead span { margin-left: auto; font-size: 0.625rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lp-ink-3); }
+.lp-inv__pbody { padding: clamp(18px, 2.2vw, 26px); display: grid; gap: 16px; align-content: start; }
+
+.lp-inv__line { margin: 0; font-size: var(--t-sm); line-height: 1.65; color: var(--lp-ink-2); }
+.lp-inv__line b { color: var(--lp-ink); font-weight: 600; }
+.lp-inv__foot {
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--lp-hair);
+  font-size: var(--t-xs);
+  line-height: 1.6;
+  color: var(--lp-ink-3);
+}
+
+.lp-inv__wire { padding: 14px 16px; border: 1px solid var(--lp-hair); border-radius: 12px; background: var(--lp-surface); }
+.lp-inv__quote { margin: 6px 0 0; font-family: var(--lp-mono); font-size: 0.85rem; color: var(--lp-ink); }
+
+.lp-inv__tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.lp-inv__tags li {
+  padding: 5px 11px;
+  border: 1px solid var(--lp-hair);
+  border-radius: 999px;
+  font-family: var(--lp-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.04em;
+  color: var(--lp-ink-3);
+}
+
+.lp-inv__ents { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.lp-inv__ents li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 14px;
+  border: 1px solid var(--lp-hair);
+  border-radius: 10px;
+  background: var(--lp-surface);
+}
+.lp-inv__ents b { font-size: 0.86rem; font-weight: 600; color: var(--lp-ink); text-align: right; }
+
+.lp-inv__agents,
+.lp-inv__checks { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.lp-inv__agents li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  padding: 11px 14px;
+  border: 1px solid var(--lp-hair);
+  border-radius: 10px;
+  background: var(--lp-surface);
+}
+.lp-inv__agents b { font-size: 0.85rem; font-weight: 600; }
+.lp-inv__agents em { grid-column: 1 / -1; font-style: normal; font-size: var(--t-xs); color: var(--lp-ink-3); }
+/* The one place the ramp is spent in this section: a verdict is a reading. */
+.lp-inv__verdict {
+  font-family: var(--lp-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border-radius: 5px;
+}
+.lp-inv__verdict[data-v="FAIL"] { color: var(--high-ink); background: var(--high-dim); }
+.lp-inv__verdict[data-v="HIT"] { color: var(--elevated-ink); background: var(--elevated-dim); }
+.lp-inv__verdict[data-v="OK"] { color: var(--lp-ink-3); background: var(--lp-surface-2); }
+
+.lp-inv__checks li { padding: 11px 14px; border: 1px solid var(--lp-hair); border-radius: 10px; background: var(--lp-surface); }
+.lp-inv__checks b { display: block; font-size: 0.82rem; font-weight: 600; }
+.lp-inv__checks em { display: block; margin-top: 2px; font-style: normal; font-size: var(--t-xs); line-height: 1.5; color: var(--lp-ink-2); }
+.lp-inv__src { display: block; margin-top: 5px; font-size: 0.625rem; color: var(--lp-ink-3); }
+
+.lp-inv__score { display: flex; align-items: baseline; gap: 16px; }
+.lp-inv__scoren {
+  font-size: clamp(3rem, 6vw, 4.6rem);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  color: var(--lp-ink);
+}
+.lp-inv__scorel { font-size: var(--t-xs); color: var(--lp-ink-3); }
+.lp-inv__scorel b { display: block; font-family: var(--lp-mono); color: var(--lp-ink-2); }
+
+/* The trajectory, as a column chart of the eight recorded frames. Height is a
+   custom property so the bars are pure CSS and the timeline never touches
+   them — this section already has enough moving parts. */
+.lp-inv__traj { display: flex; align-items: flex-end; gap: 6px; height: 96px; margin: 0; padding: 0; list-style: none; }
+.lp-inv__traj li { flex: 1; display: grid; align-content: end; justify-items: center; gap: 6px; height: 100%; }
+.lp-inv__traj i {
+  display: block;
+  width: 100%;
+  height: var(--h);
+  border-radius: 3px 3px 0 0;
+  background: var(--lp-hair-2);
+}
+.lp-inv__traj i[data-risk="CALM"] { background: color-mix(in srgb, var(--calm) 60%, transparent); }
+.lp-inv__traj i[data-risk="WATCH"] { background: color-mix(in srgb, var(--watch) 60%, transparent); }
+.lp-inv__traj i[data-risk="ELEVATED"] { background: color-mix(in srgb, var(--elevated) 65%, transparent); }
+.lp-inv__traj i[data-risk="HIGH"] { background: color-mix(in srgb, var(--high) 70%, transparent); }
+.lp-inv__traj i[data-risk="CRITICAL"] { background: var(--critical); }
+.lp-inv__traj span { font-size: 0.5625rem; color: var(--lp-ink-3); }
+
+.lp-inv__vhead { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.lp-inv__vscore { font-size: 2.6rem; font-weight: 700; line-height: 1; letter-spacing: -0.05em; color: var(--high-ink); }
+.lp-inv__vstage { font-size: var(--t-xs); color: var(--lp-ink-3); }
+.lp-inv__coach {
+  margin: 0;
+  padding: 16px 18px;
+  border-left: 2px solid var(--lp-accent);
+  border-radius: 0 10px 10px 0;
+  background: var(--lp-accent-soft);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--lp-ink);
+}
+.lp-inv__coach cite { display: block; margin-top: 8px; font-style: normal; font-size: var(--t-xs); font-weight: 400; color: var(--lp-ink-2); }
+
+@media (max-width: 1080px) {
+  .lp-inv { grid-template-columns: minmax(0, 1fr); align-content: center; }
+  .lp-inv__step em { display: none; }
+  .lp-inv__steps { grid-auto-flow: row; }
+}
+
+/* =========================================================================
+   The agent architecture
+   ========================================================================= */
+
+.lp-arch {
+  position: relative;
+  margin-top: clamp(40px, 5vw, 68px);
+  aspect-ratio: 1200 / 580;
+}
+.lp-arch__svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lp-arch__edge {
+  stroke: color-mix(in srgb, var(--lp-accent) 34%, transparent);
+  stroke-width: 1;
+  stroke-opacity: 0.45;
+  vector-effect: non-scaling-stroke;
+}
+.lp-arch__edge--out { stroke: color-mix(in srgb, var(--lp-indigo) 40%, transparent); }
+.lp-arch__layer { position: absolute; inset: 0; }
+
+.lp-arch__core,
+.lp-arch__verdict {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 14px 26px;
+  border-radius: 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+.lp-arch__core {
+  border: 1px solid color-mix(in srgb, var(--lp-accent) 42%, transparent);
+  background:
+    radial-gradient(100% 140% at 50% 0%, color-mix(in srgb, var(--lp-accent) 15%, transparent), transparent 70%),
+    color-mix(in srgb, var(--lp-raise) 94%, transparent);
+  box-shadow: 0 0 46px color-mix(in srgb, var(--lp-accent) 13%, transparent);
+}
+.lp-arch__verdict {
+  border: 1px solid color-mix(in srgb, var(--lp-indigo) 42%, transparent);
+  background:
+    radial-gradient(100% 140% at 50% 100%, color-mix(in srgb, var(--lp-indigo) 15%, transparent), transparent 70%),
+    color-mix(in srgb, var(--lp-raise) 94%, transparent);
+  box-shadow: 0 0 46px color-mix(in srgb, var(--lp-indigo) 13%, transparent);
+}
+.lp-arch__core b,
+.lp-arch__verdict b {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--lp-ink);
+}
+.lp-arch__core span,
+.lp-arch__verdict span {
+  font-family: var(--lp-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--lp-ink-3);
+}
+
+.lp-arch__card {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  width: 22.5%;
+  /* The card spans exactly from CARD_TOP to CARD_BOTTOM in the diagram's
+     coordinate space — (393 − 180) / 580. Without it the card is only as tall
+     as its text, the out-edges start at a fixed y below wherever it happens to
+     end, and the gap between the cards and the verdict changes with the copy. */
+  height: 36.7%;
+  padding: 16px 18px;
+  border: 1px solid var(--lp-hair);
+  border-radius: 14px;
+  background: var(--lp-card-bg);
+  box-shadow: var(--lp-card-shadow);
+  backdrop-filter: blur(8px);
+  transition: border-color var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out);
+}
+.lp-arch__card:hover { border-color: color-mix(in srgb, var(--lp-accent) 46%, transparent); transform: translateX(-50%) translateY(-3px); }
+.lp-arch__card header { display: flex; align-items: center; gap: 10px; }
+.lp-arch__card h3 { margin: 0; font-family: var(--font-display); font-size: 0.92rem; font-weight: 700; letter-spacing: -0.015em; }
+.lp-arch__icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--lp-accent-soft);
+  color: var(--lp-accent);
+  flex: none;
+}
+.lp-arch__card p { margin: 10px 0 12px; font-size: var(--t-xs); line-height: 1.6; color: var(--lp-ink-2); }
+.lp-arch__card ul { display: grid; gap: 5px; margin: auto 0 0; padding: 12px 0 0; border-top: 1px solid var(--lp-hair); list-style: none; align-content: end; }
+.lp-arch__card li {
+  font-family: var(--lp-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.02em;
+  color: var(--lp-ink-3);
+}
+.lp-arch__card li::before { content: "› "; color: var(--lp-accent); }
+
+/* Under 900px the fan-out has no room to be a fan-out. The lines and the two
+   hub nodes go, and the four tiers become an ordinary stack — the reading
+   order carries the same sequence the diagram was drawing. */
+@media (max-width: 900px) {
+  .lp-arch { aspect-ratio: auto; }
+  .lp-arch__svg,
+  .lp-arch__core,
+  .lp-arch__verdict { display: none; }
+  .lp-arch__layer { position: static; display: grid; gap: 12px; }
+  .lp-arch__card { position: static; transform: none; width: 100%; height: auto; }
+  .lp-arch__card ul { margin-top: 0; }
+  .lp-arch__card:hover { transform: translateY(-3px); }
+}
+
+/* =========================================================================
+   The decision engine
+   ========================================================================= */
+
+.lp-fuse {
+  position: relative;
+  margin-top: clamp(36px, 4.6vw, 60px);
+  aspect-ratio: 1000 / 460;
+}
+.lp-fuse__svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lp-fuse__edge {
+  stroke: color-mix(in srgb, var(--lp-cyan) 34%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  vector-effect: non-scaling-stroke;
+}
+.lp-fuse__layer { position: absolute; inset: 0; }
+
+.lp-fuse__sig {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  gap: 3px;
+  padding: 10px 14px;
+  border: 1px solid var(--lp-hair);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--lp-raise) 92%, transparent);
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+}
+.lp-fuse__sig b { font-size: 0.8rem; font-weight: 600; color: var(--lp-ink); }
+.lp-fuse__sig em { font-style: normal; font-size: 0.625rem; color: var(--lp-ink-3); }
+
+.lp-fuse__engine {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(300px, 34%);
+  display: grid;
+  gap: 12px;
+  padding: 22px 24px;
+  border: 1px solid color-mix(in srgb, var(--lp-accent) 34%, transparent);
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 100% at 50% 0%, color-mix(in srgb, var(--lp-accent) 13%, transparent), transparent 68%),
+    color-mix(in srgb, var(--lp-raise) 95%, transparent);
+  box-shadow: 0 0 64px color-mix(in srgb, var(--lp-accent) 12%, transparent);
+}
+.lp-fuse__read { display: flex; align-items: center; gap: 14px; }
+.lp-fuse__score {
+  font-size: clamp(2.6rem, 4.4vw, 3.6rem);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  color: var(--lp-ink);
+}
+/* The one saturated element in this section, and it is a reading.
+   Two layers of the *same* full-width gradient: the track at low alpha, and
+   the fill clipped from the right. Clipping rather than scaling matters —
+   `scaleX` on a gradient squashes it, so the colour under the marker would no
+   longer be the colour that reading means. */
+.lp-fuse__ramp {
+  --ramp: linear-gradient(
+    90deg,
+    var(--calm) 0%,
+    var(--watch) 26%,
+    var(--elevated) 50%,
+    var(--high) 74%,
+    var(--critical) 100%
+  );
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--lp-surface-2);
+  overflow: hidden;
+}
+.lp-fuse__ramp::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--ramp);
+  opacity: 0.2;
+}
+.lp-fuse__ramp i {
+  position: absolute;
+  inset: 0;
+  background: var(--ramp);
+  clip-path: inset(0 calc(100% - var(--w)) 0 0);
+}
+.lp-fuse__scale { display: flex; justify-content: space-between; margin: 0; font-size: 0.5rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lp-ink-3); }
+
+@media (max-width: 900px) {
+  /* The convergence needs width to be a convergence. On a narrow screen the
+     six signals become a list above the engine, which still reads as six
+     things feeding one — just in the reading order rather than in space. */
+  .lp-fuse { aspect-ratio: auto; }
+  .lp-fuse__svg { display: none; }
+  .lp-fuse__layer { position: static; display: grid; gap: 8px; }
+  .lp-fuse__sig { position: static; transform: none; white-space: normal; }
+  .lp-fuse__engine { position: static; transform: none; width: 100%; margin-top: 8px; }
+}
+
+/* --- the contribution breakdown ----------------------------------------- */
+.lp-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 56px);
+  margin-top: clamp(40px, 5vw, 72px);
+  align-items: start;
+}
+@media (max-width: 900px) { .lp-split { grid-template-columns: minmax(0, 1fr); } }
+
+.lp-drivers { display: grid; gap: 18px; margin: 24px 0 0; padding: 0; list-style: none; }
+.lp-drivers__row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.lp-drivers__row b { font-size: 0.92rem; font-weight: 600; color: var(--lp-ink); }
+.lp-drivers__row span { font-size: 0.82rem; color: var(--lp-accent); }
+.lp-drivers__bar { display: block; height: 4px; margin: 8px 0 6px; border-radius: 999px; background: var(--lp-surface-2); overflow: hidden; }
+.lp-drivers__bar i { display: block; height: 100%; width: var(--w); border-radius: 999px; background: var(--lp-accent); }
+.lp-drivers li em { font-style: normal; font-size: var(--t-xs); color: var(--lp-ink-3); }
+
+.lp-invariant { border-color: color-mix(in srgb, var(--lp-accent) 26%, transparent); }
+.lp-invariant__line {
+  margin: 12px 0 16px;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--lp-ink);
+}
+.lp-invariant__line em { font-style: normal; color: var(--lp-accent); }
+
+/* =========================================================================
+   The knowledge graph
+   ========================================================================= */
+
+.lp-graph {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+  gap: clamp(20px, 3vw, 40px);
+  margin-top: clamp(36px, 4.6vw, 60px);
+  align-items: start;
+}
+@media (max-width: 900px) { .lp-graph { grid-template-columns: minmax(0, 1fr); } }
+
+.lp-graph__stage {
+  position: relative;
+  aspect-ratio: 900 / 560;
+  border: 1px solid var(--lp-hair);
+  border-radius: 18px;
+  background:
+    radial-gradient(80% 70% at 50% 50%, color-mix(in srgb, var(--lp-accent) 6%, transparent), transparent 70%),
+    var(--lp-surface);
+  overflow: hidden;
+}
+.lp-graph__svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lp-graph__edge {
+  stroke: var(--lp-hair-2);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  transition: stroke var(--t-med) var(--ease-out), stroke-opacity var(--t-med) var(--ease-out);
+  stroke-opacity: 0.4;
+}
+.lp-graph__edge[data-on] { stroke: var(--lp-accent); stroke-opacity: 1; }
+.lp-graph__layer { position: absolute; inset: 0; }
+
+.lp-graph__node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--lp-hair);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--lp-raise) 94%, transparent);
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  opacity: 0.55;
+  transition:
+    opacity var(--t-med) var(--ease-out),
+    border-color var(--t-med) var(--ease-out),
+    box-shadow var(--t-med) var(--ease-out);
+}
+/* Dimming the rest rather than brightening the selection: with eleven edges
+   on screen, "which of these belongs to what I am looking at" is only
+   answerable if everything else recedes. */
+.lp-graph__node[data-on] { opacity: 1; }
+.lp-graph__node[aria-pressed="true"] {
+  border-color: var(--lp-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--lp-accent) 16%, transparent);
+}
+.lp-graph__node:focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 3px; }
+.lp-graph__kind {
+  font-family: var(--lp-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--lp-ink-3);
+}
+.lp-graph__node[data-kind="phone"] .lp-graph__kind { color: var(--lp-accent); }
+.lp-graph__node[data-kind="upi"] .lp-graph__kind { color: var(--lp-cyan); }
+.lp-graph__node[data-kind="apk"] .lp-graph__kind { color: var(--high-ink); }
+.lp-graph__node[data-kind="case"] .lp-graph__kind { color: var(--lp-indigo); }
+.lp-graph__label { font-size: 0.75rem; color: var(--lp-ink); }
+
+.lp-graph__panel { align-self: stretch; }
+.lp-graph__pname { margin: 8px 0 0; font-size: 1rem; color: var(--lp-ink); word-break: break-all; }
+.lp-graph__psub { margin-top: 20px; }
+.lp-graph__links { display: grid; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+.lp-graph__links li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--lp-hair);
+  border-radius: 8px;
+  background: var(--lp-surface);
+  font-size: 0.72rem;
+}
+.lp-graph__links em { font-style: normal; font-size: 0.5625rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lp-ink-3); flex: none; }
+.lp-graph__meta { display: grid; gap: 5px; margin: 16px 0 0; padding: 14px 0 0; border-top: 1px solid var(--lp-hair); list-style: none; }
+.lp-graph__meta li { font-size: var(--t-xs); color: var(--lp-ink-2); }
+.lp-graph__meta li::before { content: "· "; color: var(--lp-accent); }
+.lp-graph__hint { margin: 16px 0 0; font-size: 0.625rem; line-height: 1.6; color: var(--lp-ink-3); }
+
+@media (max-width: 620px) {
+  /* Eight labelled nodes in 340px is a pile of overlapping pills. The graph
+     becomes its own readout: the panel, and a plain list of the entities. */
+  .lp-graph__stage { display: none; }
+}
+
+/* =========================================================================
+   The live call
+
+   The second of the four places on this page where the threat ramp is spent,
+   because it is one of the four places a threat is being reported.
+   ========================================================================= */
+
+.lp-call {
+  margin-top: clamp(36px, 4.6vw, 60px);
+  border: 1px solid var(--lp-hair);
+  border-radius: 20px;
+  background: var(--lp-card-bg);
+  box-shadow: var(--lp-card-shadow);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+.lp-call__head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--lp-hair);
+  background: color-mix(in srgb, var(--lp-raise) 60%, transparent);
+  font-size: var(--t-xs);
+}
+.lp-call__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--lp-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--critical-ink);
+}
+.lp-call__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--critical);
+  animation: lp-ping 2.2s var(--ease-in-out) infinite;
+}
+.lp-call__num { display: inline-flex; align-items: center; gap: 6px; color: var(--lp-ink-2); }
+.lp-call__t { margin-left: auto; color: var(--lp-ink); }
+
+.lp-call__grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+@media (max-width: 860px) { .lp-call__grid { grid-template-columns: minmax(0, 1fr); } }
+.lp-call__left { padding: clamp(18px, 2.4vw, 28px); min-width: 0; }
+.lp-call__right {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(18px, 2.4vw, 28px);
+  border-left: 1px solid var(--lp-hair);
+  background: color-mix(in srgb, var(--lp-raise) 45%, transparent);
+  min-width: 0;
+}
+@media (max-width: 860px) { .lp-call__right { border-left: 0; border-top: 1px solid var(--lp-hair); } }
+
+/* The waveform. Decorative, and labelled as such in the component — a
+   plausible envelope, not an analysis of the audio. */
+.lp-call__wave {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 46px;
+  margin-bottom: 22px;
+}
+.lp-call__wave i {
+  flex: 1;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--lp-accent), color-mix(in srgb, var(--lp-accent) 30%, transparent));
+  opacity: 0.5;
+  transform: scaleY(calc(0.2 + var(--seed) * 0.55));
+}
+
+.lp-call__script { display: grid; gap: 12px; margin: 10px 0 0; padding: 0; list-style: none; }
+.lp-call__script li {
+  padding: 12px 14px;
+  border-left: 2px solid var(--lp-hair-2);
+  border-radius: 0 10px 10px 0;
+  background: var(--lp-surface);
+}
+.lp-call__stage {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.5625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--lp-ink-3);
+}
+.lp-call__script q { font-size: 0.86rem; line-height: 1.65; color: var(--lp-ink); }
+
+.lp-call__score { display: flex; align-items: center; gap: 14px; }
+.lp-call__scoren {
+  font-size: clamp(2.6rem, 4.6vw, 3.4rem);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  color: var(--high-ink);
+}
+.lp-call__stagenow { margin: 14px 0 0; font-size: var(--t-sm); color: var(--lp-ink-2); }
+.lp-call__stagenow strong { color: var(--lp-ink); }
+.lp-call__mlabel { margin-top: 22px; }
+.lp-call__meters { display: grid; gap: 9px; margin: 10px 0 0; padding: 0; list-style: none; }
+.lp-call__meters li { display: grid; grid-template-columns: 74px minmax(0, 1fr) 34px; align-items: center; gap: 10px; }
+.lp-call__meters span:first-child { font-size: var(--t-xs); color: var(--lp-ink-2); }
+.lp-call__meter { height: 4px; border-radius: 999px; background: var(--lp-surface-2); overflow: hidden; }
+.lp-call__meter i { display: block; height: 100%; width: var(--w); border-radius: 999px; background: var(--high); }
+.lp-call__meters b { font-size: 0.625rem; color: var(--lp-ink-3); text-align: right; }
+/* Pinned to the foot of the column: the transcript beside it is taller, and
+   a forecast floating in the middle of a column of air reads as unfinished. */
+.lp-call__forecast { margin: auto 0 0; padding-top: 16px; border-top: 1px solid var(--lp-hair); font-size: var(--t-xs); line-height: 1.6; color: var(--lp-ink-2); }
+.lp-call__forecast strong { color: var(--lp-accent); }
+
+.lp-call__warn {
+  display: flex;
+  gap: 14px;
+  padding: 18px clamp(18px, 2.4vw, 28px);
+  border-top: 1px solid color-mix(in srgb, var(--critical) 30%, transparent);
+  background: var(--critical-dim);
+  color: var(--critical-ink);
+}
+.lp-call__warn > svg { flex: none; margin-top: 2px; }
+.lp-call__warn b { display: block; font-size: 0.88rem; font-weight: 700; }
+.lp-call__warn p { margin: 8px 0 0; font-size: var(--t-sm); line-height: 1.6; font-weight: 600; color: var(--lp-ink); }
+.lp-call__warn span { display: block; margin-top: 6px; font-size: var(--t-xs); color: var(--lp-ink-2); }
+
+/* =========================================================================
+   Explainability — the receipt
+   ========================================================================= */
+
+.lp-receipt {
+  margin-top: clamp(36px, 4.6vw, 56px);
+  padding: clamp(22px, 3vw, 34px);
+  border: 1px solid var(--lp-hair);
+  border-radius: 20px;
+  background: var(--lp-card-bg);
+  box-shadow: var(--lp-card-shadow);
+}
+.lp-receipt__who {
+  margin: 8px 0 18px;
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 2.6vw, 1.9rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--lp-ink);
+}
+.lp-receipt__trust { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.lp-receipt__bar { flex: 1; min-width: 160px; height: 5px; border-radius: 999px; background: var(--lp-surface-2); overflow: hidden; }
+/* Three per cent trust is a reading, so it wears the ramp. */
+.lp-receipt__bar i { display: block; height: 100%; width: var(--w); border-radius: 999px; background: var(--critical); }
+.lp-receipt__trust b { font-size: 0.9rem; color: var(--critical-ink); }
+
+.lp-receipt__checks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 26px 0 0;
+  padding: 24px 0 0;
+  border-top: 1px solid var(--lp-hair);
+  list-style: none;
+}
+@media (max-width: 760px) { .lp-receipt__checks { grid-template-columns: minmax(0, 1fr); } }
+.lp-receipt__checks li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; }
+.lp-receipt__x {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--critical-dim);
+  color: var(--critical-ink);
+  margin-top: 1px;
+}
+.lp-receipt__checks b { display: block; font-size: 0.86rem; font-weight: 600; color: var(--lp-ink); }
+.lp-receipt__checks em { display: block; margin-top: 3px; font-style: normal; font-size: var(--t-xs); line-height: 1.55; color: var(--lp-ink-2); }
+.lp-receipt__src { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 0.5625rem; color: var(--lp-ink-3); }
+
+.lp-receipt__verdict {
+  margin: 26px 0 0;
+  padding-top: 22px;
+  border-top: 1px solid var(--lp-hair);
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  line-height: 1.6;
+  color: var(--lp-ink-2);
+}
+.lp-receipt__verdict em { font-style: normal; font-weight: 700; color: var(--lp-ink); }
+
+.lp-guar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 20px);
+  margin-top: clamp(24px, 3vw, 40px);
+}
+@media (max-width: 980px) { .lp-guar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .lp-guar { grid-template-columns: minmax(0, 1fr); } }
+.lp-guar__tick {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--calm) 16%, transparent);
+  color: var(--calm-ink);
+}
+
+/* =========================================================================
+   Research — the technology selector
+   ========================================================================= */
+
+.lp-tech {
+  display: grid;
+  grid-template-columns: minmax(0, 0.62fr) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 44px);
+  margin-top: clamp(36px, 4.6vw, 56px);
+  align-items: start;
+}
+@media (max-width: 860px) { .lp-tech { grid-template-columns: minmax(0, 1fr); } }
+
+.lp-tech__list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.lp-tech__btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-align: left;
+  color: var(--lp-ink-3);
+  cursor: pointer;
+  transition: color var(--t-fast), background var(--t-fast), border-color var(--t-fast);
+}
+.lp-tech__btn:hover { color: var(--lp-ink-2); }
+.lp-tech__btn[aria-pressed="true"] {
+  color: var(--lp-ink);
+  background: var(--lp-surface-2);
+  border-color: var(--lp-hair);
+}
+.lp-tech__btn:focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 2px; }
+.lp-tech__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lp-hair-2);
+  flex: none;
+  transition: background var(--t-fast), box-shadow var(--t-fast);
+}
+.lp-tech__btn[aria-pressed="true"] .lp-tech__dot {
+  background: var(--lp-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--lp-accent) 70%, transparent);
+}
+
+.lp-tech__panel { min-height: 300px; }
+.lp-tech__lbl { margin-top: 20px; }
+.lp-tech__body { margin: 8px 0 0; font-size: var(--t-sm); line-height: 1.7; color: var(--lp-ink-2); }
+/* The honest half is set apart, not buried: it is the reason the section
+   exists. */
+.lp-tech__limit {
+  padding-left: 14px;
+  border-left: 2px solid color-mix(in srgb, var(--lp-indigo) 50%, transparent);
+  color: var(--lp-ink-2);
+}
+
+/* =========================================================================
+   The system track
+   ========================================================================= */
+
+.lp-sys { position: relative; margin-top: clamp(40px, 5vw, 68px); }
+.lp-sys__row {
+  --sys-gap: clamp(8px, 1.2vw, 16px);
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: var(--sys-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* The lit copy sits exactly on top of the unlit one. Same markup, same box —
+   only the colours differ — so the reveal is a clip on identical geometry
+   and there is nothing to keep in sync. */
+.lp-sys__row--lit { position: absolute; inset: 0; pointer-events: none; }
+
+.lp-sys__station {
+  position: relative;
+  padding-top: 26px;
+  color: var(--lp-ink-3);
+}
+/* The track itself: one hairline through every station's dot. */
+/* Each station draws its own segment, extended across the grid gap so the
+   eight segments read as one unbroken track rather than as eight dashes. */
+.lp-sys__station::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: calc(var(--sys-gap) * -1);
+  top: 5px;
+  height: 1px;
+  background: var(--lp-hair-2);
+}
+.lp-sys__station:first-child::before { left: 5px; }
+.lp-sys__station:last-child::before { right: calc(100% - 6px); }
+.lp-sys__dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid var(--lp-hair-2);
+  background: var(--lp-void);
+}
+.lp-sys__n { display: block; font-size: 0.5625rem; letter-spacing: 0.1em; color: var(--lp-ink-3); }
+.lp-sys__station b { display: block; margin-top: 4px; font-family: var(--font-display); font-size: 0.98rem; font-weight: 700; letter-spacing: -0.02em; color: var(--lp-ink-2); }
+.lp-sys__station em { display: block; margin-top: 6px; font-style: normal; font-size: var(--t-xs); line-height: 1.55; color: var(--lp-ink-3); }
+
+.lp-sys__row--lit .lp-sys__station::before { background: var(--lp-accent); }
+.lp-sys__row--lit .lp-sys__dot { border-color: var(--lp-accent); background: var(--lp-accent); box-shadow: 0 0 14px color-mix(in srgb, var(--lp-accent) 60%, transparent); }
+.lp-sys__row--lit .lp-sys__n { color: var(--lp-accent); }
+.lp-sys__row--lit .lp-sys__station b { color: var(--lp-ink); }
+.lp-sys__row--lit .lp-sys__station em { color: var(--lp-ink-2); }
+
+@media (max-width: 860px) {
+  /* Vertical track. Eight stations across 375px is four words each. */
+  .lp-sys__row { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .lp-sys__station { padding: 0 0 0 26px; }
+  .lp-sys__station::before { left: 5px; right: auto; top: 0; bottom: -20px; width: 1px; height: auto; }
+  .lp-sys__station:first-child::before { top: 5px; left: 5px; }
+  .lp-sys__station:last-child::before { display: none; }
+}
+
+/* =========================================================================
+   The close and the footer
+   ========================================================================= */
+
+.lp-close {
+  position: relative;
+  padding-top: clamp(100px, 14vw, 190px);
+  padding-bottom: clamp(80px, 11vw, 150px);
+  text-align: center;
+}
+/* The page gets quieter here: a wash that dims the living background so the
+   last sentence is the only thing with any energy in it. */
+.lp-close__veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    90% 70% at 50% 50%,
+    color-mix(in srgb, var(--lp-void) 88%, transparent),
+    transparent 72%
+  );
+}
+.lp-close__inner { position: relative; }
+.lp-close__sub {
+  margin: clamp(20px, 2.4vw, 30px) auto 0;
+  max-width: 46ch;
+  font-size: var(--lp-lead);
+  line-height: 1.65;
+  color: var(--lp-ink-2);
+}
+.lp-close__act { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: clamp(26px, 3vw, 38px); }
+
+.lp-close__stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(20px, 4vw, 56px);
+  margin: clamp(44px, 6vw, 76px) 0 0;
+  padding-top: clamp(24px, 3vw, 36px);
+  border-top: 1px solid var(--lp-hair);
+}
+.lp-close__stats div { max-width: 22ch; }
+.lp-close__stats dt { font-size: 1.7rem; font-weight: 700; letter-spacing: -0.04em; color: var(--lp-ink); }
+.lp-close__stats dd { margin: 6px 0 0; font-size: var(--t-xs); line-height: 1.55; color: var(--lp-ink-3); }
+
+.lp-foot { position: relative; border-top: 1px solid var(--lp-hair); background: var(--lp-deep); }
+.lp-foot__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr);
+  gap: clamp(24px, 4vw, 64px);
+  padding: clamp(40px, 5vw, 64px) var(--lp-gut);
+}
+@media (max-width: 820px) { .lp-foot__inner { grid-template-columns: minmax(0, 1fr); } }
+.lp-foot__brand p { margin: 16px 0 0; max-width: 34ch; font-size: var(--t-xs); line-height: 1.7; color: var(--lp-ink-3); }
+.lp-foot__nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+@media (max-width: 520px) { .lp-foot__nav { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.lp-foot__nav div { display: grid; gap: 9px; align-content: start; }
+.lp-foot__nav a { font-size: var(--t-sm); color: var(--lp-ink-2); transition: color var(--t-fast); }
+.lp-foot__nav a:hover { color: var(--lp-ink); }
+.lp-foot__nav .lp-label { margin-bottom: 3px; }
+
+.lp-foot__note {
+  padding: 20px var(--lp-gut) 32px;
+  border-top: 1px solid var(--lp-hair);
+}
+.lp-foot__note p { margin: 0; max-width: 78ch; font-size: var(--t-xs); line-height: 1.7; color: var(--lp-ink-3); }
+.lp-foot__note strong { color: var(--lp-ink-2); }
+.lp-foot__note a { color: var(--lp-accent); text-decoration: underline; text-underline-offset: 0.18em; }

@@ -566,7 +566,11 @@
 @media (max-width: 720px) { .grid2--pairs { grid-template-columns: minmax(0, 1fr); } }
 /* .stack, .row, .btn2, .field and the text utilities live in primitives.css. */
 
-/* --- Home ----------------------------------------------------------------- */
+/* --- Shield's hero -----------------------------------------------------------
+   The landing no longer uses any of this: it is `.lp-hero` in landing.css,
+   with its own scale and its own ground. What remains here is the Shield
+   route's hero, which is still the console's typography on the console's
+   surface, and should stay that way. */
 .hero {
   position: relative;
   min-height: calc(100vh - var(--topbar-h));
@@ -578,8 +582,6 @@
 .threatfield { position: absolute; inset: 0; z-index: 0; }
 .threatfield canvas { display: block; width: 100%; height: 100%; }
 .hero__inner { position: relative; z-index: 1; max-width: 860px; text-align: center; }
-/* The hero's pill eyebrow is gone: the brand lockup says what the eyebrow was
-   saying, at the size that claim deserves. See `.brandlock` in modules.css. */
 .hero__title {
   font-family: var(--font-display);
   font-size: var(--t-3xl);
