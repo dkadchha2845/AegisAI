@@ -98,7 +98,7 @@ export function CitizenHome() {
 
       {awareness && (
         <>
-          <div className="card" style={{ marginTop: "var(--s-6)" }}>
+          <div className="card">
             <h2 className="card__title">Scams going around right now</h2>
             <p className="small muted" style={{ marginTop: 0 }}>
               The kinds of scams the most people are reporting this week.
@@ -138,7 +138,7 @@ export function CitizenHome() {
         </div>
       )}
 
-      <p className="small faint" style={{ marginTop: "var(--s-5)" }}>
+      <p className="small faint">
         AegisAI gives guidance — it's not a substitute for reporting fraud on{" "}
         <strong className="mono">1930</strong> or at{" "}
         <a href="https://cybercrime.gov.in" target="_blank" rel="noreferrer">

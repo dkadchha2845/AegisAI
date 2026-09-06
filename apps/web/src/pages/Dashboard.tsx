@@ -116,7 +116,7 @@ export function Dashboard() {
       </section>
 
       {/* --- What the machine is running ---------------------------------- */}
-      <section className="card" style={{ marginTop: "var(--s-6)" }}>
+      <section className="card">
         <h2 className="card__title">System state</h2>
 
         {loading && <Skeleton lines={4} label="Checking the analysis service" />}

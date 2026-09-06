@@ -399,8 +399,15 @@
 .whatnext__eta { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
 
 /* --- Admin dashboard -------------------------------------------------------- */
+/* Four across only while four tiles can each hold their own number. Below
+   that the row folds to 2x2 and then to one column, rather than letting a
+   tile break "Rs 12.16 Cr" across two lines — the same rule `.statband`
+   states in app.css, for the same reason: a figure that wraps mid-number
+   reads as broken data. 1260px is where the fourth column stops fitting the
+   widest value at its display size, measured against the 248px rail. */
 .admin-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-4); }
-@media (max-width: 820px) { .admin-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1260px) { .admin-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .admin-kpis { grid-template-columns: minmax(0, 1fr); } }
 .admin-kpis > .card { margin-top: 0; }
 .admin-kpi { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
 .admin-kpi__icon { color: var(--accent); }

@@ -27,6 +27,7 @@
  * in `LayoutMode` (App.tsx), one level up, where it covers every route.
  */
 
+import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
@@ -155,26 +156,35 @@ export function AppShell() {
           </button>
         </div>
 
+        {/* The rail names destinations, it does not explain them. Each row used
+            to carry a two-line blurb under its label, which turned eight rows
+            into sixteen lines of competing text and left the label — the only
+            part anyone scans for — at 13px inside it. The blurb is not lost:
+            it rides along as the row's tooltip, the top bar prints it for
+            wherever you currently are, and the command palette shows it
+            against every destination. `--i` is the row's index across all
+            groups, which the stylesheet turns into the entrance stagger. */}
         <nav className="sidebar__nav">
-          {groups.map((group) => (
-            <div className="sidebar__group" key={group.id}>
-              <p className="label sidebar__grouplabel">{group.label}</p>
-              {group.items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) => `sidenav ${isActive ? "sidenav--active" : ""}`}
-                  data-tooltip={collapsed ? `${item.label} — ${item.blurb}` : undefined}
-                >
-                  <item.icon size={17} className="sidenav__icon" aria-hidden="true" />
-                  <span className="sidenav__text">
+          {(() => {
+            let row = 0;
+            return groups.map((group) => (
+              <div className="sidebar__group" key={group.id}>
+                <p className="label sidebar__grouplabel">{group.label}</p>
+                {group.items.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) => `sidenav ${isActive ? "sidenav--active" : ""}`}
+                    style={{ "--i": row++ } as CSSProperties}
+                    data-tooltip={collapsed ? `${item.label} — ${item.blurb}` : item.blurb}
+                  >
+                    <item.icon size={18} className="sidenav__icon" aria-hidden="true" />
                     <span className="sidenav__label">{item.label}</span>
-                    <span className="sidenav__blurb">{item.blurb}</span>
-                  </span>
-                </NavLink>
-              ))}
-            </div>
-          ))}
+                  </NavLink>
+                ))}
+              </div>
+            ));
+          })()}
         </nav>
 
         <div className="sidebar__foot">

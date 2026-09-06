@@ -19,30 +19,39 @@
  * It is still UX, not the boundary — don't show someone a door that 403s. The
  * route gate in `App.tsx` and the `require_permission` on the API behind it are
  * the two independent checks that matter.
+ *
+ * **One glyph per destination.** The icons come from `brand/icons.tsx` rather
+ * than the icon library. Three pairs here used to share a picture — Analyze and
+ * Investigate were both `ScanSearch`, Learn and Model card were both
+ * `BookOpen`, Profile and Administration were both `UserCircle` — which makes
+ * the icon column decoration and forces the reader back onto the labels.
  */
 
-import type { LucideIcon } from "lucide-react";
 import {
-  Activity,
-  BookOpen,
-  FlaskConical,
-  FolderArchive,
-  Gauge,
-  Home as HomeIcon,
-  Network,
-  ScanSearch,
-  ShieldCheck,
-  Siren,
-  SlidersHorizontal,
-  UserCircle,
-  Radio,
-} from "lucide-react";
+  IconAdmin,
+  IconAnalyze,
+  IconAnalyzer,
+  IconConsole,
+  IconDashboard,
+  IconEmergency,
+  IconGraph,
+  IconGuardian,
+  IconHome,
+  IconInvestigate,
+  IconLearn,
+  IconLive,
+  IconModel,
+  IconProfile,
+  IconReports,
+  IconResearch,
+} from "@/components/brand/icons";
+import type { AegisIcon } from "@/components/brand/icons";
 import type { PermissionCode } from "@/lib/api";
 
 export interface NavItem {
   to: string;
   label: string;
-  icon: LucideIcon;
+  icon: AegisIcon;
   /** One-line description shown in the sidebar and the command palette. */
   blurb: string;
   /** Longer copy for cards / palette detail. */
@@ -66,14 +75,14 @@ export const NAV: NavItem[] = [
   {
     to: "/home",
     label: "Home",
-    icon: HomeIcon,
+    icon: IconHome,
     blurb: "Start here",
     detail: "Choose what happened and we'll guide you from there.",
   },
   {
     to: "/analyze",
     label: "Analyze",
-    icon: ScanSearch,
+    icon: IconAnalyze,
     blurb: "Check a message, screenshot, or number",
     detail:
       "Paste a suspicious message, upload a screenshot, or verify a phone "
@@ -82,7 +91,7 @@ export const NAV: NavItem[] = [
   {
     to: "/live",
     label: "Live Protection",
-    icon: Activity,
+    icon: IconLive,
     blurb: "Guidance during a live call",
     detail:
       "Watching a call as it happens — it names the danger, warns you the "
@@ -91,28 +100,28 @@ export const NAV: NavItem[] = [
   {
     to: "/reports",
     label: "My Reports",
-    icon: FolderArchive,
+    icon: IconReports,
     blurb: "Your saved investigations",
     detail: "Every check you've saved, ready to reopen or file with the police.",
   },
   {
     to: "/learn",
     label: "Learn",
-    icon: BookOpen,
+    icon: IconLearn,
     blurb: "How these scams work",
     detail: "Plain-language guides to the scams going around and how to stay safe.",
   },
   {
     to: "/emergency",
     label: "Emergency",
-    icon: Siren,
+    icon: IconEmergency,
     blurb: "Get help right now",
     detail: "The helpline, the reporting portal, and a step-by-step for a scam in progress.",
   },
   {
     to: "/profile",
     label: "Profile",
-    icon: UserCircle,
+    icon: IconProfile,
     blurb: "Account and settings",
     detail: "Your account, password, appearance, privacy and data-retention settings.",
   },
@@ -125,7 +134,7 @@ export const NAV: NavItem[] = [
 export const DASHBOARD: NavItem = {
   to: "/dashboard",
   label: "Dashboard",
-  icon: Gauge,
+  icon: IconDashboard,
   blurb: "Your cases and what needs attention",
   detail: "What you have investigated, what is going around, and what needs you.",
 };
@@ -137,7 +146,7 @@ export const ANALYST_NAV: NavItem[] = [
   {
     to: "/investigate",
     label: "Investigate",
-    icon: ScanSearch,
+    icon: IconInvestigate,
     blurb: "Submit evidence to the agent graph",
     detail: "Submit evidence and watch each agent node complete against the real API.",
     needs: ["INVESTIGATION_CREATE", "GRAPH_READ"],
@@ -145,7 +154,7 @@ export const ANALYST_NAV: NavItem[] = [
   {
     to: "/analyst/console",
     label: "Live console",
-    icon: Radio,
+    icon: IconConsole,
     blurb: "Threat meter, twin, manipulation map",
     detail: "The full instrument view of a call in progress.",
     needs: ["LIVE_SESSION_USE", "GRAPH_READ"],
@@ -153,7 +162,7 @@ export const ANALYST_NAV: NavItem[] = [
   {
     to: "/intel",
     label: "Fraud intelligence",
-    icon: Network,
+    icon: IconGraph,
     blurb: "Knowledge graph and hotspots",
     detail: "The fraud graph, its clusters, and the geospatial analytics over them.",
     needs: ["GRAPH_READ"],
@@ -161,7 +170,7 @@ export const ANALYST_NAV: NavItem[] = [
   {
     to: "/guardian",
     label: "Guardian",
-    icon: ShieldCheck,
+    icon: IconGuardian,
     blurb: "Intervention and circuit breaker",
     detail: "The intervention console — hold a payment, alert a registered contact.",
     needs: ["LIVE_SESSION_USE", "GRAPH_READ"],
@@ -169,7 +178,7 @@ export const ANALYST_NAV: NavItem[] = [
   {
     to: "/analyzer",
     label: "Analyzer",
-    icon: SlidersHorizontal,
+    icon: IconAnalyzer,
     blurb: "Raw detector output",
     detail: "Line-by-line detector output with the driver weights behind each score.",
     needs: ["GRAPH_READ"],
@@ -177,7 +186,7 @@ export const ANALYST_NAV: NavItem[] = [
   {
     to: "/model",
     label: "Model card",
-    icon: BookOpen,
+    icon: IconModel,
     blurb: "Architecture, training data, limits",
     detail: "Read from the running service, so it describes the model actually loaded.",
     needs: ["GRAPH_READ"],
@@ -189,7 +198,7 @@ export const OVERSIGHT_NAV: NavItem[] = [
   {
     to: "/research/dashboard",
     label: "Research",
-    icon: FlaskConical,
+    icon: IconResearch,
     blurb: "Datasets, model evaluation, fraud trends",
     detail:
       "Aggregated statistics and measured model performance. No case-level data "
@@ -199,7 +208,7 @@ export const OVERSIGHT_NAV: NavItem[] = [
   {
     to: "/admin/dashboard",
     label: "Administration",
-    icon: UserCircle,
+    icon: IconAdmin,
     blurb: "Organisations, users, roles, audit log",
     detail: "Tenants, access control, and the audit trail across the platform.",
     needs: ["USER_MANAGE"],

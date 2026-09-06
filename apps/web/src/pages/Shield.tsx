@@ -444,7 +444,7 @@ export function Shield() {
 
       {/* awareness */}
       {awareness && (
-        <div className="card" style={{ marginTop: "var(--s-6)" }}>
+        <div className="card">
           <h2 className="card__title">
             <Sparkles size={16} /> What's circulating right now
           </h2>

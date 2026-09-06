@@ -19,7 +19,13 @@
  */
 
 import { useEffect, useState } from "react";
-import { BrainCircuit, Database, FlaskConical, Lock, TrendingUp } from "lucide-react";
+import {
+  IconCases,
+  IconModel,
+  IconPrivacy,
+  IconResearch,
+  IconTrend,
+} from "@/components/brand/icons";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ErrorState, Skeleton } from "@/components/ui/States";
 import { formatInr } from "@/lib/format";
@@ -65,7 +71,7 @@ export function ResearchDashboard() {
           { label: "Linked entities", value: data?.dataset.linked_entities },
         ].map((k) => (
           <div key={k.label} className="card admin-kpi">
-            <Database size={18} className="admin-kpi__icon" aria-hidden="true" />
+            <IconCases size={18} className="admin-kpi__icon" aria-hidden="true" />
             <strong className="admin-kpi__v">
               {data ? k.value : "—"}
             </strong>
@@ -78,7 +84,7 @@ export function ResearchDashboard() {
         {/* --- Model ------------------------------------------------------ */}
         <section className="card">
           <h2 className="card__title">
-            <BrainCircuit size={16} aria-hidden="true" /> Model
+            <IconModel size={16} aria-hidden="true" /> Model
           </h2>
           {!data ? (
             <Skeleton lines={4} />
@@ -105,7 +111,7 @@ export function ResearchDashboard() {
         {/* --- Evaluation ------------------------------------------------- */}
         <section className="card">
           <h2 className="card__title">
-            <FlaskConical size={16} aria-hidden="true" /> Evaluation
+            <IconResearch size={16} aria-hidden="true" /> Evaluation
           </h2>
           {!data ? (
             <Skeleton lines={3} />
@@ -167,7 +173,7 @@ export function ResearchDashboard() {
       {/* --- Trends ------------------------------------------------------- */}
       <section className="card">
         <h2 className="card__title">
-          <TrendingUp size={16} aria-hidden="true" /> Fraud trends
+          <IconTrend size={16} /> Fraud trends
         </h2>
         {!data ? (
           <Skeleton lines={4} />
@@ -211,7 +217,7 @@ export function ResearchDashboard() {
       {data && (
         <section className="card">
           <h2 className="card__title">
-            <Lock size={16} aria-hidden="true" /> What this surface will not show you
+            <IconPrivacy size={16} /> What this surface will not show you
           </h2>
           <p className="small muted" style={{ marginTop: 0 }}>{data.privacy.note}</p>
           <ul className="factlist">

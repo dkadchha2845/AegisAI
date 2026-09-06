@@ -16,15 +16,15 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import {
-  Activity,
-  ArrowRight,
-  FolderArchive,
-  ScanSearch,
-  ShieldCheck,
-  Siren,
-  TrendingUp,
-} from "lucide-react";
+  IconEmergency,
+  IconInvestigate,
+  IconLearn,
+  IconLive,
+  IconReports,
+  IconTrend,
+} from "@/components/brand/icons";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState, SkeletonRows } from "@/components/ui/States";
 import { useAuth } from "@/context/AuthContext";
@@ -34,28 +34,28 @@ import type { CaseSummary, InvestigationSummary } from "@/lib/api";
 const ACTIONS = [
   {
     to: "/analyze",
-    icon: ScanSearch,
+    icon: IconInvestigate,
     title: "Check something",
     body: "Paste a message, upload a screenshot, or verify a number or UPI ID.",
     tone: "primary",
   },
   {
     to: "/live",
-    icon: Activity,
+    icon: IconLive,
     title: "Live Protection",
     body: "On a suspicious call right now? Let AegisAI listen and guide you.",
     tone: "urgent",
   },
   {
     to: "/reports",
-    icon: FolderArchive,
+    icon: IconReports,
     title: "My reports",
     body: "Reopen a saved investigation or file it with the police.",
     tone: "calm",
   },
   {
     to: "/emergency",
-    icon: Siren,
+    icon: IconEmergency,
     title: "Emergency",
     body: "Money already sent, or need help this minute? Start here.",
     tone: "bad",
@@ -118,7 +118,7 @@ export function CitizenDashboard() {
       {/* --- My investigations ------------------------------------------- */}
       <section className="card">
         <h2 className="card__title">
-          <ScanSearch size={16} aria-hidden="true" /> My investigations
+          <IconInvestigate size={16} /> My investigations
         </h2>
         {!cases && <SkeletonRows rows={3} cols={4} />}
         {cases && cases.length === 0 && (
@@ -178,7 +178,7 @@ export function CitizenDashboard() {
       {/* --- Saved reports ------------------------------------------------ */}
       <section className="card">
         <h2 className="card__title">
-          <FolderArchive size={16} aria-hidden="true" /> Saved reports
+          <IconReports size={16} /> Saved reports
         </h2>
         {!reports && <SkeletonRows rows={2} cols={3} />}
         {reports && reports.length === 0 && (
@@ -208,7 +208,7 @@ export function CitizenDashboard() {
       {/* --- What's going around ------------------------------------------ */}
       <section className="card">
         <h2 className="card__title">
-          <TrendingUp size={16} aria-hidden="true" /> Going around right now
+          <IconTrend size={16} /> Going around right now
         </h2>
         <p className="small muted" style={{ marginTop: 0 }}>
           Aggregate patterns from the fraud-intelligence graph. No one's personal
@@ -229,7 +229,7 @@ export function CitizenDashboard() {
           </ul>
         )}
         <Link className="btn2" to="/learn" style={{ marginTop: "var(--s-3)" }}>
-          <ShieldCheck size={14} aria-hidden="true" /> How these scams work
+          <IconLearn size={14} /> How these scams work
         </Link>
       </section>
     </div>

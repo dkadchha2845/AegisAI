@@ -569,17 +569,44 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
    One page container, three widths, one header block. Before this, `.page`
    was 1180px, `.section` was 1180px, the analyzer was a 2-col grid at full
    bleed and the model card ran edge to edge — so the same H1 started at four
-   different x positions depending on which link you clicked. */
+   different x positions depending on which link you clicked.
+
+   **The container owns the vertical rhythm too.** It is a flex column with a
+   single gap, so the distance between any two sections on any screen is one
+   number defined here. It used to be whatever each page happened to write:
+   the operations dashboard put `marginTop: var(--s-6)` inline on one section,
+   the administration console wrapped its sections in a `.stack` with a
+   different gap, and the citizen and research dashboards set nothing at all —
+   so their cards sat flush against each other with a 1px border between them
+   and read as one box. Sections now need no spacing markup of their own, and a
+   page that adds a section gets the rhythm for free.
+
+   The horizontal inset is 32px rather than 24px: the page sits against a
+   248px rail with its own border, and 24px did not give the H1 enough room to
+   stop feeling attached to it. */
 .page {
   width: 100%;
   max-width: var(--w-app);
   margin: 0 auto;
-  padding: var(--s-6) var(--s-5) var(--s-8);
+  padding: var(--s-6) var(--s-6) var(--s-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
 }
+/* The container owns the rhythm, so a direct child does not get to add to it.
+   Without this a section that happens to be a `<p>` or a `<section>` carries
+   its own block margins into the gap and lands 12px further down than the card
+   above it — which is how the citizen home page ended up with four different
+   distances between five sections. Sibling-card stacking is exempted where it
+   is defined, in app.css, because that selector outranks this one. */
+.page > * { margin-block: 0; }
 .page--doc { max-width: var(--w-doc); }
 .page--wide { max-width: var(--w-wide); }
 @media (max-width: 620px) {
-  .page { padding: var(--s-5) var(--s-4) var(--s-7); }
+  .page {
+    padding: var(--s-5) var(--s-4) var(--s-7);
+    gap: var(--s-5);
+  }
 }
 
 .page__head {
@@ -588,7 +615,8 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   justify-content: space-between;
   gap: var(--s-4);
   flex-wrap: wrap;
-  margin-bottom: var(--s-6);
+  /* The container's gap does the spacing now; a margin here would add to it. */
+  margin-bottom: 0;
 }
 .page__headmain { min-width: 0; }
 .page__title {

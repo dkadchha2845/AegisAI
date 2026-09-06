@@ -59,7 +59,7 @@ export function Emergency() {
         ))}
       </div>
 
-      <div className="card" style={{ marginTop: "var(--s-5)" }}>
+      <div className="card">
         <h2 className="card__title">
           <AlertTriangle size={16} /> If a scam is in progress
         </h2>

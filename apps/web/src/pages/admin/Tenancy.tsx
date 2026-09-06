@@ -15,6 +15,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Ban, RefreshCw, ShieldCheck, UserPlus } from "lucide-react";
+import { IconRoster } from "@/components/brand/icons";
 import { EmptyState, SkeletonRows } from "@/components/ui/States";
 import * as api from "@/lib/api";
 import type { AuditEvent, AuthUser, RoleInfo } from "@/lib/api";
@@ -270,7 +271,7 @@ export function Users() {
   return (
     <div className="card">
       <h2 className="card__title">
-        <UserPlus size={16} aria-hidden="true" /> Users
+        <IconRoster size={16} /> Users
       </h2>
       <p className="small muted" style={{ marginTop: 0 }}>
         Changing a role or disabling an account signs that person out everywhere —

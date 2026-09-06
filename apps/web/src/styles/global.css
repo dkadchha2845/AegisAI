@@ -166,6 +166,11 @@ html.js .fx-revealed { opacity: 1 !important; transform: none !important; }
   html:not([data-motion="full"]) *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
+    /* The delay matters as much as the duration. A staggered entrance holds
+       its from-state through the delay, so collapsing only the duration still
+       leaves the last item invisible for as long as the stagger runs — a third
+       of a second of blank rail for the one reader who asked for none of it. */
+    animation-delay: 0ms !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
@@ -177,6 +182,7 @@ html[data-motion="reduced"] *::before,
 html[data-motion="reduced"] *::after {
   animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
+  animation-delay: 0ms !important;
   transition-duration: 0.001ms !important;
   scroll-behavior: auto !important;
 }

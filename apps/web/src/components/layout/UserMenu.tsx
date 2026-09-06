@@ -35,32 +35,37 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
+import { ChevronDown, LogOut } from "lucide-react";
 import {
-  ChevronDown,
-  FolderArchive,
-  LayoutDashboard,
-  LogOut,
-  Settings,
-  ShieldCheck,
-  UserRound,
-} from "lucide-react";
+  IconAdmin,
+  IconDashboard,
+  IconProfile,
+  IconReports,
+} from "@/components/brand/icons";
+import type { AegisIcon } from "@/components/brand/icons";
 import { useAuth } from "@/context/AuthContext";
 import type { PermissionCode } from "@/lib/api";
 
 interface MenuItem {
   to: string;
   label: string;
-  icon: typeof UserRound;
+  icon: AegisIcon;
   /** Every code must be held for the row to appear. */
   needs?: PermissionCode[];
 }
 
+/**
+ * There is no separate "Settings" row. `/profile` *is* the settings page —
+ * account, password, appearance, privacy and retention all live on it — so the
+ * menu used to offer two rows that landed on the same screen, one of them via
+ * a `#settings` fragment that only scrolled it. Two doors into one room reads
+ * as two rooms, and the reader has to open one to find out.
+ */
 const ITEMS: MenuItem[] = [
-  { to: "__home__", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/reports", label: "My investigations", icon: FolderArchive, needs: ["REPORT_READ_OWN"] },
-  { to: "/profile", label: "Profile", icon: UserRound },
-  { to: "/profile#settings", label: "Settings", icon: Settings },
-  { to: "/admin/dashboard", label: "Administration", icon: ShieldCheck, needs: ["USER_MANAGE"] },
+  { to: "__home__", label: "Dashboard", icon: IconDashboard },
+  { to: "/reports", label: "My investigations", icon: IconReports, needs: ["REPORT_READ_OWN"] },
+  { to: "/profile", label: "Profile and settings", icon: IconProfile },
+  { to: "/admin/dashboard", label: "Administration", icon: IconAdmin, needs: ["USER_MANAGE"] },
 ];
 
 export function UserMenu({ tone = "app" }: { tone?: "app" | "landing" }) {
@@ -248,7 +253,7 @@ export function UserMenu({ tone = "app" }: { tone?: "app" | "landing" }) {
                     className="usermenu__item"
                     onClick={() => close()}
                   >
-                    <it.icon size={15} aria-hidden="true" />
+                    <it.icon size={15} />
                     {it.label}
                   </Link>
                 ))}

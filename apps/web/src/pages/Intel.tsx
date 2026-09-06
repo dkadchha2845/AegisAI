@@ -102,7 +102,7 @@ export function Intel() {
 
       {/* live statistics */}
       {stats && (
-        <div className="statband" style={{ marginBottom: "var(--s-6)" }}>
+        <div className="statband">
           {/* No tones. The ramp is the threat scale, and spending `bad` on
               cumulative reported loss — money already gone, not a live
               danger — is exactly the dilution that makes an actual CRITICAL
@@ -293,7 +293,7 @@ function EntitySearch({ onCluster }: { onCluster: (id: string) => void }) {
   }, [q]);
 
   return (
-    <div className="card" style={{ marginBottom: "var(--s-5)" }}>
+    <div className="card">
       <h2 className="card__title"><Search size={16} /> Entity search</h2>
       <div className="row" style={{ gap: "var(--s-2)" }}>
         <label className="vh" htmlFor="intel-q">

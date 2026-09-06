@@ -157,7 +157,7 @@ export function Knowledge() {
       )}
 
       {result && (
-        <section style={{ marginTop: "var(--s-5)" }}>
+        <section>
           {/* The synthesized answer, when an LLM is available. */}
           {result.answer && (
             <div className="assistant" data-grounded={result.grounded || undefined}>
@@ -214,7 +214,7 @@ export function Knowledge() {
       )}
 
       {!result && docs.length > 0 && (
-        <section style={{ marginTop: "var(--s-6)" }} aria-label="Guides">
+        <section aria-label="Guides">
           {docs.map((doc) => (
             <div key={doc.name} className="guide">
               <h2 className="guide__title">
@@ -242,7 +242,7 @@ export function Knowledge() {
       )}
 
       {!result && !docs.length && !error && (
-        <div style={{ marginTop: "var(--s-6)" }}>
+        <div>
           <Skeleton lines={5} label="Loading guides" />
         </div>
       )}
