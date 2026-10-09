@@ -9,6 +9,41 @@ and [`docs/TASKS.md`](docs/TASKS.md) before starting work.
 
 ---
 
+## Standing rules and control protocol (master brief, 2026-10-09)
+
+The owner's [master brief](./AEGIS_AGENT_BRIEF.md) governs how work proceeds.
+In a new session, read it, then `docs/AUDIT.md`, `docs/TASKS.md` and
+`docs/PROGRESS.md`, run `git log --oneline -15` and `git status`, report the
+last approved task and anything in 🔄 or 🧪, and **wait for a command**.
+
+1. **Slow and correct over fast.** Read before writing, run before claiming.
+2. **One task at a time.** Finish, report, stop. Start the next only on `next`
+   or `start T-XX`. A task that reaches 🧪 with green gates is committed to
+   `main` as `T-XX: <title>` so it can be reviewed in the running checkout;
+   `approve T-XX` marks it ✅.
+3. **No fake completeness.** No TODO, placeholder or silent mock in a finished
+   task. A mock that must exist is labelled `# MOCK:` and named in the report.
+4. **No silent decisions.** A change to architecture, data model, stack or
+   scope is asked first, with options and a recommendation.
+5. **Never destroy work.** No deleting files, rewriting working modules,
+   dropping tables or force-pushing without asking.
+6. **Never commit secrets.** Keys live in `.env`; keep `.env.example` current.
+7. **Honest reports.** A failed test or a half-working feature is said plainly.
+8. **Docs are the source of truth** and are updated in the same task.
+
+Commands: `status` · `next` · `start T-XX` · `approve T-XX` · `redo T-XX: …` ·
+`explain T-XX` · `split T-XX` · `add task: …` · `pause`.
+
+Task IDs are `T-XX` in `docs/TASKS.md`. Older code and comments cite the
+previous numbering ("task 2.8"); the Legacy column there maps one to the other,
+and the full record of completed work is `docs/TASKS_HISTORY.md`. The PRD and
+the design-system document do not exist yet — they are T-01 and T-03.
+
+**Do not cite the stage classifier's macro-F1 of 0.767.** It is a train/test
+leak (audit item B-01): on scam types the model has not seen it scores 0.300
+against the lexical baseline's 0.431. Wherever this file or another still says
+otherwise, the audit is right and the correction is task T-04.
+
 ## Working agreement (set by the project owner, 2026-08-24)
 
 1. Produce a **complete task-list file** (`docs/TASKS.md`) after each iteration.
@@ -172,6 +207,7 @@ panel. Then run the four gates.
 
 ## Git
 
-Branch before working; `main` stays green. One logical change per commit,
-with the gate output in the message. Move files with `git mv` — history matters
+Commit to `main`; do not create separate branches (owner's instruction,
+2026-10-09). `main` stays green — the gates run before every commit. One
+logical change per commit, with the gate output in the message. Move files with `git mv` — history matters
 for the capstone defence.
