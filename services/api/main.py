@@ -153,8 +153,9 @@ def warm() -> None:
 
 
 def _comparison() -> Dict[str, Any]:
-    """Measured macro-F1 of both backends on the held-out archetypes, if
-    ml/evaluation/eval_backends.py has been run. This is what gates promotion."""
+    """Macro-F1 of both backends as the promotion gate recorded it, if
+    ml/evaluation/eval_backends.py has been run. This is what gates promotion —
+    and it is contaminated; see `classifier.EVALUATION_PROTOCOL`."""
     path = classifier_mod.COMPARISON_PATH
     if not path.exists():
         return {}
@@ -364,17 +365,17 @@ def model_card() -> Dict[str, Any]:
                    "utterance-level split leaks test into train and inflates macro-F1",
         },
         "evaluation": {
-            "protocol": "macro-F1 on four whole held-out call archetypes, both "
-                        "backends scored through the same serving interface "
-                        "(ml/evaluation/eval_backends.py)",
+            "protocol": classifier_mod.EVALUATION_PROTOCOL,
             "scores": _comparison(),
             "selection": classifier_mod.selection_reason,
         },
         "limitations": [
-            "The fine-tuned checkpoint currently scores macro-F1 0.22 on unseen "
-            "archetypes against the lexical baseline's 0.37, so it is trained but "
-            "not promoted. It reached 0.98 on validation, which is memorisation of "
-            "the training archetypes, not generalisation.",
+            "On scam archetypes it was not trained on, the fine-tuned checkpoint "
+            "scores macro-F1 0.30 against the lexical baseline's 0.43 (0.22 against "
+            "0.37 on its original test split). Where the checkpoint is present it "
+            "is still served, fused with the lexical model, on the strength of the "
+            "contaminated comparison above. It reached 0.98 on validation, which "
+            "is memorisation of the training archetypes, not generalisation.",
             "320 synthetic calls is too few for an 8-way classifier. This is a "
             "corpus-size problem; more and more varied calls is the fix, not more "
             "epochs.",

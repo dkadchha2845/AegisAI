@@ -22,7 +22,10 @@ experiments:
 Most work classifies an artefact in isolation. AegisAI models fraud as a
 *staged psychological process* (7 stages + benign) and detects the arc across
 calls, chats and message threads. The inherited engine already does this for
-calls at macro-F1 0.767 on a held-out-archetype split; Task 5.2 generalises it.
+calls, but not yet well: on scam archetypes it has not seen, the fine-tuned
+classifier scores macro-F1 0.300 against a lexical baseline's 0.431. (The 0.767
+quoted here before 2026-10-09 was a train/test leak — `docs/AUDIT.md`, B-01.)
+The claim stands or falls on T-45 and T-46.
 *Evidence:* Experiment 7 and the conversation-dynamics evaluation.
 
 **C2 — Structured evidence fusion with measured inter-agent disagreement.**

@@ -2,9 +2,10 @@
 Measured metrics stay tied to the model they describe.
 
 This project has been bitten twice by a metrics file drifting from its model:
-a stale `backend_comparison.json` pinned serving to the lexical fallback for
-weeks, and `stage-classifier/metrics.json` still claims macro-F1 0.269 for a
-checkpoint that measures 0.767.
+a `backend_comparison.json` that disagreed with the checkpoint beside it, and
+`stage-classifier/metrics.json`, which records macro-F1 0.269 for a different
+training run from the weights on disk. (The 0.767 these notes once called the
+checkpoint's real score was itself a train/test leak — docs/AUDIT.md, B-01.)
 
 The full integrity check hashes ~950 MB and belongs in `make verify-checkpoint`,
 not in a suite that has to stay fast. What is cheap — and what would have caught

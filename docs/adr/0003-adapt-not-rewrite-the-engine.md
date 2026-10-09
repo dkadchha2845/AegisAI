@@ -7,7 +7,10 @@ AegisAI's architecture is agent-based. The inherited KAVACH engine is a linear
 pipeline of ~50 modules covering stage classification, coercion indexing, threat
 fusion, the Digital Twin forecast, identity passport checks, spoofing intel and
 script similarity. It carries 84 passing tests and a fine-tuned MuRIL checkpoint
-at macro-F1 0.767 on a zero-leak held-out-archetype split.
+then believed to score macro-F1 0.767 on a zero-leak held-out-archetype split.
+(Corrected 2026-10-09: that figure was a train/test leak. On unseen archetypes
+the checkpoint scores 0.300 against a lexical baseline's 0.431 — see
+`docs/AUDIT.md`, B-01.)
 
 The tempting move is to rewrite it "properly" as agents.
 

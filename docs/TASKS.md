@@ -65,7 +65,7 @@ reused.
 | T-01 | Write the PRD | P1 | ⬜ | S×2 | — |
 | T-02 | Bring the architecture document to the brief's shape | P2 | ⬜ | S | — |
 | T-03 | Write the design-system document from the shipped tokens | P2 | ⬜ | S | 7.1 |
-| T-04 | Correct the stage-classifier claim everywhere it is stated | M0 | ⬜ | S | — |
+| T-04 | Correct the stage-classifier claim everywhere it is stated | M0 | 🧪 | S | — |
 | T-05 | Make the promotion gate refuse a contaminated comparison | M0 | ⬜ | S | — |
 | T-06 | Commit the leak-free classifier baseline as the first research result | M0 | ⬜ | S | — |
 | T-07 | Re-verify the infrastructure path with the stack up | M0 | ⬜ | S | — |
@@ -263,22 +263,22 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-04 — Correct the stage-classifier claim everywhere it is stated
 - Milestone: M0
-- Status: ⬜ Todo
+- Status: 🧪 Awaiting my review (2026-10-09)
 - Depends on: — (Q3 decided 2026-10-09: correct it)
 - Fixes / implements: B-01, U-01
 - Goal: Stop the repository and the product from stating a leaked score as a held-out result. Replace 0.767 with the three measured figures and one sentence saying what happened.
-- Scope: `README.md`, `CLAUDE.md` (the "stale benchmark" warning, which has the story backwards), `docs/RESEARCH.md`, `docs/INVENTORY.md`, `docs/DATASETS.md`, `docs/DEPLOYMENT.md`, `docs/adr/0003-adapt-not-rewrite-the-engine.md`, the comments in `ml/evaluation/manifest.py`, `ml/evaluation/eval_backends.py` and `schema/check_contract.py`, and the heading copy on `apps/web/src/pages/ModelCard.tsx`. The numbers on that page come from the API and change in T-05, not here.
+- Scope: `README.md`, `CLAUDE.md` (the "stale benchmark" warning, which has the story backwards), `docs/RESEARCH.md`, `docs/INVENTORY.md`, `docs/DATASETS.md`, `docs/DEPLOYMENT.md`, `docs/adr/0003-adapt-not-rewrite-the-engine.md`, the comments in `ml/evaluation/manifest.py`, `ml/evaluation/eval_backends.py` and `schema/check_contract.py`, and the heading copy on `apps/web/src/pages/ModelCard.tsx`. The numbers on that page come from the API and change in T-05, not here. **Widened during the task:** the sentence the API serves beside those numbers said "four whole held-out call archetypes" in two places (`services/api/main.py`, `services/api/routes/research.py`); it is now one constant in `services/api/engine/classifier.py` that says what the comparison is. The two HTML dossiers had their stat tile replaced rather than a note added, because a tile has no room for a qualifier.
 - Out of scope: the gate's logic (T-05); retraining (T-45); `docs/TASKS_HISTORY.md`, which is a record of what was believed at the time and gets one dated correction note at the top instead; the two generated HTML dossiers, which get the same note.
 - Acceptance criteria:
-  - [ ] `grep -rn "0\.767"` over tracked Markdown and source finds the figure only where it is labelled as contaminated
-  - [ ] No document calls the split "zero-leak" or "held-out" without the 112-turn qualifier
-  - [ ] The Model card no longer presents the figure under "Measured, not assumed" without the qualifier
-  - [ ] Four gates green
+  - [x] `grep -rn "0\.767"` over tracked Markdown and source finds the figure only where it is labelled as contaminated — with one exception, `services/api/tests/test_serving_backend.py:153`, a fixture copying the reason string the gate emits; it changes with the gate in T-05
+  - [x] No document calls the split "zero-leak" or "held-out" without the 112-turn qualifier
+  - [x] The Model card no longer presents the figure under "Measured, not assumed" without the qualifier — but the page still draws 0.767 large and green as "currently serving", because that number and that choice come from the gate. Honest wording, misleading emphasis, until T-05
+  - [x] Four gates green
 - How Dhrumil verifies it:
   1. Run `grep -rn "0\.767" README.md docs CLAUDE.md`
   2. Run `make api` and `make web`, sign in as Analyst, open `/model`
   3. Expect: every hit is qualified, and the page says the comparison includes data the model was trained on
-- Tests to add: a contributor-docs test asserting no doc states 0.767 without the word "contaminated" or "leak" in the same paragraph
+- Tests to add: a contributor-docs test asserting no doc states 0.767 without the word "contaminated" or "leak" in the same paragraph — added, 21 cases, and written so that "zero-leak" cannot vouch for itself
 
 ### T-05 — Make the promotion gate refuse a contaminated comparison
 - Milestone: M0
@@ -722,14 +722,14 @@ The paper's contribution. Nothing here is claimed until it is measured.
 | ID | Goal | Acceptance, in brief |
 |---|---|---|
 | T-37 | A labelled evaluation set covering all four modalities, benign cases included, with a data card stating what is synthetic | Provenance for every item; synthetic items labelled as such; class balance reported |
-| T-38 | Reproducible splits with a test that fails on any overlap | No text, template or entity appears in both train and test — the test that would have caught B-01 |
+| T-38 | Reproducible splits with a test that fails on any overlap | No text, template, entity **or archetype** appears in both train and test — the test that would have caught B-01, and fixes B-07 |
 | T-39 | Four modality scores as contract fields | Each is a documented function of that modality's features; a missing modality is "absent", not zero |
 | T-40 | Logistic regression and gradient boosting on the fused features; a rules-only and an LLM-only baseline; a SAGE-style tabular baseline | All on identical splits; results committed as JSON. **Blocked on Q5** for the SAGE definition |
 | T-41 | Calibrate each modality score; fit the fusion weights on held-out data | ECE and a reliability diagram committed; the number the UI shows is the calibrated one |
 | T-42 | Calibrated fusion replaces T-20's provisional judge; disagreement between scoring paths is recorded | The `score:uncalibrated` tag disappears; the benign regression suite passes |
 | T-43 | A curated benign corpus and a CI gate on its false-positive rate | A model that raises the rate cannot be promoted |
 | T-44 | A registry recording version, data hash, metrics and calibration for every served model | A worse model is refused by a test; closes legacy 1.7b |
-| T-45 | More varied archetypes, then a retrain on the leak-free split | Promoted **only if** it beats the lexical baseline on unseen archetypes; otherwise the result is reported as it is |
+| T-45 | More varied archetypes, then a retrain on the leak-free split (after T-38 — B-07) | Promoted **only if** it beats the lexical baseline on unseen archetypes; otherwise the result is reported as it is |
 | T-46 | The stage machine generalised from calls to any conversation, as an explicit tested module | Evaluated separately on chat transcripts; forecast accuracy measured |
 
 ---

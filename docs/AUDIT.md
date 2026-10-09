@@ -196,7 +196,7 @@ Measured today, read-only:
 
 | Subset of the current 423-turn test split | n | Lexical macro-F1 | MuRIL macro-F1 |
 |---|---|---|---|
-| All turns (the published figure) | 423 | 0.375 | **0.767** |
+| All turns (the published figure — leaked) | 423 | 0.375 | **0.767** |
 | Archetypes whose turns are verbatim in the original train + val | 311 | 0.317 | **1.000** |
 | Archetypes the model never saw | 112 | **0.431** | 0.300 |
 
@@ -214,13 +214,23 @@ stated as "zero-leak" in `README.md`, `docs/RESEARCH.md`, `docs/INVENTORY.md`,
 `docs/DATASETS.md`, ADR-0003, `docs/DEPLOYMENT.md` and two HTML dossiers, and
 the product's own Model card page displays it under the heading "Measured, not
 assumed". `CLAUDE.md`'s advice to "check the promotion gate before retraining"
-rests on the same reading. Any report, slide or paper draft citing 0.767 needs
-correcting before a review.
+rests on the same reading. Any report, slide or paper draft citing the leaked
+0.767 needs correcting before a review.
 
 **Reproduce:** extract `ml/data/processed/{train,val}.jsonl` at `85a2aee`, count
 current test turns whose text appears in them, and score both backends on the
 two halves through `ml/evaluation/eval_backends.py`'s own `evaluate()`. T-06
 commits that script.
+
+**Also measured 2026-10-09, during T-04:** on the *original* 171-turn test split
+— the one these weights were actually held out from — MuRIL scores 0.221 and
+lexical 0.372. That 0.221 is exactly the figure in the `metrics.json` committed
+with the weights in `85a2aee`. So the earlier account, in which 0.221 was a
+"stale" file suppressing a good checkpoint, had it backwards: 0.221 was the
+honest number and 0.767 the leak.
+
+**Status:** documents, code comments and the wording the product serves were
+corrected in T-04. The gate itself still promotes the checkpoint; that is T-05.
 
 ### B-02 — High — The agentic investigation produces no verdict
 
@@ -260,6 +270,19 @@ user; the finding still appears on the report. Confidence not inspected.
 The `api` configuration uses a relative `.venv/bin/python`, which exists only
 in the main checkout.
 
+### B-07 — Medium — The current split is "leave-archetypes-out" in name only
+
+*Found 2026-10-09 during T-04; not fixed.* `ml/data/processed/report.md` and the
+Model card both describe the split as leave-archetypes-out. It holds out eight
+call *skeletons*, and no text, call or skeleton is shared between train, val and
+test — that part is true. But three archetypes sit on both sides through
+different skeletons: `kyc_expiry` is in train (65 turns) and in test (12), and
+`kyc_expiry`, `loan_app_harassment` and `genuine_police` are in both val and
+test. A model retrained on this split is therefore not being tested on unseen
+scam *types* for those three, and any figure from it must not be described that
+way. Owned by T-38, which builds the split with an overlap test; T-45 must not
+retrain before it.
+
 ---
 
 ## 6. Security issues
@@ -284,7 +307,7 @@ No screenshots were saved to the repository during this audit.
 
 | ID | Issue | Where |
 |---|---|---|
-| U-01 | The Model card shows **0.767** under "Measured, not assumed" (B-01) | `/model` |
+| U-01 | The Model card shows the leaked **0.767** under "Measured, not assumed" (B-01) | `/model` |
 | U-02 | Two icon buttons in the app header have no accessible name | `components/layout/AppShell.tsx` |
 | U-03 | Internal task numbers in user-facing copy: "The judgement tier has no agents yet (tasks 4.6 and 4.7)" | `/investigate` |
 | U-04 | Two entry points for one job. "Analyze" gives a score; "Investigate" gives an agent trace and no score. A user cannot know which to use | `/analyze`, `/investigate` |
@@ -311,6 +334,7 @@ overflow at 375 px, the app chrome renders in dark theme.
 | D-08 | No structured logging and no request or case ID carried through a run. Sixteen bare `print()` calls in served modules |
 | D-09 | No shared error envelope: 57 `HTTPException` call sites return a string `detail`, validation errors return a list |
 | D-10 | The brief's document set is incomplete: no PRD and no design-system document |
+| D-12 | *Found during T-04.* The Model card's hand-written limitations are stale: "320 synthetic calls" (the corpus report says 338), "PAYMENT_SETUP and PAYMENT_EXECUTION have 2 and 4 test examples" (the current split has 27 and 58), and the split is described as leave-archetypes-out (B-07). Owned by T-44, which should generate the card from the manifest |
 | D-11 | The plan is behind its own timeline. Phase 2 was scheduled for 28 Sep – 1 Nov; the last commit is 7 Sep and Phase 2 has not started. The plan totals about 1,060 hours |
 
 ---

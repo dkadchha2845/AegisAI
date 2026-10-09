@@ -3,8 +3,8 @@
 One entry per finished piece of work, newest last. A new session reads this
 after [`TASKS.md`](TASKS.md) to find where things stand.
 
-**Current state (2026-10-09):** Phase 0 and Phase 3 approved and committed to
-`main`. Execution has started with T-04.
+**Current state (2026-10-09):** Phase 0 and Phase 3 approved. **T-04 is 🧪
+awaiting review**, committed to `main`. Next in order: T-05.
 
 ---
 
@@ -45,6 +45,49 @@ after [`TASKS.md`](TASKS.md) to find where things stand.
   Q5, Q7).
 - How to verify: read `docs/TASKS.md`; answer the questions in
   `docs/AUDIT.md` §9.
+
+## T-04 — Correct the stage-classifier claim everywhere it is stated — 2026-10-09
+
+- What changed: the leaked macro-F1 of 0.767 is no longer stated as a result
+  anywhere. Nine documents now give the measured figures (0.300 MuRIL against
+  0.431 lexical on the 112 unseen turns) and say what happened. Four code
+  comments that told the story backwards — "a stale 0.221 suppressed a 0.767
+  checkpoint" — are corrected. The sentence the API serves beside the
+  comparison no longer says "held-out"; it is one constant,
+  `classifier.EVALUATION_PROTOCOL`, used by the model card and the research
+  overview. The Model card heading "Measured, not assumed" is now
+  "Promotion-gate comparison".
+- Files: `README.md`, `CLAUDE.md`, `docs/RESEARCH.md`, `docs/INVENTORY.md`,
+  `docs/DATASETS.md`, `docs/DEPLOYMENT.md`, `docs/TASKS_HISTORY.md` (one dated
+  correction at its head), `docs/adr/0003-adapt-not-rewrite-the-engine.md`,
+  `docs/ROADMAP.html`, `docs/build-dossier.html`, `docs/AUDIT.md`,
+  `ml/evaluation/manifest.py`, `ml/evaluation/eval_backends.py`,
+  `schema/check_contract.py`, `services/api/engine/classifier.py`,
+  `services/api/main.py`, `services/api/routes/research.py`,
+  `apps/web/src/pages/ModelCard.tsx`,
+  `services/api/tests/test_checkpoint_manifest.py`,
+  `services/api/tests/test_contributor_docs.py`
+- Tests: 21 new cases in `test_contributor_docs.py`. Backend suite 598 passed,
+  26 skipped, 0 failed — run twice, on the lexical fallback and with
+  `AEGIS_REQUIRE_SERVING_BEST=1` against the real checkpoint. Contract
+  consistent; ruff and mypy clean; frontend typecheck and build clean.
+  Running app: `/api/model/card` and `/api/research/overview` serve the new
+  sentence; `/model` renders it under the new heading.
+- New measurement: on the original 171-turn test split, the one these weights
+  were held out from, MuRIL scores 0.221 and lexical 0.372. 0.221 is the figure
+  committed with the weights. It was never stale.
+- Known limitations: **the gate still promotes the checkpoint.** `/api/health`
+  still gives the leaked comparison as its reason ("measured better (0.767 vs
+  0.375)"), and the Model card still draws that leaked 0.767 large and green as
+  "currently serving" — both come from the gate, which is T-05. One test fixture still contains the string. No mocks.
+- Found and not fixed: **B-07** (three archetypes sit on both sides of the
+  current split) and **D-12** (stale hand-written Model card limitations), both
+  recorded in `docs/AUDIT.md`.
+- How to verify:
+  1. Run `grep -rn "0\.767" README.md docs CLAUDE.md`
+  2. Run `make api` and `make web`, sign in as Analyst, open `/model`
+  3. Expect: every hit is qualified, and the page says the comparison includes
+     data the model was trained on
 
 ## Decisions — 2026-10-09
 

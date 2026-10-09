@@ -330,3 +330,69 @@ def test_both_authors_are_named_wherever_authorship_is_declared(path: str) -> No
     body = read(path)
     missing = [name for name in AUTHORS if name not in body]
     assert not missing, f"{path} does not name: {missing}"
+
+
+# --------------------------------------------------------------------------
+# The leaked classifier score (audit B-01, task T-04)
+# --------------------------------------------------------------------------
+
+#: The stage classifier's macro-F1 as the promotion gate recorded it. It is a
+#: train/test leak — the served weights predate the split they were scored on —
+#: and it was written into nine documents as a "zero-leak" result before anyone
+#: checked. The figure may appear in a document only next to the words that say
+#: what it is.
+LEAKED_FIGURE = "0.767"
+
+#: "zero-leak" contains "leak", so a naive search would let the original false
+#: sentence — "0.767 on a zero-leak split" — vouch for itself.
+_SAYS_IT_IS_A_LEAK = re.compile(r"(?<!zero[- ])leak|contaminat", re.I)
+
+#: `docs/TASKS_HISTORY.md` is the unmodified record of what was believed at the
+#: time, so it is exempt from the line-by-line rule and carries one dated
+#: correction at its head instead, which has its own test below.
+HISTORICAL_RECORD = "docs/TASKS_HISTORY.md"
+
+
+def _documents_that_make_claims() -> list[str]:
+    paths = [ROOT / "README.md", ROOT / "CLAUDE.md", ROOT / "AGENTS.md"]
+    paths += sorted((ROOT / "docs").glob("*.md"))
+    paths += sorted((ROOT / "docs" / "adr").glob("*.md"))
+    return [
+        str(p.relative_to(ROOT))
+        for p in paths
+        if p.exists() and str(p.relative_to(ROOT)) != HISTORICAL_RECORD
+    ]
+
+
+@pytest.mark.parametrize("doc", _documents_that_make_claims())
+def test_the_leaked_classifier_score_is_never_stated_as_a_result(doc: str) -> None:
+    """Invariant 7, applied to the one number that broke it.
+
+    Wherever the figure appears, a reader must meet the word "leak" or
+    "contaminated" within a few lines of it. Six lines either side is a
+    paragraph in these documents; a correction three sections away is not a
+    correction to the sentence someone is quoting.
+    """
+    lines = read(doc).splitlines()
+    unqualified = [
+        f"{doc}:{i + 1}: {line.strip()[:100]}"
+        for i, line in enumerate(lines)
+        if LEAKED_FIGURE in line
+        and not _SAYS_IT_IS_A_LEAK.search("\n".join(lines[max(0, i - 6) : i + 7]))
+    ]
+    assert not unqualified, (
+        f"{LEAKED_FIGURE} is a train/test leak (docs/AUDIT.md, B-01) and is stated "
+        f"here without saying so: {unqualified}"
+    )
+
+
+@pytest.mark.parametrize("doc", ("docs/ROADMAP.html", "docs/build-dossier.html"))
+def test_the_dossiers_do_not_display_the_leaked_score(doc: str) -> None:
+    """A stat tile has no room for a qualifier, so the figure does not appear."""
+    assert LEAKED_FIGURE not in read(doc)
+
+
+def test_the_historical_record_opens_with_the_correction() -> None:
+    head = "\n".join(read(HISTORICAL_RECORD).splitlines()[:12])
+    assert "Correction" in head and LEAKED_FIGURE in head
+    assert _SAYS_IT_IS_A_LEAK.search(head)

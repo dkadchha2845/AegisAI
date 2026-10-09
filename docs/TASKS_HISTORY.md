@@ -1,5 +1,11 @@
 # AegisAI — Master Task List
 
+> **Correction, 2026-10-09.** This file is the record of what was done and
+> believed up to 2026-09-07, kept unmodified below. Wherever it gives the stage
+> classifier's macro-F1 as 0.767, or calls 0.221 or 0.269 "stale", it is wrong:
+> 0.767 was a train/test leak ([`AUDIT.md`](AUDIT.md), B-01). The live task
+> list is [`TASKS.md`](TASKS.md).
+
 > **Status: Phase 0 complete — all seven tasks. Phase 1 complete — all nine,
 > verified end-to-end; 1.7b is in progress and the rest of it belongs to
 > 4.8/4.9. An investigation is submitted from the product, routed through the

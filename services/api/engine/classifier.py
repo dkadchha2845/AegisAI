@@ -332,6 +332,11 @@ class FusedStageClassifier(StageClassifier):
         on. Measured macro-F1 on the held-out archetypes is 0.69, versus 0.77 for
         MuRIL alone and 0.38 for lexical alone: it gives back a little Hinglish
         accuracy to stop missing English scams outright.
+
+        CAUTION (docs/AUDIT.md, B-01): those three figures were measured on a
+        test split most of which MuRIL had been trained on, so they overstate
+        MuRIL and the fusion. On archetypes it has not seen, MuRIL alone scores
+        0.30 against lexical 0.43; the fusion has not been re-measured there.
     """
 
     backend = "fused"
@@ -389,6 +394,21 @@ _cached: StageClassifier | None = None
 #: Written by ml/evaluation/eval_backends.py — both backends scored on the same held-out
 #: archetypes, through this same serving interface.
 COMPARISON_PATH = settings.classifier_dir.parent / "backend_comparison.json"
+
+#: How the comparison at `COMPARISON_PATH` was produced, in the words the model
+#: card and the research overview show next to its numbers. One string, because
+#: it was once written out twice and both copies said "held-out" of a split that
+#: was not: the served weights predate the current split, so most of its test
+#: turns are their own training data (docs/AUDIT.md, B-01). The figures quoted
+#: are from that audit, measured 2026-10-09. T-05 makes the gate refuse the
+#: comparison; this sentence is what keeps the page honest until it does.
+EVALUATION_PROTOCOL = (
+    "macro-F1 on the current 423-turn test split, both backends scored through "
+    "the same serving interface (ml/evaluation/eval_backends.py). CONTAMINATED: "
+    "311 of those turns were in the data the fine-tuned checkpoint was trained "
+    "on. On the 112 turns it had not seen, the checkpoint scores 0.300 and the "
+    "lexical baseline 0.431 (docs/AUDIT.md, B-01)."
+)
 
 
 def _checkpoint_is_better() -> tuple[bool, str]:

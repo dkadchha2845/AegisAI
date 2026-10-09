@@ -4,16 +4,22 @@ Checkpoint identity: bind measured metrics to the exact model that produced them
 This project has now been bitten twice by metric files drifting from the model
 they describe:
 
-  * A stale `backend_comparison.json` (macro-F1 0.221) pinned serving to the
-    weaker lexical model for weeks, while the checkpoint on disk actually
-    scored 0.767.
-  * `stage-classifier/metrics.json` records macro-F1 0.269 for a checkpoint
-    whose real score is 0.767 — it describes an earlier model, and it is one of
-    only two artifact files committed to git.
+  * A `backend_comparison.json` recording macro-F1 0.221 kept serving on the
+    lexical model. It was later judged stale against a re-measured 0.767 —
+    wrongly. 0.221 was the checkpoint's true score on the split it was trained
+    against; 0.767 came from scoring it on a later split that contained its own
+    training data (docs/AUDIT.md, B-01).
+  * `stage-classifier/metrics.json` records macro-F1 0.269 for a different
+    training run from the weights beside it, and it is one of only two artifact
+    files committed to git.
 
 Both are the same bug: a number in a file with nothing tying it to a model. A
 JSON file cannot go stale if it carries the fingerprint of the weights it was
 measured against, because the mismatch becomes checkable.
+
+What the fingerprint does **not** do is tie a score to the *data* the weights
+were trained on. That is the hole B-01 went through — the weights and the score
+matched each other perfectly, and the score was still a leak. T-05 closes it.
 
 So the manifest records *what was measured*, *on which split*, and *of which
 exact bytes*. `verify()` then answers "do these metrics describe the checkpoint

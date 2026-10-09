@@ -44,7 +44,7 @@ Measured on this codebase rather than guessed:
 | | |
 |---|---|
 | **Memory** | The API needs **~126 MB** resident once warm, against Render's 512 MB. Comfortable. |
-| **Classifier** | **Lexical, not MuRIL.** `torch` and `transformers` are commented out of `requirements.txt`, and the checkpoint is 915 MB of gitignored weights Render has no way to fetch. `/api/health` reports `clf:lexical_fallback` — an honest degradation, and on held-out archetypes it measures macro-F1 **0.375 against the checkpoint's 0.767**. Say so in your write-up rather than quoting the checkpoint's number for a site serving the fallback. |
+| **Classifier** | **Lexical, not MuRIL.** `torch` and `transformers` are commented out of `requirements.txt`, and the checkpoint is 915 MB of gitignored weights Render has no way to fetch. `/api/health` reports `clf:lexical_fallback` — an honest degradation. On scam archetypes neither model was trained on, the lexical classifier measures macro-F1 **0.431 against the checkpoint's 0.300**; the 0.767 this guide used to quote for the checkpoint was a train/test leak (`AUDIT.md` B-01). Quote the lexical figure for a site serving the fallback. |
 | **Retrieval** | BM25, not dense embeddings. Citations are still exact; ranking on paraphrased queries is weaker. |
 | **Cold starts** | A free web service sleeps after roughly 15 minutes idle. The next request wakes it, and *then* the lifespan hook warms the agents — so the first visitor after a quiet spell waits. Fine for a demo you are about to show; not fine as a surprise. Mitigation below. |
 | **Uploaded evidence** | **Does not survive a redeploy.** Free instances have an ephemeral filesystem, so `AEGIS_EVIDENCE_DIR` is scratch. The case row lives in Postgres; the bytes of the screenshot attached to it do not. `/api/health` raises `blobs:ephemeral`, which is exactly this. |
@@ -435,9 +435,11 @@ sudo -u aegis bash -c 'set -a; . .env; set +a; .venv/bin/python -m services.api.
 
 Skip this and the API serves the lexical classifier and says so on
 `/api/health` (`clf:lexical_fallback`). That is a real, honest degradation, not
-a broken deployment — but on English/Hinglish scam scoring the checkpoint
-measured **macro-F1 0.767 against the lexical model's 0.375**, so it is worth
-the disk.
+a broken deployment. **Do not add the checkpoint expecting better accuracy:**
+the macro-F1 0.767 once quoted here was a train/test leak, and on archetypes it
+has not seen the checkpoint scores 0.300 against the lexical model's 0.431
+(`AUDIT.md` B-01). The steps below are kept for when a retrained checkpoint
+earns promotion (T-45).
 
 `ml/artifacts/` is gitignored, so copy it from a machine that has it. Only
 `stage-classifier/` and the two JSON files are needed at serve time —

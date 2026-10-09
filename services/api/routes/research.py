@@ -137,9 +137,7 @@ def overview(_: User = Depends(require_permission("RESEARCH_READ"))) -> Dict[str
             "selection_reason": classifier_mod.selection_reason,
         },
         "evaluation": {
-            "protocol": "macro-F1 on four whole held-out call archetypes, both "
-                        "backends scored through the same serving interface "
-                        "(ml/evaluation/eval_backends.py)",
+            "protocol": classifier_mod.EVALUATION_PROTOCOL,
             "measured": bool(comparison),
             "scores": comparison,
         },

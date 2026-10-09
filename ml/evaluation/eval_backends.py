@@ -125,9 +125,13 @@ def main() -> int:
     print(f"\nwrote {ARTIFACTS.parent / 'backend_comparison.json'}")
 
     # Bind these numbers to the exact weights they were measured against.
-    # A metrics file with nothing tying it to a model is how this project ended
-    # up serving a lexical fallback for weeks on a stale 0.221, and how
-    # stage-classifier/metrics.json still claims 0.269 for a 0.767 checkpoint.
+    # A metrics file with nothing tying it to a model is how
+    # stage-classifier/metrics.json came to sit beside weights it does not
+    # describe. NOTE (docs/AUDIT.md, B-01): this binds a score to weights, not
+    # to the data they were trained on. The 0.767 this script once produced was
+    # a train/test leak, because the split was rebuilt after training and the
+    # old weights were scored on the new test set. T-05 makes the script refuse
+    # that comparison.
     if "muril" in results:
         manifest = manifest_mod.build(
             model_dir=ARTIFACTS,

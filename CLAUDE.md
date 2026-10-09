@@ -41,8 +41,9 @@ the design-system document do not exist yet — they are T-01 and T-03.
 
 **Do not cite the stage classifier's macro-F1 of 0.767.** It is a train/test
 leak (audit item B-01): on scam types the model has not seen it scores 0.300
-against the lexical baseline's 0.431. Wherever this file or another still says
-otherwise, the audit is right and the correction is task T-04.
+against the lexical baseline's 0.431. The documents were corrected in T-04; the
+gate that produced the number is fixed in T-05, and until then `/api/health`
+still reports the leaked comparison.
 
 ## Working agreement (set by the project owner, 2026-08-24)
 
@@ -162,10 +163,15 @@ panel. Then run the four gates.
 ## Things that are easy to get wrong here
 
 - **`ml/artifacts/` is 3.5 GB.** Don't add to it; don't commit checkpoints.
-- **The MuRIL checkpoint was once suppressed for weeks by a stale
-  `ml/artifacts/backend_comparison.json`.** If the classifier looks weak, check
-  the promotion gate before retraining — a blind retrain risks overwriting a
-  good checkpoint.
+- **The stage classifier's published score was a train/test leak.** The served
+  MuRIL weights were trained on one split, and the promotion gate then scored
+  them on a later one that contained most of their training data — which is
+  where macro-F1 0.767 came from. On the 112 turns they had not seen they score
+  0.300 against the lexical baseline's 0.431; on their own original test split,
+  0.221 against 0.372. An earlier note here called 0.221 a "stale" file
+  suppressing a good checkpoint. That had it backwards. Never score a
+  checkpoint on a split other than the one it was trained against (audit item
+  B-01).
 - **A green suite in a fresh worktree proves the fallback.** `ml/artifacts/` is
   3.5 GB and gitignored, so a new worktree has 8 KB of it. Point
   `AEGIS_ARTIFACTS` at a full checkout's `ml/artifacts` before a benign-input

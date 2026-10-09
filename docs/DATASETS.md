@@ -27,7 +27,7 @@ present it as real. Every item is labelled `synthetic`, `public`, or
 
 | Asset | Size | Quality |
 |---|---|---|
-| Synthetic scam-call corpus | 1,692 calls, train/val/test split | Good. Zero-leak 7/8-held-out-archetype split; validated by `ml/corpus/validate_corpus.py` |
+| Synthetic scam-call corpus | 1,692 calls, train/val/test split | The split holds whole call skeletons out and shares no text between its parts, though three archetypes appear on both sides through different skeletons (`AUDIT.md` B-07). The served checkpoint was trained on an earlier split, so its published score on this one is a leak (`AUDIT.md` B-01). Validated by `ml/corpus/validate_corpus.py` |
 | Stage transition matrix | Fitted | Powers the Digital Twin |
 | Knowledge corpus | 31 chunks / 4 docs | Thin — Phase 3.5 expands to ≥1,500 |
 | Coach library | 14 human-reviewed lines | Small but deliberately verbatim-only |
@@ -168,7 +168,9 @@ Three splits, reported separately, because each answers a different question:
 1. **Random split** — the optimistic number. Reported for comparability only.
 2. **Held-out archetype** — train on 11 categories, test on the 12th. Answers
    *"does it generalise to a scam pattern it has never seen?"* This is the
-   inherited discipline that produced the honest 0.767 macro-F1.
+   discipline the inherited 0.767 macro-F1 claimed and did not meet: the
+   checkpoint was scored on a later split containing its own training data, a
+   leak (`AUDIT.md` B-01). T-38 adds the overlap test that would have caught it.
 3. **Temporal split** — train on earlier items, test on later. Phishing and scam
    scripts are non-stationary; a random split silently inflates every URL result
    in the literature.

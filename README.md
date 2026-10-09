@@ -34,9 +34,15 @@ INPUT → EXTRACT → INVESTIGATE → CORRELATE → REASON → SCORE → EXPLAIN
 **Final-year B.Tech CSE capstone + research project.** AegisAI evolves from
 **KAVACH/PRESAGE**, a real-time digital-arrest scam-call detection engine built
 for the ET AI Hackathon 2026 (PS-6). That engine — ~30,000 lines, 84 passing
-tests, a fine-tuned MuRIL stage classifier at macro-F1 **0.767** on a zero-leak
-held-out-archetype split — is inherited intact and becomes AegisAI's
-conversation-analysis agent.
+tests, a fine-tuned MuRIL stage classifier — is inherited intact and becomes
+AegisAI's conversation-analysis agent.
+
+> **Correction, 2026-10-09.** Earlier versions of this README quoted that
+> classifier at macro-F1 0.767 on a "zero-leak" split. The figure is a
+> train/test leak: 311 of the 423 test turns were in the data the served
+> weights were trained on. On the 112 turns it had not seen, it scores
+> **0.300** — below the keyword baseline's **0.431**. See
+> [`docs/AUDIT.md`](./docs/AUDIT.md), item B-01.
 
 | | |
 |---|---|

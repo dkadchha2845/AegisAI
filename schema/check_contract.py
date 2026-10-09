@@ -98,8 +98,8 @@ def check_investigation_fixture() -> list[str]:
     (2) is the one that matters. `investigation.fixture.ts` is what makes
     `npm run typecheck` a field-level contract check, and a stale fixture would
     keep passing that gate while describing a contract nobody uses any more —
-    the same failure mode as the stale `metrics.json` in task 0.5, which claimed
-    macro-F1 0.269 for a model measuring 0.767. The generator is deterministic
+    the same failure mode as the stale `metrics.json` in task 0.5, which described
+    a different training run from the weights beside it. The generator is deterministic
     precisely so this comparison is possible.
     """
     from schema import mock_investigation as mi

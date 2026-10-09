@@ -77,7 +77,7 @@ export function ModelCard() {
 
           {card.evaluation?.scores && Object.keys(card.evaluation.scores).length > 0 && (
             <section className="card">
-              <h2 className="card__title">Measured, not assumed</h2>
+              <h2 className="card__title">Promotion-gate comparison</h2>
               <p className="muted small" style={{ marginTop: 0 }}>
                 {card.evaluation.protocol}
               </p>
@@ -105,10 +105,10 @@ export function ModelCard() {
                 })}
               </div>
               <p className="small faint" style={{ marginTop: "var(--s-4)" }}>
-                Selection: {card.evaluation.selection}. A checkpoint is promoted
-                on measured evidence, not on the files existing — loading a model
-                that loses to its own baseline would quietly make every verdict
-                in the product worse.
+                Selection: {card.evaluation.selection}. Read the note above
+                before quoting either figure: a comparison only justifies
+                promoting a checkpoint when the checkpoint was not trained on
+                the data it is being scored on.
               </p>
             </section>
           )}
