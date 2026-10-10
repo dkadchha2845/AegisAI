@@ -3,8 +3,8 @@
 One entry per finished piece of work, newest last. A new session reads this
 after [`TASKS.md`](TASKS.md) to find where things stand.
 
-**Current state (2026-10-09):** Phase 0 and Phase 3 approved. **T-04 is 🧪
-awaiting review**, committed to `main`. Next in order: T-05.
+**Current state (2026-10-10):** Phase 0 and Phase 3 approved. T-04 approved
+2026-10-10. **T-05 is 🔄 in progress.**
 
 ---
 

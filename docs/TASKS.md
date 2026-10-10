@@ -65,8 +65,8 @@ reused.
 | T-01 | Write the PRD | P1 | ⬜ | S×2 | — |
 | T-02 | Bring the architecture document to the brief's shape | P2 | ⬜ | S | — |
 | T-03 | Write the design-system document from the shipped tokens | P2 | ⬜ | S | 7.1 |
-| T-04 | Correct the stage-classifier claim everywhere it is stated | M0 | 🧪 | S | — |
-| T-05 | Make the promotion gate refuse a contaminated comparison | M0 | ⬜ | S | — |
+| T-04 | Correct the stage-classifier claim everywhere it is stated | M0 | ✅ | S | — |
+| T-05 | Make the promotion gate refuse a contaminated comparison | M0 | 🔄 | S | — |
 | T-06 | Commit the leak-free classifier baseline as the first research result | M0 | ⬜ | S | — |
 | T-07 | Re-verify the infrastructure path with the stack up | M0 | ⬜ | S | — |
 | T-08 | Prove the project runs from a fresh clone | M0 | ⬜ | S | — |
@@ -263,7 +263,7 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-04 — Correct the stage-classifier claim everywhere it is stated
 - Milestone: M0
-- Status: 🧪 Awaiting my review (2026-10-09)
+- Status: ✅ Approved (2026-10-10)
 - Depends on: — (Q3 decided 2026-10-09: correct it)
 - Fixes / implements: B-01, U-01
 - Goal: Stop the repository and the product from stating a leaked score as a held-out result. Replace 0.767 with the three measured figures and one sentence saying what happened.
