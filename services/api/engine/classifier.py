@@ -565,7 +565,7 @@ def load_classifier() -> StageClassifier:
             # the gate refused to score it, or was never run. In every case the
             # lexical model is the best model with anything behind it, so this
             # is *not* degraded: it is what every machine now serves.
-            print(f"[aegis] checkpoint not promoted — {reason}")
+            print(f"[aegis] checkpoint present but {reason}")
             selection_reason = f"checkpoint present but {reason}"
             serving_is_fallback = False
     else:
