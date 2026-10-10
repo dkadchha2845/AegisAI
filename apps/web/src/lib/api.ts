@@ -339,8 +339,9 @@ export interface ModelCard {
   base_model: string;
   active_backend: string;
   training_data: Record<string, string>;
-  /** Both backends scored on the same held-out archetypes. Empty until
-   *  ml/eval_backends.py has been run. */
+  /** Per-backend scores from the promotion gate. Empty until
+   *  ml/evaluation/eval_backends.py has produced a leak-checked comparison;
+   *  holds the lexical model alone when the gate refused the checkpoint. */
   evaluation?: {
     protocol: string;
     scores: Record<string, BackendScore>;

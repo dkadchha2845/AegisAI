@@ -36,10 +36,12 @@ def _load(path: Path):
 
 def test_manifest_has_the_expected_shape():
     m = _load(MANIFEST)
-    assert m["schema"] == 1
+    assert m["schema"] == 2
     assert m["measured_at"]
     assert m["evaluation"]["split"]
     assert m["evaluation"]["n_examples"] > 0
+    assert m["evaluation"]["status"] in ("valid", "refused")
+    assert m["evaluation"]["reason"], "a manifest must say why it is valid or refused"
     assert m["evaluation"]["results"], "manifest records no scores"
 
 
@@ -62,35 +64,51 @@ def test_manifest_agrees_with_the_promotion_gate():
     manifest = _load(MANIFEST)
     comparison = _load(COMPARISON)
 
+    assert manifest["evaluation"]["status"] == comparison["status"]
+    assert manifest["evaluation"]["reason"] == comparison["reason"]
+    assert manifest["evaluation"]["leak_check"] == comparison["leak_check"]
+
     recorded = manifest["evaluation"]["results"]
-    assert set(recorded) == set(comparison), (
+    scores = comparison["results"]
+    assert set(recorded) == set(scores), (
         f"manifest scores {sorted(recorded)} but backend_comparison has "
-        f"{sorted(comparison)} — one of them is stale"
+        f"{sorted(scores)} — one of them is stale"
     )
-    for backend, scores in comparison.items():
-        assert recorded[backend]["macro_f1"] == pytest.approx(scores["macro_f1"]), (
+    for backend, s in scores.items():
+        assert recorded[backend]["macro_f1"] == pytest.approx(s["macro_f1"]), (
             f"{backend}: manifest says {recorded[backend]['macro_f1']:.4f}, "
-            f"backend_comparison says {scores['macro_f1']:.4f}. Re-run "
+            f"backend_comparison says {s['macro_f1']:.4f}. Re-run "
             f"ml/evaluation/eval_backends.py."
         )
 
 
-def test_promoted_backend_actually_won():
-    """Whatever is recorded as best must be the highest scorer.
+def test_the_committed_comparison_scores_the_checkpoint_only_after_a_clean_leak_check():
+    """The assertion that would have caught B-01, on the file that carried it.
 
-    Guards the promotion gate's own logic, not just its inputs.
+    `backend_comparison.json` is tracked. Whatever is committed there must
+    either score the checkpoint on data it demonstrably had not seen, or not
+    score it at all — never the third thing, which is what was committed until
+    T-05: a checkpoint score with nothing recorded about what it was scored on.
     """
     comparison = _load(COMPARISON)
-    if len(comparison) < 2:
-        pytest.skip("only one backend measured")
-    best = max(comparison, key=lambda k: comparison[k]["macro_f1"])
-    assert comparison[best]["macro_f1"] >= max(
-        s["macro_f1"] for s in comparison.values()
+    assert comparison["schema"] == 2, (
+        "the committed comparison predates the leak check — re-run "
+        "ml/evaluation/eval_backends.py"
     )
+    checkpoint_scored = {"muril", "fused"} & set(comparison["results"])
+    if comparison["status"] == "valid":
+        assert comparison["leak_check"]["overlap_turns"] == 0
+        assert checkpoint_scored == {"muril", "fused"}
+    else:
+        assert not checkpoint_scored, (
+            f"status is {comparison['status']!r} but the checkpoint was scored "
+            f"anyway: {sorted(checkpoint_scored)}"
+        )
+        assert comparison["reason"]
 
 
 def test_recorded_scores_are_plausible():
     """A macro-F1 outside [0, 1] means something wrote garbage."""
-    for backend, scores in _load(COMPARISON).items():
+    for backend, scores in _load(COMPARISON)["results"].items():
         assert 0.0 <= scores["macro_f1"] <= 1.0, backend
         assert 0.0 <= scores["weighted_f1"] <= 1.0, backend

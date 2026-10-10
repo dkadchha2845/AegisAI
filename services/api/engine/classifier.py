@@ -337,6 +337,8 @@ class FusedStageClassifier(StageClassifier):
         test split most of which MuRIL had been trained on, so they overstate
         MuRIL and the fusion. On archetypes it has not seen, MuRIL alone scores
         0.30 against lexical 0.43; the fusion has not been re-measured there.
+        The gate now scores the fusion itself, and only on data the checkpoint
+        has not seen.
     """
 
     backend = "fused"
@@ -391,40 +393,93 @@ class FusedStageClassifier(StageClassifier):
 
 _cached: StageClassifier | None = None
 
-#: Written by ml/evaluation/eval_backends.py — both backends scored on the same held-out
-#: archetypes, through this same serving interface.
+#: Written by ml/evaluation/eval_backends.py. Since schema 2 it is not a bare
+#: table of scores: it says whether the checkpoint could be scored at all.
 COMPARISON_PATH = settings.classifier_dir.parent / "backend_comparison.json"
 
-#: How the comparison at `COMPARISON_PATH` was produced, in the words the model
-#: card and the research overview show next to its numbers. One string, because
-#: it was once written out twice and both copies said "held-out" of a split that
-#: was not: the served weights predate the current split, so most of its test
-#: turns are their own training data (docs/AUDIT.md, B-01). The figures quoted
-#: are from that audit, measured 2026-10-09. T-05 makes the gate refuse the
-#: comparison; this sentence is what keeps the page honest until it does.
-EVALUATION_PROTOCOL = (
-    "macro-F1 on the current 423-turn test split, both backends scored through "
-    "the same serving interface (ml/evaluation/eval_backends.py). CONTAMINATED: "
-    "311 of those turns were in the data the fine-tuned checkpoint was trained "
-    "on. On the 112 turns it had not seen, the checkpoint scores 0.300 and the "
-    "lexical baseline 0.431 (docs/AUDIT.md, B-01)."
-)
+#: The only comparison shape this module will act on. Schema 1 was the bare
+#: `{backend: scores}` map, and the file of that shape committed to this
+#: repository is the leak in audit item B-01 — so an older file is not read
+#: generously, it is refused. `ml/evaluation/provenance.py` holds the same
+#: number; a test asserts the two agree.
+COMPARISON_SCHEMA = 2
+
+
+def _read_comparison() -> dict | None:
+    """The comparison on file if it is one this module will act on, else None."""
+    try:
+        record = json.loads(COMPARISON_PATH.read_text())
+    except (json.JSONDecodeError, OSError):
+        return None
+    if not isinstance(record, dict) or record.get("schema") != COMPARISON_SCHEMA:
+        return None
+    if not isinstance(record.get("results"), dict):
+        return None
+    return record
+
+
+def comparison_scores() -> dict:
+    """Per-backend scores from the gate, for `/api/health`, the model card and
+    the research overview.
+
+    Empty unless a schema-2 comparison is on file: a figure that has not been
+    through the leak check is not shown next to the model it claims to
+    describe. When the gate refused the checkpoint this holds the lexical model
+    alone, which is correct — that number is sound, and there is no other.
+    """
+    record = _read_comparison()
+    return dict(record["results"]) if record else {}
+
+
+def evaluation_protocol() -> str:
+    """How the figures in `comparison_scores()` were produced, in the words
+    shown beside them. Derived from the record, so it cannot describe a
+    comparison other than the one on file — the sentence this replaces was
+    written out twice and said "held-out" of a split that was not."""
+    if not COMPARISON_PATH.exists():
+        return ("No comparison on file: ml/evaluation/eval_backends.py has not "
+                "been run here.")
+    record = _read_comparison()
+    if record is None:
+        return ("The comparison on file predates the leak check and is not shown "
+                "(docs/AUDIT.md, B-01). Re-run ml/evaluation/eval_backends.py.")
+    n = record.get("n_test", "?")
+    reason = record.get("reason", "")
+    status = record.get("status")
+    if status == "valid":
+        return (f"macro-F1 on the {n}-turn test split, every backend scored through "
+                "the same serving interface (ml/evaluation/eval_backends.py). Leak "
+                f"check passed: {reason}.")
+    if status == "refused":
+        return ("The promotion gate refused to score the fine-tuned checkpoint: "
+                f"{reason} (docs/AUDIT.md, B-01). The one figure shown is the lexical "
+                f"model's macro-F1 on the full {n}-turn test split, through the "
+                "serving interface.")
+    return (f"Lexical model only — {reason}. macro-F1 on the {n}-turn test split, "
+            "through the serving interface (ml/evaluation/eval_backends.py).")
 
 
 def _checkpoint_is_better() -> tuple[bool, str]:
     """Should the fine-tuned checkpoint be promoted over the lexical baseline?
 
-    Presence of a checkpoint is not evidence that it helps. The current one
-    scores macro-F1 0.221 on held-out archetypes against the lexical model's
-    0.368 — it memorised the training archetypes (val macro-F1 0.98) and does
-    not generalise, which is a corpus-size problem rather than a training bug.
-    Loading it just because the files exist would quietly make every verdict
-    in the product worse.
+    Presence of a checkpoint is not evidence that it helps, and neither is a
+    number. The checkpoint this was written for memorised its training
+    archetypes (val macro-F1 0.98) and scores 0.221 on its own held-out split
+    against the lexical model's 0.37. It was then promoted anyway, for weeks,
+    on a comparison run against a later split that contained most of its
+    training data (docs/AUDIT.md, B-01).
 
-    So promotion is gated on the measured comparison. Set
-    AEGIS_CLASSIFIER=muril to override once you have retrained on a larger
-    corpus, or delete the comparison file to fall back to presence-based
-    loading.
+    So promotion needs a comparison that is *valid*, not merely present:
+    schema 2, status `valid`, a leak check recording zero overlap, and the
+    model the API would actually serve — the fusion — scoring at least as well
+    as the lexical model. Anything else leaves the lexical model serving and
+    says why. In particular "no comparison on file" used to mean "trust the
+    checkpoint"; it now means the opposite, because an unmeasured model is the
+    one case where nothing at all supports loading it.
+
+    `AEGIS_CLASSIFIER=muril` still overrides, and is reported as forced.
+
+    The reason is a clause that follows "checkpoint present but".
     """
     forced = os.getenv("AEGIS_CLASSIFIER", "").strip().lower()
     if forced == "muril":
@@ -433,19 +488,38 @@ def _checkpoint_is_better() -> tuple[bool, str]:
         return False, "forced by AEGIS_CLASSIFIER"
 
     if not COMPARISON_PATH.exists():
-        # Never measured. Trust the checkpoint, but say so on /api/health.
-        return True, "no comparison on file"
+        return False, ("not promoted: no comparison on file, so nothing shows it "
+                       "beats the lexical model (run `make eval`)")
+
+    record = _read_comparison()
+    if record is None:
+        return False, ("not promoted: the comparison on file is unreadable or predates "
+                       "the leak check (docs/AUDIT.md, B-01) — run `make eval`")
+
+    status = record.get("status")
+    if status != "valid":
+        return False, f"not promoted: {record.get('reason') or 'the gate did not score it'}"
+
+    # Defence in depth: a record that calls itself valid while carrying a leak
+    # is a hand-edited record, and is believed about the leak, not the status.
+    leak_check = record.get("leak_check")
+    if not isinstance(leak_check, dict) or leak_check.get("overlap_turns") != 0:
+        return False, "not promoted: the comparison on file does not record a clean leak check"
 
     try:
-        scores = json.loads(COMPARISON_PATH.read_text())
-        muril = float(scores["muril"]["macro_f1"])
-        lexical = float(scores["lexical"]["macro_f1"])
-    except (json.JSONDecodeError, KeyError, TypeError, ValueError, OSError):
-        return True, "comparison unreadable"
+        results = record["results"]
+        lexical = float(results["lexical"]["macro_f1"])
+        # The fusion is what `load_classifier` builds when it promotes, so it
+        # is the candidate. MuRIL alone is the fallback reading for a record
+        # written without it.
+        name = "fused" if "fused" in results else "muril"
+        candidate = float(results[name]["macro_f1"])
+    except (KeyError, TypeError, ValueError):
+        return False, "not promoted: the comparison on file has no score for the checkpoint"
 
-    if muril >= lexical:
-        return True, f"measured better ({muril:.3f} vs {lexical:.3f})"
-    return False, f"measured worse ({muril:.3f} vs {lexical:.3f})"
+    if candidate >= lexical:
+        return True, f"measured better ({name} {candidate:.3f} vs lexical {lexical:.3f})"
+    return False, f"measured worse ({name} {candidate:.3f} vs lexical {lexical:.3f})"
 
 
 #: Why the active backend was chosen. Surfaced on /api/health so "which model
@@ -486,8 +560,11 @@ def load_classifier() -> StageClassifier:
                 selection_reason = f"checkpoint failed to load: {exc}"
                 serving_is_fallback = True
         else:
-            # Lexical is serving because it measurably beat the checkpoint (or was
-            # forced). It is the best available model, so this is *not* degraded.
+            # Lexical is serving because it measurably beat the checkpoint, was
+            # forced, or because nothing valid shows the checkpoint is better —
+            # the gate refused to score it, or was never run. In every case the
+            # lexical model is the best model with anything behind it, so this
+            # is *not* degraded: it is what every machine now serves.
             print(f"[aegis] checkpoint not promoted — {reason}")
             selection_reason = f"checkpoint present but {reason}"
             serving_is_fallback = False

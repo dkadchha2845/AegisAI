@@ -73,9 +73,18 @@ def test_checkpoint_present_but_not_loaded_is_never_reported_as_best(report: dic
     lexical model. That is legitimate — the requirements file calls torch
     optional — but it must never read as "the best model is serving", because
     that is exactly the state 1.7 was ticked in.
+
+    There is one other way to have the weights and not load them, and it is the
+    opposite of silent: the promotion gate declined to promote them — they lost
+    the comparison, or (since T-05) the gate refused to score them on data they
+    were trained on. Then the lexical model *is* the best one with anything
+    behind it, the reason says so in words, and that is not a substitution.
+    Until T-05 this branch was never reached on a machine with the weights,
+    which is how the leaked comparison went unquestioned.
     """
     if report["checkpoint_present"] and not report["loaded"]:
-        assert report["serving_best"] is False, report["reason"]
+        declined_by_the_gate = report["reason"].startswith("checkpoint present but ")
+        assert declined_by_the_gate or report["serving_best"] is False, report["reason"]
 
 
 # --- the requirement -------------------------------------------------------
@@ -150,7 +159,7 @@ def test_requiring_a_fallback_fails_when_a_real_model_turns_up() -> None:
     """
     served = {
         "backend": "fused", "loaded": True, "serving_best": True,
-        "reason": "fused (muril + lexical): measured better (0.767 vs 0.375)",
+        "reason": "fused (muril + lexical): measured better (fused 0.610 vs lexical 0.430)",
         "checkpoint": "/ml/artifacts/stage-classifier", "checkpoint_present": True,
     }
     (problem,) = serving.unmet_requirements("fallback", served)

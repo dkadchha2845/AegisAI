@@ -41,9 +41,10 @@ the design-system document do not exist yet — they are T-01 and T-03.
 
 **Do not cite the stage classifier's macro-F1 of 0.767.** It is a train/test
 leak (audit item B-01): on scam types the model has not seen it scores 0.300
-against the lexical baseline's 0.431. The documents were corrected in T-04; the
-gate that produced the number is fixed in T-05, and until then `/api/health`
-still reports the leaked comparison.
+against the lexical baseline's 0.431. The documents were corrected in T-04.
+Since T-05 the promotion gate refuses to score a checkpoint on data it was
+trained on, so **the lexical classifier is what serves, on every machine**,
+until a retrained checkpoint passes the leak check and wins (T-45).
 
 ## Working agreement (set by the project owner, 2026-08-24)
 
@@ -169,9 +170,10 @@ panel. Then run the four gates.
   where macro-F1 0.767 came from. On the 112 turns they had not seen they score
   0.300 against the lexical baseline's 0.431; on their own original test split,
   0.221 against 0.372. An earlier note here called 0.221 a "stale" file
-  suppressing a good checkpoint. That had it backwards. Never score a
-  checkpoint on a split other than the one it was trained against (audit item
-  B-01).
+  suppressing a good checkpoint. That had it backwards. `make eval` now refuses
+  to score a checkpoint whose training data (recorded beside the weights by
+  `train.py`) overlaps the test split, and exits 2; the API promotes only on a
+  comparison that passed that check (audit item B-01).
 - **A green suite in a fresh worktree proves the fallback.** `ml/artifacts/` is
   3.5 GB and gitignored, so a new worktree has 8 KB of it. Point
   `AEGIS_ARTIFACTS` at a full checkout's `ml/artifacts` before a benign-input

@@ -18,6 +18,24 @@ Both are evaluated through `StageClassifier.predict`, not through their
 internals, so this measures what the API will actually do — including the
 speaker-tagged context join, which is exactly the thing most likely to be
 wrong.
+
+What it refuses to do
+---------------------
+Score a checkpoint on data it was trained on. This script once did exactly
+that: the split was rebuilt after training, the old weights were scored on the
+new test set, and the macro-F1 of 0.767 it wrote down was a leak — 311 of the
+423 test turns were the weights' own training data (docs/AUDIT.md, B-01).
+
+So before the checkpoint is loaded, `provenance.leak_verdict` compares the test
+split against the record `train.py` leaves beside the weights. If any test turn
+is in it, or there is no record, the checkpoint is **not scored**: the script
+writes the refusal and its reason where the comparison would have gone, and
+exits non-zero. The lexical model is still scored — it is not trained, so its
+number on this split is sound — and the API serves it.
+
+When the check passes, three backends are scored, not two: the fused model is
+what the API actually serves when a checkpoint is promoted, so it is the one
+promotion is decided on.
 """
 
 from __future__ import annotations
@@ -35,13 +53,24 @@ ML_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ML_DIR.parent))
 
 from ml.evaluation import manifest as manifest_mod
+from ml.evaluation import provenance
 from ml.training.train import LABELS, load_split
+from services.api.config import settings
 from services.api.engine.classifier import (
+    COMPARISON_PATH,
+    FusedStageClassifier,
     LexicalStageClassifier,
     MuRILStageClassifier,
 )
 
-ARTIFACTS = ML_DIR / "artifacts" / "stage-classifier"
+#: The serving path's own answer, not a second derivation of it: the gate must
+#: score the checkpoint the API would load, and write where the API will read.
+#: (`AEGIS_ARTIFACTS` moves both.)
+ARTIFACTS = settings.classifier_dir
+
+#: Exit status when the checkpoint was not scored. Distinct from 1 so a caller
+#: can tell "the gate refused" from "the script crashed".
+EXIT_REFUSED = 2
 
 
 def build_pairs(rows: list[dict]) -> list[tuple[str, str, str, str, str]]:
@@ -94,57 +123,92 @@ def report(name: str, y_true, y_pred) -> dict:
 
 
 def main() -> int:
-    pairs = build_pairs(load_split("test"))
+    test_rows = load_split("test")
+    pairs = build_pairs(test_rows)
     print(f"held-out test turns: {len(pairs)}")
 
+    # The lexical model has no training data, so there is nothing for it to
+    # have leaked from. It is scored unconditionally.
     results = {}
     y_true, y_pred = evaluate(LexicalStageClassifier(), pairs)
     results["lexical"] = report("lexical fallback", y_true, y_pred)
 
-    if (ARTIFACTS / "config.json").exists():
-        y_true, y_pred = evaluate(MuRILStageClassifier(ARTIFACTS), pairs)
-        results["muril"] = report("fine-tuned MuRIL", y_true, y_pred)
-    else:
+    if not (ARTIFACTS / "config.json").exists():
         print(f"\nno checkpoint at {ARTIFACTS} — run ml/training/train.py first")
-
-    if len(results) == 2:
-        best = max(results, key=lambda k: results[k]["macro_f1"])
-        delta = abs(results["muril"]["macro_f1"] - results["lexical"]["macro_f1"])
-        print(f"\n{'=' * 60}")
-        print(f"winner on held-out archetypes: {best}  (Δ macro-F1 {delta:.4f})")
-        if best == "lexical":
-            print(
-                "\nThe fine-tuned model loses to the baseline on unseen archetypes.\n"
-                "That is a data problem, not a training bug: 320 synthetic calls\n"
-                "from a seeded grid let the model memorise archetypes instead of\n"
-                "learning the stages. Generate more, more varied calls before\n"
-                "promoting the checkpoint to default."
-            )
-
-    (ARTIFACTS.parent / "backend_comparison.json").write_text(json.dumps(results, indent=2))
-    print(f"\nwrote {ARTIFACTS.parent / 'backend_comparison.json'}")
-
-    # Bind these numbers to the exact weights they were measured against.
-    # A metrics file with nothing tying it to a model is how
-    # stage-classifier/metrics.json came to sit beside weights it does not
-    # describe. NOTE (docs/AUDIT.md, B-01): this binds a score to weights, not
-    # to the data they were trained on. The 0.767 this script once produced was
-    # a train/test leak, because the split was rebuilt after training and the
-    # old weights were scored on the new test set. T-05 makes the script refuse
-    # that comparison.
-    if "muril" in results:
-        manifest = manifest_mod.build(
-            model_dir=ARTIFACTS,
+        _write_comparison(provenance.comparison_record(
+            status="no_checkpoint",
+            reason="no fine-tuned checkpoint was present when the gate ran",
+            n_test=len(pairs),
             results=results,
-            split="test",
-            n_examples=len(pairs),
+        ))
+        return 0
+
+    trained_on = provenance.load(ARTIFACTS)
+    ok, reason, leak_check = provenance.leak_verdict(trained_on, test_rows)
+    training_data = provenance.summary(trained_on) if trained_on is not None else None
+
+    if ok:
+        muril = MuRILStageClassifier(ARTIFACTS)
+        y_true, y_pred = evaluate(muril, pairs)
+        results["muril"] = report("fine-tuned MuRIL", y_true, y_pred)
+        y_true, y_pred = evaluate(FusedStageClassifier(muril, LexicalStageClassifier()), pairs)
+        results["fused"] = report("fused (MuRIL + lexical) — what the API would serve", y_true, y_pred)
+
+        best = max(results, key=lambda k: results[k]["macro_f1"])
+        print(f"\n{'=' * 60}")
+        print(f"leak check passed: {reason}")
+        print(f"winner on held-out data: {best}")
+        if results["fused"]["macro_f1"] < results["lexical"]["macro_f1"]:
+            print(
+                "\nThe fused model loses to the lexical baseline on data the\n"
+                "checkpoint has not seen, so it will not be promoted. That is a\n"
+                "data problem, not a training bug: generate more, more varied\n"
+                "calls before retraining."
+            )
+    else:
+        print(f"\n{'=' * 60}")
+        print(f"REFUSED: {reason}.")
+        print(
+            "The checkpoint was not scored, because a score on data it was\n"
+            "trained on is not a measurement. The API will serve the lexical\n"
+            "model. See docs/AUDIT.md, B-01."
         )
-        path = manifest_mod.write(manifest, ARTIFACTS.parent)
-        print(f"wrote {path}")
-        print(f"checkpoint fingerprint: "
-              f"{manifest['fingerprint']['combined_sha256'][:16]}…")
-    return 0
+        if leak_check is not None:
+            for archetype, n in leak_check["by_archetype"].items():
+                print(f"  {archetype:28s} {n['overlap']:4d} / {n['turns']} turns trained on")
+
+    _write_comparison(provenance.comparison_record(
+        status="valid" if ok else "refused",
+        reason=reason,
+        n_test=len(pairs),
+        results=results,
+        leak_check=leak_check,
+        training_data=training_data,
+    ))
+
+    # Bind this outcome to the exact weights it is about — a score, or a
+    # refusal — so neither can be mistaken for a statement about another model.
+    manifest = manifest_mod.build(
+        model_dir=ARTIFACTS,
+        results=results,
+        split="test",
+        n_examples=len(pairs),
+        status="valid" if ok else "refused",
+        reason=reason,
+        leak_check=leak_check,
+        training_data=training_data,
+    )
+    path = manifest_mod.write(manifest, ARTIFACTS.parent)
+    print(f"wrote {path}")
+    print(f"checkpoint fingerprint: "
+          f"{manifest['fingerprint']['combined_sha256'][:16]}…")
+    return 0 if ok else EXIT_REFUSED
+
+
+def _write_comparison(record: dict) -> None:
+    COMPARISON_PATH.write_text(json.dumps(record, indent=2) + "\n")
+    print(f"\nwrote {COMPARISON_PATH}")
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())

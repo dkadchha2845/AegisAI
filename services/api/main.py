@@ -11,7 +11,6 @@ model loaded?" is a question with a checkable answer rather than a hope.
 
 from __future__ import annotations
 
-import json
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Dict
 
@@ -153,16 +152,9 @@ def warm() -> None:
 
 
 def _comparison() -> Dict[str, Any]:
-    """Macro-F1 of both backends as the promotion gate recorded it, if
-    ml/evaluation/eval_backends.py has been run. This is what gates promotion —
-    and it is contaminated; see `classifier.EVALUATION_PROTOCOL`."""
-    path = classifier_mod.COMPARISON_PATH
-    if not path.exists():
-        return {}
-    try:
-        return json.loads(path.read_text())
-    except (json.JSONDecodeError, OSError):
-        return {}
+    """Per-backend macro-F1 from the promotion gate. One reader, in the module
+    that acts on the file — see `classifier.comparison_scores`."""
+    return classifier_mod.comparison_scores()
 
 
 @app.get("/api/health")
@@ -365,17 +357,17 @@ def model_card() -> Dict[str, Any]:
                    "utterance-level split leaks test into train and inflates macro-F1",
         },
         "evaluation": {
-            "protocol": classifier_mod.EVALUATION_PROTOCOL,
+            "protocol": classifier_mod.evaluation_protocol(),
             "scores": _comparison(),
             "selection": classifier_mod.selection_reason,
         },
         "limitations": [
             "On scam archetypes it was not trained on, the fine-tuned checkpoint "
             "scores macro-F1 0.30 against the lexical baseline's 0.43 (0.22 against "
-            "0.37 on its original test split). Where the checkpoint is present it "
-            "is still served, fused with the lexical model, on the strength of the "
-            "contaminated comparison above. It reached 0.98 on validation, which "
-            "is memorisation of the training archetypes, not generalisation.",
+            "0.37 on its original test split), so it is not promoted. The gate "
+            "refuses to score it on the current test split, most of which it was "
+            "trained on. It reached 0.98 on validation, which is memorisation of "
+            "the training archetypes, not generalisation.",
             "320 synthetic calls is too few for an 8-way classifier. This is a "
             "corpus-size problem; more and more varied calls is the fix, not more "
             "epochs.",

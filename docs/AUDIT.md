@@ -230,7 +230,10 @@ with the weights in `85a2aee`. So the earlier account, in which 0.221 was a
 honest number and 0.767 the leak.
 
 **Status:** documents, code comments and the wording the product serves were
-corrected in T-04. The gate itself still promotes the checkpoint; that is T-05.
+corrected in T-04. **The gate was fixed in T-05 (2026-10-10):** it now refuses
+to score a checkpoint on data it was trained on, the leaked comparison is gone
+from the repository, and the lexical classifier serves. What remains is a
+model that deserves promotion — T-38 and T-45.
 
 ### B-02 — High — The agentic investigation produces no verdict
 
@@ -270,6 +273,15 @@ user; the finding still appears on the report. Confidence not inspected.
 The `api` configuration uses a relative `.venv/bin/python`, which exists only
 in the main checkout.
 
+### B-08 — Medium — An English payment-demand scam is scored as legitimate
+
+*Found 2026-10-10 during T-05; not fixed, and not caused by it.* "This is FedEx
+customs. A parcel in your name contains illegal items. Pay the clearance fine of
+4999 now or a police case will be filed." scores **32 WATCH, LIKELY_LEGITIMATE**
+with the fused model and **25 WATCH** with the lexical one. A false negative on
+a textbook script, in the language the project already knew was its weak one.
+Owned by T-45 (corpus) and T-42 (fusion).
+
 ### B-07 — Medium — The current split is "leave-archetypes-out" in name only
 
 *Found 2026-10-09 during T-04; not fixed.* `ml/data/processed/report.md` and the
@@ -307,7 +319,7 @@ No screenshots were saved to the repository during this audit.
 
 | ID | Issue | Where |
 |---|---|---|
-| U-01 | The Model card shows the leaked **0.767** under "Measured, not assumed" (B-01) | `/model` |
+| U-01 | The Model card shows the leaked **0.767** under "Measured, not assumed" (B-01). *Fixed in T-05: the page now shows the gate's refusal and the lexical figure alone* | `/model` |
 | U-02 | Two icon buttons in the app header have no accessible name | `components/layout/AppShell.tsx` |
 | U-03 | Internal task numbers in user-facing copy: "The judgement tier has no agents yet (tasks 4.6 and 4.7)" | `/investigate` |
 | U-04 | Two entry points for one job. "Analyze" gives a score; "Investigate" gives an agent trace and no score. A user cannot know which to use | `/analyze`, `/investigate` |
@@ -335,6 +347,7 @@ overflow at 375 px, the app chrome renders in dark theme.
 | D-09 | No shared error envelope: 57 `HTTPException` call sites return a string `detail`, validation errors return a list |
 | D-10 | The brief's document set is incomplete: no PRD and no design-system document |
 | D-12 | *Found during T-04.* The Model card's hand-written limitations are stale: "320 synthetic calls" (the corpus report says 338), "PAYMENT_SETUP and PAYMENT_EXECUTION have 2 and 4 test examples" (the current split has 27 and 58), and the split is described as leave-archetypes-out (B-07). Owned by T-44, which should generate the card from the manifest |
+| D-13 | *Found during T-05.* The same lexical model is now served everywhere, but a checkout with no checkpoint reports it as a FALLBACK with `clf:lexical_fallback`, while a checkout holding the refused checkpoint reports it as "best available" with no tag. Both are defensible; together they are confusing. `services/api/serving.py`'s line "not what the app serves" is now untrue of a clean clone. Owned by T-44 |
 | D-11 | The plan is behind its own timeline. Phase 2 was scheduled for 28 Sep – 1 Nov; the last commit is 7 Sep and Phase 2 has not started. The plan totals about 1,060 hours |
 
 ---

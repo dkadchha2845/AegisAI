@@ -1,10 +1,62 @@
 {
-  "lexical": {
-    "macro_f1": 0.3748427636783711,
-    "weighted_f1": 0.3812231246754251
+  "schema": 2,
+  "status": "refused",
+  "reason": "311 of the 423 test turns are in the checkpoint's own training data",
+  "n_test": 423,
+  "leak_check": {
+    "n_test": 423,
+    "overlap_turns": 311,
+    "overlap_calls": 60,
+    "test_calls": 84,
+    "by_archetype": {
+      "courier_parcel": {
+        "overlap": 118,
+        "turns": 118
+      },
+      "credit_limit_upgrade": {
+        "overlap": 0,
+        "turns": 19
+      },
+      "genuine_police": {
+        "overlap": 0,
+        "turns": 27
+      },
+      "income_tax_refund": {
+        "overlap": 0,
+        "turns": 22
+      },
+      "kyc_expiry": {
+        "overlap": 0,
+        "turns": 12
+      },
+      "loan_app_harassment": {
+        "overlap": 86,
+        "turns": 86
+      },
+      "refund_overpayment": {
+        "overlap": 107,
+        "turns": 107
+      },
+      "telecom_plan_upgrade": {
+        "overlap": 0,
+        "turns": 32
+      }
+    }
   },
-  "muril": {
-    "macro_f1": 0.7671653641306211,
-    "weighted_f1": 0.806693451767051
+  "training_data": {
+    "source": "BACKFILLED, asserted not proven: ml/data/processed at git 85a2aee",
+    "recorded_at": "2026-10-10T07:24:35+00:00",
+    "splits": {
+      "train": 931,
+      "val": 138
+    },
+    "n_texts": 1069,
+    "sha256": "33821828e1da150e481742a6c0a27ee8a0a6ecfe501d626a4061a1225f3d00a4"
+  },
+  "results": {
+    "lexical": {
+      "macro_f1": 0.3748427636783711,
+      "weighted_f1": 0.3812231246754251
+    }
   }
 }

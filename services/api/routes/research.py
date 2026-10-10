@@ -35,7 +35,6 @@ guarantee, and this project does not claim differential privacy.
 
 from __future__ import annotations
 
-import json
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends
@@ -55,16 +54,10 @@ _MIN_CLUSTER = 3
 
 
 def _comparison() -> Dict[str, Any]:
-    """The measured macro-F1 of both classifier backends, if the promotion gate
-    has been run. Empty when it has not — an unmeasured model reports nothing
-    rather than a plausible number."""
-    path = classifier_mod.COMPARISON_PATH
-    if not path.exists():
-        return {}
-    try:
-        return json.loads(path.read_text())
-    except (json.JSONDecodeError, OSError):
-        return {}
+    """The measured macro-F1 of the classifier backends, if the promotion gate
+    has been run and its comparison passed the leak check. Empty otherwise — an
+    unmeasured model reports nothing rather than a plausible number."""
+    return classifier_mod.comparison_scores()
 
 
 def _anonymised_trends(graph: Any) -> List[Dict[str, Any]]:
@@ -137,7 +130,7 @@ def overview(_: User = Depends(require_permission("RESEARCH_READ"))) -> Dict[str
             "selection_reason": classifier_mod.selection_reason,
         },
         "evaluation": {
-            "protocol": classifier_mod.EVALUATION_PROTOCOL,
+            "protocol": classifier_mod.evaluation_protocol(),
             "measured": bool(comparison),
             "scores": comparison,
         },

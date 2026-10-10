@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import sys
 from collections import Counter
 from pathlib import Path
 
@@ -44,6 +45,10 @@ from transformers import (
 ML_DIR = Path(__file__).resolve().parents[1]
 DATA = ML_DIR / "data" / "processed"
 ARTIFACTS = ML_DIR / "artifacts" / "stage-classifier"
+
+sys.path.insert(0, str(ML_DIR.parent))
+
+from ml.evaluation import provenance  # after the path insert above
 
 LABELS = [
     "GREETING", "AUTHORITY_CLAIM", "FEAR_INDUCTION", "ISOLATION",
@@ -342,6 +347,17 @@ def main() -> int:
     assert {int(k): v for k, v in saved["id2label"].items()} == ID2LABEL, (
         "id2label did not round-trip into the checkpoint config"
     )
+
+    # Leave a record of exactly which texts these weights have seen, beside the
+    # weights. Without it nobody can later show the checkpoint was held out from
+    # whatever it is being scored on, and the promotion gate refuses to score it
+    # at all — which is what should have happened to the last one (B-01).
+    trained_on = provenance.build(
+        {"train": train_rows, "val": val_rows},
+        source=f"ml/training/train.py — {_SPLIT_FILES.get('train', 'train.jsonl')} + "
+               f"{_SPLIT_FILES.get('val', 'val.jsonl')}, seed {args.seed}",
+    )
+    print(f"wrote {provenance.write(trained_on, args.out)}: {trained_on['n_texts']} texts")
 
     (args.out / "metrics.json").write_text(json.dumps({
         "base_model": args.model,

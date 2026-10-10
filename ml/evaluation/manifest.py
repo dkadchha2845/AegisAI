@@ -19,7 +19,9 @@ measured against, because the mismatch becomes checkable.
 
 What the fingerprint does **not** do is tie a score to the *data* the weights
 were trained on. That is the hole B-01 went through — the weights and the score
-matched each other perfectly, and the score was still a leak. T-05 closes it.
+matched each other perfectly, and the score was still a leak. `provenance.py`
+closes it, and since schema 2 the manifest records the outcome of that check:
+either scores with a passed leak check, or a refusal and its reason.
 
 So the manifest records *what was measured*, *on which split*, and *of which
 exact bytes*. `verify()` then answers "do these metrics describe the checkpoint
@@ -39,6 +41,9 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 MANIFEST_NAME = "checkpoint_manifest.json"
+
+#: 2 since the manifest began recording the leak check (docs/AUDIT.md, B-01).
+MANIFEST_SCHEMA = 2
 
 #: Files that define a checkpoint's behaviour. The tokenizer is included on
 #: purpose: identical weights with a different vocab decode differently, and
@@ -84,16 +89,30 @@ def build(
     results: Dict[str, Dict[str, float]],
     split: str,
     n_examples: int,
+    *,
+    status: str = "valid",
+    reason: str = "",
+    leak_check: Optional[Dict[str, Any]] = None,
+    training_data: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """Assemble the manifest for a just-completed evaluation."""
+    """Assemble the manifest for a just-completed evaluation.
+
+    `status` is `valid` or `refused`. A refused manifest still fingerprints the
+    weights — it is a statement about *this* checkpoint — but its `results`
+    hold no score for it.
+    """
     return {
-        "schema": 1,
+        "schema": MANIFEST_SCHEMA,
         "measured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "checkpoint_dir": model_dir.name,
         "fingerprint": fingerprint(model_dir),
         "evaluation": {
             "split": split,
             "n_examples": n_examples,
+            "status": status,
+            "reason": reason,
+            "leak_check": leak_check,
+            "training_data": training_data,
             "results": results,
             # Named so nobody has to guess which script produced this.
             "produced_by": "ml/evaluation/eval_backends.py",
@@ -153,9 +172,12 @@ def verify(model_dir: Path, manifest: Dict[str, Any]) -> tuple[bool, str]:
 def main() -> int:
     """`make verify-checkpoint` — check the on-disk model against the manifest."""
 
-    ml_dir = Path(__file__).resolve().parents[1]
-    artifacts = ml_dir / "artifacts"
-    model_dir = artifacts / "stage-classifier"
+    # The same directory the gate wrote to and the API reads from, so that
+    # `AEGIS_ARTIFACTS` moves all three together.
+    from . import provenance
+
+    model_dir = provenance.default_model_dir()
+    artifacts = model_dir.parent
     manifest = load(artifacts / MANIFEST_NAME)
 
     if manifest is None:
@@ -163,9 +185,12 @@ def main() -> int:
         return 0  # not a failure: a clean clone has neither file
 
     ok, reason = verify(model_dir, manifest)
-    scores = manifest["evaluation"]["results"]
+    evaluation = manifest["evaluation"]
+    scores = evaluation["results"]
     print(f"manifest measured {manifest['measured_at']} on split "
-          f"'{manifest['evaluation']['split']}' ({manifest['evaluation']['n_examples']} examples)")
+          f"'{evaluation['split']}' ({evaluation['n_examples']} examples)")
+    print(f"  status: {evaluation.get('status', 'unrecorded (schema 1)')}"
+          f"{' — ' + evaluation['reason'] if evaluation.get('reason') else ''}")
     for backend, s in sorted(scores.items()):
         print(f"  {backend:10s} macro-F1 {s['macro_f1']:.4f}")
     print(f"\n{'OK  ' if ok else 'FAIL'} {reason}")

@@ -83,32 +83,31 @@ export function ModelCard() {
               </p>
               <div className="statband" style={{ marginTop: "var(--s-4)" }}>
                 {Object.entries(card.evaluation.scores).map(([backend, score]) => {
-                  const best =
-                    score.macro_f1 ===
-                    Math.max(
-                      ...Object.values(card.evaluation!.scores).map((s) => s.macro_f1),
-                    );
+                  /* Which backend is serving is the service's answer, read
+                     from the card. This used to be "whichever score is
+                     highest", worked out here — a rule in the renderer, and
+                     wrong whenever the gate chose anything but the maximum. */
+                  const serving = backend === card.active_backend;
                   return (
                     <div className="stat" key={backend}>
                       <div
                         className="stat__n"
-                        style={{ color: best ? "var(--calm)" : "var(--ink-muted)" }}
+                        style={{ color: serving ? "var(--calm)" : "var(--ink-muted)" }}
                       >
                         {score.macro_f1.toFixed(3)}
                       </div>
                       <p className="stat__l">
                         <strong>{backend}</strong> macro-F1
-                        {best ? " — currently serving" : ""}
+                        {serving ? " — currently serving" : ""}
                       </p>
                     </div>
                   );
                 })}
               </div>
               <p className="small faint" style={{ marginTop: "var(--s-4)" }}>
-                Selection: {card.evaluation.selection}. Read the note above
-                before quoting either figure: a comparison only justifies
-                promoting a checkpoint when the checkpoint was not trained on
-                the data it is being scored on.
+                Selection: {card.evaluation.selection}. A checkpoint is promoted
+                only on a comparison that passed the leak check — one run on
+                data the checkpoint was not trained on.
               </p>
             </section>
           )}
