@@ -331,3 +331,42 @@ committed to `main`, with no separate branches.
 - How to verify: open `docs/PRD.md`; search `[ASSUMPTION]` and confirm or
   correct each; spot-check three API rows against `services/api/routes/`.
 
+## T-02 — Bring the architecture document to the brief's shape — 2026-10-22
+
+- What changed: `docs/ARCHITECTURE.md` gained, without rewriting what was
+  right: a reading guide with status marks (✅ built · 🟡 partial · 🎯 target ·
+  🅿️ parked); **§0** the brief's five layers mapped onto the six code layers,
+  with a diagram; **§2.1** A7 placed in the target graph between the evidence
+  join and feature assembly, with uphold / downgrade / reject edges;
+  **§2.2** the graph as it actually runs today (`begin → classify → extract →
+  investigate → reason → judge → finish`); **§2.3** A7's position, inputs,
+  outputs, deterministic and LLM challengers, effect on the score, failure
+  behaviour, tests and evaluation; **§4.1** today's scoring formula, read from
+  `engine/threat.py` (weights 0.40 / 0.25 / 0.20 / 0.15, escalators 0.18 and
+  0.15 gated at 0.45, a 2.5-point-per-second ratchet, the five bands);
+  **§4.2** the calibrated late-fusion target — per-modality scores from
+  A7-weighted findings, isotonic or Platt calibration, log-odds fusion fit by
+  logistic regression, ECE over 15 bins — and the files it will live in;
+  **§10** sequence diagrams for evidence → case file and for live
+  intervention; **§11** two pipelines today, one tomorrow; **§12**
+  operations — errors, timeouts, retries, degradation tags, logging,
+  observability, configuration, secrets.
+- Status marks added to existing sections, because they described the target
+  as if built: the layered view gained a "today" table (Neo4j, Qdrant and the
+  XGBoost risk model are not in use; MuRIL is refused by the gate), the
+  real-time section says live intervention runs on text utterances and the
+  400 ms budget is unmeasured, and the technology table gained a "Today"
+  column (PaddleOCR is not used; Tesseract is the default).
+- Files: `docs/ARCHITECTURE.md`, `docs/TASKS.md`, `docs/PROGRESS.md`
+- Tests: a document. All 8 Mermaid diagrams were parsed and rendered by
+  Mermaid 10.9.1 in a browser (a temporary page, removed). Every number and
+  name in §2.2, §4.1 and §12 was read from source: `orchestration/graph.py`,
+  `orchestration/policy.py`, `agents/base.py`, `engine/threat.py`,
+  `config.py`, `.env.example` (every variable cited is listed there).
+- Known limitations: §4.2 and §2.3 are designs; their tasks may refine the
+  numbers (bin count, the A7 rule list) and will update this document when
+  they do. No mocks.
+- How to verify: open `docs/ARCHITECTURE.md` in a Markdown preview; read the
+  two sequence diagrams in §10 against the product; check A7 sits where a
+  finding can be stopped.
+

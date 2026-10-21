@@ -63,7 +63,7 @@ reused.
 | ID | Title | Milestone | Status | Size | Legacy |
 |---|---|---|---|---|---|
 | T-01 | Write the PRD | P1 | 🧪 | S×2 | — |
-| T-02 | Bring the architecture document to the brief's shape | P2 | ⬜ | S | — |
+| T-02 | Bring the architecture document to the brief's shape | P2 | 🧪 | S | — |
 | T-03 | Write the design-system document from the shipped tokens | P2 | ⬜ | S | 7.1 |
 | T-04 | Correct the stage-classifier claim everywhere it is stated | M0 | ✅ | S | — |
 | T-05 | Make the promotion gate refuse a contaminated comparison | M0 | ✅ | S | — |
@@ -225,17 +225,17 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-02 — Bring the architecture document to the brief's shape
 - Milestone: P2
-- Status: ⬜ Todo
+- Status: 🧪 Awaiting my review (2026-10-22)
 - Depends on: T-01
 - Fixes / implements: brief §5; D-01
 - Goal: `docs/ARCHITECTURE.md` already describes the system well; it lacks the brief's five-layer mapping, A7, the two sequence diagrams and a fusion formula. Add them without rewriting what is right.
 - Scope: `docs/ARCHITECTURE.md` — add: the five brief layers mapped onto the six existing ones; A7 in the LangGraph diagram between the evidence join and the judge, with its reject/downgrade edges; sequence diagrams for (1) evidence → case file and (2) live intervention; the late-fusion and calibration formula with the module it will live in; a short "two pipelines today, one tomorrow" section.
 - Out of scope: the ADRs; any code; restructuring existing sections.
 - Acceptance criteria:
-  - [ ] Every Mermaid diagram renders
-  - [ ] A7's position, inputs, outputs and failure behaviour are specified
-  - [ ] The fusion section gives the formula and names the file that will implement it
-  - [ ] Nothing in the document describes as built something the audit marks ❌
+  - [x] Every Mermaid diagram renders — all 8 parsed and rendered by Mermaid 10.9.1 in a browser
+  - [x] A7's position, inputs, outputs and failure behaviour are specified (§2.3)
+  - [x] The fusion section gives the formula and names the file that will implement it — today's formula (§4.1) and the calibrated target (§4.2, `services/api/decision/`)
+  - [x] Nothing in the document describes as built something the audit marks ❌ — every section now carries ✅ / 🟡 / 🎯 / 🅿️; the technology table gained a "Today" column
 - How Dhrumil verifies it:
   1. Open `docs/ARCHITECTURE.md` in a Markdown preview
   2. Read the two sequence diagrams against the product
