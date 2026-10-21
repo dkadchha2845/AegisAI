@@ -42,7 +42,7 @@ reused.
 | Phase | What | Status |
 |---|---|---|
 | 0 — Audit | [`AUDIT.md`](AUDIT.md) | ✅ Approved 2026-10-09 |
-| 1 — PRD | T-01 | ⬜ |
+| 1 — PRD | T-01 | 🧪 |
 | 2 — Architecture and design system | T-02, T-03 | ⬜ |
 | 3 — Task list | this file | ✅ Approved 2026-10-09 |
 | 4 — Execution | M0 → M5, one task at a time | ⬜ |
@@ -62,7 +62,7 @@ reused.
 
 | ID | Title | Milestone | Status | Size | Legacy |
 |---|---|---|---|---|---|
-| T-01 | Write the PRD | P1 | ⬜ | S×2 | — |
+| T-01 | Write the PRD | P1 | 🧪 | S×2 | — |
 | T-02 | Bring the architecture document to the brief's shape | P2 | ⬜ | S | — |
 | T-03 | Write the design-system document from the shipped tokens | P2 | ⬜ | S | 7.1 |
 | T-04 | Correct the stage-classifier claim everywhere it is stated | M0 | ✅ | S | — |
@@ -204,19 +204,19 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-01 — Write the PRD
 - Milestone: P1
-- Status: ⬜ Todo
+- Status: 🧪 Awaiting my review (2026-10-22)
 - Depends on: — (Q1 and Q2 are decided; team and review dates stay `[ASSUMPTION]` placeholders until the owner supplies them)
 - Fixes / implements: D-10; brief §4
 - Goal: A complete PRD that describes the product the brief pitches, grounded in what the audit found exists, with every guess marked **[ASSUMPTION]**.
 - Scope: new `docs/PRD.md` only. Two sittings: sections 1–7 (overview, goals, personas, stories, functional requirements, agent specification, non-functional), then 8–13 (data model, API surface, screens, evaluation plan, risks, milestones).
 - Out of scope: any code; changing `docs/ARCHITECTURE.md`; deciding scope questions on your behalf.
 - Acceptance criteria:
-  - [ ] All 13 sections of brief §4 are present and none is a skeleton
-  - [ ] User stories `US-01`… carry Given/When/Then; requirements `FR-01`… are grouped as the brief lists
-  - [ ] The agent table specifies all seven agents, including how A7 challenges each
-  - [ ] The data model and API surface describe the *existing* schema and the 61 live routes, with additions marked as new
-  - [ ] The evaluation plan names the leak-free baseline from T-06 and makes no claim the audit contradicts
-  - [ ] Every assumption is tagged `[ASSUMPTION]`
+  - [x] All 13 sections of brief §4 are present and none is a skeleton
+  - [x] User stories `US-01`… carry Given/When/Then (17); requirements `FR-01`… are grouped as the brief lists (73, plus 20 NFRs)
+  - [x] The agent table specifies all seven agents, including how A7 challenges each
+  - [x] The data model and API surface describe the *existing* schema and the live routes, with additions marked as new. **Amended:** there are 73 routes, not 61 — recounted from source; the audit is corrected
+  - [x] The evaluation plan names the leak-free baseline from T-06 and makes no claim the audit contradicts
+  - [x] Every assumption is tagged `[ASSUMPTION]` (six, tabled in the appendix)
 - How Dhrumil verifies it:
   1. Open `docs/PRD.md`
   2. Search for `[ASSUMPTION]` and confirm or correct each

@@ -4,8 +4,9 @@ One entry per finished piece of work, newest last. A new session reads this
 after [`TASKS.md`](TASKS.md) to find where things stand.
 
 **Current state (2026-10-22):** Phase 0 and Phase 3 approved. T-04 approved
-2026-10-10; T-05, T-69 and T-70 approved 2026-10-22. Nothing is in progress or
-awaiting review. T-69 and T-70 (landing fixes, sections 01–02 then 03, 04, 06
+2026-10-10; T-05, T-69 and T-70 approved 2026-10-22. On the owner's
+instruction T-01, T-02 and T-03 run back to back, then the open issues from
+T-04 and T-05 (D-12, D-13, D-14, B-07, B-08); each is committed at 🧪. T-69 and T-70 (landing fixes, sections 01–02 then 03, 04, 06
 and 09) were added on the owner's request ahead of the recommended order; the
 remaining landing sections (05, 07, 08, 10–12) await the owner's feedback.
 Next in the recommended order: T-06.
@@ -299,4 +300,34 @@ committed to `main`, with no separate branches.
      its sidebar
   3. Expect: rail in step with the panels; a whole diagram with a packet
      running; a graph that answers; a sidebar that follows
+
+## T-01 — Write the PRD — 2026-10-22
+
+- What changed: new `docs/PRD.md`, all 13 sections of brief §4 — overview,
+  goals and non-goals, four personas, 17 user stories in Given/When/Then, 73
+  functional requirements in the brief's groups and 20 non-functional ones,
+  the A1–A7 agent table (with how A7 challenges each), the data model, all 73
+  API routes, 22 screens plus the new ones, the evaluation plan, risks, and
+  milestones. Every requirement says whether it is built, partial or new, and
+  names the task that builds it.
+- Found while writing it, recorded rather than fixed: **S-07** — 25 routes
+  (all of `/api/analyze/*` and `/api/shield/*`, 10 of 13 `/api/session/*`)
+  declare no permission and do not identify the caller, although `CLAUDE.md`
+  says every route does and `ANALYZE_USE` exists unused; owned by T-59.
+  **D-15** — `DATASETS.md` says 1,692 calls, the generated report 338.
+  The audit's route count (61) was an undercount; it is 73, corrected.
+- Files: `docs/PRD.md` (new), `docs/AUDIT.md`, `docs/TASKS.md`,
+  `docs/PROGRESS.md`
+- Tests: a document. Every route, column, request field, error code and enum
+  value it states was checked against the source before commit; ten were
+  wrong in the first draft and corrected (e.g. `AgentStatus` is
+  OK/DEGRADED/SKIPPED/ERROR; the 409 belongs to `/stream`, not `/report`).
+  `test_contributor_docs.py` 43 passed; every PRD table has a consistent
+  column count.
+- Known limitations: six `[ASSUMPTION]`s await the owner (team, review dates,
+  a sourced FIR-conversion figure, SAGE, the names of the six agents, a
+  single-LLM baseline). Request and response shapes are summarised, not full
+  schemas — `schema/` remains the source of truth. No mocks.
+- How to verify: open `docs/PRD.md`; search `[ASSUMPTION]` and confirm or
+  correct each; spot-check three API rows against `services/api/routes/`.
 

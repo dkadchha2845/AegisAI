@@ -19,7 +19,7 @@ was changed to produce it.
 
 | Layer | What is used |
 |---|---|
-| Backend | Python 3.12.14 (`.venv`), FastAPI, Pydantic v2, SQLAlchemy + Alembic, 9 routers / 61 route handlers |
+| Backend | Python 3.12.14 (`.venv`), FastAPI, Pydantic v2, SQLAlchemy + Alembic, 9 routers / 73 routes (72 REST + 1 WebSocket; recounted from source during T-01 — the original 61 undercounted) |
 | Orchestration | **LangGraph 0.6** (`services/api/orchestration/graph.py`), Celery + Redis worker with an in-process fallback |
 | Stores | PostgreSQL 16 · Neo4j 5.26 · Qdrant 1.12 · Redis 7.4 via colima + `infra/compose/dev.yml`. All four are optional; SQLite / NetworkX / in-house retrieval / in-process execution are the fallbacks |
 | ML | Fine-tuned MuRIL stage classifier fused with a lexical classifier; sentence-transformers retrieval; Markov "digital twin". `torch` and `transformers` are commented out of `services/api/requirements.txt` — installed locally, absent on the deploy |
@@ -307,6 +307,7 @@ retrain before it.
 | S-04 | Low | No per-organisation upload quota. The 4 MB per-file cap is enforced while reading | `investigations/intake.py` |
 | S-05 | Low | 1,613 third-party files under `Skills/` are tracked in the product repository — unreviewed content, licence exposure and review noise | `git ls-files Skills` |
 | S-06 | Info | A live Gemini key sits in the local `.env`. It is gitignored and has never been committed; rotate it before any public demo | `git check-ignore .env` |
+| S-07 | Medium | *Found during T-01.* **Routes that declare no permission.** `CLAUDE.md` says every route declares `require_permission(...)`. Twenty-five routes in three routers neither declare a permission nor identify the caller: all 8 of `/api/analyze/*` (an `ANALYZE_USE` permission exists in `permissions.py` and nothing requires it), all 7 of `/api/shield/*` (the vault is token-addressed by design), and 10 of the 13 `/api/session/*` routes — every one but the three payment actions, including the WebSocket and the evidence-package PDF. (Sign-up, login, password reset, `/api/auth/status` and `/api/auth/demo-accounts` are also unauthenticated, as they must be.) Some may be public by intent (a citizen checking a message without an account); that intent is not written down anywhere, and the session routes expose another person's live transcript to anyone holding its id. Owned by T-59 | route decorators in `services/api/routes/` |
 
 Not found: committed secrets, wildcard CORS origins (origins are pinned;
 methods and headers are `*` with credentials), path traversal at intake.
@@ -349,6 +350,7 @@ overflow at 375 px, the app chrome renders in dark theme.
 | D-12 | *Found during T-04.* The Model card's hand-written limitations are stale: "320 synthetic calls" (the corpus report says 338), "PAYMENT_SETUP and PAYMENT_EXECUTION have 2 and 4 test examples" (the current split has 27 and 58), and the split is described as leave-archetypes-out (B-07). Owned by T-44, which should generate the card from the manifest |
 | D-13 | *Found during T-05.* The same lexical model is now served everywhere, but a checkout with no checkpoint reports it as a FALLBACK with `clf:lexical_fallback`, while a checkout holding the refused checkpoint reports it as "best available" with no tag. Both are defensible; together they are confusing. `services/api/serving.py`'s line "not what the app serves" is now untrue of a clean clone. Owned by T-44 |
 | D-14 | *Found during T-05.* Every `make eval` rewrites the tracked `ml/artifacts/checkpoint_manifest.json` with a new `measured_at`, so re-running the gate leaves the working tree dirty even when nothing changed. Owned by T-44 |
+| D-15 | *Found during T-01.* `docs/DATASETS.md` §2 gives the call corpus as "1,692 calls"; the generated `ml/data/processed/report.md` says 338 calls (209 scam, 129 benign) and 1,617 utterances. The PRD uses the generated figures. Owned by T-37's data card |
 | D-11 | The plan is behind its own timeline. Phase 2 was scheduled for 28 Sep – 1 Nov; the last commit is 7 Sep and Phase 2 has not started. The plan totals about 1,060 hours |
 
 ---
