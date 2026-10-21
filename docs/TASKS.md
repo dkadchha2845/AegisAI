@@ -132,8 +132,9 @@ reused.
 | T-68 | Paper draft and reproducibility package | M5 | ⬜ | WP | 9.7 |
 | T-69 | Landing: fix the hero, the problem web and the evidence grid | UI | ✅ | S | — |
 | T-70 | Landing: the investigation rail, the agent diagram, the intelligence graph, the research sidebar | UI | ✅ | S | — |
+| T-71 | Close the issues found in T-04 and T-05 (D-12, D-13, D-14, B-07, B-08) | M0 | 🔄 | S×2 | — |
 
-70 tasks: 38 single-sitting (27 written out in full below), 32 work packages.
+71 tasks: 39 single-sitting (28 written out in full below), 32 work packages.
 T-69 and T-70 were added on the owner's request on 2026-10-21 and 2026-10-22,
 out of the recommended order; they are specified at the end of this file.
 

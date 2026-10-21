@@ -400,3 +400,20 @@ committed to `main`, with no separate branches.
 - How to verify: open `docs/DESIGN_SYSTEM.md`; pick three tokens and find
   them in `apps/web/src/styles/tokens.css`; values match.
 
+## T-71 — Close the issues found in T-04 and T-05 — in progress (2026-10-22)
+
+- **Done:** D-14 — `ml/evaluation/manifest.write()` leaves the tracked manifest
+  untouched when only `measured_at` would change (2 tests). D-13 — with no
+  checkpoint, the lexical model is reported as a fallback only when the
+  comparison on file promotes a checkpoint this machine lacks; a clean clone
+  now reads "best available — no checkpoint here, and none would serve", the
+  same as a checkout holding the refused weights (3 tests). CI changed from
+  `--require fallback` to `--require best` and its health assertion inverted
+  accordingly — **CI itself has not run on this change yet**.
+- **Left:** B-07 (rebuild the split by archetype with an overlap test — the
+  raw corpus has two cp1252 bytes in a metadata field to fix first), B-08
+  (English courier/customs cues, measured on probe sets written before
+  tuning), D-12 (Model card limitations derived from the data — the split
+  files hold 304 calls, not the "320" the card states). T-06 must pin the
+  pre-B-07 split commit (`e123bd5`) once B-07 lands.
+

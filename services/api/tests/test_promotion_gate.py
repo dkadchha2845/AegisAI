@@ -317,6 +317,64 @@ def test_nothing_on_file_says_so(tmp_path, monkeypatch) -> None:
     assert "No comparison on file" in classifier_mod.evaluation_protocol()
 
 
+# --- D-13: one label for one model --------------------------------------------
+
+
+def _no_checkpoint(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A clean clone: no weights at all, the tracked comparison beside them."""
+    monkeypatch.setattr(
+        classifier_mod, "settings", SimpleNamespace(classifier_dir=tmp_path / "absent")
+    )
+    monkeypatch.setattr(classifier_mod, "_cached", None)
+    monkeypatch.setattr(classifier_mod, "selection_reason", "not yet loaded")
+    monkeypatch.setattr(classifier_mod, "serving_is_fallback", False)
+
+
+def test_a_clean_clone_is_not_a_fallback_when_the_gate_refused_the_checkpoint(
+    tmp_path, monkeypatch
+) -> None:
+    """The same lexical model, the same refusal on file: the same label.
+
+    Before D-13 a clone with no weights flagged lexical as a fallback while a
+    checkout holding the refused weights called the identical model "best
+    available". The tracked comparison says no checkpoint would serve, so
+    nothing better exists anywhere — the clone serves what production serves.
+    """
+    _comparison(tmp_path, monkeypatch, REFUSED)
+    _no_checkpoint(tmp_path, monkeypatch)
+    clf = classifier_mod.load_classifier()
+    assert clf.backend == "lexical"
+    assert classifier_mod.serving_is_fallback is False
+    assert classifier_mod.selection_reason.startswith("no checkpoint here, and none would serve")
+    assert "311 of the 423 test turns" in classifier_mod.selection_reason
+
+
+def test_a_clean_clone_is_a_fallback_when_the_comparison_promotes_a_checkpoint(
+    tmp_path, monkeypatch
+) -> None:
+    """The other direction: a promoted checkpoint this machine lacks.
+
+    Then the lexical model really is a substitute for what the application
+    serves, and must be reported as one — `--require best` fails on it.
+    """
+    _comparison(tmp_path, monkeypatch, _valid(fused=0.6, lexical=0.4))
+    _no_checkpoint(tmp_path, monkeypatch)
+    clf = classifier_mod.load_classifier()
+    assert clf.backend == "lexical"
+    assert classifier_mod.serving_is_fallback is True
+    assert "promotes one" in classifier_mod.selection_reason
+    assert "substitute" in classifier_mod.selection_reason
+
+
+def test_a_clean_clone_with_nothing_on_file_is_not_a_fallback(tmp_path, monkeypatch) -> None:
+    """No comparison means nothing shows a checkpoint is better (T-05), so the
+    lexical model is the best one with anything behind it."""
+    _comparison(tmp_path, monkeypatch, None)
+    _no_checkpoint(tmp_path, monkeypatch)
+    classifier_mod.load_classifier()
+    assert classifier_mod.serving_is_fallback is False
+
+
 # --- the running service -----------------------------------------------------
 
 

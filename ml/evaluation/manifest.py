@@ -124,8 +124,32 @@ def build(
     }
 
 
+#: Fields that change on every run whether or not anything was measured
+#: differently. Ignored when deciding whether a manifest needs rewriting.
+_VOLATILE = ("measured_at",)
+
+
+def _substance(manifest: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """The manifest without its volatile fields — what it actually says."""
+    if manifest is None:
+        return None
+    return {k: v for k, v in manifest.items() if k not in _VOLATILE}
+
+
 def write(manifest: Dict[str, Any], out_dir: Path) -> Path:
+    """Write the manifest — unless the one on disk already says the same thing.
+
+    `measured_at` is new on every run, so writing unconditionally made every
+    `make eval` dirty the tracked `ml/artifacts/checkpoint_manifest.json` even
+    when the gate reached the identical verdict on the identical weights and
+    split (audit D-14). A rewrite now happens only when something the manifest
+    *states* has changed — the fingerprint, the split, the verdict, the scores
+    or the environment — and the timestamp then records when that change was
+    measured, which is the only time it means anything.
+    """
     path = out_dir / MANIFEST_NAME
+    if _substance(load(path)) == _substance(manifest):
+        return path
     path.write_text(json.dumps(manifest, indent=2) + "\n")
     return path
 

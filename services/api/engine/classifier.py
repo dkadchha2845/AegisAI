@@ -569,10 +569,28 @@ def load_classifier() -> StageClassifier:
             selection_reason = f"checkpoint present but {reason}"
             serving_is_fallback = False
     else:
-        # The fine-tuned model was never produced on this machine (the clean-clone
-        # / CI path). Lexical is genuinely a fallback here — flag it.
-        selection_reason = "no checkpoint exported"
-        serving_is_fallback = True
+        # No checkpoint on this machine (the clean-clone / CI path). Whether the
+        # lexical model is a *fallback* here depends on what the comparison on
+        # file says, and that file is tracked, so a clean clone can read it.
+        #
+        # It used to be flagged a fallback unconditionally — while a checkout
+        # holding the refused checkpoint reported the same lexical model as
+        # "best available". Same model, same verdict from the gate, opposite
+        # labels (audit D-13). The question that decides it is the same in both
+        # places: would the gate promote a checkpoint if one were here? If not,
+        # lexical is the best model anyone has, here or anywhere. Only when the
+        # comparison on file promotes a checkpoint this machine lacks is the
+        # lexical model a substitute for what the application serves.
+        promote, reason = _checkpoint_is_better()
+        if promote:
+            selection_reason = (
+                f"no checkpoint at {model_dir}, but the comparison on file promotes "
+                f"one ({reason}) — this machine serves a substitute"
+            )
+            serving_is_fallback = True
+        else:
+            selection_reason = f"no checkpoint here, and none would serve: {reason}"
+            serving_is_fallback = False
 
     _cached = LexicalStageClassifier()
     return _cached

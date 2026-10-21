@@ -112,3 +112,50 @@ def test_recorded_scores_are_plausible():
     for backend, scores in _load(COMPARISON)["results"].items():
         assert 0.0 <= scores["macro_f1"] <= 1.0, backend
         assert 0.0 <= scores["weighted_f1"] <= 1.0, backend
+
+
+# --- D-14: re-running the gate does not dirty the tracked manifest ---------
+
+
+def _manifest(tmp: Path, **evaluation) -> dict:
+    from ml.evaluation import manifest as manifest_mod
+
+    model = tmp / "stage-classifier"
+    model.mkdir(exist_ok=True)
+    (model / "config.json").write_text('{"labels": 8}')
+    return manifest_mod.build(
+        model,
+        evaluation.get("results", {"lexical": {"macro_f1": 0.4}}),
+        "test",
+        evaluation.get("n", 100),
+        status="refused",
+        reason="fixture",
+    )
+
+
+def test_an_identical_re_measurement_leaves_the_file_untouched(tmp_path):
+    from ml.evaluation import manifest as manifest_mod
+
+    first = _manifest(tmp_path)
+    path = manifest_mod.write(first, tmp_path)
+    before = path.read_bytes()
+
+    again = _manifest(tmp_path)
+    again["measured_at"] = "2099-01-01T00:00:00+00:00"  # a later run, same verdict
+    manifest_mod.write(again, tmp_path)
+
+    assert path.read_bytes() == before, (
+        "the manifest was rewritten although only its timestamp changed — "
+        "every `make eval` would dirty the working tree (D-14)"
+    )
+
+
+def test_a_changed_measurement_is_written(tmp_path):
+    from ml.evaluation import manifest as manifest_mod
+
+    path = manifest_mod.write(_manifest(tmp_path), tmp_path)
+    changed = _manifest(tmp_path, results={"lexical": {"macro_f1": 0.5}})
+    manifest_mod.write(changed, tmp_path)
+
+    assert json.loads(path.read_text())["evaluation"]["results"]["lexical"]["macro_f1"] == 0.5
+    assert json.loads(path.read_text())["measured_at"] == changed["measured_at"]

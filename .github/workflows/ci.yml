@@ -128,18 +128,15 @@ jobs:
                  services/api/tests/test_jobs_journal.py \
                  services/api/tests/test_jobs_worker.py -q
 
-      # Task 1.7b. The step above ran against whichever classifier this runner
-      # has, and that is always the lexical fallback: ml/artifacts/ is
-      # gitignored and nothing here exports a checkpoint. So a green backend job
-      # proves the fallback, not what the application serves — which is exactly
-      # how 1.7 was ticked on the false positive 1.7a then had to fix.
-      #
-      # Asserting the state rather than leaving it implied means the day 4.9
-      # puts a promoted checkpoint on the runner this fails, and someone has to
-      # decide what the gates require, instead of the suite quietly changing
-      # what it proves.
+      # Task 1.7b, revised by T-71 (audit D-13). This runner has no checkpoint,
+      # so it serves the lexical model. Since T-05 the tracked comparison records
+      # that the gate refused the only checkpoint, so lexical is what the
+      # application serves on every machine — this run proves the served model.
+      # `--require best` fails the day the comparison on file promotes a
+      # checkpoint the runner does not have, which is exactly when a green
+      # backend job would stop proving what production runs.
       - name: Which classifier did the gates prove?
-        run: python -m services.api.serving --require fallback
+        run: python -m services.api.serving --require best
 
       - name: Contract drift (Python <-> TypeScript)
         run: python schema/check_contract.py
@@ -185,8 +182,9 @@ jobs:
           assert "@" not in ex["broker"], "a broker credential reached /api/health"
           # 1.7b: the same pin, on the served endpoint rather than in-process.
           clf = h["classifier"]
-          assert clf["serving_best"] is False, ("a promoted checkpoint is serving on CI - see 1.7b", clf)
-          assert "clf:lexical_fallback" in h["degraded"], h["degraded"]
+          assert clf["backend"] == "lexical", ("a checkpoint is serving on CI - see 1.7b", clf)
+          assert clf["serving_best"] is True, ("CI serves a substitute for a promoted checkpoint - D-13", clf)
+          assert "clf:lexical_fallback" not in h["degraded"], h["degraded"]
           print("health ok:", clf["backend"], "|", clf["reason"])
           print("degraded:", h["degraded"])
           '
