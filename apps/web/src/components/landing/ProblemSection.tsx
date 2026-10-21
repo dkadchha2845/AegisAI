@@ -16,6 +16,18 @@
  * **The geometry is computed once and shared.** The chips are DOM, the lines
  * are SVG, and both read the same table of positions — so a label can never
  * drift away from the line that belongs to it, at any viewport.
+ *
+ * **Why each chip sits in a slot.** A chip is centred on its point with
+ * `translate(-50%, -50%)`. When GSAP animated that same element it read the
+ * centring as its starting transform — mid-way through a CSS transition, as it
+ * happened — and wrote a wrong one back as the end state: chips settled up to
+ * 90px off their lines, and three stayed at half size. The slot owns the
+ * centring and never moves; the chip inside it owns the entrance.
+ *
+ * **After the web forms, it keeps working.** One signal at a time travels a
+ * line from its channel into the centre, which answers each arrival — the
+ * section's claim, that eleven surfaces are one operation, shown rather than
+ * asserted.
  */
 
 import { useEffect, useRef } from "react";
@@ -70,11 +82,16 @@ const CHANNELS = [
 
 /** The four entrances, cycled by index. */
 const ENTRANCES = [
-  { opacity: 0, y: 40, filter: "blur(14px)" },
-  { opacity: 0, x: -54, filter: "blur(12px)" },
-  { opacity: 0, scale: 0.5, filter: "blur(10px)" },
-  { opacity: 0, x: 54, filter: "blur(12px)" },
+  { opacity: 0, y: 32, filter: "blur(12px)" },
+  { opacity: 0, x: -44, filter: "blur(10px)" },
+  { opacity: 0, scale: 0.6, filter: "blur(10px)" },
+  { opacity: 0, x: 44, filter: "blur(10px)" },
 ];
+
+/** A channel's line into the centre. A path rather than a line, so a signal
+ *  can ride it. */
+const toCore = (c: (typeof CHANNELS)[number]) =>
+  `M ${c.x.toFixed(1)} ${c.y.toFixed(1)} L ${CX} ${CY}`;
 
 export function ProblemSection() {
   const root = useRef<HTMLElement>(null);
@@ -136,19 +153,33 @@ export function ProblemSection() {
           )
           .from("[data-p-verdict]", { opacity: 0, y: 16, duration: DUR.reveal, ease: EASE.out }, "-=0.3");
 
-        // Once the web exists it stays alive: a slow travelling highlight on
-        // the edges, so the section does not become a still picture the
-        // moment its entrance finishes.
-        tl.to(
-          "[data-p-edge]",
-          {
-            strokeOpacity: 0.75,
-            duration: 0.9,
-            ease: "sine.inOut",
-            stagger: { each: 0.16, repeat: -1, yoyo: true },
-          },
-          ">",
-        );
+        /* Once the web exists it keeps working: a signal leaves one channel
+           at a time, travels its line, and the centre answers. Channels fire
+           in a shuffled but fixed order, so neighbours never fire back to
+           back and the pattern does not read as a clock hand. */
+        const edges = gsap.utils.toArray<SVGPathElement>("[data-p-edge]");
+        const core = el.querySelector("[data-p-core]");
+        const signal = gsap.timeline({ paused: true, repeat: -1 });
+        const ORDER = [0, 6, 3, 9, 1, 7, 4, 10, 2, 8, 5];
+        ORDER.forEach((i, k) => {
+          const path = edges[i];
+          const dot = el.querySelector(`[data-p-signal="${i}"]`);
+          if (!path || !dot) return;
+          const t = k * 0.62;
+          signal
+            .set(dot, { opacity: 1 }, t)
+            .to(dot, { motionPath: { path, align: path, alignOrigin: [0.5, 0.5] }, duration: 0.95, ease: "power1.in" }, t)
+            .set(dot, { opacity: 0 }, t + 0.95)
+            .fromTo(
+              core,
+              { "--hit": 1 },
+              { "--hit": 0, duration: 0.55, ease: "power2.out", immediateRender: false },
+              t + 0.95,
+            );
+        });
+        tl.add(() => {
+          signal.play(0);
+        }, ">");
       }, el);
       teardown.push(() => ctx.revert());
       // Triggers built after the route's own refresh; see `refreshSoon`.
@@ -178,17 +209,12 @@ export function ProblemSection() {
         </p>
 
         <div className="lp-web" data-p-stage aria-hidden="true">
-          <svg className="lp-web__svg" viewBox={`0 0 ${W} ${H}`} fill="none" preserveAspectRatio="none">
+          <svg className="lp-web__svg" viewBox={`0 0 ${W} ${H}`} fill="none">
             {CHANNELS.map((c) => (
-              <line
-                key={c.id}
-                className="lp-web__edge"
-                data-p-edge
-                x1={c.x}
-                y1={c.y}
-                x2={CX}
-                y2={CY}
-              />
+              <path key={c.id} className="lp-web__edge" data-p-edge d={toCore(c)} />
+            ))}
+            {CHANNELS.map((c, i) => (
+              <circle key={`s-${c.id}`} className="lp-web__signal" r={3.2} cx={c.x} cy={c.y} data-p-signal={i} />
             ))}
           </svg>
 
@@ -196,18 +222,21 @@ export function ProblemSection() {
             {CHANNELS.map((c) => (
               <div
                 key={c.id}
-                className="lp-web__chip"
-                data-p-chip
+                className="lp-web__slot"
                 style={{ left: `${(c.x / W) * 100}%`, top: `${(c.y / H) * 100}%` }}
               >
-                <c.icon size={14} strokeWidth={1.7} />
-                {c.label}
+                <div className="lp-web__chip" data-p-chip>
+                  <c.icon size={14} strokeWidth={1.7} aria-hidden="true" />
+                  {c.label}
+                </div>
               </div>
             ))}
 
-            <div className="lp-web__core" data-p-core>
-              <span className="lp-web__coren">One operation</span>
-              <span className="lp-web__cores">Eleven surfaces</span>
+            <div className="lp-web__slot lp-web__slot--core">
+              <div className="lp-web__core" data-p-core>
+                <span className="lp-web__coren">One operation</span>
+                <span className="lp-web__cores">Eleven surfaces</span>
+              </div>
             </div>
           </div>
         </div>

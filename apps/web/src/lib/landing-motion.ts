@@ -293,6 +293,31 @@ export function refreshSoon(): void {
   refreshTimer = window.setTimeout(() => ScrollTrigger.refresh(), 80);
 }
 
+/* ------------------------------------------------------------ in-page nav */
+
+/** Clearance for the fixed bar, so a section's eyebrow is not landed under it.
+ *  The same figure the bar's own section links use. */
+const NAV_CLEARANCE = 68;
+
+/**
+ * Click handler for an in-page link: a smooth scroll that clears the bar, or
+ * an instant one under reduced motion. A bare `href="#id"` jumps instantly and
+ * parks the section's first line behind the bar, which is what the hero's
+ * secondary actions used to do. The `href` stays on the anchor, so the link
+ * still works without JavaScript and still says where it goes.
+ */
+export function scrollToSection(id: string) {
+  return (e: { preventDefault(): void }) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    window.scrollTo({
+      top: el.getBoundingClientRect().top + window.scrollY - NAV_CLEARANCE,
+      behavior: reduced() ? "auto" : "smooth",
+    });
+  };
+}
+
 /* ------------------------------------------------------------- lifecycle */
 
 /**

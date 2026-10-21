@@ -3,9 +3,11 @@
 One entry per finished piece of work, newest last. A new session reads this
 after [`TASKS.md`](TASKS.md) to find where things stand.
 
-**Current state (2026-10-10):** Phase 0 and Phase 3 approved. T-04 approved
-2026-10-10. **T-05 is 🧪 awaiting review**, committed to `main`. Next in
-order: T-06.
+**Current state (2026-10-21):** Phase 0 and Phase 3 approved. T-04 approved
+2026-10-10. **T-05 and T-69 are 🧪 awaiting review**, committed to `main`.
+T-69 (landing fixes through section 02) was added on the owner's request ahead
+of the recommended order; the owner will continue with the later sections.
+Next in the recommended order: T-06.
 
 ---
 
@@ -154,3 +156,72 @@ The owner approved both documents and delegated the open questions; the
 decisions are tabled in `docs/AUDIT.md` §9. Still open: the SAGE paper (blocks
 T-40) and the team and review dates (placeholders in the PRD). All work is
 committed to `main`, with no separate branches.
+
+## T-69 — Landing: fix the hero, the problem web and the evidence grid — 2026-10-21
+
+- What changed:
+  - **Hero.** The pill label ("● AEGISAI · AGENTIC DIGITAL PUBLIC SAFETY") is
+    now a plain kicker: an accent rule and "Agentic digital public safety".
+    The primary button is no longer magnetic — it drifted up to 26px sideways
+    and 11px down toward the cursor and left its neighbour behind. The two
+    buttons share a row, a height and a top; "Explore the system" gained an
+    arrow. "Explore the system" and "Scroll" were bare anchors that jumped
+    instantly and parked the section under the bar; they now use the same
+    smooth, bar-clearing scroll as the nav (`scrollToSection`).
+  - **Hero network.** Rebuilt on the structure the owner chose: four analysis
+    lanes — Voice (phone call, voice note), Text (message, email), Vision
+    (screenshot, QR code), Identity (UPI ID, caller number) — feeding the core.
+    It was nine inputs wired to four hubs by angle alone, which produced
+    pairings such as a phone call feeding "Risk", one hub with three inputs
+    and an edge through every hub label. The owner's choice listed "URL" in
+    the last lane; the link scanner is not built, so it is "Caller number",
+    and the lane is named Identity. Labels are sized in container units and
+    stay legible; packets travel input → lane → core and the core pulses on
+    each arrival.
+  - **The motion defect behind "misplaced".** The problem chips (and the
+    hero's nodes) were centred with `translate(-50%, -50%)` on the same
+    element GSAP animated, and the chips also had a CSS `transition` on
+    `transform`. GSAP recorded a half-transitioned matrix as the end state:
+    measured in the running page, chips settled up to 92px off their line ends
+    and three (Email, Website, Screenshot) stayed at half size. Every
+    positioned node now sits in a slot that owns the centring and never
+    animates. The same transition conflict existed on `.lp-btn` (press) and
+    `.lp-card` (hover lift); both now use the individual `scale` /
+    `translate` properties, which compose with GSAP instead of fighting it.
+  - **Problem web.** Chips land on their lines; after the web forms, one
+    signal at a time travels from a channel into "One operation", which
+    flashes as it arrives, replacing a flickering line opacity.
+  - **Evidence.** The staggered offsets (0/34/0/62px) read as misalignment,
+    and because a transform takes no layout space, the note sat beside the
+    lowest cards. Now an aligned 4×2 grid of equal cards, each ending in the
+    name of what reads it. One entrance per row, left to right; each icon has
+    its own small gesture. Four cards described things that are not built —
+    a link scanner with an SSRF guard, email-header analysis, video, APK
+    analysis — and the footer said uploads are "validated by magic bytes"
+    (true of the investigation intake, not of `/api/analyze`). They are
+    replaced by Message, UPI ID, Caller number and Document, and every card's
+    copy was checked against `routes/analyze.py`, `engine/ocr.py`,
+    `engine/upi.py`, `engine/spoofing.py` and `ingest/asr.py`.
+- Files: `apps/web/src/components/landing/HeroSection.tsx`,
+  `HeroNetwork.tsx`, `ProblemSection.tsx`, `EvidenceSection.tsx`,
+  `apps/web/src/lib/landing-motion.ts`, `apps/web/src/styles/landing.css`,
+  `docs/TASKS.md`, `docs/PROGRESS.md`
+- Tests: no frontend harness exists yet (T-15). Measured in the running page
+  at 1470×801: buttons at the same top (527) and height (50); network nodes
+  centred within 1px of their computed points; all 11 problem chips 0px from
+  their line ends at scale 1; evidence cards all 295×309, reader lines aligned
+  per row, note 36px under the grid. No overlap and no horizontal scroll at
+  1470, 1024, 768, 430 and 375. Light theme and reduced motion checked
+  (everything visible at rest, no stray packets). Both in-page links land
+  their section 68px from the top. Four gates green.
+- Known limitations: the browser pane used for verification was hidden, so
+  it delivered no animation frames; GSAP and ScrollTrigger were stepped by
+  hand to reach each settled state. The geometry is measured; the *feel* of
+  the motion at 60fps needs the owner's eye. `useMagnetic` is still used by
+  the closing section's button, which was out of scope. No mocks.
+- How to verify:
+  1. `make api` and `make web`, open `http://localhost:5173/`
+  2. Hover both hero buttons; click "Explore the system"; scroll through 01–02
+  3. Expect: the buttons stay in one row; the network is symmetric with
+     packets reaching the core; chips land on their lines; eight even cards
+

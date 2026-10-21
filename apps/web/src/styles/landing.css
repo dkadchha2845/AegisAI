@@ -242,10 +242,14 @@ html[data-theme="light"] .lp {
     border-color var(--t-fast) var(--ease-out),
     background var(--t-fast) var(--ease-out),
     color var(--t-fast) var(--ease-out),
-    transform var(--t-instant) var(--ease-out);
+    scale var(--t-instant) var(--ease-out);
 }
 .lp-btn:hover { border-color: var(--lp-hair-2); background: var(--lp-surface-2); color: var(--lp-ink); }
-.lp-btn:active { transform: scale(0.975); }
+/* The press is on `scale`, the individual property, not on `transform`. GSAP
+   owns `transform` on any button it brings in, and a CSS transition on the
+   same property eases every frame of that tween a second time — the entrance
+   lags and can settle short of where it was going. */
+.lp-btn:active { scale: 0.975; }
 .lp-btn:focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 3px; }
 .lp-btn svg { flex: none; }
 
@@ -292,6 +296,11 @@ html[data-theme="light"] .lp-btn--primary:hover { color: #fff; }
 
 .lp-btn--sm { height: 38px; padding: 0 18px; font-size: 0.83rem; }
 
+/* A trailing arrow that leads on hover: it says "this goes somewhere on the
+   page" without a second visual weight competing with the primary. */
+.lp-btn--arrow svg { transition: translate var(--t-fast) var(--ease-out); }
+.lp-btn--arrow:hover svg { translate: 3px 0; }
+
 /* A magnetic control's transform is written every frame by GSAP; leaving the
    CSS transition on the same property stacks a second ease on the tween and
    the button lags the cursor. `useMagnetic` sets the attribute. */
@@ -322,14 +331,19 @@ html[data-theme="light"] .lp-btn--primary:hover { color: #fff; }
   border-radius: 16px;
   background: var(--lp-card-bg);
   box-shadow: var(--lp-card-shadow);
+  /* The hover lift is on `translate`, the individual property, never on
+     `transform`. Cards are brought in by GSAP, which owns `transform`; a CSS
+     transition on that same property eases every frame of the entrance a
+     second time, so a card can lag, overshoot or settle short. `translate`
+     composes with whatever GSAP writes instead of competing with it. */
   transition:
     border-color var(--t-med) var(--ease-out),
-    transform var(--t-med) var(--ease-out),
+    translate var(--t-med) var(--ease-out),
     background var(--t-med) var(--ease-out);
 }
 .lp-card--hover:hover {
   border-color: color-mix(in srgb, var(--lp-accent) 42%, transparent);
-  transform: translateY(-3px);
+  translate: 0 -3px;
 }
 .lp-card__title {
   margin: 0;
@@ -652,33 +666,30 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
 
 .lp-hero__col { min-width: 0; }
 
-.lp-hero__eyebrow {
-  display: inline-flex;
+/* The kicker: a short accent rule and a phrase, in the body face at reading
+   size. It replaced a pill with a blinking dot and letter-spaced mono caps —
+   the most recognisable template element there is, repeating a wordmark that
+   is already in the bar directly above it. */
+.lp-hero__kicker {
+  display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 0 0 clamp(16px, 2.2vw, 26px);
-  padding: 7px 14px 7px 11px;
-  border: 1px solid var(--lp-hair);
-  border-radius: 999px;
-  background: var(--lp-surface-2);
-  font-family: var(--lp-mono);
-  font-size: var(--lp-micro);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  gap: 14px;
+  margin: 0 0 clamp(18px, 2.2vw, 28px);
+  font-size: clamp(0.88rem, 0.3vw + 0.8rem, 1rem);
+  font-weight: 500;
+  letter-spacing: -0.005em;
   color: var(--lp-ink-2);
 }
-.lp-hero__eyebrow b { font-weight: inherit; }
-/* The one live indicator in the chrome. It is the product's own idiom — the
-   console has the same dot — so it reads as a status light rather than as a
-   decoration that happens to blink. */
-.lp-hero__live {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+.lp-hero__rule {
+  flex: none;
+  width: 32px;
+  height: 2px;
+  border-radius: 2px;
   background: var(--lp-accent);
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--lp-accent) 60%, transparent);
-  animation: lp-ping 2.6s var(--ease-in-out) infinite;
 }
+
+/* The page's status-light pulse. It used to live with the hero's badge; the
+   live indicators further down still use it. */
 @keyframes lp-ping {
   0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--lp-accent) 55%, transparent); }
   60% { box-shadow: 0 0 0 7px transparent; }
@@ -718,11 +729,26 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
   color: var(--lp-ink-2);
 }
 
+/* One row. The two controls share a height, a radius and a baseline, and the
+   row never wraps: a secondary action dropping under the primary reads as a
+   layout accident, not a hierarchy. On a phone too narrow for both at full
+   size they split the row evenly; only below 430px, where even that would
+   truncate a label, do they stack — full width, still the same pair. The
+   430 is measured, not guessed: at 0.85rem with 12px padding the longer
+   button needs 181px, and a 430px screen gives each one 188. */
 .lp-hero__act {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: center;
   gap: 12px;
-  margin-top: clamp(22px, 2.6vw, 32px);
+  margin-top: clamp(24px, 2.8vw, 34px);
+}
+@media (max-width: 560px) {
+  .lp-hero__act .lp-btn { flex: 1 1 0; min-width: 0; height: 48px; gap: 8px; padding: 0 12px; font-size: 0.85rem; }
+}
+@media (max-width: 429px) {
+  .lp-hero__act { flex-direction: column; align-items: stretch; }
+  .lp-hero__act .lp-btn { flex: none; width: 100%; }
 }
 
 .lp-hero__flow {
@@ -792,9 +818,6 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
   .lp-hero__visual { max-width: 460px; margin-inline: auto; width: 100%; }
 }
 @media (max-width: 560px) { .lp-hero__visual { display: none; } }
-/* "AegisAI ·" is redundant on a phone — the wordmark is 40px above it in the
-   bar — and it is what pushes the eyebrow onto two ragged lines. */
-@media (max-width: 560px) { .lp-hero__eyebrow b { display: none; } }
 
 .lp-hero__scroll {
   position: absolute;
@@ -827,114 +850,149 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
   position: relative;
   width: 100%;
   aspect-ratio: 1;
+  /* Every DOM size below is in `cqw` — a percentage of this box — clamped to
+     a legible floor and a sensible ceiling. The geometry is percentages of
+     the same box, so the chips, the lanes and the core scale with the lines
+     they sit on instead of colliding when the column narrows. */
+  container-type: inline-size;
   /* The cursor parallax is one GSAP transform on this wrapper, so the pointer
-     moves the whole picture as a single object rather than nudging thirteen
-     elements independently. */
+     moves the picture as one object rather than nudging twenty. */
   will-change: transform;
 }
 .lp-net__svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.lp-net__nodes { position: absolute; inset: 0; }
+.lp-net__layer { position: absolute; inset: 0; }
 
 .lp-net__ring { fill: none; stroke: var(--lp-hair-2); stroke-width: 1; }
 .lp-net__ring--outer { stroke: var(--lp-hair); }
-.lp-net__spoke { stroke: color-mix(in srgb, var(--lp-accent) 34%, transparent); stroke-width: 1; }
+.lp-net__spoke {
+  stroke: color-mix(in srgb, var(--lp-accent) 42%, transparent);
+  stroke-width: 1.2;
+}
 .lp-net__edge {
   fill: none;
-  stroke: color-mix(in srgb, var(--lp-cyan) 26%, transparent);
+  stroke: color-mix(in srgb, var(--lp-cyan) 34%, transparent);
   stroke-width: 1;
 }
+/* Parked and invisible until the timeline sends one; a reduced-motion
+   visitor never sees a stray dot sitting on a chip. */
 .lp-net__packet {
+  opacity: 0;
   fill: var(--lp-cyan);
-  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--lp-cyan) 70%, transparent));
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--lp-cyan) 75%, transparent));
+}
+.lp-net__packet--core {
+  fill: var(--lp-accent);
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--lp-accent) 80%, transparent));
 }
 
-/* Every node is positioned by its computed centre and pulled back by half of
-   itself, so the DOM layer and the SVG layer agree about where a thing is
-   without either of them knowing the other's units. */
-.lp-net__pillar,
-.lp-net__node,
-.lp-net__hub {
+/* The slot owns the centring and never animates; whatever is inside it owns
+   the motion and never centres. See the component's note on why. */
+.lp-net__slot {
   position: absolute;
+  display: flex;
   transform: translate(-50%, -50%);
 }
 
-.lp-net__pillar {
-  display: grid;
-  justify-items: center;
-  gap: 7px;
+/* Evidence. Sentence case in the body face: these are the words a person
+   would use for what they were sent, and they have to be read, not decoded. */
+.lp-net__node {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.5em 0.85em 0.5em 0.7em;
+  border: 1px solid color-mix(in srgb, var(--lp-cyan) 22%, var(--lp-hair));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lp-raise) 92%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  font-size: clamp(10px, 2.15cqw, 12.5px);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--lp-ink-2);
 }
-.lp-net__pdot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--lp-accent);
-  box-shadow: 0 0 14px color-mix(in srgb, var(--lp-accent) 60%, transparent);
-}
-.lp-net__plabel {
+.lp-net__node svg { width: 1.2em; height: 1.2em; flex: none; color: var(--lp-cyan); }
+
+/* A lane: its name on a lit pill. `--hit` runs 1 → 0 each time a packet
+   arrives, and is the only input to the flash, so at rest — and under reduced
+   motion, where nothing moves it — the lane is simply its quiet self. */
+.lp-net__lane {
+  --hit: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  padding: 0.55em 0.95em;
+  border: 1px solid color-mix(in srgb, var(--lp-accent) calc(38% + var(--hit) * 40%), transparent);
+  border-radius: 999px;
+  /* A tint over an opaque ground: the edges run underneath the pill and must
+     not show through it. Only the last layer may be a bare colour, so the
+     tint is a one-stop gradient. */
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--lp-accent) calc(10% + var(--hit) * 14%), transparent),
+      color-mix(in srgb, var(--lp-accent) calc(10% + var(--hit) * 14%), transparent)
+    ),
+    var(--lp-raise);
+  box-shadow: 0 0 calc(4px + var(--hit) * 18px) color-mix(in srgb, var(--lp-accent) calc(10% + var(--hit) * 40%), transparent);
   font-family: var(--lp-mono);
-  font-size: 0.5625rem;
+  font-size: clamp(9px, 1.85cqw, 11px);
+  font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  line-height: 1;
   white-space: nowrap;
-  color: var(--lp-ink-2);
+  color: var(--lp-ink);
 }
-
-.lp-net__node {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 11px 6px 9px;
-  border: 1px solid var(--lp-hair);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--lp-raise) 88%, transparent);
-  backdrop-filter: blur(6px);
-  white-space: nowrap;
-  color: var(--lp-cyan);
-}
-.lp-net__nlabel {
-  font-family: var(--lp-mono);
-  font-size: 0.5625rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--lp-ink-2);
+.lp-net__ldot {
+  width: 0.6em;
+  height: 0.6em;
+  border-radius: 50%;
+  background: var(--lp-accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--lp-accent) 70%, transparent);
 }
 
 .lp-net__hub {
-  left: 50%;
-  top: 50%;
+  position: relative;
   display: grid;
   place-items: center;
   align-content: center;
-  gap: 1px;
-  width: 118px;
-  height: 118px;
+  gap: 0.2em;
+  width: clamp(88px, 21cqw, 122px);
+  aspect-ratio: 1;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--lp-accent) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lp-accent) 46%, transparent);
   background:
-    radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--lp-accent) 16%, transparent), transparent 68%),
-    color-mix(in srgb, var(--lp-raise) 92%, transparent);
+    radial-gradient(circle at 50% 36%, color-mix(in srgb, var(--lp-accent) 18%, transparent), transparent 70%),
+    var(--lp-raise);
   box-shadow:
-    0 0 44px color-mix(in srgb, var(--lp-accent) 16%, transparent),
-    inset 0 0 30px color-mix(in srgb, var(--lp-accent) 8%, transparent);
+    0 0 44px color-mix(in srgb, var(--lp-accent) 18%, transparent),
+    inset 0 0 28px color-mix(in srgb, var(--lp-accent) 9%, transparent);
 }
-.lp-net__hubring {
+/* The arrival pulse: a ring that leaves the core each time a packet lands. */
+.lp-net__pulse {
   position: absolute;
-  inset: -9px;
+  inset: -1px;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--lp-accent) 16%, transparent);
+  border: 1px solid var(--lp-accent);
+  opacity: 0;
+  pointer-events: none;
 }
 .lp-net__hubname {
   font-family: var(--font-display);
-  font-size: 1.02rem;
+  font-size: clamp(0.9rem, 3.4cqw, 1.15rem);
   font-weight: 900;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  text-indent: 0.06em;
+  line-height: 1;
   color: var(--lp-ink);
 }
 .lp-net__hubsub {
   font-family: var(--lp-mono);
-  font-size: 0.5rem;
+  font-size: clamp(8px, 1.6cqw, 10px);
   letter-spacing: 0.3em;
   text-indent: 0.3em;
+  text-transform: uppercase;
+  line-height: 1;
   color: var(--lp-accent);
 }
 
@@ -948,66 +1006,82 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
   aspect-ratio: 1000 / 520;
   width: 100%;
 }
-/* `preserveAspectRatio: none` on the SVG plus percentage positions on the DOM
-   layer: both stretch with the box in the same way, so a line always ends
-   exactly under the chip it belongs to at any width. */
-.lp-web__svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* The box has the viewBox's own aspect ratio, so the SVG scales uniformly and
+   the DOM layer's percentages land exactly where the SVG's coordinates do: a
+   line always ends under the chip it belongs to, and a signal stays round. */
+.lp-web__svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .lp-web__edge {
-  stroke: color-mix(in srgb, var(--lp-accent) 32%, transparent);
+  stroke: color-mix(in srgb, var(--lp-accent) 30%, transparent);
   stroke-width: 1;
-  stroke-opacity: 0.45;
   vector-effect: non-scaling-stroke;
+}
+.lp-web__signal {
+  opacity: 0;
+  fill: var(--lp-accent);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--lp-accent) 80%, transparent));
 }
 .lp-web__nodes { position: absolute; inset: 0; }
 
-.lp-web__chip {
+/* The slot owns the centring and never animates; the chip inside owns the
+   entrance. See the component's note on why. */
+.lp-web__slot {
   position: absolute;
+  display: flex;
   transform: translate(-50%, -50%);
+}
+.lp-web__slot--core { left: 50%; top: 50%; }
+
+.lp-web__chip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
-  border: 1px solid var(--lp-hair);
+  padding: 9px 15px 9px 13px;
+  border: 1px solid var(--lp-hair-2);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--lp-raise) 92%, transparent);
+  background: color-mix(in srgb, var(--lp-raise) 94%, transparent);
   backdrop-filter: blur(8px);
-  font-size: 0.8rem;
+  box-shadow: var(--lp-card-shadow);
+  font-size: 0.82rem;
   font-weight: 500;
+  line-height: 1;
   white-space: nowrap;
   color: var(--lp-ink-2);
-  transition: border-color var(--t-fast), color var(--t-fast), transform var(--t-med) var(--ease-out);
+  /* Colour only. GSAP owns this element's `transform`, and a CSS transition
+     on the same property is what used to land chips off their lines. */
+  transition: border-color var(--t-fast), color var(--t-fast);
 }
-.lp-web__chip svg { color: var(--lp-ink-3); transition: color var(--t-fast); }
+.lp-web__chip svg { flex: none; color: var(--lp-ink-3); transition: color var(--t-fast); }
 .lp-web__chip:hover { border-color: color-mix(in srgb, var(--lp-accent) 46%, transparent); color: var(--lp-ink); }
 .lp-web__chip:hover svg { color: var(--lp-accent); }
 
+/* The centre. `--hit` runs 1 → 0 as each signal lands; it is the only input
+   to the flash, so at rest and under reduced motion the box is just itself. */
 .lp-web__core {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  --hit: 0;
   display: grid;
   justify-items: center;
-  gap: 3px;
+  gap: 5px;
   padding: 18px 30px;
-  border: 1px solid color-mix(in srgb, var(--lp-accent) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lp-accent) calc(40% + var(--hit) * 40%), transparent);
   border-radius: 14px;
   background:
-    radial-gradient(90% 120% at 50% 0%, color-mix(in srgb, var(--lp-accent) 14%, transparent), transparent 70%),
-    color-mix(in srgb, var(--lp-raise) 94%, transparent);
-  box-shadow: 0 0 50px color-mix(in srgb, var(--lp-accent) 14%, transparent);
+    radial-gradient(90% 120% at 50% 0%, color-mix(in srgb, var(--lp-accent) calc(14% + var(--hit) * 12%), transparent), transparent 70%),
+    var(--lp-raise);
+  box-shadow: 0 0 calc(40px + var(--hit) * 30px) color-mix(in srgb, var(--lp-accent) calc(14% + var(--hit) * 22%), transparent);
   text-align: center;
+  white-space: nowrap;
 }
 .lp-web__coren {
   font-family: var(--font-display);
   font-size: 1.05rem;
   font-weight: 800;
   letter-spacing: -0.02em;
+  line-height: 1.1;
   color: var(--lp-ink);
 }
 .lp-web__cores {
   font-family: var(--lp-mono);
-  font-size: 0.5625rem;
+  font-size: 0.625rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--lp-accent);
@@ -1021,8 +1095,9 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
   .lp-web { aspect-ratio: auto; }
   .lp-web__svg { display: none; }
   .lp-web__nodes { position: static; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-  .lp-web__chip { position: static; transform: none; }
-  .lp-web__core { position: static; transform: none; width: 100%; margin-top: 12px; }
+  .lp-web__slot { position: static; transform: none; }
+  .lp-web__slot--core { width: 100%; margin-top: 12px; }
+  .lp-web__core { width: 100%; }
 }
 
 /* =========================================================================
@@ -1037,40 +1112,63 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
 .lp-eg {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(14px, 1.6vw, 22px);
-  margin-top: clamp(40px, 5vw, 72px);
+  /* Rows size to their tallest card and every card fills its cell, so the
+     grid is a grid: tops, bottoms and the reader line all align. */
+  grid-auto-rows: 1fr;
+  gap: clamp(14px, 1.6vw, 20px);
+  margin-top: clamp(40px, 5vw, 64px);
 }
-/* The irregular rhythm. Cards in the even columns sit lower, so the set reads
-   as a scatter of objects rather than as a table of features — and the eye
-   has to travel through it instead of scanning a row. */
-.lp-eg__cell { display: flex; min-width: 0; }
-.lp-eg__card { flex: 1; }
-.lp-eg__cell:nth-child(2n) { transform: translateY(clamp(12px, 2.4vw, 34px)); }
-.lp-eg__cell:nth-child(4n) { transform: translateY(clamp(24px, 4.4vw, 62px)); }
 @media (max-width: 1080px) {
   .lp-eg { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .lp-eg__cell:nth-child(4n) { transform: translateY(clamp(12px, 2.4vw, 34px)); }
 }
 @media (max-width: 620px) {
-  .lp-eg { grid-template-columns: minmax(0, 1fr); }
-  /* The offsets are a desktop composition. On one column they are just an
-     inconsistent amount of vertical noise. */
-  .lp-eg__cell,
-  .lp-eg__cell:nth-child(2n),
-  .lp-eg__cell:nth-child(4n) { transform: none; }
+  .lp-eg { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; }
 }
+
+.lp-eg__card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lp-eg__card .lp-card__body { flex: 1; }
 
 .lp-eg__icon {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  margin-bottom: 16px;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 18px;
   border: 1px solid color-mix(in srgb, var(--lp-cyan) 26%, transparent);
   border-radius: 11px;
   background: var(--lp-cyan-soft);
   color: var(--lp-cyan);
 }
+
+/* What reads it, pinned to the card's foot. The same line on every card, so
+   the eye can run along the row and compare. */
+.lp-eg__reader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--lp-hair);
+  font-family: var(--lp-mono);
+  font-size: var(--lp-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lp-ink-3);
+}
+.lp-eg__reader::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--lp-cyan);
+}
+
+/* The note sits under the grid, at the grid's own rhythm. */
+.lp-eg + .lp-note { margin-top: clamp(24px, 3vw, 36px); }
 
 /* =========================================================================
    The pinned investigation

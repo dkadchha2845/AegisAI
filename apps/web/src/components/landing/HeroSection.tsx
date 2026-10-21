@@ -30,9 +30,8 @@
 
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowDown, ScanLine } from "lucide-react";
+import { ArrowDown, ArrowRight, ScanLine } from "lucide-react";
 import { HeroNetwork } from "@/components/landing/HeroNetwork";
-import { useMagnetic } from "@/hooks/useMagnetic";
 import {
   gsap,
   split,
@@ -42,6 +41,7 @@ import {
   EASE,
   reduced,
   refreshSoon,
+  scrollToSection,
 } from "@/lib/landing-motion";
 
 /** The claim, as lines. Authored as lines rather than measured at runtime so
@@ -55,7 +55,6 @@ const HEADLINE = [
 
 export function HeroSection({ booted }: { booted: boolean }) {
   const root = useRef<HTMLElement>(null);
-  const cta = useMagnetic<HTMLAnchorElement>(0.32);
 
   useEffect(() => {
     const el = root.current;
@@ -136,9 +135,12 @@ export function HeroSection({ booted }: { booted: boolean }) {
     <section className="lp-hero" ref={root} id="top">
       <div className="lp-hero__grid">
         <div className="lp-hero__col" data-hero-col>
-          <p className="lp-hero__eyebrow" data-hero-eyebrow>
-            <span className="lp-hero__live" aria-hidden="true" />
-            <b>AegisAI ·</b> Agentic digital public safety
+          {/* A kicker, not a badge: a rule and a phrase in the body face. The
+              wordmark is already in the bar 40px above, so repeating it here in
+              a pill with a status light only made the column look templated. */}
+          <p className="lp-hero__kicker" data-hero-eyebrow>
+            <span className="lp-hero__rule" aria-hidden="true" />
+            Agentic digital public safety
           </p>
 
           <h1 className="lp-hero__h1" data-hero-h1>
@@ -155,12 +157,20 @@ export function HeroSection({ booted }: { booted: boolean }) {
             call into a verdict, the signals behind it, and the next thing to do.
           </p>
 
+          {/* The pair is one row at every width it fits, and the two controls
+              move together: neither follows the cursor, because a primary that
+              drifts toward the pointer leaves its neighbour behind and the row
+              stops being a row. */}
           <div className="lp-hero__act" data-hero-act>
-            <Link ref={cta} className="lp-btn lp-btn--primary" to="/analyze">
+            <Link className="lp-btn lp-btn--primary" to="/analyze">
               <ScanLine size={16} aria-hidden="true" /> Start an investigation
             </Link>
-            <a className="lp-btn lp-btn--ghost" href="#investigation">
-              Explore the system
+            <a
+              className="lp-btn lp-btn--ghost lp-btn--arrow"
+              href="#investigation"
+              onClick={scrollToSection("investigation")}
+            >
+              Explore the system <ArrowRight size={16} aria-hidden="true" />
             </a>
           </div>
 
@@ -191,7 +201,7 @@ export function HeroSection({ booted }: { booted: boolean }) {
         </div>
       </div>
 
-      <a className="lp-hero__scroll" href="#problem" data-hero-scroll>
+      <a className="lp-hero__scroll" href="#problem" onClick={scrollToSection("problem")} data-hero-scroll>
         <span>Scroll</span>
         <ArrowDown size={13} aria-hidden="true" />
       </a>

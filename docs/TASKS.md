@@ -130,8 +130,11 @@ reused.
 | T-66 | Refresh the deployment and prove production mode | M5 | ⬜ | S | 10.3 |
 | T-67 | Demo scripts for Review-1, Review-2 and the final | M5 | ⬜ | S | 10.5 |
 | T-68 | Paper draft and reproducibility package | M5 | ⬜ | WP | 9.7 |
+| T-69 | Landing: fix the hero, the problem web and the evidence grid | UI | 🧪 | S | — |
 
-68 tasks: 36 single-sitting (25 written out in full below), 32 work packages.
+69 tasks: 37 single-sitting (26 written out in full below), 32 work packages.
+T-69 was added on the owner's request on 2026-10-21, out of the recommended
+order; it is specified at the end of this file.
 
 ### Recommended order
 
@@ -770,3 +773,33 @@ The paper's contribution. Nothing here is claimed until it is measured.
 | T-66 | Redeploy; prove the deployed API enforces auth and serves no demo accounts (S-01) | An unauthenticated request to `/api/audit` on production returns 401 |
 | T-67 | A timed script for each review, with a fallback for every live step | Rehearsed once end to end |
 | T-68 | The paper draft and a package that regenerates every table | Every number traces to a file in `research/results/` |
+
+---
+
+# Added on request
+
+### T-69 — Landing: fix the hero, the problem web and the evidence grid
+- Milestone: UI (added by the owner, 2026-10-21, ahead of the recommended order)
+- Status: 🧪 Awaiting my review (2026-10-21)
+- Depends on: —
+- Fixes / implements: the owner's page feedback on `/` at 1470×801, items 1–5, everything up to and including section 02
+- Goal: The first three sections of the landing look deliberate, align exactly, animate correctly on scroll, and claim nothing the product does not do.
+- Scope: `HeroSection.tsx`, `HeroNetwork.tsx`, `ProblemSection.tsx`, `EvidenceSection.tsx`, `lib/landing-motion.ts` (one helper), `styles/landing.css` (those sections, plus the shared `.lp-btn` press and `.lp-card` hover, which caused the motion defect).
+- Decided with the owner before building: the hero label becomes a plain kicker; the hero network shows analysis lanes; the Evidence section shows only what works today.
+- Out of scope: every section after 02; the console app; the nav.
+- Acceptance criteria:
+  - [x] Both hero buttons sit on one row at every width from 430px up, with the same top and height, and neither drifts toward the cursor; below 430px they stack at full width rather than clip
+  - [x] "Explore the system" and "Scroll" scroll smoothly and land their section 68px below the top, clear of the bar, as the nav does
+  - [x] The hero label is a rule and a sentence-case phrase — no pill, no blinking dot
+  - [x] The hero network is symmetric (8 inputs, 2 per lane), every input wired to the lane that reads it, every node centred on its point to within 1px, no label crossed by a line, labels legible; packets travel input → lane → core and the core answers
+  - [x] Every Problem chip settles exactly on its line end (0px measured on all 11) at full size; the web keeps working after it forms
+  - [x] The Evidence cards form an aligned 4×2 grid of equal cards; the note sits under the grid; each card has one consistent entrance
+  - [x] No card claims a capability that is not built; each is checked against the code that implements it
+  - [x] No overlap or horizontal scroll at 1470, 1024, 768, 430 and 375; light theme and reduced motion checked
+  - [x] Four gates green
+- How Dhrumil verifies it:
+  1. Run `make api` and `make web`, open `http://localhost:5173/` at full width
+  2. Hover the hero buttons, click "Explore the system", scroll slowly through 01 and 02
+  3. Expect: one row of buttons that stay put; a symmetric network with packets reaching the core; chips that land on their lines; an even grid of eight cards
+- Tests to add: none until T-15 provides a frontend harness. The geometry was measured in the running page and the numbers are in `docs/PROGRESS.md`
+
