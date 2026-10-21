@@ -66,7 +66,7 @@ reused.
 | T-02 | Bring the architecture document to the brief's shape | P2 | ⬜ | S | — |
 | T-03 | Write the design-system document from the shipped tokens | P2 | ⬜ | S | 7.1 |
 | T-04 | Correct the stage-classifier claim everywhere it is stated | M0 | ✅ | S | — |
-| T-05 | Make the promotion gate refuse a contaminated comparison | M0 | 🧪 | S | — |
+| T-05 | Make the promotion gate refuse a contaminated comparison | M0 | ✅ | S | — |
 | T-06 | Commit the leak-free classifier baseline as the first research result | M0 | ⬜ | S | — |
 | T-07 | Re-verify the infrastructure path with the stack up | M0 | ⬜ | S | — |
 | T-08 | Prove the project runs from a fresh clone | M0 | ⬜ | S | — |
@@ -130,8 +130,8 @@ reused.
 | T-66 | Refresh the deployment and prove production mode | M5 | ⬜ | S | 10.3 |
 | T-67 | Demo scripts for Review-1, Review-2 and the final | M5 | ⬜ | S | 10.5 |
 | T-68 | Paper draft and reproducibility package | M5 | ⬜ | WP | 9.7 |
-| T-69 | Landing: fix the hero, the problem web and the evidence grid | UI | 🧪 | S | — |
-| T-70 | Landing: the investigation rail, the agent diagram, the intelligence graph, the research sidebar | UI | 🧪 | S | — |
+| T-69 | Landing: fix the hero, the problem web and the evidence grid | UI | ✅ | S | — |
+| T-70 | Landing: the investigation rail, the agent diagram, the intelligence graph, the research sidebar | UI | ✅ | S | — |
 
 70 tasks: 38 single-sitting (27 written out in full below), 32 work packages.
 T-69 and T-70 were added on the owner's request on 2026-10-21 and 2026-10-22,
@@ -286,7 +286,7 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-05 — Make the promotion gate refuse a contaminated comparison
 - Milestone: M0
-- Status: 🧪 Awaiting my review (2026-10-10)
+- Status: ✅ Approved (2026-10-22)
 - Depends on: T-04
 - Fixes / implements: B-01, U-01
 - Goal: A checkpoint must never again be scored on data it was trained on. The gate should prove the split it evaluates on is disjoint from the split the weights came from, and refuse otherwise.
@@ -781,7 +781,7 @@ The paper's contribution. Nothing here is claimed until it is measured.
 
 ### T-69 — Landing: fix the hero, the problem web and the evidence grid
 - Milestone: UI (added by the owner, 2026-10-21, ahead of the recommended order)
-- Status: 🧪 Awaiting my review (2026-10-21)
+- Status: ✅ Approved (2026-10-22)
 - Depends on: —
 - Fixes / implements: the owner's page feedback on `/` at 1470×801, items 1–5, everything up to and including section 02
 - Goal: The first three sections of the landing look deliberate, align exactly, animate correctly on scroll, and claim nothing the product does not do.
@@ -806,7 +806,7 @@ The paper's contribution. Nothing here is claimed until it is measured.
 
 ### T-70 — Landing: the investigation rail, the agent diagram, the intelligence graph, the research sidebar
 - Milestone: UI (added by the owner, 2026-10-22, ahead of the recommended order)
-- Status: 🧪 Awaiting my review (2026-10-22)
+- Status: ✅ Approved (2026-10-22)
 - Depends on: T-69
 - Fixes / implements: the owner's page feedback on `/` at 1470×923, items 1–5 — sections 03, 04, 06 and 09
 - Goal: The four sections animate correctly on scroll, align exactly, are understandable without instruction, and state only what the system does — with live figures where the system can report one.

@@ -4,10 +4,11 @@ One entry per finished piece of work, newest last. A new session reads this
 after [`TASKS.md`](TASKS.md) to find where things stand.
 
 **Current state (2026-10-22):** Phase 0 and Phase 3 approved. T-04 approved
-2026-10-10. **T-05, T-69 and T-70 are 🧪 awaiting review**, committed to
-`main`. T-69 and T-70 (landing fixes, sections 01–02 then 03, 04, 06 and 09)
-were added on the owner's request ahead of the recommended order. Next in the
-recommended order: T-06.
+2026-10-10; T-05, T-69 and T-70 approved 2026-10-22. Nothing is in progress or
+awaiting review. T-69 and T-70 (landing fixes, sections 01–02 then 03, 04, 06
+and 09) were added on the owner's request ahead of the recommended order; the
+remaining landing sections (05, 07, 08, 10–12) await the owner's feedback.
+Next in the recommended order: T-06.
 
 ---
 
