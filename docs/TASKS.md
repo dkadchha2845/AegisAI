@@ -131,10 +131,11 @@ reused.
 | T-67 | Demo scripts for Review-1, Review-2 and the final | M5 | ⬜ | S | 10.5 |
 | T-68 | Paper draft and reproducibility package | M5 | ⬜ | WP | 9.7 |
 | T-69 | Landing: fix the hero, the problem web and the evidence grid | UI | 🧪 | S | — |
+| T-70 | Landing: the investigation rail, the agent diagram, the intelligence graph, the research sidebar | UI | 🧪 | S | — |
 
-69 tasks: 37 single-sitting (26 written out in full below), 32 work packages.
-T-69 was added on the owner's request on 2026-10-21, out of the recommended
-order; it is specified at the end of this file.
+70 tasks: 38 single-sitting (27 written out in full below), 32 work packages.
+T-69 and T-70 were added on the owner's request on 2026-10-21 and 2026-10-22,
+out of the recommended order; they are specified at the end of this file.
 
 ### Recommended order
 
@@ -802,4 +803,28 @@ The paper's contribution. Nothing here is claimed until it is measured.
   2. Hover the hero buttons, click "Explore the system", scroll slowly through 01 and 02
   3. Expect: one row of buttons that stay put; a symmetric network with packets reaching the core; chips that land on their lines; an even grid of eight cards
 - Tests to add: none until T-15 provides a frontend harness. The geometry was measured in the running page and the numbers are in `docs/PROGRESS.md`
+
+### T-70 — Landing: the investigation rail, the agent diagram, the intelligence graph, the research sidebar
+- Milestone: UI (added by the owner, 2026-10-22, ahead of the recommended order)
+- Status: 🧪 Awaiting my review (2026-10-22)
+- Depends on: T-69
+- Fixes / implements: the owner's page feedback on `/` at 1470×923, items 1–5 — sections 03, 04, 06 and 09
+- Goal: The four sections animate correctly on scroll, align exactly, are understandable without instruction, and state only what the system does — with live figures where the system can report one.
+- Scope: `InvestigationSection.tsx` (rail only), `AgentsSection.tsx`, `GraphSection.tsx`, `ResearchSection.tsx`, `LandingNav.tsx` (one option), new `landing/live.ts` and `landing/cluster.ts`, `lib/api.ts` (optional fields on `Health`), `styles/landing.css` for those sections.
+- Decided with the owner before building: the agent diagram shows the real registry; the graph loads a real campaign from the intelligence store, labelled synthetic, with a snapshot fallback; the research section uses a sticky sidebar with scrollspy and live figures.
+- Out of scope: the investigation's panels (the owner: "rest is perfect"); sections 05, 07, 08, 10–12.
+- Acceptance criteria:
+  - [x] The investigation rail marks every step done / active / upcoming in step with the panel, and its fill lands on the active step's icon at every stage (0px measured at all seven); a step is a button that scrolls to its stage
+  - [x] The agent diagram is fully visible when complete, shows the stages and agents the API's registry reports (8 agents, 4 stages, versions), and every connector starts and ends on its box (0px measured on all eight)
+  - [x] The graph shows campaign FC-001 from `/api/intel/clusters/FC-001` — 7 identifiers, 26 cases, 74 links — with a summary, a legend, per-node detail and risk factors; it tours itself until the reader takes over, and says the data is synthetic
+  - [x] The research sidebar stays on screen, marks the panel being read (correct at every panel, in the gaps, after jumps, and after a click), and each panel shows a live figure where `/api/health` has one
+  - [x] The nav highlights the section actually in view
+  - [x] No claim the code does not support (13 agents, a fine-tuned transformer serving, calibrated fusion, registrar and certificate lookups are gone)
+  - [x] No overlap or horizontal scroll at 1470, 1024, 768 and 375; light theme and reduced motion checked
+  - [x] Four gates green
+- How Dhrumil verifies it:
+  1. Run `make api` and `make web`, open `http://localhost:5173/`
+  2. Scroll through 03 and click a step; scroll 04 into view; hover the graph in 06; scroll through 09 and click the sidebar
+  3. Expect: the rail tracks the panels; the agent diagram builds whole with a packet running through it; the graph answers every hover; the research sidebar follows the scroll
+- Tests to add: none until T-15 provides a frontend harness. Measured in the running page; numbers in `docs/PROGRESS.md`
 

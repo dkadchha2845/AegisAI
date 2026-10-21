@@ -288,12 +288,20 @@ export interface Health {
      *  because it won the measured comparison). False only for a real fallback. */
     serving_best: boolean;
     reason: string;
+    /** The promotion gate's measured scores, per backend it was allowed to
+     *  score. Optional: absent when no valid comparison is on file. */
+    comparison?: Record<string, { macro_f1: number; weighted_f1?: number }>;
   };
   retrieval: { backend: string; chunks: number; documents: string[] };
   twin: { fitted: boolean; stages: string[]; support: Record<string, number> };
   coach: { lines: number };
   llm: { backend: string; model: string | null; configured: boolean };
   database?: { backend: string; persistent: boolean; url_configured: boolean };
+  /** The investigation graph's registry: stage → agent ids, and each agent's
+   *  version. Optional because older APIs did not report it. */
+  agents?: { stages: string[]; agents: Record<string, string[]>; versions: Record<string, string> };
+  /** The intelligence store's size, as `/api/health` reports it. */
+  intel?: { backend: string; cases: number; clusters: number; campaigns: number; entities: number };
   degraded: string[];
 }
 

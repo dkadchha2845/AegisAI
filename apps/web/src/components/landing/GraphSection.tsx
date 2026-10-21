@@ -1,30 +1,39 @@
 /**
  * What the graph knows that no single check can.
  *
- * A phone number, on its own, is a nuisance. The same number appearing beside
- * two payment handles, three domains and four earlier cases is an
- * organisation, and that is a different fact requiring a different response —
- * blocking a caller versus dismantling a crew.
+ * One campaign from the intelligence store, drawn the way the store holds it:
+ * the phone numbers and UPI handles it shares on an inner ring, the cases they
+ * appear in on an outer one, and a line for every appearance. A number on its
+ * own is a nuisance. The same four numbers and three handles turning up across
+ * twenty-six cases in three states is an organisation — a different fact that
+ * needs a different response.
  *
- * **The nodes reposition as you scroll.** They start scattered, as unrelated
- * indicators, and settle into the clustered arrangement as the section
- * arrives, with the edges drawing themselves between them. That is the
- * section's whole claim performed rather than described: nothing about the
- * indicators changed, only what is known about how they relate.
+ * **The data is the store's, and it is synthetic.** The section loads campaign
+ * FC-001 from `/api/intel/clusters/FC-001` — the same endpoint the
+ * intelligence console reads. When that fails (the API is asleep, or it
+ * enforces sign-in, as it does in production for an anonymous visitor), it
+ * shows a snapshot of the same response from `landing/cluster.ts`. Either
+ * way, the cases come from `seed_cases()`, which the store itself calls
+ * "deterministic, clearly-synthetic", and the section says so on screen.
  *
- * **Hover or focus a node and the graph answers.** Its edges brighten, the
- * rest of the graph dims, and the panel beside it says what that entity is
- * connected to. It is keyboard-reachable, so this is a real reading of the
- * data rather than a mouse-only flourish.
+ * **It is visibly interactive.** Until the reader touches it, the graph tours
+ * itself: every few seconds another identifier lights up, its lines brighten,
+ * the rest recede, and the panel reads it out. A pulsing ring marks the
+ * current node, and nodes lift under the pointer. The moment the reader
+ * hovers, focuses or taps a node, the tour stops and the graph is theirs.
  *
- * **Not pinned, deliberately.** The page already spends one long pin on the
- * investigation sequence, which needs it because it is a *sequence*. This is a
- * picture that rearranges; scrubbing it against its own travel through the
- * viewport gives the same effect for none of the pin's cost, and leaves the
- * reader free to stop and interrogate it.
+ * **The layout is computed from the data.** Identifiers are spaced evenly on
+ * the inner ring; each case sits on the outer ring at the average angle of the
+ * identifiers it used, so lines run outward rather than across the picture.
+ * DOM nodes sit in slots that own their centring and never animate, so GSAP's
+ * entrance cannot knock a node off the end of its lines.
+ *
+ * On a phone the drawing is replaced by its readout: the identifiers become a
+ * row of chips that select, and the panel answers.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Hash, IndianRupee } from "lucide-react";
 import {
   gsap,
   split,
@@ -34,63 +43,172 @@ import {
   reduced,
   refreshSoon,
 } from "@/lib/landing-motion";
+import * as api from "@/lib/api";
+import {
+  FC001_CAPTURED,
+  FC001_CLUSTER,
+  FC001_EDGES,
+  FC001_FACTORS,
+  FC001_NODES,
+} from "@/components/landing/cluster";
 
 const W = 900;
 const H = 560;
+const CX = W / 2;
+const CY = H / 2;
+const RING_IN = { rx: 214, ry: 136 };
+const RING_OUT = { rx: 400, ry: 238 };
+const TOUR_MS = 2800;
 
-interface GNode {
-  id: string;
-  label: string;
-  kind: "phone" | "upi" | "domain" | "apk" | "case" | "qr";
-  /** Settled position. */
-  x: number;
-  y: number;
-  /** Where it starts, before anything is known to connect it. */
-  sx: number;
-  sy: number;
-  meta: string[];
+interface Campaign {
+  cluster: api.Cluster;
+  nodes: api.GraphNode[];
+  edges: [string, string][];
+  factors: api.RiskFactor[];
+  source: "live" | "snapshot";
 }
 
-const NODES: GNode[] = [
-  { id: "phone", label: "+1-838-224-7719", kind: "phone", x: 450, y: 275, sx: 300, sy: 120, meta: ["3 domains", "2 UPI handles", "4 investigations"] },
-  { id: "upi1", label: "verify@okaxis", kind: "upi", x: 205, y: 150, sx: 90, sy: 420, meta: ["seen in 3 cases", "first seen 11 days ago"] },
-  { id: "upi2", label: "rbi.audit@ybl", kind: "upi", x: 190, y: 400, sx: 620, sy: 470, meta: ["seen in 2 cases", "shares a device fingerprint"] },
-  { id: "dom1", label: "cbi-verify.in", kind: "domain", x: 690, y: 128, sx: 760, sy: 380, meta: ["registered 9 days ago", "privacy-shielded registrar"] },
-  { id: "dom2", label: "rbi-secure-audit.co", kind: "domain", x: 745, y: 300, sx: 160, sy: 240, meta: ["shares a certificate with cbi-verify.in"] },
-  { id: "dom3", label: "parcel-status.link", kind: "domain", x: 672, y: 452, sx: 430, sy: 60, meta: ["redirects to rbi-secure-audit.co"] },
-  { id: "apk", label: "CBI-Verify.apk", kind: "apk", x: 430, y: 96, sx: 800, sy: 150, meta: ["requests SMS + accessibility", "self-signed certificate"] },
-  { id: "case", label: "Case 4471 · Pune", kind: "case", x: 420, y: 470, sx: 240, sy: 500, meta: ["4 linked cases", "3 states"] },
-];
-
-const EDGES: [string, string][] = [
-  ["phone", "upi1"],
-  ["phone", "upi2"],
-  ["phone", "dom1"],
-  ["phone", "dom2"],
-  ["phone", "apk"],
-  ["phone", "case"],
-  ["dom1", "dom2"],
-  ["dom2", "dom3"],
-  ["dom3", "apk"],
-  ["upi1", "case"],
-  ["upi2", "case"],
-];
-
-const KIND_LABEL: Record<GNode["kind"], string> = {
-  phone: "Phone",
-  upi: "UPI handle",
-  domain: "Domain",
-  apk: "Installer",
-  case: "Investigation",
-  qr: "QR",
+const SNAPSHOT: Campaign = {
+  cluster: FC001_CLUSTER,
+  nodes: FC001_NODES,
+  edges: FC001_EDGES,
+  factors: FC001_FACTORS,
+  source: "snapshot",
 };
 
-const byId = (id: string) => NODES.find((n) => n.id === id)!;
+interface Placed extends api.GraphNode {
+  x: number;
+  y: number;
+}
+
+const rad = (deg: number) => (deg * Math.PI) / 180;
+const onRing = (deg: number, r: { rx: number; ry: number }) => ({
+  x: CX + Math.cos(rad(deg)) * r.rx,
+  y: CY + Math.sin(rad(deg)) * r.ry,
+});
+
+/** Identifiers evenly on the inner ring, phones and handles alternating;
+ *  each case on the outer ring at the circular mean of its identifiers'
+ *  angles, then spread evenly in that order. */
+function layout(c: Campaign) {
+  const ids = c.nodes.filter((n) => n.kind !== "case");
+  const phones = ids.filter((n) => n.kind === "phone");
+  const handles = ids.filter((n) => n.kind !== "phone");
+  const ordered: api.GraphNode[] = [];
+  for (let i = 0; i < Math.max(phones.length, handles.length); i++) {
+    if (phones[i]) ordered.push(phones[i]);
+    if (handles[i]) ordered.push(handles[i]);
+  }
+  const angle = new Map<string, number>();
+  const placed = new Map<string, Placed>();
+  ordered.forEach((n, i) => {
+    const deg = -90 + (360 / ordered.length) * i;
+    angle.set(n.id, deg);
+    placed.set(n.id, { ...n, ...onRing(deg, RING_IN) });
+  });
+
+  const cases = c.nodes.filter((n) => n.kind === "case");
+  const mean = (id: string) => {
+    let sx = 0;
+    let sy = 0;
+    c.edges.forEach(([a, b]) => {
+      const other = a === id ? b : b === id ? a : null;
+      const deg = other ? angle.get(other) : undefined;
+      if (deg !== undefined) {
+        sx += Math.cos(rad(deg));
+        sy += Math.sin(rad(deg));
+      }
+    });
+    return (Math.atan2(sy, sx) * 180) / Math.PI;
+  };
+  const byAngle = cases
+    .map((n) => ({ n, a: mean(n.id) }))
+    .sort((p, q) => p.a - q.a);
+  // Spread evenly, rotated so the slots sit as close as they can to the
+  // angles the cases want.
+  const step = 360 / Math.max(1, byAngle.length);
+  const offset =
+    byAngle.reduce((acc, p, i) => acc + (((p.a - (i * step - 180)) % 360) + 540) % 360 - 180, 0) /
+    Math.max(1, byAngle.length);
+  byAngle.forEach((p, i) => {
+    const deg = i * step - 180 + offset;
+    placed.set(p.n.id, { ...p.n, ...onRing(deg, RING_OUT) });
+  });
+  return { identifiers: ordered.map((n) => placed.get(n.id)!), cases: byAngle.map((p) => placed.get(p.n.id)!), placed };
+}
+
+const KIND: Record<string, string> = { phone: "Phone number", upi: "UPI handle", case: "Case" };
+const crore = (inr: number) => `₹${(inr / 1e7).toFixed(2)} cr`;
 
 export function GraphSection() {
   const root = useRef<HTMLElement>(null);
-  const [active, setActive] = useState<string>("phone");
+  const [data, setData] = useState<Campaign>(SNAPSHOT);
+  const [active, setActive] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
 
+  /* --- the data: live first, snapshot if the store will not answer ---- */
+  useEffect(() => {
+    let alive = true;
+    void api.getClusterDetail("FC-001").then((r) => {
+      if (!alive || !r.ok) return;
+      const { cluster, graph, report } = r.data;
+      setData({
+        cluster,
+        nodes: graph.nodes,
+        edges: graph.edges.map((e) => [e.source, e.target] as [string, string]),
+        factors: report.risk_factors,
+        source: "live",
+      });
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const { identifiers, cases, placed } = useMemo(() => layout(data), [data]);
+  const neighbours = useMemo(() => {
+    const m = new Map<string, Set<string>>();
+    data.edges.forEach(([a, b]) => {
+      if (!m.has(a)) m.set(a, new Set());
+      if (!m.has(b)) m.set(b, new Set());
+      m.get(a)!.add(b);
+      m.get(b)!.add(a);
+    });
+    return m;
+  }, [data]);
+
+  const current = active ?? identifiers[0]?.id ?? null;
+  const node = current ? placed.get(current) : undefined;
+  const linked = current ? neighbours.get(current) ?? new Set<string>() : new Set<string>();
+
+  /* --- the tour: until the reader takes over --------------------------- */
+  useEffect(() => {
+    const el = root.current;
+    if (!el || touched || reduced() || !identifiers.length) return;
+    let i = 0;
+    let visible = false;
+    const io = new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+    }, { threshold: 0.35 });
+    const stage = el.querySelector("[data-g-stage]");
+    if (stage) io.observe(stage);
+    const timer = window.setInterval(() => {
+      if (!visible) return;
+      i = (i + 1) % identifiers.length;
+      setActive(identifiers[i].id);
+    }, TOUR_MS);
+    return () => {
+      window.clearInterval(timer);
+      io.disconnect();
+    };
+  }, [touched, identifiers]);
+
+  const choose = (id: string) => {
+    setTouched(true);
+    setActive(id);
+  };
+
+  /* --- the entrance ---------------------------------------------------- */
   useEffect(() => {
     const el = root.current;
     if (!el || reduced()) return;
@@ -111,46 +229,41 @@ export function GraphSection() {
           scrollTrigger: { trigger: el, start: "top 72%", once: true },
           onComplete: () => h.revert(),
         });
-        gsap.from("[data-g-lede]", {
+        gsap.from("[data-g-lede], [data-g-sum]", {
           opacity: 0,
           y: 22,
           filter: "blur(8px)",
           duration: DUR.reveal,
           ease: EASE.out,
+          stagger: 0.1,
           scrollTrigger: { trigger: "[data-g-lede]", start: "top 88%", once: true },
         });
 
-        /* The rearrangement. Nodes are authored at their *settled* position
-           and offset to the scattered one, so the DOM and the SVG never
-           disagree about where a node ends up — only about where it currently
-           is, which is what the tween owns. */
+        /* Scrubbed against the stage's own arrival, and finished while the
+           whole stage is still on screen: identifiers drift in from where
+           they would be if nothing connected them, the cases surface on the
+           outer ring, and only then do the lines between them draw. */
+        const stage = el.querySelector<HTMLElement>("[data-g-stage]");
         const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: "[data-g-stage]",
-            start: "top 82%",
-            end: "top 34%",
-            scrub: 0.8,
-          },
+          scrollTrigger: { trigger: "[data-g-stage]", start: "top 86%", end: "top 30%", scrub: 0.8 },
         });
-
-        NODES.forEach((n, i) => {
-          const stage = el.querySelector("[data-g-stage]") as HTMLElement;
+        gsap.utils.toArray<HTMLElement>("[data-g-id]").forEach((n, i) => {
+          const a = (i * 137.5 * Math.PI) / 180;
           tl.from(
-            `[data-g-node="${n.id}"]`,
+            n,
             {
-              x: () => ((n.sx - n.x) / W) * stage.clientWidth,
-              y: () => ((n.sy - n.y) / H) * stage.clientHeight,
+              x: () => Math.cos(a) * (stage?.clientWidth ?? 600) * 0.16,
+              y: () => Math.sin(a) * (stage?.clientHeight ?? 400) * 0.22,
               opacity: 0,
-              scale: 0.7,
-              filter: "blur(9px)",
-              duration: 0.9,
+              scale: 0.75,
+              duration: 0.8,
               ease: EASE.out,
             },
-            i * 0.06,
+            i * 0.05,
           );
         });
-
-        tl.from("[data-g-edge]", { drawSVG: "0% 0%", duration: 0.6, stagger: 0.05, ease: "power2.inOut" }, 0.4);
+        tl.from("[data-g-case]", { scale: 0, opacity: 0, duration: 0.4, stagger: 0.015, ease: "back.out(2)" }, 0.35)
+          .from("[data-g-edge]", { drawSVG: "0% 0%", duration: 0.6, stagger: 0.006, ease: "power2.inOut" }, 0.55);
 
         gsap.from("[data-g-panel]", {
           opacity: 0,
@@ -162,7 +275,6 @@ export function GraphSection() {
         });
       }, el);
       teardown.push(() => ctx.revert());
-      // Triggers built after the route's own refresh; see `refreshSoon`.
       refreshSoon();
     });
 
@@ -172,10 +284,32 @@ export function GraphSection() {
     };
   }, []);
 
-  const node = byId(active);
-  const links = EDGES.filter(([a, b]) => a === active || b === active).map(([a, b]) =>
-    a === active ? b : a,
-  );
+  /* --- the readout ----------------------------------------------------- */
+  const c = data.cluster;
+  const caseCount = cases.length;
+  const sharedWith = (id: string) => {
+    const mine = neighbours.get(id) ?? new Set<string>();
+    return identifiers
+      .filter((o) => o.id !== id)
+      .map((o) => {
+        const theirs = neighbours.get(o.id) ?? new Set<string>();
+        let n = 0;
+        mine.forEach((x) => {
+          if (theirs.has(x)) n++;
+        });
+        return { node: o, n };
+      })
+      .filter((s) => s.n > 0)
+      .sort((p, q) => q.n - p.n);
+  };
+  const meanThreat = (id: string) => {
+    const ts = [...(neighbours.get(id) ?? [])]
+      .map((x) => placed.get(x)?.threat)
+      .filter((t): t is number => typeof t === "number");
+    return ts.length ? ts.reduce((a, b) => a + b, 0) / ts.length : null;
+  };
+  const topFactors = [...data.factors].sort((a, b) => b.contribution - a.contribution).slice(0, 3);
+  const maxFactor = topFactors[0]?.contribution || 1;
 
   return (
     <section className="lp-section" id="graph" ref={root}>
@@ -187,18 +321,56 @@ export function GraphSection() {
           Connections reveal what <em>isolated signals hide.</em>
         </h2>
         <p className="lp-lede" data-g-lede>
-          Every detection becomes a node. Numbers, handles, domains and installers that
-          keep reappearing together collapse into a single campaign with a risk score, a
-          footprint across states, and a report an investigator can file.
+          Every case leaves identifiers behind. When the same phone numbers and UPI
+          handles keep turning up across cases, the store collapses them into one
+          campaign — with a risk score, a footprint across states, and a report an
+          investigator can file. This is one of them.
         </p>
 
+        {/* The campaign, in one line, before the drawing. */}
+        <dl className="lp-graph__sum" data-g-sum>
+          <div className="lp-graph__sumhead">
+            <dt className="lp-mono">{c.cluster_id}</dt>
+            <dd>{c.primary_scam_name}</dd>
+          </div>
+          <div>
+            <dt>Risk</dt>
+            <dd className="lp-mono">
+              {c.risk} · {c.risk_score.toFixed(1)}
+            </dd>
+          </div>
+          <div>
+            <dt>Cases</dt>
+            <dd className="lp-mono">{c.size}</dd>
+          </div>
+          <div>
+            <dt>Shared identifiers</dt>
+            <dd className="lp-mono">{identifiers.length}</dd>
+          </div>
+          <div>
+            <dt>States</dt>
+            <dd className="lp-mono">{c.states.length}</dd>
+          </div>
+          <div>
+            <dt>Reported loss</dt>
+            <dd className="lp-mono">{crore(c.total_loss_inr)}</dd>
+          </div>
+        </dl>
+
         <div className="lp-graph">
-          <div className="lp-graph__stage" data-g-stage>
-            <svg className="lp-graph__svg" viewBox={`0 0 ${W} ${H}`} fill="none" preserveAspectRatio="none">
-              {EDGES.map(([a, b]) => {
-                const na = byId(a);
-                const nb = byId(b);
-                const on = a === active || b === active;
+          <div
+            className="lp-graph__stage"
+            data-g-stage
+            data-focus={current ? "" : undefined}
+          >
+            <svg className="lp-graph__svg" viewBox={`0 0 ${W} ${H}`} fill="none" aria-hidden="true">
+              <ellipse className="lp-graph__ring" cx={CX} cy={CY} rx={RING_IN.rx} ry={RING_IN.ry} />
+              <ellipse className="lp-graph__ring" cx={CX} cy={CY} rx={RING_OUT.rx} ry={RING_OUT.ry} />
+              {data.edges.map(([a, b]) => {
+                const na = placed.get(a);
+                const nb = placed.get(b);
+                if (!na || !nb) return null;
+                const on = a === current || b === current;
                 return (
                   <line
                     key={`${a}-${b}`}
@@ -215,50 +387,164 @@ export function GraphSection() {
             </svg>
 
             <div className="lp-graph__layer">
-              {NODES.map((n) => (
-                <button
-                  type="button"
-                  className="lp-graph__node"
-                  key={n.id}
-                  data-g-node={n.id}
-                  data-kind={n.kind}
-                  data-on={n.id === active || links.includes(n.id) || undefined}
-                  aria-pressed={n.id === active}
-                  style={{ left: `${(n.x / W) * 100}%`, top: `${(n.y / H) * 100}%` }}
-                  onMouseEnter={() => setActive(n.id)}
-                  onFocus={() => setActive(n.id)}
-                  onClick={() => setActive(n.id)}
-                >
-                  <span className="lp-graph__kind">{KIND_LABEL[n.kind]}</span>
-                  <span className="lp-graph__label lp-mono">{n.label}</span>
-                </button>
-              ))}
+              {cases.map((n) => {
+                const on = n.id === current || linked.has(n.id);
+                return (
+                  <div
+                    key={n.id}
+                    className="lp-graph__slot"
+                    data-on={on || undefined}
+                    style={{ left: `${(n.x / W) * 100}%`, top: `${(n.y / H) * 100}%` }}
+                  >
+                    <button
+                      type="button"
+                      className="lp-graph__case"
+                      data-g-case
+                      aria-pressed={n.id === current}
+                      aria-label={`Case ${n.label}${n.threat != null ? `, threat ${n.threat.toFixed(0)}` : ""}`}
+                      onPointerEnter={() => choose(n.id)}
+                      onFocus={() => choose(n.id)}
+                      onClick={() => choose(n.id)}
+                    >
+                      <span />
+                    </button>
+                  </div>
+                );
+              })}
+
+              {identifiers.map((n) => {
+                const on = n.id === current || linked.has(n.id);
+                const Icon = n.kind === "phone" ? Hash : IndianRupee;
+                return (
+                  <div
+                    key={n.id}
+                    className="lp-graph__slot"
+                    data-on={on || undefined}
+                    style={{ left: `${(n.x / W) * 100}%`, top: `${(n.y / H) * 100}%` }}
+                  >
+                    <button
+                      type="button"
+                      className="lp-graph__id"
+                      data-g-id
+                      data-kind={n.kind}
+                      aria-pressed={n.id === current}
+                      onPointerEnter={() => choose(n.id)}
+                      onFocus={() => choose(n.id)}
+                      onClick={() => choose(n.id)}
+                    >
+                      <span className="lp-graph__pulse" aria-hidden="true" />
+                      <Icon size={13} strokeWidth={1.8} aria-hidden="true" />
+                      <span className="lp-mono">{n.label}</span>
+                      <em className="lp-mono">{n.cases}</em>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
+
+            <ul className="lp-graph__legend" aria-hidden="true">
+              <li data-kind="phone">Phone number</li>
+              <li data-kind="upi">UPI handle</li>
+              <li data-kind="case">Case</li>
+              <li data-kind="count">cases it appears in</li>
+            </ul>
+          </div>
+
+          {/* On a phone the drawing goes; these chips select instead. */}
+          <div className="lp-graph__chips" role="group" aria-label="Shared identifiers">
+            {identifiers.map((n) => (
+              <button
+                key={n.id}
+                type="button"
+                className="lp-graph__chip lp-mono"
+                data-kind={n.kind}
+                aria-pressed={n.id === current}
+                onClick={() => choose(n.id)}
+              >
+                {n.label}
+              </button>
+            ))}
           </div>
 
           {/* The readout. `aria-live` because the panel is the answer to the
-              interaction, and a keyboard user tabbing the graph needs it
-              announced rather than merely repainted. */}
+              interaction, and a keyboard user needs it announced. */}
           <aside className="lp-graph__panel lp-card" data-g-panel aria-live="polite">
-            <p className="lp-label">{KIND_LABEL[node.kind]}</p>
-            <p className="lp-graph__pname lp-mono">{node.label}</p>
-            <p className="lp-label lp-graph__psub">Connected to</p>
-            <ul className="lp-graph__links">
-              {links.map((id) => (
-                <li key={id}>
-                  <span className="lp-mono">{byId(id).label}</span>
-                  <em>{KIND_LABEL[byId(id).kind]}</em>
+            {node && node.kind !== "case" && (
+              <>
+                <p className="lp-label">{KIND[node.kind] ?? node.kind}</p>
+                <p className="lp-graph__pname lp-mono">{node.label}</p>
+                <div className="lp-graph__stat">
+                  <span>
+                    In <b className="lp-mono">{linked.size}</b> of {caseCount} cases
+                  </span>
+                  <i style={{ ["--w" as string]: `${(linked.size / Math.max(1, caseCount)) * 100}%` }} />
+                </div>
+                {meanThreat(node.id) != null && (
+                  <p className="lp-graph__line">
+                    Mean threat across those cases{" "}
+                    <b className="lp-mono">{meanThreat(node.id)!.toFixed(1)}</b>
+                  </p>
+                )}
+                <p className="lp-label lp-graph__psub">Shares cases with</p>
+                <ul className="lp-graph__links">
+                  {sharedWith(node.id).map((s) => (
+                    <li key={s.node.id}>
+                      <button type="button" onClick={() => choose(s.node.id)}>
+                        <span className="lp-mono">{s.node.label}</span>
+                        <em>{s.n} shared</em>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {node && node.kind === "case" && (
+              <>
+                <p className="lp-label">Case</p>
+                <p className="lp-graph__pname lp-mono">{node.label}</p>
+                {node.threat != null && (
+                  <div className="lp-graph__stat">
+                    <span>
+                      Threat <b className="lp-mono">{node.threat.toFixed(1)}</b> / 100
+                    </span>
+                    <i style={{ ["--w" as string]: `${node.threat}%` }} />
+                  </div>
+                )}
+                <p className="lp-label lp-graph__psub">Identifiers used</p>
+                <ul className="lp-graph__links">
+                  {[...linked].map((id) => {
+                    const o = placed.get(id);
+                    if (!o) return null;
+                    return (
+                      <li key={id}>
+                        <button type="button" onClick={() => choose(id)}>
+                          <span className="lp-mono">{o.label}</span>
+                          <em>{KIND[o.kind] ?? o.kind}</em>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
+
+            <p className="lp-label lp-graph__psub">Why {c.risk.toLowerCase()}</p>
+            <ul className="lp-graph__factors">
+              {topFactors.map((f) => (
+                <li key={f.factor}>
+                  <span>{f.factor}</span>
+                  <em>{f.detail}</em>
+                  <i style={{ ["--w" as string]: `${(f.contribution / maxFactor) * 100}%` }} />
                 </li>
               ))}
             </ul>
-            <ul className="lp-graph__meta">
-              {node.meta.map((m) => (
-                <li key={m}>{m}</li>
-              ))}
-            </ul>
-            <p className="lp-graph__hint">
-              Hover or tab through the graph. This is a worked example built from the
-              recorded session, not live case data.
+
+            <p className="lp-graph__src">
+              <span data-live={data.source === "live" || undefined} aria-hidden="true" />
+              Synthetic demo dataset ·{" "}
+              {data.source === "live"
+                ? "loaded live from the intelligence store"
+                : `snapshot of the intelligence store, ${FC001_CAPTURED}`}
             </p>
           </aside>
         </div>

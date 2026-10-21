@@ -1190,38 +1190,58 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
 }
 
 /* --- the rail ------------------------------------------------------------ */
-.lp-inv__steps { position: relative; list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(8px, 1.4vh, 18px); }
+.lp-inv__steps { position: relative; list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(6px, 1.1vh, 14px); }
+/* The track runs from the first icon's centre to the last one's. Its top and
+   height are measured and written by the section, because the steps are as
+   tall as their copy; the values here are the unmeasured fallback. */
 .lp-inv__rail {
   position: absolute;
   left: 15px;
-  top: 8px;
-  bottom: 8px;
-  width: 1px;
+  top: 15px;
+  bottom: 15px;
+  width: 2px;
+  margin-left: -0.5px;
+  border-radius: 2px;
   background: var(--lp-hair);
 }
 /* Two layers, not one: the track is always there so the list reads as a
-   sequence even before it starts, and the fill is the only thing that moves. */
+   sequence even before it starts, and the fill is the only thing that moves.
+   GSAP drives the fill's `scaleY` stage by stage, so it lands on each icon. */
 .lp-inv__rail i {
   position: absolute;
   inset: 0;
   display: block;
-  background: linear-gradient(180deg, var(--lp-accent), color-mix(in srgb, var(--lp-accent) 25%, transparent));
+  border-radius: inherit;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--lp-accent) 55%, transparent), var(--lp-accent));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--lp-accent) 55%, transparent);
   transform-origin: top;
 }
 
-.lp-inv__step {
-  position: relative;
+/* A step is a button that fills its row: the whole line is the target. */
+.lp-inv__step { position: relative; }
+.lp-inv__stepbtn {
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr);
   align-items: start;
   gap: 16px;
-  opacity: 0.34;
-  transition: opacity var(--t-med) var(--ease-out);
+  width: 100%;
+  margin: 0;
+  padding: 8px 12px 8px 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
+.lp-inv__stepbtn:focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 2px; }
+
 /* The marker is the first grid column and the rail runs down its centre, so
-   the two line up by construction rather than by a negative margin that has
-   to be re-derived every time the type changes. */
+   the two line up by construction rather than by a negative margin. */
 .lp-inv__icon {
+  position: relative;
+  z-index: 1;
   display: grid;
   place-items: center;
   width: 30px;
@@ -1229,11 +1249,49 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
   border: 1px solid var(--lp-hair-2);
   border-radius: 50%;
   background: var(--lp-void);
-  color: var(--lp-accent);
+  color: var(--lp-ink-3);
 }
 .lp-inv__n { font-size: 0.625rem; color: var(--lp-ink-3); margin-right: 8px; }
-.lp-inv__step b { display: block; font-size: 0.94rem; font-weight: 700; letter-spacing: -0.015em; color: var(--lp-ink); }
+.lp-inv__stxt { display: block; min-width: 0; padding-top: 5px; }
+.lp-inv__step b { display: block; font-size: 0.94rem; font-weight: 700; letter-spacing: -0.015em; color: var(--lp-ink-2); }
 .lp-inv__step em { display: block; margin-top: 3px; font-style: normal; font-size: var(--t-xs); line-height: 1.55; color: var(--lp-ink-3); }
+
+/* The three states. The section sets `data-state` from the timeline and never
+   animates these properties itself, so the transitions here are the only
+   thing moving them — nothing to fight. */
+.lp-inv__step,
+.lp-inv__icon,
+.lp-inv__step b,
+.lp-inv__step em,
+.lp-inv__n {
+  transition:
+    opacity var(--t-med) var(--ease-out),
+    color var(--t-med) var(--ease-out),
+    background var(--t-med) var(--ease-out),
+    border-color var(--t-med) var(--ease-out),
+    box-shadow var(--t-med) var(--ease-out),
+    scale var(--t-med) var(--ease-out);
+}
+.lp-inv__step[data-state="upcoming"] { opacity: 0.45; }
+.lp-inv__step[data-state="upcoming"] em { opacity: 0.7; }
+.lp-inv__step[data-state="done"] { opacity: 0.78; }
+.lp-inv__step[data-state="done"] .lp-inv__icon {
+  border-color: color-mix(in srgb, var(--lp-accent) 60%, transparent);
+  color: var(--lp-accent);
+}
+.lp-inv__step[data-state="active"] .lp-inv__icon {
+  border-color: var(--lp-accent);
+  background: var(--lp-accent);
+  color: #04070f;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--lp-accent) 18%, transparent), 0 0 18px color-mix(in srgb, var(--lp-accent) 45%, transparent);
+  scale: 1.08;
+}
+html[data-theme="light"] .lp-inv__step[data-state="active"] .lp-inv__icon { color: #fff; }
+.lp-inv__step[data-state="active"] b { color: var(--lp-ink); }
+.lp-inv__step[data-state="active"] .lp-inv__n { color: var(--lp-accent); }
+.lp-inv__step[data-state="active"] em { color: var(--lp-ink-2); }
+.lp-inv__step:not([data-state="active"]) .lp-inv__stepbtn:hover b { color: var(--lp-ink); }
+.lp-inv__step:not([data-state="active"]) .lp-inv__stepbtn:hover .lp-inv__icon { border-color: var(--lp-accent); color: var(--lp-accent); }
 
 /* --- the panel stage ----------------------------------------------------- */
 /* Pinned: all seven panels occupy the same box, top-aligned, and the timeline
@@ -1251,6 +1309,7 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
 /* Unpinned (handheld, reduced motion): the same panels, one after another. */
 .lp-inv[data-mode="flow"] { grid-template-columns: minmax(0, 1fr); min-height: 0; padding-top: 0; }
 .lp-inv[data-mode="flow"] .lp-inv__step { opacity: 1; }
+.lp-inv[data-mode="flow"] .lp-inv__icon { color: var(--lp-accent); }
 .lp-inv[data-mode="flow"] .lp-inv__stage { display: grid; gap: 16px; margin-top: 32px; }
 .lp-inv[data-mode="flow"] .lp-inv__rail i { transform: none; }
 
@@ -1406,118 +1465,189 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
    The agent architecture
    ========================================================================= */
 
+/* Ordinary layout — core, a row of four stages, verdict — with the
+   connectors drawn over it from measured positions. Nothing is placed by
+   percentage, so a card is exactly as tall as what it says. */
 .lp-arch {
   position: relative;
-  margin-top: clamp(40px, 5vw, 68px);
-  aspect-ratio: 1200 / 580;
-}
-.lp-arch__svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.lp-arch__edge {
-  stroke: color-mix(in srgb, var(--lp-accent) 34%, transparent);
-  stroke-width: 1;
-  stroke-opacity: 0.45;
-  vector-effect: non-scaling-stroke;
-}
-.lp-arch__edge--out { stroke: color-mix(in srgb, var(--lp-indigo) 40%, transparent); }
-.lp-arch__layer { position: absolute; inset: 0; }
-
-.lp-arch__core,
-.lp-arch__verdict {
-  position: absolute;
-  transform: translate(-50%, -50%);
   display: grid;
   justify-items: center;
-  gap: 3px;
-  padding: 14px 26px;
+  row-gap: clamp(56px, 6vw, 84px);
+  margin-top: clamp(40px, 5vw, 68px);
+}
+.lp-arch__svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+/* Each connector draws itself once the diagram is built. `pathLength="1"`
+   makes the dash pattern independent of the path's real length, so the same
+   rule works for every connector and keeps working after a re-measure. */
+.lp-arch__edge {
+  stroke: color-mix(in srgb, var(--lp-accent) 45%, transparent);
+  stroke-width: 1.2;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0.8s var(--ease-in-out) calc(var(--i, 0) * 0.09s);
+}
+.lp-arch__edge--out { stroke: color-mix(in srgb, var(--lp-indigo) 50%, transparent); }
+.lp-arch[data-built] .lp-arch__edge { stroke-dashoffset: 0; }
+.lp-arch__packet {
+  opacity: 0;
+  fill: var(--lp-accent);
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--lp-accent) 80%, transparent));
+}
+
+.lp-arch__hub {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 14px 28px;
   border-radius: 12px;
   text-align: center;
   white-space: nowrap;
 }
-.lp-arch__core {
+.lp-arch__hub--core {
   border: 1px solid color-mix(in srgb, var(--lp-accent) 42%, transparent);
   background:
     radial-gradient(100% 140% at 50% 0%, color-mix(in srgb, var(--lp-accent) 15%, transparent), transparent 70%),
-    color-mix(in srgb, var(--lp-raise) 94%, transparent);
+    var(--lp-raise);
   box-shadow: 0 0 46px color-mix(in srgb, var(--lp-accent) 13%, transparent);
 }
-.lp-arch__verdict {
-  border: 1px solid color-mix(in srgb, var(--lp-indigo) 42%, transparent);
+/* `--hit` runs 1 → 0 as each packet arrives. */
+.lp-arch__hub--verdict {
+  --hit: 0;
+  border: 1px solid color-mix(in srgb, var(--lp-indigo) calc(42% + var(--hit) * 45%), transparent);
   background:
-    radial-gradient(100% 140% at 50% 100%, color-mix(in srgb, var(--lp-indigo) 15%, transparent), transparent 70%),
-    color-mix(in srgb, var(--lp-raise) 94%, transparent);
-  box-shadow: 0 0 46px color-mix(in srgb, var(--lp-indigo) 13%, transparent);
+    radial-gradient(100% 140% at 50% 100%, color-mix(in srgb, var(--lp-indigo) calc(15% + var(--hit) * 15%), transparent), transparent 70%),
+    var(--lp-raise);
+  box-shadow: 0 0 calc(46px + var(--hit) * 24px) color-mix(in srgb, var(--lp-indigo) calc(13% + var(--hit) * 25%), transparent);
 }
-.lp-arch__core b,
-.lp-arch__verdict b {
+.lp-arch__hub b {
   font-family: var(--font-display);
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 800;
   letter-spacing: 0.02em;
   color: var(--lp-ink);
 }
-.lp-arch__core span,
-.lp-arch__verdict span {
+.lp-arch__hub span {
   font-family: var(--lp-mono);
-  font-size: 0.5625rem;
+  font-size: 0.625rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--lp-ink-3);
 }
 
+.lp-arch__row {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(14px, 1.6vw, 20px);
+  width: 100%;
+  align-items: stretch;
+}
 .lp-arch__card {
-  position: absolute;
-  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
-  width: 22.5%;
-  /* The card spans exactly from CARD_TOP to CARD_BOTTOM in the diagram's
-     coordinate space — (393 − 180) / 580. Without it the card is only as tall
-     as its text, the out-edges start at a fixed y below wherever it happens to
-     end, and the gap between the cards and the verdict changes with the copy. */
-  height: 36.7%;
-  padding: 16px 18px;
+  min-width: 0;
+  padding: 18px 18px 16px;
   border: 1px solid var(--lp-hair);
   border-radius: 14px;
-  background: var(--lp-card-bg);
+  background: var(--lp-raise);
   box-shadow: var(--lp-card-shadow);
-  backdrop-filter: blur(8px);
-  transition: border-color var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out);
+  /* Colour and glow only. GSAP owns this element's transform during the
+     entrance; the lift on hover is on `translate`, which composes with it. */
+  transition:
+    border-color var(--t-med) var(--ease-out),
+    box-shadow var(--t-med) var(--ease-out),
+    translate var(--t-med) var(--ease-out);
 }
-.lp-arch__card:hover { border-color: color-mix(in srgb, var(--lp-accent) 46%, transparent); transform: translateX(-50%) translateY(-3px); }
+.lp-arch__card:hover { border-color: color-mix(in srgb, var(--lp-accent) 46%, transparent); translate: 0 -3px; }
+/* The stage the packet is passing through. */
+.lp-arch__card[data-hot] {
+  border-color: color-mix(in srgb, var(--lp-accent) 70%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--lp-accent) 14%, transparent), 0 10px 30px color-mix(in srgb, var(--lp-accent) 14%, transparent);
+}
 .lp-arch__card header { display: flex; align-items: center; gap: 10px; }
-.lp-arch__card h3 { margin: 0; font-family: var(--font-display); font-size: 0.92rem; font-weight: 700; letter-spacing: -0.015em; }
+.lp-arch__card h3 { margin: 0; font-family: var(--font-display); font-size: 1rem; font-weight: 700; letter-spacing: -0.015em; }
 .lp-arch__icon {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
   background: var(--lp-accent-soft);
   color: var(--lp-accent);
   flex: none;
+  transition: background var(--t-med) var(--ease-out), color var(--t-med) var(--ease-out);
 }
-.lp-arch__card p { margin: 10px 0 12px; font-size: var(--t-xs); line-height: 1.6; color: var(--lp-ink-2); }
-.lp-arch__card ul { display: grid; gap: 5px; margin: auto 0 0; padding: 12px 0 0; border-top: 1px solid var(--lp-hair); list-style: none; align-content: end; }
-.lp-arch__card li {
-  font-family: var(--lp-mono);
+.lp-arch__card[data-hot] .lp-arch__icon { background: var(--lp-accent); color: #04070f; }
+html[data-theme="light"] .lp-arch__card[data-hot] .lp-arch__icon { color: #fff; }
+.lp-arch__count {
+  margin-left: auto;
+  padding: 3px 8px;
+  border: 1px solid var(--lp-hair);
+  border-radius: 999px;
   font-size: 0.625rem;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
+  color: var(--lp-ink-3);
+  white-space: nowrap;
+}
+.lp-arch__card > p { margin: 12px 0 14px; font-size: var(--t-xs); line-height: 1.6; color: var(--lp-ink-2); }
+/* The list follows the description directly. Cards are equal height for the
+   row, so a stage with one agent has its spare room at the foot, where it
+   reads as space, not in the middle, where it read as a gap. */
+.lp-arch__card ul { display: grid; gap: 10px; margin: 0; padding: 14px 0 0; border-top: 1px solid var(--lp-hair); list-style: none; }
+.lp-arch__card li { display: grid; gap: 3px; }
+.lp-arch__aname {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--lp-ink);
+}
+.lp-arch__aname::before {
+  content: "";
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--lp-accent);
+  translate: 0 -2px;
+}
+.lp-arch__ver { margin-left: auto; font-size: 0.5625rem; font-weight: 400; color: var(--lp-ink-3); }
+.lp-arch__ajob { padding-left: 13px; font-size: 0.72rem; line-height: 1.5; color: var(--lp-ink-3); }
+
+/* Where the list came from: the running system, or this file. */
+.lp-arch__source {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: clamp(18px, 2vw, 26px) 0 0;
+  font-size: var(--lp-micro);
+  letter-spacing: 0.08em;
   color: var(--lp-ink-3);
 }
-.lp-arch__card li::before { content: "› "; color: var(--lp-accent); }
+.lp-arch__srcdot { width: 6px; height: 6px; border-radius: 50%; background: var(--lp-ink-3); }
+.lp-arch__srcdot[data-live] { background: var(--lp-cyan); animation: lp-ping 2.6s var(--ease-in-out) infinite; }
 
-/* Under 900px the fan-out has no room to be a fan-out. The lines and the two
-   hub nodes go, and the four tiers become an ordinary stack — the reading
-   order carries the same sequence the diagram was drawing. */
-@media (max-width: 900px) {
-  .lp-arch { aspect-ratio: auto; }
-  .lp-arch__svg,
-  .lp-arch__core,
-  .lp-arch__verdict { display: none; }
-  .lp-arch__layer { position: static; display: grid; gap: 12px; }
-  .lp-arch__card { position: static; transform: none; width: 100%; height: auto; }
-  .lp-arch__card ul { margin-top: 0; }
-  .lp-arch__card:hover { transform: translateY(-3px); }
+/* Below 1080px the four stages no longer fit one row, and a connector to the
+   second row would have to run underneath the first. The connectors go, and
+   the stages sit in a grid between the core and the verdict — the reading
+   order carries the sequence. */
+@media (max-width: 1080px) {
+  .lp-arch { row-gap: 16px; }
+  .lp-arch__svg { display: none; }
+  .lp-arch__row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 620px) {
+  .lp-arch__row { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* =========================================================================
@@ -1657,101 +1787,279 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
    The knowledge graph
    ========================================================================= */
 
+/* The campaign in one line, above the drawing. */
+.lp-graph__sum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  margin: clamp(28px, 3.6vw, 44px) 0 0;
+  border: 1px solid var(--lp-hair);
+  border-radius: 14px;
+  background: var(--lp-card-bg);
+  overflow: hidden;
+}
+.lp-graph__sum > div {
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  padding: 14px 20px;
+  border-right: 1px solid var(--lp-hair);
+}
+.lp-graph__sum > div:last-child { border-right: 0; }
+.lp-graph__sum dt {
+  font-family: var(--lp-mono);
+  font-size: var(--lp-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lp-ink-3);
+}
+.lp-graph__sum dd { margin: 0; font-size: 1rem; font-weight: 600; color: var(--lp-ink); }
+.lp-graph__sumhead { flex: 1 1 260px; background: var(--lp-accent-soft); }
+.lp-graph__sumhead dt { color: var(--lp-accent); letter-spacing: 0.08em; }
+.lp-graph__sumhead dd { font-family: var(--font-display); font-weight: 700; }
+
 .lp-graph {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
-  gap: clamp(20px, 3vw, 40px);
-  margin-top: clamp(36px, 4.6vw, 60px);
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
+  gap: clamp(16px, 2vw, 24px);
+  margin-top: clamp(16px, 2vw, 24px);
+  align-items: stretch;
 }
-@media (max-width: 900px) { .lp-graph { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1080px) { .lp-graph { grid-template-columns: minmax(0, 1fr); } }
 
 .lp-graph__stage {
   position: relative;
+  /* Width from the column, height from the ratio — and never the other way
+     round. Stretched to the panel's height, `aspect-ratio` derived the width
+     from it instead, and the drawing ran underneath the panel. */
+  align-self: start;
+  width: 100%;
   aspect-ratio: 900 / 560;
+  /* The pills are sized in `cqw` of this box, so they shrink with the rings
+     they sit on instead of colliding when the column narrows. */
+  container-type: inline-size;
   border: 1px solid var(--lp-hair);
   border-radius: 18px;
   background:
-    radial-gradient(80% 70% at 50% 50%, color-mix(in srgb, var(--lp-accent) 6%, transparent), transparent 70%),
+    radial-gradient(70% 70% at 50% 50%, color-mix(in srgb, var(--lp-accent) 7%, transparent), transparent 72%),
     var(--lp-surface);
   overflow: hidden;
 }
 .lp-graph__svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lp-graph__ring { stroke: var(--lp-hair); stroke-width: 1; stroke-dasharray: 2 7; vector-effect: non-scaling-stroke; }
 .lp-graph__edge {
   stroke: var(--lp-hair-2);
   stroke-width: 1;
+  stroke-opacity: 0.55;
   vector-effect: non-scaling-stroke;
   transition: stroke var(--t-med) var(--ease-out), stroke-opacity var(--t-med) var(--ease-out);
-  stroke-opacity: 0.4;
 }
-.lp-graph__edge[data-on] { stroke: var(--lp-accent); stroke-opacity: 1; }
+.lp-graph__edge[data-on] { stroke: var(--lp-accent); stroke-opacity: 0.95; }
+.lp-graph__stage[data-focus] .lp-graph__edge:not([data-on]) { stroke-opacity: 0.18; }
 .lp-graph__layer { position: absolute; inset: 0; }
 
-.lp-graph__node {
+/* The slot owns the centring and the dimming; the button inside owns the
+   entrance. GSAP never touches a slot, and CSS never transitions the button's
+   transform, so neither can undo the other. */
+.lp-graph__slot {
   position: absolute;
+  display: flex;
   transform: translate(-50%, -50%);
-  display: grid;
-  gap: 2px;
-  padding: 8px 12px;
-  border: 1px solid var(--lp-hair);
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--lp-raise) 94%, transparent);
-  text-align: left;
-  cursor: pointer;
+  transition: opacity var(--t-med) var(--ease-out);
+}
+.lp-graph__stage[data-focus] .lp-graph__slot:not([data-on]) { opacity: 0.38; }
+.lp-graph__slot[data-on] { z-index: 2; }
+
+/* An identifier: icon, value, and how many cases it appears in. */
+.lp-graph__id {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.6em 0.7em 0.6em 0.85em;
+  border: 1px solid var(--lp-hair-2);
+  border-radius: 999px;
+  background: var(--lp-raise);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  font-size: clamp(9px, 1.16cqw, 11.5px);
+  line-height: 1;
   white-space: nowrap;
-  opacity: 0.55;
-  transition:
-    opacity var(--t-med) var(--ease-out),
-    border-color var(--t-med) var(--ease-out),
-    box-shadow var(--t-med) var(--ease-out);
+  color: var(--lp-ink);
+  cursor: pointer;
+  transition: border-color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out), translate var(--t-fast) var(--ease-out);
 }
-/* Dimming the rest rather than brightening the selection: with eleven edges
-   on screen, "which of these belongs to what I am looking at" is only
-   answerable if everything else recedes. */
-.lp-graph__node[data-on] { opacity: 1; }
-.lp-graph__node[aria-pressed="true"] {
+.lp-graph__id svg { flex: none; width: 1.15em; height: 1.15em; }
+.lp-graph__id[data-kind="phone"] svg { color: var(--lp-accent); }
+.lp-graph__id[data-kind="upi"] svg { color: var(--lp-cyan); }
+.lp-graph__id em {
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: var(--lp-surface-2);
+  font-style: normal;
+  font-size: 0.625rem;
+  color: var(--lp-ink-2);
+}
+.lp-graph__id:hover { translate: 0 -2px; border-color: color-mix(in srgb, var(--lp-accent) 60%, transparent); }
+.lp-graph__id[aria-pressed="true"] {
   border-color: var(--lp-accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--lp-accent) 16%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--lp-accent) 18%, transparent), 0 6px 20px color-mix(in srgb, var(--lp-accent) 22%, transparent);
 }
-.lp-graph__node:focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 3px; }
-.lp-graph__kind {
+.lp-graph__id:focus-visible,
+.lp-graph__case:focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 3px; }
+/* The selected node breathes. It is the graph saying "this is live, and this
+   is the one being read" without a word of instruction. */
+.lp-graph__pulse {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  border: 1px solid var(--lp-accent);
+  opacity: 0;
+  pointer-events: none;
+}
+.lp-graph__id[aria-pressed="true"] .lp-graph__pulse { animation: lp-graph-pulse 1.8s var(--ease-out) infinite; }
+@keyframes lp-graph-pulse {
+  0% { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.35, 1.7); }
+}
+
+/* A case: a dot with a generous target. */
+.lp-graph__case {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+.lp-graph__case span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--lp-indigo) 70%, var(--lp-raise));
+  border: 1px solid color-mix(in srgb, var(--lp-indigo) 80%, transparent);
+  transition: scale var(--t-fast) var(--ease-out), background var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out);
+}
+.lp-graph__case:hover span { scale: 1.5; }
+.lp-graph__slot[data-on] .lp-graph__case span { background: var(--lp-indigo); box-shadow: 0 0 10px color-mix(in srgb, var(--lp-indigo) 70%, transparent); }
+.lp-graph__case[aria-pressed="true"] span { scale: 1.6; background: var(--lp-ink); }
+
+.lp-graph__legend {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   font-family: var(--lp-mono);
-  font-size: 0.5rem;
-  letter-spacing: 0.16em;
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--lp-ink-3);
+  pointer-events: none;
 }
-.lp-graph__node[data-kind="phone"] .lp-graph__kind { color: var(--lp-accent); }
-.lp-graph__node[data-kind="upi"] .lp-graph__kind { color: var(--lp-cyan); }
-.lp-graph__node[data-kind="apk"] .lp-graph__kind { color: var(--high-ink); }
-.lp-graph__node[data-kind="case"] .lp-graph__kind { color: var(--lp-indigo); }
-.lp-graph__label { font-size: 0.75rem; color: var(--lp-ink); }
+.lp-graph__legend li { display: inline-flex; align-items: center; gap: 6px; }
+.lp-graph__legend li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
+.lp-graph__legend [data-kind="phone"]::before { background: var(--lp-accent); }
+.lp-graph__legend [data-kind="upi"]::before { background: var(--lp-cyan); }
+.lp-graph__legend [data-kind="case"]::before { background: var(--lp-indigo); }
+.lp-graph__legend [data-kind="count"]::before { content: "n"; width: auto; height: auto; padding: 1px 5px; border-radius: 999px; background: var(--lp-surface-2); color: var(--lp-ink-2); font-size: 0.5625rem; }
 
-.lp-graph__panel { align-self: stretch; }
-.lp-graph__pname { margin: 8px 0 0; font-size: 1rem; color: var(--lp-ink); word-break: break-all; }
-.lp-graph__psub { margin-top: 20px; }
+/* Phones only: the identifiers as chips. */
+.lp-graph__chips { display: none; }
+
+/* --- the readout -------------------------------------------------------- */
+.lp-graph__panel { display: flex; flex-direction: column; min-width: 0; }
+.lp-graph__pname { margin: 8px 0 0; font-size: 1.05rem; color: var(--lp-ink); word-break: break-all; }
+.lp-graph__psub { margin-top: 18px; }
+.lp-graph__line { margin: 10px 0 0; font-size: var(--t-xs); color: var(--lp-ink-2); }
+.lp-graph__line b { color: var(--lp-ink); }
+.lp-graph__stat { display: grid; gap: 7px; margin-top: 14px; font-size: var(--t-xs); color: var(--lp-ink-2); }
+.lp-graph__stat b { color: var(--lp-ink); font-size: 0.95rem; }
+.lp-graph__stat i,
+.lp-graph__factors i {
+  position: relative;
+  display: block;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--lp-surface-2);
+  overflow: hidden;
+}
+.lp-graph__stat i::after,
+.lp-graph__factors i::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--w);
+  border-radius: inherit;
+  background: var(--lp-accent);
+  transition: width var(--t-med) var(--ease-out);
+}
 .lp-graph__links { display: grid; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
-.lp-graph__links li {
+.lp-graph__links button {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
+  width: 100%;
   padding: 7px 10px;
   border: 1px solid var(--lp-hair);
   border-radius: 8px;
   background: var(--lp-surface);
+  color: var(--lp-ink);
+  font: inherit;
   font-size: 0.72rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--t-fast) var(--ease-out);
 }
+.lp-graph__links button:hover { border-color: color-mix(in srgb, var(--lp-accent) 50%, transparent); }
 .lp-graph__links em { font-style: normal; font-size: 0.5625rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lp-ink-3); flex: none; }
-.lp-graph__meta { display: grid; gap: 5px; margin: 16px 0 0; padding: 14px 0 0; border-top: 1px solid var(--lp-hair); list-style: none; }
-.lp-graph__meta li { font-size: var(--t-xs); color: var(--lp-ink-2); }
-.lp-graph__meta li::before { content: "· "; color: var(--lp-accent); }
-.lp-graph__hint { margin: 16px 0 0; font-size: 0.625rem; line-height: 1.6; color: var(--lp-ink-3); }
+.lp-graph__factors { display: grid; gap: 10px; margin: 10px 0 0; padding: 0; list-style: none; }
+.lp-graph__factors li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px 10px; font-size: var(--t-xs); color: var(--lp-ink); }
+.lp-graph__factors em { font-style: normal; color: var(--lp-ink-3); font-size: 0.6875rem; }
+.lp-graph__factors i { grid-column: 1 / -1; }
+.lp-graph__factors i::after { background: var(--lp-indigo); }
+.lp-graph__src {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: auto 0 0;
+  padding-top: 16px;
+  font-size: 0.625rem;
+  line-height: 1.5;
+  color: var(--lp-ink-3);
+}
+.lp-graph__panel .lp-graph__factors { margin-bottom: 16px; }
+.lp-graph__src span { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--lp-ink-3); }
+.lp-graph__src span[data-live] { background: var(--lp-cyan); animation: lp-ping 2.6s var(--ease-in-out) infinite; }
 
-@media (max-width: 620px) {
-  /* Eight labelled nodes in 340px is a pile of overlapping pills. The graph
-     becomes its own readout: the panel, and a plain list of the entities. */
+@media (max-width: 760px) {
+  .lp-graph__sum > div { flex: 1 1 40%; border-right: 0; border-bottom: 1px solid var(--lp-hair); }
+  .lp-graph__sumhead { flex-basis: 100%; }
+}
+@media (max-width: 740px) {
+  /* Below ~670px of stage the identifier pills reach their 9px floor and
+     start to touch (measured: 5px clearance at 683px). The drawing gives way
+     to its readout: a row of chips that select, and the panel. */
   .lp-graph__stage { display: none; }
+  .lp-graph__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .lp-graph__chip {
+    padding: 7px 11px;
+    border: 1px solid var(--lp-hair-2);
+    border-radius: 999px;
+    background: var(--lp-raise);
+    color: var(--lp-ink-2);
+    font-size: 0.7rem;
+    cursor: pointer;
+  }
+  .lp-graph__chip[aria-pressed="true"] { border-color: var(--lp-accent); color: var(--lp-ink); }
 }
 
 /* =========================================================================
@@ -1964,29 +2272,61 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
 }
 
 /* =========================================================================
-   Research — the technology selector
+   Research — eight technologies, read by scrolling
    ========================================================================= */
 
 .lp-tech {
   display: grid;
-  grid-template-columns: minmax(0, 0.62fr) minmax(0, 1fr);
-  gap: clamp(20px, 3vw, 44px);
+  grid-template-columns: minmax(0, 0.42fr) minmax(0, 1fr);
+  gap: clamp(24px, 3.6vw, 56px);
   margin-top: clamp(36px, 4.6vw, 56px);
+  /* `start`, not `stretch`: the sidebar must be shorter than the column it
+     sits in, or `position: sticky` has no room to travel. */
   align-items: start;
 }
-@media (max-width: 860px) { .lp-tech { grid-template-columns: minmax(0, 1fr); } }
 
-.lp-tech__list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+/* The sidebar stays on screen while the panels scroll past it. */
+.lp-tech__side {
+  position: sticky;
+  top: calc(var(--lp-nav-h) + 28px);
+  display: grid;
+  grid-template-columns: 2px minmax(0, 1fr);
+  column-gap: 18px;
+  align-content: start;
+}
+/* A progress line: how far through the eight the reader is. Driven by one
+   custom property the section sets from the active panel; the transition is
+   the only thing that moves it. */
+.lp-tech__progress {
+  position: relative;
+  grid-row: 1;
+  border-radius: 2px;
+  background: var(--lp-hair);
+  overflow: hidden;
+}
+.lp-tech__progress i {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: var(--lp-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--lp-accent) 55%, transparent);
+  transform-origin: top;
+  transform: scaleY(var(--p, 0));
+  transition: transform 0.45s var(--ease-out);
+}
+
+.lp-tech__list { grid-row: 1; display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
 .lp-tech__btn {
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 13px 16px;
+  padding: 11px 14px;
   border: 1px solid transparent;
   border-radius: 10px;
+  background: none;
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 0.98rem;
   font-weight: 600;
   letter-spacing: -0.015em;
   text-align: left;
@@ -1994,27 +2334,73 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
   cursor: pointer;
   transition: color var(--t-fast), background var(--t-fast), border-color var(--t-fast);
 }
-.lp-tech__btn:hover { color: var(--lp-ink-2); }
-.lp-tech__btn[aria-pressed="true"] {
+.lp-tech__n { font-size: 0.625rem; font-weight: 400; color: var(--lp-ink-3); transition: color var(--t-fast); }
+.lp-tech__btn:hover { color: var(--lp-ink); }
+.lp-tech__btn[data-state="done"] { color: var(--lp-ink-2); }
+.lp-tech__btn[data-state="active"] {
   color: var(--lp-ink);
   background: var(--lp-surface-2);
-  border-color: var(--lp-hair);
+  border-color: color-mix(in srgb, var(--lp-accent) 40%, var(--lp-hair));
 }
+.lp-tech__btn[data-state="active"] .lp-tech__n { color: var(--lp-accent); }
 .lp-tech__btn:focus-visible { outline: 2px solid var(--lp-accent); outline-offset: 2px; }
-.lp-tech__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--lp-hair-2);
-  flex: none;
-  transition: background var(--t-fast), box-shadow var(--t-fast);
+
+.lp-tech__status {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0 14px;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--lp-ink-3);
 }
-.lp-tech__btn[aria-pressed="true"] .lp-tech__dot {
-  background: var(--lp-accent);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--lp-accent) 70%, transparent);
+.lp-tech__status span { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--lp-ink-3); }
+.lp-tech__status span[data-live] { background: var(--lp-cyan); animation: lp-ping 2.6s var(--ease-in-out) infinite; }
+
+/* --- the panels --------------------------------------------------------- */
+.lp-tech__panels { display: grid; gap: clamp(14px, 1.6vw, 20px); }
+.lp-tech__panel {
+  scroll-margin-top: 110px;
+  transition: border-color var(--t-med) var(--ease-out), box-shadow var(--t-med) var(--ease-out);
+}
+/* The one being read is marked here too, so the eye can find it from either
+   side. Border and glow only — GSAP owns the panel's transform on entrance. */
+.lp-tech__panel[data-active] {
+  border-color: color-mix(in srgb, var(--lp-accent) 40%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--lp-accent) 10%, transparent), 0 14px 40px rgba(0, 0, 0, 0.18);
+}
+.lp-tech__phead { display: flex; align-items: baseline; gap: 14px; }
+.lp-tech__pn { font-size: 0.625rem; letter-spacing: 0.1em; color: var(--lp-ink-3); }
+
+/* A figure the running system reported, marked as such. */
+.lp-tech__fig {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 6px 14px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--lp-cyan) 24%, var(--lp-hair));
+  border-radius: 12px;
+  background: var(--lp-cyan-soft);
+}
+.lp-tech__fig b { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; color: var(--lp-ink); white-space: nowrap; }
+.lp-tech__fig span { font-size: var(--t-xs); line-height: 1.5; color: var(--lp-ink-2); }
+.lp-tech__fig em {
+  align-self: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lp-cyan) 18%, transparent);
+  font-style: normal;
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-cyan);
 }
 
-.lp-tech__panel { min-height: 300px; }
+.lp-tech__cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 28px; }
 .lp-tech__lbl { margin-top: 20px; }
 .lp-tech__body { margin: 8px 0 0; font-size: var(--t-sm); line-height: 1.7; color: var(--lp-ink-2); }
 /* The honest half is set apart, not buried: it is the reason the section
@@ -2023,6 +2409,32 @@ html[data-theme="light"] .lp-nav .usermenu__signedout .btn2--primary { color: #f
   padding-left: 14px;
   border-left: 2px solid color-mix(in srgb, var(--lp-indigo) 50%, transparent);
   color: var(--lp-ink-2);
+}
+
+@media (max-width: 1080px) {
+  .lp-tech__cols { grid-template-columns: minmax(0, 1fr); }
+}
+/* On a narrow screen the sidebar becomes a strip of chips that sticks under
+   the bar and scrolls sideways — the same navigation, laid flat. */
+@media (max-width: 860px) {
+  .lp-tech { grid-template-columns: minmax(0, 1fr); }
+  .lp-tech__side {
+    z-index: 5;
+    top: var(--lp-nav-h);
+    display: block;
+    margin: 0 calc(var(--lp-gut) * -1);
+    padding: 10px var(--lp-gut);
+    background: color-mix(in srgb, var(--lp-void) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--lp-hair);
+  }
+  .lp-tech__progress,
+  .lp-tech__status { display: none; }
+  .lp-tech__list { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  .lp-tech__list::-webkit-scrollbar { display: none; }
+  .lp-tech__btn { white-space: nowrap; padding: 8px 12px; font-size: 0.85rem; border-color: var(--lp-hair); }
+  .lp-tech__fig { grid-template-columns: minmax(0, 1fr) auto; }
+  .lp-tech__fig span { grid-column: 1 / -1; grid-row: 2; }
 }
 
 /* =========================================================================

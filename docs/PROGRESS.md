@@ -3,11 +3,11 @@
 One entry per finished piece of work, newest last. A new session reads this
 after [`TASKS.md`](TASKS.md) to find where things stand.
 
-**Current state (2026-10-21):** Phase 0 and Phase 3 approved. T-04 approved
-2026-10-10. **T-05 and T-69 are 🧪 awaiting review**, committed to `main`.
-T-69 (landing fixes through section 02) was added on the owner's request ahead
-of the recommended order; the owner will continue with the later sections.
-Next in the recommended order: T-06.
+**Current state (2026-10-22):** Phase 0 and Phase 3 approved. T-04 approved
+2026-10-10. **T-05, T-69 and T-70 are 🧪 awaiting review**, committed to
+`main`. T-69 and T-70 (landing fixes, sections 01–02 then 03, 04, 06 and 09)
+were added on the owner's request ahead of the recommended order. Next in the
+recommended order: T-06.
 
 ---
 
@@ -224,4 +224,78 @@ committed to `main`, with no separate branches.
   2. Hover both hero buttons; click "Explore the system"; scroll through 01–02
   3. Expect: the buttons stay in one row; the network is symmetric with
      packets reaching the core; chips land on their lines; eight even cards
+
+## T-70 — Landing: the investigation rail, the agent diagram, the intelligence graph, the research sidebar — 2026-10-22
+
+- What changed:
+  - **03 — the investigation rail.** GSAP scrubbed each step's opacity while
+    the stylesheet also transitioned it, so the highlight trailed its panel
+    (measured: stage 04 current, its step still at 0.34); the fill grew
+    linearly while the icons are unevenly spaced, so it reached the last icon
+    only as the pin released. The timeline now reports the current stage, each
+    step carries `data-state` (done / active / upcoming) and CSS owns the look;
+    the fill is driven stage by stage to each icon's measured centre. Steps are
+    buttons that scroll to their stage. The panels are unchanged.
+  - **04 — the agent diagram.** It claimed "thirteen specialists" in tiers
+    ("Correlate", "Geospatial") that are not registered agents; the registry
+    has eight in four stages. It now shows the registry — read live from
+    `/api/health` with versions, or from a dated snapshot of
+    `agents/registry.py` when the API does not answer — each agent with a
+    one-line job taken from its module docstring. The layout is ordinary grid;
+    the connectors are measured from the boxes (with `offsetTop`, so a card
+    mid-entrance does not skew them) and drawn with `pathLength`. The build
+    plays once as it comes into view instead of a scrub that finished only
+    after its top had left the screen, and a packet now runs core → stage →
+    verdict, lighting the stage it passes — the comment had promised that
+    while the code faded line opacity.
+  - **06 — the intelligence graph.** It was a hand-drawn example including a
+    domain and an APK the product cannot analyse; its nodes rendered at
+    opacity 0 (a CSS opacity transition against GSAP's) and off their points
+    (the centring transform rewritten by GSAP). It now loads campaign FC-001
+    from `/api/intel/clusters/FC-001` — 7 shared identifiers, 26 cases, 74
+    links, the store's risk factors — with a snapshot of that response
+    (`landing/cluster.ts`) when the API fails or needs sign-in. The cases come
+    from `seed_cases()`, which the store calls synthetic, and the section says
+    so. Added: a summary strip, a legend, per-identifier detail (cases it
+    appears in, identifiers it shares cases with, mean threat), per-case
+    detail, the top risk factors, and a self-running tour with a pulsing ring
+    that stops when the reader hovers. Nodes sit in slots; pill sizes follow
+    the stage (`cqw`); below 740px the drawing becomes a row of chips.
+  - **09 — research.** A hover selector became eight stacked panels with a
+    sticky sidebar that marks the panel being read, fills a progress line and
+    jumps on click; on a phone it is a sticky chip strip. Panels show live
+    figures from `/api/health`: agent count, LLM backend, retrieval passages,
+    store size, the classifier serving and its measured macro-F1, coaching
+    lines. The copy no longer says a fine-tuned transformer serves, that
+    fusion is calibrated, that intelligence reads registrar and certificate
+    data, or that there are thirteen agents.
+  - **Nav.** Its section triggers were refreshed before the investigation pin
+    added its spacer, so it lit "Research" in Intelligence. They now refresh
+    last (`refreshPriority: -1`).
+- Files: `apps/web/src/components/landing/InvestigationSection.tsx`,
+  `AgentsSection.tsx`, `GraphSection.tsx`, `ResearchSection.tsx`,
+  `LandingNav.tsx`, `live.ts` (new), `cluster.ts` (new),
+  `apps/web/src/lib/api.ts`, `apps/web/src/styles/landing.css`,
+  `docs/TASKS.md`, `docs/PROGRESS.md`
+- Tests: no frontend harness yet (T-15). Measured in the running page at
+  1470×923: rail fill on the active icon at all seven stages (0px), states
+  correct, step clicks land on their stage; agent connectors 0px off their
+  boxes, diagram 716px tall with live registry data; graph — no pill overlaps,
+  nothing outside the stage, nodes on their computed points, 26 cases and 74
+  links, live data; research — active item correct at every panel, in a gap
+  and after jumps, clicks mark the chosen item, active chip kept in view on a
+  phone; nav correct in five sections. No overlap or horizontal scroll at
+  1470, 1024, 768 and 375; light theme and reduced motion checked. `make
+  gates`: 635 passed, 26 skipped, 0 failed; contract consistent; typecheck,
+  landing session check and build clean.
+- Known limitations: the verification pane was hidden and ran no animation
+  frames, so GSAP and ScrollTrigger were stepped by hand; the motion at 60fps
+  needs the owner's eye. The graph's snapshot will drift if the store's seed
+  changes — it is dated on screen. No mocks.
+- How to verify:
+  1. `make api` and `make web`, open `http://localhost:5173/`
+  2. Scroll 03 and click a step; let 04 build; hover 06; scroll 09 and click
+     its sidebar
+  3. Expect: rail in step with the panels; a whole diagram with a packet
+     running; a graph that answers; a sidebar that follows
 

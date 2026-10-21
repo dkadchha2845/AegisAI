@@ -103,6 +103,12 @@ export function LandingNav() {
         trigger: el,
         start: "top 55%",
         end: "bottom 55%",
+        // Measured last. These triggers are created as the bar mounts, before
+        // any section has built its own — including the investigation's pin,
+        // which inserts several screens of spacer above every section after
+        // it. Refreshed first, they measured a page without that spacer, and
+        // the bar lit "Research" while the reader was in Intelligence.
+        refreshPriority: -1,
         onToggle: ({ isActive }) => setCurrent((c) => (isActive ? id : c === id ? null : c)),
       });
     });

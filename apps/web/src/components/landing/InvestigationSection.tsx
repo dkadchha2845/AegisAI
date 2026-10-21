@@ -26,6 +26,16 @@
  * and for anyone who asked for less movement, the seven stages become an
  * ordinary vertical sequence. Same seven panels, same copy, no pin.
  *
+ * **The rail is a reading of the timeline, not a second animation.** It used
+ * to be: GSAP scrubbed each step's opacity while the stylesheet also
+ * transitioned it, so the highlight trailed the panel it belonged to, and the
+ * fill grew linearly while the step icons are unevenly spaced, so it reached
+ * the last icon only as the pin released. Now the timeline reports which stage
+ * is current, each step carries `data-state` (done, active, upcoming) and the
+ * stylesheet owns how those look; the fill is driven stage by stage to each
+ * icon's measured centre. The steps are buttons — choose one and the page
+ * scrolls to that stage.
+ *
  * Every value in every panel comes from the recorded session in
  * `landing/session.ts`. See that file's note.
  */
@@ -42,6 +52,7 @@ import {
 } from "lucide-react";
 import {
   gsap,
+  ScrollTrigger,
   split,
   fontsReady,
   landingMedia,
@@ -100,8 +111,23 @@ const STAGES = [
   },
 ] as const;
 
+type StepState = "done" | "active" | "upcoming";
+
+/** Mark every step relative to the current one. */
+function markSteps(steps: HTMLElement[], current: number) {
+  steps.forEach((s, i) => {
+    const state: StepState = i < current ? "done" : i === current ? "active" : "upcoming";
+    if (s.dataset.state !== state) s.dataset.state = state;
+    if (state === "active") s.setAttribute("aria-current", "step");
+    else s.removeAttribute("aria-current");
+  });
+}
+
 export function InvestigationSection() {
   const root = useRef<HTMLElement>(null);
+  /** Scrolls to a stage. Replaced by the effect with whatever the current
+   *  layout needs: a position inside the pin, or the panel itself. */
+  const jump = useRef<(i: number) => void>(() => {});
 
   useEffect(() => {
     const el = root.current;
@@ -145,6 +171,8 @@ export function InvestigationSection() {
          `matchMedia` can only see the query. */
       if (reduced()) {
         el.querySelector("[data-i-stage]")?.setAttribute("data-mode", "flow");
+        const panels = gsap.utils.toArray<HTMLElement>("[data-i-panel]", el);
+        jump.current = (i) => scrollToEl(panels[i]);
         return;
       }
 
@@ -163,6 +191,11 @@ export function InvestigationSection() {
              height, the seven stages become a document instead. */
           if (!pinnable) {
             el.querySelector("[data-i-stage]")?.setAttribute("data-mode", "flow");
+            steps.forEach((s) => s.removeAttribute("data-state"));
+            // The pinned branch measures the track; a layout that has just
+            // left it must not keep those numbers.
+            el.querySelector<HTMLElement>("[data-i-track]")?.removeAttribute("style");
+            jump.current = (i) => scrollToEl(panels[i]);
             panels.forEach((p) => {
               gsap.from(p, {
                 opacity: 0,
@@ -178,7 +211,37 @@ export function InvestigationSection() {
 
           el.querySelector("[data-i-stage]")?.setAttribute("data-mode", "pinned");
 
+          /* --- the rail's geometry ------------------------------------
+             The track runs from the first step's icon to the last one's, and
+             the fill stops on each icon in turn. Both are measured, because
+             the steps are as tall as their copy and the copy differs. Read
+             again on every refresh, so a resize or a font swap re-aims it. */
+          const list = el.querySelector<HTMLElement>("[data-i-steps]");
+          const track = el.querySelector<HTMLElement>("[data-i-track]");
+          const fill = el.querySelector<HTMLElement>("[data-i-rail]");
+          const iconCentre = (i: number) => {
+            const icon = steps[i]?.querySelector<HTMLElement>("[data-i-icon]");
+            if (!icon || !list) return 0;
+            const a = icon.getBoundingClientRect();
+            return a.top + a.height / 2 - list.getBoundingClientRect().top;
+          };
+          const span = () => Math.max(1, iconCentre(steps.length - 1) - iconCentre(0));
+          /** How far down the track step `i`'s icon sits, 0..1. */
+          const at = (i: number) => (iconCentre(i) - iconCentre(0)) / span();
+          const placeTrack = () => {
+            if (!track || !list) return;
+            track.style.top = `${iconCentre(0)}px`;
+            track.style.height = `${span()}px`;
+          };
+          placeTrack();
+          ScrollTrigger.addEventListener("refreshInit", placeTrack);
+
           /* --- desktop: the pin -------------------------------------- */
+          const OUT = 0.28;      /* previous panel leaves */
+          const IN_AT = 0.15;    /* next panel arrives */
+          const ITEMS_AT = 0.25; /* its contents follow it */
+
+          let current = -1;
           const tl = gsap.timeline({
             scrollTrigger: {
               trigger: "[data-i-pin]",
@@ -193,7 +256,20 @@ export function InvestigationSection() {
               anticipatePin: 1,
               invalidateOnRefresh: true,
             },
+            // The current stage is a reading of the playhead: stage i becomes
+            // current the moment its panel starts to arrive. Written only when
+            // it changes, so a scroll costs one comparison per frame.
+            onUpdate: () => {
+              const t = tl.time();
+              let next = 0;
+              for (let i = 1; i < STAGES.length; i++) if (t >= i + IN_AT) next = i;
+              if (next !== current) {
+                current = next;
+                markSteps(steps, current);
+              }
+            },
           });
+          markSteps(steps, 0);
 
           /* One stage per unit of timeline, and every tween placed against
              that unit's label.
@@ -205,12 +281,9 @@ export function InvestigationSection() {
              being faded while the incoming one was still staggering in, and
              the section spent most of its scroll showing neither. Absolute
              positions inside a fixed-length unit cannot drift. */
-          const OUT = 0.28;      /* previous panel leaves */
-          const IN_AT = 0.15;    /* next panel arrives */
-          const ITEMS_AT = 0.25; /* its contents follow it */
+          if (fill) gsap.set(fill, { scaleY: 0 });
 
           panels.forEach((panel, i) => {
-            const step = steps[i];
             const label = `s${i}`;
             tl.addLabel(label, i);
 
@@ -220,21 +293,29 @@ export function InvestigationSection() {
               // the section would open on an empty stage — the one frame a
               // reader is guaranteed to see.
               gsap.set(panel, { opacity: 1, filter: "blur(0px)", yPercent: 0 });
-              gsap.set(step, { opacity: 1 });
               return;
             }
 
             // Out with the last, in with the next, overlapping by half — the
             // stage is never empty and never shows two panels at full strength.
             tl.to(panels[i - 1], { opacity: 0, filter: "blur(12px)", yPercent: -6, duration: OUT }, label);
-            tl.to(steps[i - 1], { opacity: 0.34, duration: 0.25 }, label);
             tl.fromTo(
               panel,
               { opacity: 0, filter: "blur(12px)", yPercent: 6 },
               { opacity: 1, filter: "blur(0px)", yPercent: 0, duration: 0.35 },
               `${label}+=${IN_AT}`,
             );
-            tl.to(step, { opacity: 1, duration: 0.25 }, `${label}+=${IN_AT}`);
+
+            // The fill travels from the last icon to this one while the panel
+            // arrives, and lands on the icon as the stage becomes current.
+            if (fill) {
+              tl.fromTo(
+                fill,
+                { scaleY: () => at(i - 1) },
+                { scaleY: () => at(i), duration: 0.35, ease: "power1.inOut", immediateRender: false },
+                label,
+              );
+            }
 
             // Each panel's own contents arrive a beat after the panel does, so
             // a stage reads as something being assembled rather than as a
@@ -256,21 +337,18 @@ export function InvestigationSection() {
           // the timeline rather than overlapping the stage it follows.
           tl.to({}, { duration: 0.5 }, STAGES.length);
 
-          // The rail fills as the sequence advances — the only progress
-          // indicator a pinned section gets, and the thing that stops a long
-          // pin from feeling like a hang.
-          //
-          // On the pin's own timeline rather than on a second ScrollTrigger
-          // that duplicates the pin's trigger and range. Two triggers on one
-          // pinned element have to agree about a measurement that the first of
-          // them changes — and the rail's only job is to say how far through
-          // the sequence you are, which the sequence itself already knows.
-          tl.fromTo(
-            "[data-i-rail]",
-            { scaleY: 0 },
-            { scaleY: 1, ease: "none", duration: STAGES.length },
-            0,
-          );
+          // Choosing a step scrolls to the moment its panel has fully arrived.
+          jump.current = (i) => {
+            const st = tl.scrollTrigger;
+            if (!st) return;
+            const t = i === 0 ? 0 : i + IN_AT + 0.4;
+            window.scrollTo({
+              top: st.start + ((st.end - st.start) * t) / tl.duration(),
+              behavior: reduced() ? "auto" : "smooth",
+            });
+          };
+
+          const cleanupTrack = () => ScrollTrigger.removeEventListener("refreshInit", placeTrack);
 
           // The risk figure counts through the recorded trajectory rather
           // than to it. Driven off the same scrub so it cannot desynchronise
@@ -295,6 +373,7 @@ export function InvestigationSection() {
               "s5",
             );
           }
+          return cleanupTrack;
         }),
       );
       // Triggers built after the route's own refresh; see `refreshSoon`. The
@@ -333,23 +412,27 @@ export function InvestigationSection() {
             content invisible. Defaulting to the document, and upgrading to the
             cinema only once something is definitely driving it, fails open. */}
         <div className="lp-shell lp-inv" data-i-stage data-mode="flow">
-          {/* --- the rail ------------------------------------------- */}
-          <ol className="lp-inv__steps">
-            <span className="lp-inv__rail" aria-hidden="true">
+          {/* --- the rail -------------------------------------------
+              A list of buttons: each step says where it is in the sequence
+              and takes you there. */}
+          <ol className="lp-inv__steps" data-i-steps aria-label="Investigation stages">
+            <span className="lp-inv__rail" data-i-track aria-hidden="true">
               <i data-i-rail />
             </span>
             {STAGES.map((s, i) => (
               <li className="lp-inv__step" key={s.id} data-i-step>
-                <span className="lp-inv__icon">
-                  <s.icon size={15} strokeWidth={1.7} aria-hidden="true" />
-                </span>
-                <span>
-                  <b>
-                    <span className="lp-inv__n lp-mono">{String(i + 1).padStart(2, "0")}</span>
-                    {s.name}
-                  </b>
-                  <em>{s.what}</em>
-                </span>
+                <button type="button" className="lp-inv__stepbtn" onClick={() => jump.current(i)}>
+                  <span className="lp-inv__icon" data-i-icon>
+                    <s.icon size={15} strokeWidth={1.7} aria-hidden="true" />
+                  </span>
+                  <span className="lp-inv__stxt">
+                    <b>
+                      <span className="lp-inv__n lp-mono">{String(i + 1).padStart(2, "0")}</span>
+                      {s.name}
+                    </b>
+                    <em>{s.what}</em>
+                  </span>
+                </button>
               </li>
             ))}
           </ol>
@@ -531,4 +614,13 @@ function Panel({
       <div className="lp-inv__pbody">{children}</div>
     </article>
   );
+}
+
+/** Scroll a panel into view below the fixed bar. */
+function scrollToEl(el: HTMLElement | undefined) {
+  if (!el) return;
+  window.scrollTo({
+    top: el.getBoundingClientRect().top + window.scrollY - 96,
+    behavior: reduced() ? "auto" : "smooth",
+  });
 }
