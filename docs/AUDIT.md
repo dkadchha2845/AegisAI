@@ -326,6 +326,7 @@ No screenshots were saved to the repository during this audit.
 | U-04 | Two entry points for one job. "Analyze" gives a score; "Investigate" gives an agent trace and no score. A user cannot know which to use | `/analyze`, `/investigate` |
 | U-05 | The design system exists as code (`tokens.css`, `primitives.css`) and is undocumented; several components the brief requires — risk gauge, stage timeline, agent-trace panel, evidence viewer — are absent or one-off | `apps/web/src/styles/` |
 | U-06 | No Hindi interface, for a product whose strongest model is Hindi/Hinglish | — |
+| U-08 | *Found during T-03.* The landing's `--lp-ink-3` (`#6f7789`) measures **4.46:1** on `--lp-deep` — under the 4.5:1 AA floor for the captions and micro-labels it sets. Its comment in `landing.css` claims 4.6:1. Owned by T-60 | `styles/landing.css` |
 | U-07 | Six `ERR_CONNECTION_REFUSED` console errors in dev before sign-in. Source not confirmed; the dev-only Agentation toolbar is the likely cause. None after sign-in | browser console |
 
 Verified fine: the landing and login scroll, `/investigate` has no horizontal

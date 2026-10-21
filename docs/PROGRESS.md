@@ -370,3 +370,33 @@ committed to `main`, with no separate branches.
   two sequence diagrams in §10 against the product; check A7 sits where a
   finding can be stopped.
 
+## T-03 — Write the design-system document from the shipped tokens — 2026-10-22
+
+- What changed: new `docs/DESIGN_SYSTEM.md` — visual direction; every token
+  from `tokens.css` with its value in both themes (type, spacing, radius,
+  shadow, motion, containers, focus, layers, neutrals, inks, accent, the
+  threat ramp's fill / dim / ink); the risk levels as colour + label + number
+  with their score bands and the brief's names mapped onto them; measured
+  contrast; the primitives that exist; the brief's 16 components as have (9),
+  partial (5) or missing (2) with paths; layout, navigation and accessibility
+  rules; the landing's scoped tokens; and a 14-item gap table that is T-16's
+  input.
+- Found and recorded, not changed (this task touches no stylesheet):
+  **U-08** — the landing's `--lp-ink-3` measures 4.46:1, under AA, where its
+  comment claims 4.6:1; `--font-mono` is DM Sans although the comment above
+  it says JetBrains Mono (gap G-13); about a dozen ad-hoc breakpoints and no
+  breakpoint tokens (G-12).
+- Files: `docs/DESIGN_SYSTEM.md` (new), `docs/AUDIT.md`, `docs/TASKS.md`,
+  `docs/PROGRESS.md`
+- Tests: a document. Token values verified by script against `tokens.css`
+  and `landing.css` — no mismatch. Contrast computed with the WCAG 2.1
+  relative-luminance formula, translucent tints composited over the surface
+  they sit on: every text token clears 4.5:1 in both themes (lowest:
+  dark-theme HIGH on its own tint over a hovered panel, 4.73); `--ink-ghost`
+  fails, and is non-text only by design; every ratio claimed in
+  `tokens.css`'s comments re-measured and holds.
+- Known limitations: the proposed breakpoints and the component APIs in §9
+  are proposals for T-16, not decisions. No mocks.
+- How to verify: open `docs/DESIGN_SYSTEM.md`; pick three tokens and find
+  them in `apps/web/src/styles/tokens.css`; values match.
+

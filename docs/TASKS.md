@@ -43,7 +43,7 @@ reused.
 |---|---|---|
 | 0 — Audit | [`AUDIT.md`](AUDIT.md) | ✅ Approved 2026-10-09 |
 | 1 — PRD | T-01 | 🧪 |
-| 2 — Architecture and design system | T-02, T-03 | ⬜ |
+| 2 — Architecture and design system | T-02, T-03 | 🧪 |
 | 3 — Task list | this file | ✅ Approved 2026-10-09 |
 | 4 — Execution | M0 → M5, one task at a time | ⬜ |
 
@@ -64,7 +64,7 @@ reused.
 |---|---|---|---|---|---|
 | T-01 | Write the PRD | P1 | 🧪 | S×2 | — |
 | T-02 | Bring the architecture document to the brief's shape | P2 | 🧪 | S | — |
-| T-03 | Write the design-system document from the shipped tokens | P2 | ⬜ | S | 7.1 |
+| T-03 | Write the design-system document from the shipped tokens | P2 | 🧪 | S | 7.1 |
 | T-04 | Correct the stage-classifier claim everywhere it is stated | M0 | ✅ | S | — |
 | T-05 | Make the promotion gate refuse a contaminated comparison | M0 | ✅ | S | — |
 | T-06 | Commit the leak-free classifier baseline as the first research result | M0 | ⬜ | S | — |
@@ -244,17 +244,17 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-03 — Write the design-system document from the shipped tokens
 - Milestone: P2
-- Status: ⬜ Todo
+- Status: 🧪 Awaiting my review (2026-10-22)
 - Depends on: T-01
 - Fixes / implements: U-05, D-10; brief §5
 - Goal: Document the design system the product already has, and list — as a gap table — the components the brief requires and the product lacks. The gap table becomes T-16.
 - Scope: new `docs/DESIGN_SYSTEM.md`, written from `apps/web/src/styles/tokens.css` and `primitives.css`: colour tokens including the five risk levels, type scale, spacing, radius, shadow, motion; the component inventory with a have / partial / missing column; layout and accessibility rules.
 - Out of scope: changing any stylesheet or component.
 - Acceptance criteria:
-  - [ ] Every token named in the document exists in `tokens.css` with the value stated
-  - [ ] Each of the brief's 16 components is marked have, partial or missing, with a file path for the first two
-  - [ ] Risk levels are specified as colour **and** label **and** number
-  - [ ] Contrast ratios are measured, not asserted
+  - [x] Every token named in the document exists in `tokens.css` with the value stated — 112 values plus the spacing, radius and z-index rows checked by script against the stylesheet; no mismatch
+  - [x] Each of the brief's 16 components is marked have, partial or missing, with a file path for the first two — 9 have, 5 partial, 2 missing
+  - [x] Risk levels are specified as colour **and** label **and** number (§3, with the bands from `engine/threat.py`)
+  - [x] Contrast ratios are measured, not asserted — every text token in both themes, the ramp on its own tint, buttons and the focus ring (§4)
 - How Dhrumil verifies it:
   1. Open `docs/DESIGN_SYSTEM.md`
   2. Pick three tokens and find them in `apps/web/src/styles/tokens.css`
