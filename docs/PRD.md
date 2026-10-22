@@ -694,9 +694,8 @@ FR-59 (loading, empty, error, success) and NFR-18/19.
 | Fraud graph seed | 115 cases, 9 clusters | Synthetic | `intel/repository.py seed_cases()` |
 | AIFC v1 (target) | ≥10,000 items, 12 categories + ≥3,500 benign (`DATASETS.md`) | Per item: `synthetic` / `public` / `consented` | T-37 |
 
-`DATASETS.md` §2 gives the call corpus as "1,692 calls", which disagrees with
-the generated report's 338 calls / 1,617 utterances; the report is generated
-from the data and is used here. Recorded for T-37's data card.
+Figures are the generated report's (`ml/data/processed/report.md`), which
+`DATASETS.md` §2 now quotes too (D-15).
 
 ### 11.3 Metrics
 
@@ -723,8 +722,9 @@ MuRIL's **0.300**; on MuRIL's own original held-out split, 0.372 against
 0.221. The 0.767 once published for MuRIL was a train/test leak — measured on
 its own training data — and must not be cited. That split also shared three
 scam types between splits (B-07); on the archetype-disjoint split that replaced
-it on 2026-10-22, lexical scores **0.237**, and MuRIL cannot be scored until it
-is retrained on it (T-45).
+it on 2026-10-22, lexical scores **0.397** (0.240 on the first archetype-disjoint
+split, which held out different archetypes — B-09), and MuRIL cannot be scored
+until it is retrained on it (T-45). One split is too few to compare on.
 
 ### 11.5 Ablations (T-57)
 

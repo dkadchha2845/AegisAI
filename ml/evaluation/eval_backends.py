@@ -30,8 +30,11 @@ So before the checkpoint is loaded, `provenance.leak_verdict` compares the test
 split against the record `train.py` leaves beside the weights. If any test turn
 is in it, or there is no record, the checkpoint is **not scored**: the script
 writes the refusal and its reason where the comparison would have gone, and
-exits non-zero. The lexical model is still scored — it is not trained, so its
-number on this split is sound — and the API serves it.
+exits non-zero. The lexical model is still scored, and the API serves it. It
+is not trained, so no test turn is in its weights — but its cues are written by
+hand with the corpus in view, and were last revised (audit B-08) after reading
+lines from archetypes that now sit in the test split. Its figure is a
+regression measure for this code, not a clean held-out estimate (audit D-16).
 
 When the check passes, three backends are scored, not two: the fused model is
 what the API actually serves when a checkpoint is promoted, so it is the one

@@ -44,8 +44,9 @@ AegisAI's conversation-analysis agent.
 > **0.300** — below the keyword baseline's **0.431**. See
 > [`docs/AUDIT.md`](./docs/AUDIT.md), item B-01. Since 2026-10-22 the split
 > keeps every scam type in one split only (B-07); the keyword baseline scores
-> **0.237** on that test split, and the checkpoint cannot be scored on it
-> without the same leak.
+> **0.397** on its test split — and 0.240 on the archetype-disjoint split
+> before it, a swing that says one split is too few to compare models on
+> (B-09). The checkpoint cannot be scored on either without the same leak.
 
 | | |
 |---|---|

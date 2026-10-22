@@ -26,7 +26,10 @@ calls, but not yet well: on test turns it was not trained on, the fine-tuned
 classifier scores macro-F1 0.300 against a lexical baseline's 0.431. (The 0.767
 quoted here before 2026-10-09 was a train/test leak — `docs/AUDIT.md`, B-01.)
 On the archetype-disjoint split adopted 2026-10-22 (B-07), where every scam
-type in test is unseen, the lexical baseline scores 0.237.
+type in test is unseen, the lexical baseline scores 0.397 — and scored 0.240 on
+the first such split, which held out different archetypes. A 0.16 swing from the
+choice of held-out archetypes alone means a single split cannot carry a
+comparison; the evaluation needs several archetype folds (B-09, T-06, T-45).
 The claim stands or falls on T-45 and T-46.
 *Evidence:* Experiment 7 and the conversation-dynamics evaluation.
 

@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "measured_at": "2026-10-22T10:24:27+00:00",
+  "measured_at": "2026-10-22T15:17:25+00:00",
   "checkpoint_dir": "stage-classifier",
   "fingerprint": {
     "files": {
@@ -25,34 +25,42 @@
   },
   "evaluation": {
     "split": "test",
-    "n_examples": 402,
+    "n_examples": 386,
     "status": "refused",
-    "reason": "302 of the 402 test turns are in the checkpoint's own training data",
+    "reason": "185 of the 386 test turns are in the checkpoint's own training data",
     "leak_check": {
-      "n_test": 402,
-      "overlap_turns": 302,
-      "overlap_calls": 60,
-      "test_calls": 82,
+      "n_test": 386,
+      "overlap_turns": 185,
+      "overlap_calls": 40,
+      "test_calls": 95,
       "by_archetype": {
-        "army_officer_olx": {
-          "overlap": 109,
-          "turns": 109
-        },
         "electricity_bill": {
           "overlap": 0,
           "turns": 50
+        },
+        "genuine_police": {
+          "overlap": 0,
+          "turns": 55
+        },
+        "investment_returns": {
+          "overlap": 99,
+          "turns": 117
         },
         "loan_app_harassment": {
           "overlap": 86,
           "turns": 104
         },
-        "refund_overpayment": {
-          "overlap": 107,
-          "turns": 107
-        },
-        "telecom_plan_upgrade": {
+        "mutual_fund_sip": {
           "overlap": 0,
-          "turns": 32
+          "turns": 28
+        },
+        "sim_swap_trai": {
+          "overlap": 0,
+          "turns": 18
+        },
+        "tech_support_remote": {
+          "overlap": 0,
+          "turns": 14
         }
       }
     },
@@ -68,8 +76,8 @@
     },
     "results": {
       "lexical": {
-        "macro_f1": 0.24014339363245338,
-        "weighted_f1": 0.21130222315867128
+        "macro_f1": 0.3966438226474611,
+        "weighted_f1": 0.31745945268015796
       }
     },
     "produced_by": "ml/evaluation/eval_backends.py"

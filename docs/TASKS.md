@@ -362,7 +362,8 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-09 — Retire the stale status documents
 - Milestone: M0
-- Status: ⬜ Todo
+- Status: 🧪 Built 2026-10-22 (commit `0863b44`), awaiting `approve T-09`
+- Evidence: `STATUS.md` moved to `docs/archive/`; README status section points at PROGRESS, TASKS, AUDIT and PRD; dated "Historical" notices on INVENTORY, UI_AUDIT, SUBMISSION_DOCUMENT, ROADMAP, build-dossier and PRESENTATION; D-15 corrected in DATASETS.md. `test_contributor_docs.py` 44 passed; gates green.
 - Depends on: T-04
 - Fixes / implements: D-03
 - Goal: One place says what is true. Documents that describe July or August are moved to the archive, not left where a reader will trust them.
@@ -380,7 +381,8 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-10 — Move vendored and unrelated directories out of the product tree
 - Milestone: M0
-- Status: ⬜ Todo
+- Status: 🧪 Built 2026-10-22 (commit `83e4e04`), awaiting `approve T-10`
+- Evidence: `Skills/` (1,613 files, S-05) and `ui-design/` removed, `attached_assets/` and `aegis_ai_pipeline_docs.md` moved to `docs/archive/`, as the owner confirmed; D-02's three unimported feature modules removed, the four the RSSIE training imports kept. History keeps everything removed. ruff clean; gates green.
 - Depends on: — (Q7 decided 2026-10-09)
 - Fixes / implements: D-03, S-05
 - Goal: `Skills/` (1,613 files), `ui-design/` (mockups for a different product) and `attached_assets/` are not AegisAI. As decided: `git rm` the first two, `git mv` the third into `docs/archive/`. Git history keeps everything.
@@ -398,7 +400,8 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-11 — Fix the two truthfulness and labelling defects in the UI
 - Milestone: M0
-- Status: ⬜ Todo
+- Status: 🧪 Built 2026-10-22 (commit `25282d9`), awaiting `approve T-11`
+- Evidence: U-03 task number in rendered copy replaced; U-08 `--lp-ink-3` clears 4.5:1 on every landing surface in both themes; U-02 verified resolved; U-07 not reproducible. Verified in the running app; gates green.
 - Depends on: —
 - Fixes / implements: U-02, U-03
 - Goal: Remove internal task numbers from user-facing copy and give every header button an accessible name.

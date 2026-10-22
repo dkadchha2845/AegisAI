@@ -48,8 +48,8 @@ first-class agent, not diluted.
 
 **Analysis engine (`engine/`)**
 - `classifier.py` — 8-class scam-stage classifier. Fine-tuned **MuRIL** checkpoint
-  (macro-F1 0.300 on unseen test turns against lexical 0.431; lexical 0.237 on the
-  archetype-disjoint split of B-07 — the 0.767 written
+  (macro-F1 0.300 on unseen test turns against lexical 0.431; lexical 0.397 on the
+  current archetype-disjoint split, 0.240 on the first — the 0.767 written
   here on 2026-08-23 was a train/test leak, see `AUDIT.md` B-01) wrapped as a
   `FusedStageClassifier` (MuRIL sharpened + lexical max-fused). Promotion gated
   on measured F1 via `ml/evaluation/eval_backends.py`; degrades to lexical and tags

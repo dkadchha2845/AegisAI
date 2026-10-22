@@ -90,3 +90,11 @@ def test_the_model_card_counts_what_the_files_hold(rows) -> None:
         for label, n in counts.items():
             if n < THIN_CLASS:
                 assert f"{label} has {n} {word} examples" in text
+
+
+def test_validation_and_test_hold_enough_benign_calls_to_measure_false_positives(rows) -> None:
+    """B-09: "both classes present" was met by one benign call, which made a
+    call-level false-positive rate unmeasurable on either split."""
+    for name in ("val", "test"):
+        benign = {r["call_id"] for r in rows[name] if not r["is_scam"]}
+        assert len(benign) >= 5, f"{name} holds {len(benign)} benign call(s)"

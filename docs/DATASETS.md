@@ -27,7 +27,7 @@ present it as real. Every item is labelled `synthetic`, `public`, or
 
 | Asset | Size | Quality |
 |---|---|---|
-| Synthetic scam-call corpus | 338 calls (209 scam, 129 benign), 1,617 utterances after de-duplication, train/val/test split (`ml/data/processed/report.md`) | The split holds whole call skeletons out and shares no text between its parts, though three archetypes appear on both sides through different skeletons (`AUDIT.md` B-07). The served checkpoint was trained on an earlier split, so its published score on this one is a leak (`AUDIT.md` B-01). Validated by `ml/corpus/validate_corpus.py` |
+| Synthetic scam-call corpus | 338 calls (209 scam, 129 benign), of which 304 contribute after de-duplication: 1,617 utterances, train/val/test split (`ml/data/processed/report.md`) | Every archetype sits in exactly one split, validation and test each hold every stage and at least five benign calls, and no text is shared between splits (`AUDIT.md` B-07, B-09). The served checkpoint was trained on an earlier split, so it cannot be scored on this one without a leak (`AUDIT.md` B-01). Validated by `ml/corpus/validate_corpus.py` |
 | Stage transition matrix | Fitted | Powers the Digital Twin |
 | Knowledge corpus | 31 chunks / 4 docs | Thin — Phase 3.5 expands to ≥1,500 |
 | Coach library | 14 human-reviewed lines | Small but deliberately verbatim-only |

@@ -362,6 +362,8 @@ released). *Secrecy* needs a demand, not the word. The credential check knows
 the Hinglish refusal forms and a delivered code. English stage cues for
 customs, contraband and "police case" were added.
 
+Corpus rows were measured on the seed-8 split of that commit; B-09 rebuilt it.
+
 | | before | after |
 |---|---|---|
 | English dev probes — scams flagged (≥ 40) | 4 / 12 | 7 / 12 |
@@ -372,7 +374,7 @@ customs, contraband and "police case" were added.
 | Corpus scam calls flagged — train | 66 / 75 | 65 / 75 |
 | Corpus scam calls flagged — validation | 20 / 42 | 20 / 42 |
 | Corpus scam calls flagged — test | **43 / 81** | **23 / 81** |
-| Lexical stage macro-F1, test split | 0.237 | 0.240 |
+| Lexical stage macro-F1, test split (seed-8) | 0.237 | 0.240 |
 
 **The cost, stated.** Twenty test-split scam calls were caught only by the bare
 "transfer"/"bhej" floor — nineteen of them `refund_overpayment`, whose payment
@@ -396,6 +398,21 @@ train: validation and test each hold one benign call (`credit_card_reward`,
 stage figure is sound; a call-level false-positive rate on either split is
 not measurable. The split search should also require a minimum number of benign
 calls per split. Owned by T-38.
+
+**Fixed in T-71 (2026-10-22).** The split search now requires
+`MIN_BENIGN_CALLS = 5` benign calls in validation and in test, alongside every
+stage; the first seed that meets it is 9. Validation holds 18 benign calls of
+42, test 23 of 95 (whole `genuine_delivery`, `family_conversation`,
+`genuine_police` and `mutual_fund_sip` archetypes), and `test_dataset_split.py`
+asserts the floor. Call-level, with today's rules: test scams flagged 23 / 72,
+benign 0 / 23; validation 21 / 24, benign 0 / 18; train 65 / 102, benign 3 / 65.
+
+What the rebuild showed is worth more than the fix. The lexical model scores
+**macro-F1 0.397** on this test split and **0.240** on the seed-8 split — the
+same code, a 0.16 swing from which archetypes are held out. A single
+archetype-disjoint split is too noisy to compare two models on; the evaluation
+needs several archetype folds and a spread, not one number (T-06, T-45). And see
+D-16 on what the lexical figure is.
 
 ### B-07 — Medium — The current split is "leave-archetypes-out" in name only
 
@@ -425,6 +442,12 @@ named on the Model card rather than quoted: ISOLATION 5 and VERIFICATION_DEMAND 
 test turns; PAYMENT_SETUP 4 and PAYMENT_EXECUTION 8 validation turns. The
 pre-B-07 split stays readable at git `e123bd5` for T-06.
 
+*Superseded the same day by B-09's rebuild (seed 9), which also requires five
+benign calls in validation and in test: 1,027 / 204 / 386 turns over 167 / 42 /
+95 calls. Lexical macro-F1 on its test split is 0.397; the gate refuses the
+checkpoint (185 of 386 test turns are its training data). The seed-8 split is
+readable at git `20718c7`.*
+
 ---
 
 ## 6. Security issues
@@ -435,7 +458,7 @@ pre-B-07 split stays readable at git `e123bd5` for T-06.
 | S-02 | High (when built) | The URL agent will fetch attacker-supplied URLs and the APK agent will hold live malware. Neither exists yet. The `sandbox` queue is chosen from the filename, so it is a cost class, not a boundary | `docs/ARCHITECTURE.md` §8 |
 | S-03 | Medium | **Prompt-injection handling was not audited.** Evidence text reaches `llm.py` for explanations. Invariant 8 says it is quoted as untrusted data; no test was found that feeds an injection and asserts it is not followed. **Fixed in T-71 (2026-10-22):** the explainer's analysis and the assistant's question are quoted in named blocks the system prompts declare to be data, with any attempt to close the block from inside neutralised; `test_prompt_injection.py` feeds injections through a recording fake backend and asserts the framing, that no raw transcript is sent, and that a model claiming "the score is 0" moves nothing. Whether a hosted model obeys is measured in T-62 | `services/api/llm.py` |
 | S-04 | Low | No per-organisation upload quota. The 4 MB per-file cap is enforced while reading. **Fixed in T-71 (2026-10-22):** `AEGIS_ORG_UPLOAD_QUOTA_MB` (default 256, 0 = off) caps the evidence an organisation stores in any rolling 24 h; checked in the repository layer before anything is written; 429 naming the setting | `investigations/intake.py` |
-| S-05 | Low | 1,613 third-party files under `Skills/` are tracked in the product repository — unreviewed content, licence exposure and review noise | `git ls-files Skills` |
+| S-05 | Low | 1,613 third-party files under `Skills/` are tracked in the product repository — unreviewed content, licence exposure and review noise | `git ls-files Skills` **Fixed in T-10 (2026-10-22):** `Skills/` removed from the product tree, as the owner confirmed; history keeps it. |
 | S-06 | Info | A live Gemini key sits in the local `.env`. It is gitignored and has never been committed; rotate it before any public demo | `git check-ignore .env` |
 | S-07 | Medium | *Found during T-01.* **Routes that declare no permission.** `CLAUDE.md` says every route declares `require_permission(...)`. Twenty-five routes in three routers neither declare a permission nor identify the caller: all 8 of `/api/analyze/*` (an `ANALYZE_USE` permission exists in `permissions.py` and nothing requires it), all 7 of `/api/shield/*` (the vault is token-addressed by design), and 10 of the 13 `/api/session/*` routes — every one but the three payment actions, including the WebSocket and the evidence-package PDF. (Sign-up, login, password reset, `/api/auth/status` and `/api/auth/demo-accounts` are also unauthenticated, as they must be.) Some may be public by intent (a citizen checking a message without an account); that intent is not written down anywhere, and the session routes expose another person's live transcript to anyone holding its id. **Fixed in T-71 (2026-10-22):** every route declares a guard (permission, signed-in, capability, or `public(reason)`), enforced by `test_route_guards.py` over all 73 routes; live sessions require their token, their creator or `INVESTIGATION_READ_ALL` (404 otherwise); listing sessions needs `INVESTIGATION_READ_ALL`; the WebSocket no longer accepts unaudited payment actions. Verified against an enforcing API through the real frontend module | route decorators in `services/api/routes/` |
 | S-08 | Medium | *Found during T-12.* **Password-reset tokens are written to the server log**, with the account's email, whether or not auth is enforced. It is the documented delivery — there is no mail transport — so an operator with log access can complete any reset; it also means anyone who can read the log, or wherever it is shipped, can take over any account that asks for one. T-12 removed the email (the line names the internal user id) and kept the token, because removing it would make reset impossible wherever auth is enforced. **Open — needs the owner's decision.** Recommended: an admin route (`USERS_MANAGE`) that issues a single-use reset link for a user and returns it to the admin, audited; then stop logging tokens when `AEGIS_AUTH=1`. Alternative: a mail transport (new dependency, new fallback) | `services/api/routes/auth.py` `forgot_password` |
@@ -471,19 +494,20 @@ overflow at 375 px, the app chrome renders in dark theme.
 | ID | Issue |
 |---|---|
 | D-01 | **Two analysis pipelines.** The legacy engine behind `/api/analyze` and `/api/session`, and the investigation graph. They disagree on the same input (B-02) and every new capability must currently choose one. **Partly fixed in T-71 (2026-10-22):** they now agree — the graph reaches the analyzer's score through the analyzer's own floor and findings functions, under a parity test. Two pipelines still exist; retiring one is T-47 |
-| D-02 | `engine/features/` (about 600 statements) is off the serving path and duplicates `engine/spoofing.py` and `engine/scripts.py`. Carried from `docs/INVENTORY.md`; not re-measured today |
-| D-03 | Stale and stray documents: `STATUS.md` (dated 22 July, titled "AegisAI / AegisAI"), the task-history header (2026-08-27, "575 tests"), `docs/INVENTORY.md` (2026-08-23), `aegis_ai_pipeline_docs.md` at the root, `attached_assets/`, `ui-design/`, `Skills/` |
+| D-02 | `engine/features/` (about 600 statements) is off the serving path and duplicates `engine/spoofing.py` and `engine/scripts.py`. Carried from `docs/INVENTORY.md`; not re-measured today **Partly fixed in T-10 (2026-10-22):** the three modules nothing imported (`features/spoofing.py`, `script_templates.py`, `video.py`) are removed. The four the RSSIE training pipeline imports stay — they are not dead, only off the serving path. |
+| D-03 | Stale and stray documents: `STATUS.md` (dated 22 July, titled "AegisAI / AegisAI"), the task-history header (2026-08-27, "575 tests"), `docs/INVENTORY.md` (2026-08-23), `aegis_ai_pipeline_docs.md` at the root, `attached_assets/`, `ui-design/`, `Skills/` **Fixed in T-09 and T-10 (2026-10-22):** `STATUS.md`, `aegis_ai_pipeline_docs.md` and `attached_assets/` are in `docs/archive/`; `ui-design/` and `Skills/` removed; the dated documents that stay carry a "Historical" notice. |
 | D-04 | `research/` is empty. No experiment, ablation, baseline or result has been committed |
 | D-05 | Prompts are inline strings in `services/api/llm.py`, not versioned files. **Fixed in T-71 via T-14 (2026-10-22):** `services/api/prompts/{explain,assistant}.prompt`, each with an `id` and `version` header, loaded by a parser that refuses a file without them; `explanation_source` / `answer_source` record `llm:<backend> prompt:<id>@<version>`, and `/api/health` lists the prompt versions. A snapshot captured from the inline strings before the move proves the rendered prompts are byte-identical |
 | D-06 | No frontend tests and no end-to-end tests. **Fixed in T-71 via T-15 (2026-10-22):** Vitest + Testing Library (`make webtest`, `npm test`) with a RiskDial test — including that an unscored case is never drawn as zero — and a Playwright smoke (`make e2e`) that starts or reuses the real API and SPA: the landing loads with no script error, and a demo analyst signs in. Both run in CI (the smoke as its own job). New dev dependencies: vitest 2, @testing-library/{react,dom,jest-dom}, jsdom, @playwright/test 1.64.0 (pinned to the Chromium build already cached locally). Broad coverage is T-61 |
-| D-07 | CI can only ever prove the lexical fallback, because the checkpoint is not reachable from a runner (task 1.7b, still open) |
+| D-07 | CI can only ever prove the lexical fallback, because the checkpoint is not reachable from a runner (task 1.7b, still open) **Changed in T-71 (D-13, 2026-10-22):** since the gate refuses the checkpoint, the lexical model is what serves on every machine, so CI now proves what the application serves and requires `best` (`python -m services.api.serving --require best`). It will stop doing so the day a retrained checkpoint is promoted (T-45) — the runner still cannot reach the weights. |
 | D-08 | No structured logging and no request or case ID carried through a run. Sixteen bare `print()` calls in served modules. **Fixed in T-71 via T-12 (2026-10-22):** `services/api/logs.py` writes JSON lines carrying `request_id` and `case_id` from context variables; every response returns `X-Request-ID` (a supplied one kept only if well formed); `drive()` binds the case id, so the API process and the worker log alike, and the request id travels to the worker in the job; each trace span is a line. No `print()` remains in a served module (a test walks them). uvicorn's access log is off everywhere it is launched, because it printed `?token=` |
 | D-09 | No shared error envelope: 57 `HTTPException` call sites return a string `detail`, validation errors return a list. **Fixed in T-71 via T-13 (2026-10-22):** every 4xx/5xx is `ErrorResponse` (`status`, `code`, `message`, `request_id`, `detail`) — `HTTPException`, Starlette's 404/405, validation (which no longer echoes the submitted values), the rate limiter's 429, and an unhandled exception, answered as a 500 with no stack trace by the request-id middleware. The model is in both contract files and `check_contract.py` compares its fields; the frontend reads it in one function |
-| D-10 | The brief's document set is incomplete: no PRD and no design-system document |
+| D-10 | The brief's document set is incomplete: no PRD and no design-system document **Fixed in T-01 and T-03 (2026-10-22):** `docs/PRD.md` and `docs/DESIGN_SYSTEM.md` exist; both approved. |
 | D-12 | *Found during T-04.* The Model card's hand-written limitations are stale: "320 synthetic calls" (the corpus report says 338), "PAYMENT_SETUP and PAYMENT_EXECUTION have 2 and 4 test examples" (the current split has 27 and 58), and the split is described as leave-archetypes-out (B-07). Owned by T-44, which should generate the card from the manifest. **Fixed in T-71 (2026-10-22):** the call count, per-split call counts and every class under 10 examples in validation or test are read from `ml/data/processed` when the card is served; a test asserts the card matches the files |
 | D-13 | *Found during T-05.* The same lexical model is now served everywhere, but a checkout with no checkpoint reports it as a FALLBACK with `clf:lexical_fallback`, while a checkout holding the refused checkpoint reports it as "best available" with no tag. Both are defensible; together they are confusing. `services/api/serving.py`'s line "not what the app serves" is now untrue of a clean clone. **Fixed in T-71 (2026-10-22):** with no checkpoint, the lexical model is a fallback only when the comparison on file promotes a checkpoint this machine lacks; CI now requires `best` |
 | D-14 | *Found during T-05.* Every `make eval` rewrites the tracked `ml/artifacts/checkpoint_manifest.json` with a new `measured_at`, so re-running the gate leaves the working tree dirty even when nothing changed. **Fixed in T-71 (2026-10-22):** the manifest is rewritten only when something it states changes |
-| D-15 | *Found during T-01.* `docs/DATASETS.md` §2 gives the call corpus as "1,692 calls"; the generated `ml/data/processed/report.md` says 338 calls (209 scam, 129 benign) and 1,617 utterances. The PRD uses the generated figures. Owned by T-37's data card |
+| D-15 | *Found during T-01.* `docs/DATASETS.md` §2 gives the call corpus as "1,692 calls"; the generated `ml/data/processed/report.md` says 338 calls (209 scam, 129 benign) and 1,617 utterances. The PRD uses the generated figures. Owned by T-37's data card. **Fixed (2026-10-22):** `DATASETS.md` §2 quotes the generated report (corrected in T-09; the PRD's note is updated), and the report now also says 304 of the 338 calls contribute after de-duplication |
+| D-16 | *Found during B-09.* The lexical classifier's score is described as sound on any split because it is not trained. Its cues are hand-written with the corpus in view, and B-08's revision read lines from `investment_returns` and `mutual_fund_sip`, both now in the test split. So its figure is a regression measure for this code, not a clean held-out estimate; `eval_backends.py` now says so. A clean comparison needs a fold the rules were never written against — fresh calls (T-37) or a frozen rule set scored on newly generated archetypes |
 | D-11 | The plan is behind its own timeline. Phase 2 was scheduled for 28 Sep – 1 Nov; the last commit is 7 Sep and Phase 2 has not started. The plan totals about 1,060 hours |
 
 ---

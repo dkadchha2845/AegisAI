@@ -99,6 +99,12 @@ MAX_SEED_TRIES = 500
 #: product decision, stated here and in the report, not a tuning of the
 #: benchmark: the test set still contains only archetypes never trained on.
 PINNED_TRAIN = frozenset({"digital_arrest"})
+#: Benign calls validation and test must each hold. "Both classes present"
+#: was met by a single call, and the seed-8 split had exactly one benign call
+#: in each — which left a call-level false-positive rate unmeasurable on
+#: either (audit B-09). Five is a floor, not a target: whole benign archetypes
+#: run to twenty calls, so a split that meets it holds far more.
+MIN_BENIGN_CALLS = 5
 
 
 def _turns(calls: list[dict]) -> int:
@@ -165,8 +171,8 @@ def split_by_call(
     memorisation the test set is there to expose.
 
     A split is accepted only if both validation and test contain every one of
-    the eight stages and both scam and benign calls; seeds are tried in order
-    from `seed` until one does.
+    the eight stages, scam calls, and at least `MIN_BENIGN_CALLS` benign calls;
+    seeds are tried in order from `seed` until one does.
     """
     groups: dict[str, list[dict]] = defaultdict(list)
     for c in calls:
@@ -183,7 +189,7 @@ def split_by_call(
         ok = all(
             _labels(parts[p]) >= set(LABELS)
             and any(c["seed"]["is_scam"] for c in parts[p])
-            and any(not c["seed"]["is_scam"] for c in parts[p])
+            and sum(not c["seed"]["is_scam"] for c in parts[p]) >= MIN_BENIGN_CALLS
             for p in ("val", "test")
         ) and _labels(parts["train"]) >= set(LABELS)
         if ok:
@@ -195,7 +201,8 @@ def split_by_call(
 
     raise SystemExit(
         f"No archetype split within {MAX_SEED_TRIES} seeds gives validation and test "
-        "every stage. Generate more varied calls before building."
+        f"every stage and {MIN_BENIGN_CALLS} benign calls. Generate more varied calls "
+        "before building."
     )
 
 
@@ -319,6 +326,13 @@ def report(splits: dict[str, list[dict]], calls: list[dict], trans: dict,
                  f"{sum(not c['seed']['is_scam'] for c in calls)} benign)")
     total = sum(len(v) for v in splits.values())
     lines.append(f"- Utterances after de-duplication: **{total}**")
+    # Some generated calls are templated variants whose every turn duplicates
+    # an earlier call's; they contribute nothing and are in no split. Said here
+    # so "338 calls" and the model card's per-split call counts are not read
+    # as disagreeing.
+    used = {r["call_id"] for rows in splits.values() for r in rows}
+    lines.append(f"- Calls contributing at least one utterance: **{len(used)}** "
+                 f"({len(calls) - len(used)} were entirely near-duplicates of earlier calls)")
     lines.append("- **Leave-archetypes-out split.** Every archetype (scam type) sits in "
                  "exactly one split; the model never sees a test archetype in any form. "
                  f"Seed {held_out['seed'][0]}.")
