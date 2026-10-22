@@ -235,41 +235,55 @@ utterance (typed / ASR / OCR)
 
 ## Quick Start
 
-**Prerequisites:** Python 3.11+, Node 18+. No GPU, no API key, no network at runtime.
-Docker is **optional** — see [Dev stack](#dev-stack-optional).
-
-```bash
-make gates    # the four checks that must pass before anything is "done"
-make api      # backend on :8000
-make web      # frontend on :5173
-make up       # optional: Postgres + Neo4j + Qdrant + Redis
-```
+**Prerequisites:** Python 3.11+ (3.12 is what the project runs on — macOS's own
+`python3` is 3.9, so install 3.12 with Homebrew or pyenv) and Node 18+. No GPU,
+no API key, no network at runtime. Docker is **optional** — see
+[Dev stack](#dev-stack-optional).
 
 ```bash
 git clone https://github.com/dkadchha2845/AegisAI.git
-cd aegis
+cd AegisAI
+make install   # creates .venv from Python 3.11+ if absent, then pip + npm ci
+make gates     # the four checks that must pass before anything is "done"
+make api       # backend on :8000, open demo mode
+make web       # frontend on :5173
+make up        # optional: Postgres + Neo4j + Qdrant + Redis
 ```
+
+A clone has no model weights (they are 3.5 GB and gitignored), so it serves the
+**lexical stage classifier** and says so: `make gates` prints
+`classifier: lexical (best available)`, and `/api/health` reports it. That is
+also what serves on every other machine today — the fine-tuned checkpoint is
+refused by the promotion gate (`docs/AUDIT.md`, B-01).
+
+The steps behind those targets, if you want them by hand:
 
 ### 1. Backend — port 8000
 
 ```bash
-python3 -m venv .venv
+python3.12 -m venv .venv
 .venv/bin/pip install -r services/api/requirements.txt
-.venv/bin/uvicorn services.api.main:app --reload --port 8000
+AEGIS_AUTH=0 .venv/bin/uvicorn services.api.main:app --reload \
+  --reload-dir services --reload-dir schema --port 8000
 ```
+
+`AEGIS_AUTH=0` is the open demo mode `make api` sets for you. Without it the
+API enforces sign-in (the default since audit S-01) and seeds no demo accounts.
+`--reload-dir` keeps a reload from wiping the ephemeral database.
 
 ### 2. Frontend — port 5173
 
 ```bash
-npm install --prefix apps/web
+npm ci --prefix apps/web
 npm run dev --prefix apps/web
 # → http://localhost:5173
 ```
 
 ### 3. Sign in
 
-The demo runs **open** by default: the API acts as the seeded owner for any
-request with no token, so nothing needs provisioning to look around. To watch
+In open demo mode (`make api`, or `AEGIS_AUTH=0`) the API acts as the seeded
+owner for any request with no token, so nothing needs provisioning to look
+around. Sign-in is enforced whenever `AEGIS_AUTH` is unset or `1`. To watch
 access control actually work, sign in as one of the seeded roles — the sign-in
 screen lists them, and each one lands somewhere different and can do different
 things.

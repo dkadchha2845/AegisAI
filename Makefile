@@ -9,6 +9,10 @@
 
 COMPOSE   := docker compose -f infra/compose/dev.yml
 PY        := .venv/bin/python
+# The interpreter `make install` builds `.venv` from. 3.12 first: it is what
+# the project runs on, and macOS's own `python3` is 3.9, which it cannot.
+# Override with `PYTHON=python3.13 make install`.
+PYTHON    ?= $(shell command -v python3.12 || command -v python3.13 || command -v python3.11 || command -v python3)
 WEB       := --prefix apps/web
 
 .DEFAULT_GOAL := help
@@ -138,6 +142,8 @@ dlq: ## Show jobs the retry policy gave up on
 web: ## Run the frontend dev server
 	npm run dev $(WEB)
 
-install: ## Install backend deps (including the editable aegis-core) + frontend
+install: ## Create .venv (Python 3.11+) if absent, install backend deps (incl. the editable aegis-core) + frontend
+	@[ -x $(PY) ] || $(PYTHON) -m venv .venv
+	@$(PY) -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else "\n.venv is Python " + sys.version.split()[0] + "; AegisAI needs 3.11+. Remove .venv and run: PYTHON=python3.12 make install")'
 	$(PY) -m pip install -r services/api/requirements.txt
 	npm ci $(WEB)

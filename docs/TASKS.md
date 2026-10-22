@@ -69,7 +69,7 @@ reused.
 | T-05 | Make the promotion gate refuse a contaminated comparison | M0 | ✅ | S | — |
 | T-06 | Commit the leak-free classifier baseline as the first research result | M0 | ✅ | S | — |
 | T-07 | Re-verify the infrastructure path with the stack up | M0 | 🧪 | S | — |
-| T-08 | Prove the project runs from a fresh clone | M0 | ⬜ | S | — |
+| T-08 | Prove the project runs from a fresh clone | M0 | 🧪 | S | — |
 | T-09 | Retire the stale status documents | M0 | ✅ | S | — |
 | T-10 | Move vendored and unrelated directories out of the product tree | M0 | ✅ | S | — |
 | T-11 | Fix the two truthfulness and labelling defects in the UI | M0 | ✅ | S | — |
@@ -350,7 +350,8 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-08 — Prove the project runs from a fresh clone
 - Milestone: M0
-- Status: ⬜ Todo
+- Status: 🧪 Done 2026-10-22, awaiting `approve T-08`
+- Evidence: transcript in `docs/PROGRESS.md`. First clone: `make install` failed at once (nothing created `.venv`); the README's own `python3 -m venv` gives macOS's Python 3.9; the README said `cd aegis`; and its backend command started with sign-in enforced and no demo accounts while the next section promised an open demo (stale since S-01). Fixed: `make install` creates `.venv` from Python 3.11+ (3.12 first) and refuses an older one with the remedy; the Quick Start is `git clone → cd AegisAI → make install → make gates → make api → make web`, with the by-hand commands corrected. Second clone, no manual step: install and gates exit 0 in 42 s (warm caches), `classifier: lexical (best available) — no checkpoint here`. `make api` + `make web` from a clone: landing loads, no console errors, every API request 200. `.claude/launch.json` needed no change (it calls `scripts/dev.sh`).
 - Depends on: T-05
 - Fixes / implements: M0 exit criterion; B-06
 - Goal: Clone into an empty directory, follow the README, and reach a running application — recording every step that fails.

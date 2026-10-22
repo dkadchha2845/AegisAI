@@ -465,3 +465,21 @@ full pipeline merge (T-47). One commit per change, each with its gates.
 - Harness, stated: the 15 s delay came from a throwaway Celery module in a
   temp directory, never committed. The verification database was dropped.
 - How to verify: the commands above; the table in `docs/AUDIT.md` §1.
+
+## T-08 — Prove the project runs from a fresh clone — 2026-10-22 (🧪)
+
+Transcript (macOS, Homebrew Python 3.12 present, pip/npm caches warm):
+
+| Step | First clone (before) | Second clone (after the fixes) |
+|---|---|---|
+| `git clone … AegisAI` | ok | ok |
+| README `cd aegis` | **wrong directory name** | README says `cd AegisAI` |
+| `make install` | **fails: `.venv/bin/python: No such file`** | creates `.venv` (Python 3.12.14), pip + `npm ci`, exit 0 |
+| README `python3 -m venv .venv` | macOS `python3` is **3.9.6**, below the 3.11 the code needs | README says `python3.12`; `make install` refuses 3.9 with the remedy |
+| `make gates` | exit 0 (34 s), after creating `.venv` by hand | exit 0; install + gates 42 s, no manual step |
+| classifier line | `lexical (best available) — no checkpoint here, and none would serve` | same |
+| README backend command | **sign-in enforced, no demo accounts** — contradicts "the demo runs open by default" (stale since S-01) | README gives `AEGIS_AUTH=0 … --reload-dir …` and says when sign-in is enforced |
+| `make api` + `make web` | landing loads; fresh tab: **no console errors**, every API request 200; health: lexical, `rag:lexical`, `db:ephemeral`, `queue:no_workers` | (runtime code unchanged) |
+
+- Files: `Makefile` (`install` creates `.venv`, `PYTHON` override, version guard), `README.md` (Quick Start).
+- Not measured: a cold machine's download time — caches were warm.
