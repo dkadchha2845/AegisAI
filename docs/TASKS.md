@@ -78,7 +78,7 @@ reused.
 | T-14 | Move prompts into versioned files | M1 | ✅ | S | — |
 | T-15 | Stand up the frontend test harness | M1 | ✅ | S | 7.10 |
 | T-16 | Build the design-system components the brief requires | M1 | ⬜ | WP | 7.1 |
-| T-17 | Add verification fields to the investigation contract | M2 | ⬜ | S | — |
+| T-17 | Add verification fields to the investigation contract | M2 | 🧪 | S | — |
 | T-18 | Extract entities inside the graph | M2 | ✅ | S | — |
 | T-19 | Define the feature-assembly contract, version 0 | M2 | ⬜ | S | 4.1 |
 | T-20 | Port the served threat score into the graph as a provisional judge | M2 | ✅ | S | 4.6 |
@@ -542,7 +542,8 @@ demonstrated as the brief describes it — on one modality, honestly labelled.
 
 ### T-17 — Add verification fields to the investigation contract
 - Milestone: M2
-- Status: ⬜ Todo
+- Status: 🧪 Done 2026-10-22, awaiting `approve T-17`
+- Evidence: `Finding.verification: Optional[Verification] = None` in `schema/models.py` and `verification?: Verification | null` in `schema/types.ts`, with `VerificationVerdict` (`UPHELD` / `DOWNGRADED` / `REJECTED`), `reason`, `challenger`, `confidence_before`, `confidence_after` and `weight` — the last from `ARCHITECTURE.md` §2.3's `verified_weight`, which the spec did not list; §2.3 now describes the built shape. The model enforces A7's rule (never raises confidence; weight 1 / 0 / between by verdict). `check_contract.py` compares the enum (3 members) — contract consistent; the fixture carries one illustrative verdict so the typecheck exercises the type. `test_contract_verification.py` (10): the pre-T-17 fixture from git (`d0ca55c`) validates; the enums agree; every rule-breaking verdict is refused. Contract version unchanged — the field is additive and optional, as earlier additions were.
 - Depends on: T-02
 - Fixes / implements: A7 (brief §2, §8)
 - Goal: A7 needs somewhere to write. Add the verifier's verdict per finding to the contract before any agent uses it, on both sides, in one commit.

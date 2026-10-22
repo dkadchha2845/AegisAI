@@ -420,6 +420,11 @@ export type FraudCategory = (typeof FRAUD_CATEGORIES)[number];
 
 /** One ordered scale shared by findings and recommendations, so the report can
  *  rank them in a single column without the UI reconciling two scales. */
+/** A7's verdict on one finding (T-17). It may only argue against a finding —
+ *  there is no verdict that strengthens one. */
+export const VERIFICATION_VERDICTS = ["UPHELD", "DOWNGRADED", "REJECTED"] as const;
+export type VerificationVerdict = (typeof VERIFICATION_VERDICTS)[number];
+
 export const SEVERITIES = ["INFO", "LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
 export type Severity = (typeof SEVERITIES)[number];
 
@@ -523,6 +528,20 @@ export interface EntitySet {
 
 /** One thing an agent observed — machine-facing and cheap. Distinct from
  *  `EvidenceFinding`, the ranked citizen-facing item promoted into a report. */
+/** A7's verdict on one finding, and what it did to the finding's weight.
+ *  `weight` is carried, never computed here: 1 upheld, 0 rejected, between
+ *  for downgraded. Confidence never rises. */
+export interface Verification {
+  verdict: VerificationVerdict;
+  /** why, in words a reviewer can check */
+  reason: string;
+  /** "deterministic:<rule>" or "llm:<backend>" */
+  challenger: string;
+  confidence_before: number;
+  confidence_after: number;
+  weight: number;
+}
+
 export interface Finding {
   /** stable machine key, e.g. "domain_age_days" */
   label: string;
@@ -531,6 +550,8 @@ export interface Finding {
   /** what produced it: "whois", "urlhaus", "muril:v3" */
   source: string;
   detail: string | null;
+  /** A7's verdict; absent on an investigation recorded before A7 existed */
+  verification?: Verification | null;
 }
 
 /** The single shape every agent returns.

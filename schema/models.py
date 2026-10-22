@@ -42,7 +42,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 CONTRACT_VERSION = 1
 
@@ -498,6 +498,17 @@ class FraudCategory(str, Enum):
     BENIGN = "benign"
 
 
+class VerificationVerdict(str, Enum):
+    """What the adversarial verifier (A7) decided about one finding (T-17).
+
+    A7 may only argue *against* a finding: uphold it, weaken it, or throw it
+    out. There is deliberately no verdict that strengthens one."""
+
+    UPHELD = "UPHELD"
+    DOWNGRADED = "DOWNGRADED"
+    REJECTED = "REJECTED"
+
+
 class Severity(str, Enum):
     """One ordered scale, shared by evidence findings and recommendations.
 
@@ -648,6 +659,43 @@ class EntitySet(BaseModel):
     scam_keywords: list[str] = Field(default_factory=list)
 
 
+class Verification(BaseModel):
+    """A7's verdict on one finding, and what it did to the finding's weight.
+
+    Written by the verifier between the reason and judge tiers (T-21, T-22).
+    Optional on `Finding`, so every investigation recorded before A7 existed
+    still validates. `weight` is the multiplier the judge applies to the
+    finding's contribution — carried rather than derived, so no client computes
+    it (invariant 2). The validator holds A7 to its one rule: it never raises a
+    finding's confidence (docs/ARCHITECTURE.md §2.3).
+    """
+
+    verdict: VerificationVerdict
+    reason: str = Field(min_length=1, description="why, in words a reviewer can check")
+    challenger: str = Field(
+        description="which challenger decided: 'deterministic:<rule>' or 'llm:<backend>'"
+    )
+    confidence_before: float = Field(ge=0, le=1)
+    confidence_after: float = Field(ge=0, le=1)
+    weight: float = Field(
+        ge=0, le=1, description="multiplier on the finding's contribution: 1 upheld, 0 rejected"
+    )
+
+    @model_validator(mode="after")
+    def _never_upgrades(self) -> "Verification":
+        if self.confidence_after > self.confidence_before:
+            raise ValueError("A7 never raises a finding's confidence")
+        if self.verdict is VerificationVerdict.UPHELD and (
+            self.weight != 1 or self.confidence_after != self.confidence_before
+        ):
+            raise ValueError("an UPHELD finding keeps its confidence and weight 1")
+        if self.verdict is VerificationVerdict.REJECTED and self.weight != 0:
+            raise ValueError("a REJECTED finding contributes nothing: weight 0")
+        if self.verdict is VerificationVerdict.DOWNGRADED and not 0 < self.weight < 1:
+            raise ValueError("a DOWNGRADED finding has 0 < weight < 1")
+        return self
+
+
 class Finding(BaseModel):
     """One thing an agent observed. Machine-facing and cheap.
 
@@ -662,6 +710,9 @@ class Finding(BaseModel):
     confidence: float = Field(1.0, ge=0, le=1)
     source: str = Field(description="what produced it: 'whois', 'urlhaus', 'muril:v3'")
     detail: Optional[str] = None
+    verification: Optional["Verification"] = Field(
+        None, description="A7's verdict on this finding; None until A7 has run (T-17)"
+    )
 
 
 class AgentResult(BaseModel):

@@ -80,6 +80,8 @@ from schema.models import (
     TraceSpan,
     Transcript,
     Utterance,
+    Verification,
+    VerificationVerdict,
     VictimState,
 )
 
@@ -210,6 +212,16 @@ def build() -> InvestigationState:
                         confidence=0.88,
                         source="html_features",
                         detail="Password field posting to a third-party origin.",
+                        # Illustrative A7 verdict (T-17), so the fixture — and
+                        # the typecheck built on it — exercises the shape.
+                        verification=Verification(
+                            verdict=VerificationVerdict.DOWNGRADED,
+                            reason="Seen by one agent only; no independent agent corroborates it.",
+                            challenger="deterministic:uncorroborated",
+                            confidence_before=0.88,
+                            confidence_after=0.62,
+                            weight=0.7,
+                        ),
                     ),
                 ],
                 features={"domain_age_days": 3.0, "has_login_form": 1.0},

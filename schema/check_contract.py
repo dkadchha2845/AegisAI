@@ -55,6 +55,7 @@ from schema.models import (
     StateFrame,
     ThreatLevel,
     Verdict,
+    VerificationVerdict,
     VictimState,
 )
 
@@ -76,6 +77,7 @@ PAIRS = [
     (Severity, "SEVERITIES"),
     (RecommendedAction, "RECOMMENDED_ACTIONS"),
     (InvestigationEventKind, "INVESTIGATION_EVENT_KINDS"),
+    (VerificationVerdict, "VERIFICATION_VERDICTS"),
 ]
 
 

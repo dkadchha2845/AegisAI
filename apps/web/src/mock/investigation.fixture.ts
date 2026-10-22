@@ -146,6 +146,7 @@ export const INVESTIGATION_FIXTURE: InvestigationState = {
           "confidence": 1.0,
           "source": "whois",
           "detail": "Registered 2026-08-21 via a privacy proxy.",
+          "verification": null,
         },
         {
           "label": "login_form_present",
@@ -153,6 +154,14 @@ export const INVESTIGATION_FIXTURE: InvestigationState = {
           "confidence": 0.88,
           "source": "html_features",
           "detail": "Password field posting to a third-party origin.",
+          "verification": {
+            "verdict": "DOWNGRADED",
+            "reason": "Seen by one agent only; no independent agent corroborates it.",
+            "challenger": "deterministic:uncorroborated",
+            "confidence_before": 0.88,
+            "confidence_after": 0.62,
+            "weight": 0.7,
+          },
         },
       ],
       "features": {
@@ -179,6 +188,7 @@ export const INVESTIGATION_FIXTURE: InvestigationState = {
           "confidence": 1.0,
           "source": "cache",
           "detail": "Live feed unreachable; served a 6-hour-old snapshot.",
+          "verification": null,
         },
       ],
       "features": {
