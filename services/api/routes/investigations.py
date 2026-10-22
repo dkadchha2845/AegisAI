@@ -59,6 +59,7 @@ in a URL. Task 1.9 builds that client.
 
 from __future__ import annotations
 
+import datetime as _dt
 import uuid
 from typing import Any, AsyncIterator, Dict, List, Optional
 
@@ -270,6 +271,31 @@ async def _submissions(
     return subs
 
 
+def _check_quota(db: Session, scope: str, submissions: List["intake_mod.Submission"]) -> None:
+    """Refuse a submission that would take the organisation over its rolling
+    24-hour evidence quota (S-04). Checked before anything is written, so a
+    refused upload leaves no blob behind."""
+    quota_mb = settings.org_upload_quota_mb
+    if quota_mb <= 0:
+        return
+    incoming = sum(
+        len(s.data or b"") + len((s.text or "").encode("utf-8")) for s in submissions
+    )
+    since = (_dt.datetime.now(_dt.timezone.utc) - _dt.timedelta(hours=24)).isoformat(
+        timespec="seconds"
+    ).replace("+00:00", "Z")
+    used = EvidenceStore(db, scope).bytes_received_since(since)
+    if used + incoming > quota_mb * 1024 * 1024:
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                f"This organisation has stored {used / 1024 / 1024:.1f} MB of evidence in "
+                f"the last 24 hours; this submission would exceed the "
+                f"{quota_mb} MB quota (AEGIS_ORG_UPLOAD_QUOTA_MB). Try again later."
+            ),
+        )
+
+
 @router.post(
     "",
     status_code=202,
@@ -297,6 +323,7 @@ async def create_investigation(
 
     try:
         submissions = await _submissions(request, files, text)
+        _check_quota(db, scope, submissions)
         result = intake_mod.build_items(case_id, submissions, EvidenceBlobs(scope))
     except intake_mod.EvidenceTooLarge as exc:
         raise HTTPException(status_code=413, detail=str(exc)) from exc

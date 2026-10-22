@@ -495,6 +495,50 @@ def test_an_upload_at_the_cap_is_accepted(client: TestClient) -> None:
     assert response.status_code == 202
 
 
+def test_an_organisation_over_its_upload_quota_is_refused(client: TestClient, monkeypatch) -> None:
+    """S-04. The per-file cap stops one huge upload; the quota stops a stream
+    of capped ones. Refused before anything is written."""
+    from services.api.db import SessionLocal
+    from services.api.routes import investigations as inv_routes
+    from services.api.stores.evidence import EvidenceStore
+
+    # Whatever this organisation already stored in earlier tests counts too,
+    # so the quota is set relative to it rather than to an assumed zero.
+    db = SessionLocal()
+    try:
+        scope = client.get("/api/auth/me").json().get("org_id") or "org_default"
+        used = EvidenceStore(db, scope).bytes_received_since("1970-01-01T00:00:00Z")
+    finally:
+        db.close()
+    used_mb = used / 1024 / 1024
+    monkeypatch.setattr(
+        inv_routes, "settings",
+        inv_routes.settings.model_copy(update={"org_upload_quota_mb": int(used_mb) + 1}),
+    )
+
+    chunk = b"\x01" * (600 * 1024)
+    first = client.post("/api/investigations", files={"files": ("a.bin", chunk, "application/octet-stream")})
+    second = client.post("/api/investigations", files={"files": ("b.bin", chunk, "application/octet-stream")})
+    statuses = (first.status_code, second.status_code)
+    # One of the two must cross the quota, and the refusal names the setting.
+    assert 429 in statuses, statuses
+    refused = first if first.status_code == 429 else second
+    assert "AEGIS_ORG_UPLOAD_QUOTA_MB" in refused.json()["detail"]
+
+
+def test_a_zero_quota_means_no_quota(client: TestClient, monkeypatch) -> None:
+    from services.api.routes import investigations as inv_routes
+
+    monkeypatch.setattr(
+        inv_routes, "settings", inv_routes.settings.model_copy(update={"org_upload_quota_mb": 0})
+    )
+    response = client.post(
+        "/api/investigations",
+        files={"files": ("c.bin", b"\x02" * 1024, "application/octet-stream")},
+    )
+    assert response.status_code == 202
+
+
 def test_read_capped_refuses_before_buffering_the_whole_body() -> None:
     """The cap is enforced *while reading*, which is the point of it.
 

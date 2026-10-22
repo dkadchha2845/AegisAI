@@ -281,6 +281,12 @@ class Settings(BaseSettings):
         # dict.fromkeys is an order-preserving dedupe.
         return tuple(dict.fromkeys([*ALWAYS_ALLOW, *parts]))
     rate_limit_enabled: bool = Field(default=True, validation_alias=_alias("RATELIMIT"))
+    #: Evidence an organisation may store in any rolling 24 hours, in MB
+    #: (audit S-04). The per-file cap stops one huge upload; this stops a
+    #: steady stream of capped ones filling the evidence store. 0 = no quota.
+    org_upload_quota_mb: int = Field(
+        default=256, ge=0, validation_alias=_alias("ORG_UPLOAD_QUOTA_MB")
+    )
     frame_hz: float = Field(
         default=4.0, gt=0, le=60,
         validation_alias=_alias("FRAME_HZ"),

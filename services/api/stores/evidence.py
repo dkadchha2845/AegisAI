@@ -300,6 +300,24 @@ class EvidenceStore:
 
     # -- reads -------------------------------------------------------------
 
+    def bytes_received_since(self, since_iso: str) -> int:
+        """Evidence bytes this organisation stored at or after `since_iso`.
+
+        For the upload quota (S-04). Scoped like every other read here: there
+        is no way to ask about another organisation's usage. `received_at` is
+        an ISO-8601 UTC string from `utc_now_iso()`, which sorts as text.
+        """
+        from sqlalchemy import func
+
+        total = (
+            self.db.query(func.coalesce(func.sum(EvidenceItemRow.size_bytes), 0))
+            .filter(EvidenceItemRow.org_id == self.org_id)
+            .filter(EvidenceItemRow.received_at >= since_iso)
+            .scalar()
+        )
+        return int(total or 0)
+
+
     def load(self, case_id: str) -> Optional[InvestigationState]:
         """Rebuild the full state, or None if this organisation has no such case.
 
