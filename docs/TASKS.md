@@ -67,7 +67,7 @@ reused.
 | T-03 | Write the design-system document from the shipped tokens | P2 | ✅ | S | 7.1 |
 | T-04 | Correct the stage-classifier claim everywhere it is stated | M0 | ✅ | S | — |
 | T-05 | Make the promotion gate refuse a contaminated comparison | M0 | ✅ | S | — |
-| T-06 | Commit the leak-free classifier baseline as the first research result | M0 | ⬜ | S | — |
+| T-06 | Commit the leak-free classifier baseline as the first research result | M0 | 🧪 | S | — |
 | T-07 | Re-verify the infrastructure path with the stack up | M0 | ⬜ | S | — |
 | T-08 | Prove the project runs from a fresh clone | M0 | ⬜ | S | — |
 | T-09 | Retire the stale status documents | M0 | 🧪 | S | — |
@@ -307,7 +307,8 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-06 — Commit the leak-free classifier baseline as the first research result
 - Milestone: M0
-- Status: ⬜ Todo
+- Status: 🧪 Built under T-71 (2026-10-22), awaiting `approve T-06`
+- Evidence: `.venv/bin/python research/experiments/exp0_stage_classifier_leak.py` reads both historical test splits from git (`e123bd5`, and `85a2aee`, the revision the checkpoint's provenance record names) with no manual step, and writes macro-F1 and accuracy for `lexical@e123bd5` (the cues as they were), `lexical` (today's), `muril` and `fused@e123bd5` on all / leaked / unseen turns with n for each. It reproduces 0.767 / 1.000 / 0.300 vs lexical 0.431, and 0.221 vs 0.372. Two runs under different `PYTHONHASHSEED`s give a byte-identical file — after fixing B-12, which the first two runs exposed. `test_research_results.py` checks the schema, that leaked + unseen = all for each split, and the published figures. Deviation, stated: macro-F1 is averaged over the labels present in gold or prediction, the gate's own convention — over all eight, the leaked cut (no BENIGN turn) reads 0.875 for a checkpoint that labels every turn correctly.
 - Depends on: T-05
 - Fixes / implements: B-01, D-04
 - Goal: Put the numbers from the audit on file, with the script that produces them, so the paper's first table is reproducible and `research/` stops being empty.

@@ -1,0 +1,147 @@
+{
+  "checkpoint": {
+    "fingerprint": {
+      "combined_sha256": "ef6d2ebc4a109cb588aa8f3ba9d72067bf67066286d9742cd5ea52abe67be1f3",
+      "files": {
+        "config.json": {
+          "bytes": 1109,
+          "sha256": "ec35c2502aa40954134cc5a40941e93a9a2b7de218554ac539a181c62dc4f16d"
+        },
+        "pytorch_model.bin": {
+          "bytes": 950315502,
+          "sha256": "c0f1f2a5c5d0c7cfed41b0f91a264022751d817cb108edb4c7ac883081951c66"
+        },
+        "tokenizer.json": {
+          "bytes": 6408647,
+          "sha256": "9513c0917e9c1673c3af00a3bd1f6e6f0239afdae7fbee68ba24b5d7786193ed"
+        },
+        "vocab.txt": {
+          "bytes": 3162999,
+          "sha256": "b96cc938b4009d063a605930cb82aef2c91ee52a94e94e6fcb78510d4ee5310b"
+        }
+      }
+    },
+    "provenance": {
+      "n_texts": 1069,
+      "recorded_at": "2026-10-10T07:24:35+00:00",
+      "sha256": "33821828e1da150e481742a6c0a27ee8a0a6ecfe501d626a4061a1225f3d00a4",
+      "source": "BACKFILLED, asserted not proven: ml/data/processed at git 85a2aee",
+      "splits": {
+        "train": 931,
+        "val": 138
+      }
+    }
+  },
+  "cuts": "leaked = the turn's exact text is in the checkpoint's train+val; unseen = not",
+  "experiment": "exp0_stage_classifier_leak",
+  "protocol": "one previous turn of context per utterance, through StageClassifier.predict (ml/evaluation/eval_backends.py); macro-F1 over the stages present in gold or prediction, as the gate computes it",
+  "question": "How much of the stage classifier's published macro-F1 was a train/test leak?",
+  "splits": {
+    "own_test@85a2aee": {
+      "all": {
+        "fused@e123bd5": {
+          "accuracy": 0.5146,
+          "macro_f1": 0.4225
+        },
+        "lexical": {
+          "accuracy": 0.4678,
+          "macro_f1": 0.3717
+        },
+        "lexical@e123bd5": {
+          "accuracy": 0.4678,
+          "macro_f1": 0.3717
+        },
+        "muril": {
+          "accuracy": 0.3918,
+          "macro_f1": 0.2211
+        },
+        "n": 171
+      },
+      "leaked": {
+        "fused@e123bd5": null,
+        "lexical": null,
+        "lexical@e123bd5": null,
+        "muril": null,
+        "n": 0
+      },
+      "unseen": {
+        "fused@e123bd5": {
+          "accuracy": 0.5146,
+          "macro_f1": 0.4225
+        },
+        "lexical": {
+          "accuracy": 0.4678,
+          "macro_f1": 0.3717
+        },
+        "lexical@e123bd5": {
+          "accuracy": 0.4678,
+          "macro_f1": 0.3717
+        },
+        "muril": {
+          "accuracy": 0.3918,
+          "macro_f1": 0.2211
+        },
+        "n": 171
+      }
+    },
+    "published_test@e123bd5": {
+      "all": {
+        "fused@e123bd5": {
+          "accuracy": 0.6785,
+          "macro_f1": 0.7042
+        },
+        "lexical": {
+          "accuracy": 0.4066,
+          "macro_f1": 0.4141
+        },
+        "lexical@e123bd5": {
+          "accuracy": 0.357,
+          "macro_f1": 0.3748
+        },
+        "muril": {
+          "accuracy": 0.8156,
+          "macro_f1": 0.7672
+        },
+        "n": 423
+      },
+      "leaked": {
+        "fused@e123bd5": {
+          "accuracy": 0.7942,
+          "macro_f1": 0.7701
+        },
+        "lexical": {
+          "accuracy": 0.3891,
+          "macro_f1": 0.356
+        },
+        "lexical@e123bd5": {
+          "accuracy": 0.3248,
+          "macro_f1": 0.3171
+        },
+        "muril": {
+          "accuracy": 1.0,
+          "macro_f1": 1.0
+        },
+        "n": 311
+      },
+      "unseen": {
+        "fused@e123bd5": {
+          "accuracy": 0.3571,
+          "macro_f1": 0.393
+        },
+        "lexical": {
+          "accuracy": 0.4554,
+          "macro_f1": 0.4535
+        },
+        "lexical@e123bd5": {
+          "accuracy": 0.4464,
+          "macro_f1": 0.4308
+        },
+        "muril": {
+          "accuracy": 0.3036,
+          "macro_f1": 0.2998
+        },
+        "n": 112
+      }
+    }
+  }
+}

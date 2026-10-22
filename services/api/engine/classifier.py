@@ -394,7 +394,14 @@ class FusedStageClassifier(StageClassifier):
         a = self.primary.predict(text, history, speaker, previous_speaker)
         b = self.secondary.predict(text, history, speaker, previous_speaker)
         da = self._sharpen(a.distribution)
-        labels = set(da) | set(b.distribution)
+        # In the fixed label order, never a set's. `max` keeps the first of
+        # equal values, so iterating a set broke ties by string-hash order,
+        # which Python randomises per process: the same turn could be labelled
+        # differently by two workers, and two runs of the gate scored the fused
+        # model at 0.654 and 0.689 on one split (audit B-12). Ties are common —
+        # a lexical model that matched nothing is near-uniform.
+        labels = [l for l in LABELS if l in da or l in b.distribution]
+        labels += sorted((set(da) | set(b.distribution)) - set(labels))
         fused = {l: max(da.get(l, 0.0), b.distribution.get(l, 0.0)) for l in labels}
         
         # Sharpen before normalizing so MuRIL's noise floor doesn't dilute a strong lexical peak

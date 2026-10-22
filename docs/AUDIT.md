@@ -276,6 +276,19 @@ an allow-list or one another agent in the same tier writes. Verified live: a
 message with a VPA, a number and a link lists all three in the investigation
 and its report. Two defects surfaced on the way, B-10 and B-11.
 
+### B-12 — Medium — The fused classifier labelled one input differently in different processes
+
+*Found and fixed 2026-10-22 (T-06).* `FusedStageClassifier.predict` took the
+union of the two models' labels as a `set` and the `max` over it, so ties were
+broken by string-hash order — which Python randomises per process. One flat
+input got five different labels across six processes, and two runs of experiment
+0 scored the fused model 0.654 and 0.689 on the same split. Ties are common: a
+lexical model that matched nothing is near-uniform. Not serving today (the gate
+refuses the checkpoint), but it would have the day one is promoted, with two
+workers disagreeing about the same turn. Labels are now iterated in the
+taxonomy's order; `test_fused_determinism.py` runs six processes with different
+hash seeds.
+
 ### B-10 — Medium — A VPA ending a sentence was not extracted
 
 *Found and fixed 2026-10-22 (T-18).* `intel/entities.py` discarded a UPI handle
@@ -496,7 +509,7 @@ overflow at 375 px, the app chrome renders in dark theme.
 | D-01 | **Two analysis pipelines.** The legacy engine behind `/api/analyze` and `/api/session`, and the investigation graph. They disagree on the same input (B-02) and every new capability must currently choose one. **Partly fixed in T-71 (2026-10-22):** they now agree — the graph reaches the analyzer's score through the analyzer's own floor and findings functions, under a parity test. Two pipelines still exist; retiring one is T-47 |
 | D-02 | `engine/features/` (about 600 statements) is off the serving path and duplicates `engine/spoofing.py` and `engine/scripts.py`. Carried from `docs/INVENTORY.md`; not re-measured today **Partly fixed in T-10 (2026-10-22):** the three modules nothing imported (`features/spoofing.py`, `script_templates.py`, `video.py`) are removed. The four the RSSIE training pipeline imports stay — they are not dead, only off the serving path. |
 | D-03 | Stale and stray documents: `STATUS.md` (dated 22 July, titled "AegisAI / AegisAI"), the task-history header (2026-08-27, "575 tests"), `docs/INVENTORY.md` (2026-08-23), `aegis_ai_pipeline_docs.md` at the root, `attached_assets/`, `ui-design/`, `Skills/` **Fixed in T-09 and T-10 (2026-10-22):** `STATUS.md`, `aegis_ai_pipeline_docs.md` and `attached_assets/` are in `docs/archive/`; `ui-design/` and `Skills/` removed; the dated documents that stay carry a "Historical" notice. |
-| D-04 | `research/` is empty. No experiment, ablation, baseline or result has been committed |
+| D-04 | `research/` is empty. No experiment, ablation, baseline or result has been committed. **Fixed in T-71 via T-06 (2026-10-22):** experiment 0 (`research/experiments/exp0_stage_classifier_leak.py`) and its committed result reproduce every B-01 figure from git history — 0.767 all, 1.000 on the 311 leaked turns, 0.300 against lexical 0.431 on the 112 unseen, 0.221 against 0.372 on the checkpoint's own split — byte for byte across runs; `research/README.md` carries the table |
 | D-05 | Prompts are inline strings in `services/api/llm.py`, not versioned files. **Fixed in T-71 via T-14 (2026-10-22):** `services/api/prompts/{explain,assistant}.prompt`, each with an `id` and `version` header, loaded by a parser that refuses a file without them; `explanation_source` / `answer_source` record `llm:<backend> prompt:<id>@<version>`, and `/api/health` lists the prompt versions. A snapshot captured from the inline strings before the move proves the rendered prompts are byte-identical |
 | D-06 | No frontend tests and no end-to-end tests. **Fixed in T-71 via T-15 (2026-10-22):** Vitest + Testing Library (`make webtest`, `npm test`) with a RiskDial test — including that an unscored case is never drawn as zero — and a Playwright smoke (`make e2e`) that starts or reuses the real API and SPA: the landing loads with no script error, and a demo analyst signs in. Both run in CI (the smoke as its own job). New dev dependencies: vitest 2, @testing-library/{react,dom,jest-dom}, jsdom, @playwright/test 1.64.0 (pinned to the Chromium build already cached locally). Broad coverage is T-61 |
 | D-07 | CI can only ever prove the lexical fallback, because the checkpoint is not reachable from a runner (task 1.7b, still open) **Changed in T-71 (D-13, 2026-10-22):** since the gate refuses the checkpoint, the lexical model is what serves on every machine, so CI now proves what the application serves and requires `best` (`python -m services.api.serving --require best`). It will stop doing so the day a retrained checkpoint is promoted (T-45) — the runner still cannot reach the weights. |
