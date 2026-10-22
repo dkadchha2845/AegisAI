@@ -73,7 +73,7 @@ def _with_explanation(result: Dict[str, Any], wanted: bool) -> Dict[str, Any]:
         prose = llm.explain(result)
         if prose:
             result["explanation"] = prose
-            result["explanation_source"] = f"llm:{settings.llm_backend}"
+            result["explanation_source"] = llm.source(llm.EXPLAIN)
             return result
         # Asked for, unavailable, said so. Silently degrading to the template
         # without a word would leave the user thinking they got the good one.
@@ -360,7 +360,7 @@ def ask_knowledge(req: AskRequest) -> Dict[str, Any]:
     return {
         "question": req.question,
         "answer": answer,                     # None => UI shows passages only
-        "answer_source": ("llm:" + settings.llm_backend) if answer and llm.available() else "extractive",
+        "answer_source": llm.source(llm.ASSISTANT) if answer and llm.available() else "extractive",
         "grounded": grounded,
         "retrieval_backend": kb.backend,
         "llm_configured": llm.available(),

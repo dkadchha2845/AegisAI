@@ -103,7 +103,7 @@ def test_nothing_the_model_says_moves_the_score(fake_llm) -> None:
     )
     plain = client.post("/api/analyze/text", json={"text": text}).json()
     explained = client.post("/api/analyze/text", json={"text": text, "explain": True}).json()
-    assert explained["explanation_source"] == "llm:fake"
+    assert explained["explanation_source"] == "llm:fake prompt:explain@1"
     assert explained["score"] == plain["score"]
     assert explained["verdict"] == plain["verdict"]
     assert plain["score"] >= 70, "the scam itself must still score as one"

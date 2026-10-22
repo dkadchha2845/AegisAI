@@ -75,7 +75,7 @@ reused.
 | T-11 | Fix the two truthfulness and labelling defects in the UI | M0 | 🧪 | S | — |
 | T-12 | Carry a request and case ID through structured logs | M1 | 🧪 | S | 10.2 |
 | T-13 | Give every route one error envelope | M1 | 🧪 | S | — |
-| T-14 | Move prompts into versioned files | M1 | ⬜ | S | — |
+| T-14 | Move prompts into versioned files | M1 | 🧪 | S | — |
 | T-15 | Stand up the frontend test harness | M1 | ⬜ | S | 7.10 |
 | T-16 | Build the design-system components the brief requires | M1 | ⬜ | WP | 7.1 |
 | T-17 | Add verification fields to the investigation contract | M2 | ⬜ | S | — |
@@ -463,7 +463,8 @@ with seven roles, the API skeleton and CI. These are what is left.
 
 ### T-14 — Move prompts into versioned files
 - Milestone: M1
-- Status: ⬜ Todo
+- Status: 🧪 Built under T-71 (2026-10-22), awaiting `approve T-14`
+- Evidence: `test_prompts.py` (13) — the explainer's and the assistant's rendered prompt and system prompt equal, byte for byte, a snapshot captured from the inline strings *before* the move (`tests/snapshots/prompts_t14.json`); evidence is still quoted once in `<analysis>`; no prompt text remains in `llm.py`; each answer names `prompt:<id>@<version>`; the loader refuses a file with no version, a non-integer version, a wrong id, no user section or no header; placeholders must match exactly and placeholder-shaped evidence is never substituted. Live: `/api/health` reports `prompts: [explain@1, assistant@1]`. Not exercised live: an actual LLM explanation — the dev API has no backend configured, and turning one on would send data to an external service; the path is proven with a recording backend.
 - Depends on: —
 - Fixes / implements: D-05; brief §8
 - Goal: Prompts are data with a version, not strings scattered through a module — so an explanation can be traced to the prompt that produced it.
