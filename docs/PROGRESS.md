@@ -4,12 +4,11 @@ One entry per finished piece of work, newest last. A new session reads this
 after [`TASKS.md`](TASKS.md) to find where things stand.
 
 **Current state (2026-10-22):** Phase 0 and Phase 3 approved. T-04 approved
-2026-10-10; T-05, T-69, T-70, T-01, T-02 and T-03 approved 2026-10-22. On the owner's
-instruction T-01, T-02 and T-03 run back to back, then the open issues from
-T-04 and T-05 (D-12, D-13, D-14, B-07, B-08); each is committed at 🧪. T-69 and T-70 (landing fixes, sections 01–02 then 03, 04, 06
-and 09) were added on the owner's request ahead of the recommended order; the
+2026-10-10; T-05, T-69, T-70, T-01, T-02 and T-03 approved 2026-10-22. T-71
+(close the audit's open issues) is at 🧪, and with it T-06, T-09, T-10, T-11,
+T-12, T-13, T-14, T-15, T-18 and T-20, each awaiting `approve`. Open for the
+owner: S-08 (reset tokens in the log) and S-06 (rotate the Gemini key). The
 remaining landing sections (05, 07, 08, 10–12) await the owner's feedback.
-Next in the recommended order: T-06.
 
 ---
 
@@ -400,20 +399,48 @@ committed to `main`, with no separate branches.
 - How to verify: open `docs/DESIGN_SYSTEM.md`; pick three tokens and find
   them in `apps/web/src/styles/tokens.css`; values match.
 
-## T-71 — Close the issues found in T-04 and T-05 — in progress (2026-10-22)
+## T-71 — Close the audit's open issues — 2026-10-22 (🧪)
 
-- **Done:** D-14 — `ml/evaluation/manifest.write()` leaves the tracked manifest
-  untouched when only `measured_at` would change (2 tests). D-13 — with no
-  checkpoint, the lexical model is reported as a fallback only when the
-  comparison on file promotes a checkpoint this machine lacks; a clean clone
-  now reads "best available — no checkpoint here, and none would serve", the
-  same as a checkout holding the refused weights (3 tests). CI changed from
-  `--require fallback` to `--require best` and its health assertion inverted
-  accordingly — **CI itself has not run on this change yet**.
-- **Left:** B-07 (rebuild the split by archetype with an overlap test — the
-  raw corpus has two cp1252 bytes in a metadata field to fix first), B-08
-  (English courier/customs cues, measured on probe sets written before
-  tuning), D-12 (Model card limitations derived from the data — the split
-  files hold 304 calls, not the "320" the card states). T-06 must pin the
-  pre-B-07 split commit (`e123bd5`) once B-07 lands.
+On the owner's instruction ("fix all the bugs, errors, security issues, UI/UX
+issues, code quality and tech debt from the audit"), with T-01, T-02 and T-03
+approved first. Scoping answers: auth enforced by default (S-01); sessions
+public by design with per-session tokens (S-07); the deletions in T-10; make
+Analyze and Investigate agree now via T-18 and T-20 (D-01, U-04), without the
+full pipeline merge (T-47). One commit per change, each with its gates.
 
+- **Security.** S-01 auth enforced unless `AEGIS_AUTH=0`. S-07 every one of
+  73 routes declares its guard, enforced by a test; live sessions need their
+  token. S-03 evidence quoted as data in every prompt, tested with a recording
+  backend. S-04 per-organisation upload quota. S-09 React Router advisory.
+- **Bugs.** B-02/B-03 (via T-18, T-20) investigations extract entities and
+  give the same score as Analyze, tagged `score:uncalibrated`. B-04, B-05,
+  B-06. B-07 and B-09 the split is archetype-disjoint with five benign calls
+  in validation and test. B-08 English scams now floored — and measuring it
+  found 9 of 106 genuine calls floored at 87–95 by single words, fixed.
+  Found and fixed on the way: B-10 (VPA before a full stop), B-11 (foreign
+  caller number typed TEXT), B-12 (fused classifier non-deterministic).
+- **Code quality and debt.** D-04 (T-06 experiment 0), D-05 (T-14 prompts),
+  D-06 (T-15 frontend tests), D-08 (T-12 logs), D-09 (T-13 error envelope),
+  D-12, D-13, D-14, D-15; D-07 changed (CI proves what serves); audit rows for
+  T-09/T-10 work (S-05, D-02, D-03) and D-10 brought up to date.
+- **UI/UX.** U-02, U-03, U-07, U-08 (T-11); U-04 partly (same score on both
+  pages).
+- **Found and left open, with reasons:** S-08 — password-reset tokens are
+  logged; the email is gone, the token kept because removing it would make
+  reset impossible with auth enforced; needs the owner's choice (admin-issued
+  reset link recommended). D-16 — the lexical score is not a clean held-out
+  figure; needs fresh calls (T-37). The single-split swing (lexical 0.240 vs
+  0.397 on two archetype-disjoint splits) means comparisons need folds (T-45).
+- **Not code, not done:** S-02 (agents not built), S-06 (rotate the key —
+  the owner's), U-05 components (T-16), U-06 Hindi UI (parked), D-11 (the
+  schedule), D-02's four remaining modules (used by RSSIE training).
+- Tests: 767 passed, 26 skipped (the queue and Postgres suites need the stack);
+  ruff and mypy clean; contract consistent; typecheck and build clean;
+  `make webtest` 3 passed; Playwright smoke 2 passed. classifier: lexical (best
+  available). postgres: SQLite only — no migration was touched.
+- Verified in the running app: per change, recorded in each commit — the
+  model card, Analyze vs Investigate parity (93.0 and 91.0 on both), the
+  Investigate page's caption, the JSON log trail for one case id, the error
+  envelope, `/api/health`'s prompt versions.
+- How to verify: `make gates`, `make webtest`, `make e2e`; read each 🧪
+  task's Evidence line in `docs/TASKS.md`.
