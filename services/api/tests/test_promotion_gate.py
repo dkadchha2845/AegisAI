@@ -138,21 +138,21 @@ def test_the_real_split_is_judged_against_the_split_the_weights_came_from() -> N
     """The actual incident, from git history rather than from a fixture.
 
     The served weights were trained at 85a2aee. Scored against the test split
-    as it is now, 311 of 423 turns are theirs. Skipped where history is shallow
-    (a CI checkout), because the claim is about this repository's past.
+    the gate then used — the one rebuilt at 5afb554 and committed until T-71
+    replaced it with an archetype-disjoint split (B-07) — 311 of 423 turns are
+    theirs. Read from e123bd5, the last commit holding that split, so the
+    incident replays the same way however the split changes later. Skipped
+    where history is shallow (a CI checkout), because the claim is about this
+    repository's past.
     """
     try:
         trained = provenance.build(
             {s: provenance.rows_at_rev("85a2aee", s) for s in ("train", "val")},
             source="git 85a2aee",
         )
+        test_rows = provenance.rows_at_rev("e123bd5", "test")
     except Exception:  # shallow clone, or no git at all
-        pytest.skip("commit 85a2aee is not reachable in this checkout")
-    test_rows = [
-        json.loads(line)
-        for line in (ROOT / "ml/data/processed/test.jsonl").read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+        pytest.skip("commits 85a2aee / e123bd5 are not reachable in this checkout")
     ok, reason, check = provenance.leak_verdict(trained, test_rows)
     assert ok is False
     assert check is not None

@@ -297,6 +297,21 @@ scam *types* for those three, and any figure from it must not be described that
 way. Owned by T-38, which builds the split with an overlap test; T-45 must not
 retrain before it.
 
+**Fixed in T-71 (2026-10-22).** `ml/corpus/build_dataset.py` now assigns whole
+archetypes, not skeletons, to splits: each scam type sits in exactly one of
+train, validation and test (`digital_arrest`, the flagship, is pinned to train),
+and a seeded search picks the assignment whose test share is closest to 25% with
+every stage present in validation and test. `test_dataset_split.py` asserts no
+archetype, call or turn text is in two splits. Two raw calls held a Windows-1252
+dash that made the old builder skip them; both are repaired. New split (seed 8):
+972 / 243 / 402 turns over 179 / 43 / 82 calls. The lexical model scores
+**macro-F1 0.237** on the new test split — down from 0.375 on the old one, which
+is what testing on unseen scam types costs. The gate refuses the served MuRIL
+checkpoint on it (302 of 402 test turns are in its training data). Thin classes,
+named on the Model card rather than quoted: ISOLATION 5 and VERIFICATION_DEMAND 9
+test turns; PAYMENT_SETUP 4 and PAYMENT_EXECUTION 8 validation turns. The
+pre-B-07 split stays readable at git `e123bd5` for T-06.
+
 ---
 
 ## 6. Security issues
@@ -350,7 +365,7 @@ overflow at 375 px, the app chrome renders in dark theme.
 | D-08 | No structured logging and no request or case ID carried through a run. Sixteen bare `print()` calls in served modules |
 | D-09 | No shared error envelope: 57 `HTTPException` call sites return a string `detail`, validation errors return a list |
 | D-10 | The brief's document set is incomplete: no PRD and no design-system document |
-| D-12 | *Found during T-04.* The Model card's hand-written limitations are stale: "320 synthetic calls" (the corpus report says 338), "PAYMENT_SETUP and PAYMENT_EXECUTION have 2 and 4 test examples" (the current split has 27 and 58), and the split is described as leave-archetypes-out (B-07). Owned by T-44, which should generate the card from the manifest |
+| D-12 | *Found during T-04.* The Model card's hand-written limitations are stale: "320 synthetic calls" (the corpus report says 338), "PAYMENT_SETUP and PAYMENT_EXECUTION have 2 and 4 test examples" (the current split has 27 and 58), and the split is described as leave-archetypes-out (B-07). Owned by T-44, which should generate the card from the manifest. **Fixed in T-71 (2026-10-22):** the call count, per-split call counts and every class under 10 examples in validation or test are read from `ml/data/processed` when the card is served; a test asserts the card matches the files |
 | D-13 | *Found during T-05.* The same lexical model is now served everywhere, but a checkout with no checkpoint reports it as a FALLBACK with `clf:lexical_fallback`, while a checkout holding the refused checkpoint reports it as "best available" with no tag. Both are defensible; together they are confusing. `services/api/serving.py`'s line "not what the app serves" is now untrue of a clean clone. **Fixed in T-71 (2026-10-22):** with no checkpoint, the lexical model is a fallback only when the comparison on file promotes a checkpoint this machine lacks; CI now requires `best` |
 | D-14 | *Found during T-05.* Every `make eval` rewrites the tracked `ml/artifacts/checkpoint_manifest.json` with a new `measured_at`, so re-running the gate leaves the working tree dirty even when nothing changed. **Fixed in T-71 (2026-10-22):** the manifest is rewritten only when something it states changes |
 | D-15 | *Found during T-01.* `docs/DATASETS.md` §2 gives the call corpus as "1,692 calls"; the generated `ml/data/processed/report.md` says 338 calls (209 scam, 129 benign) and 1,617 utterances. The PRD uses the generated figures. Owned by T-37's data card |

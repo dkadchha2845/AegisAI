@@ -314,7 +314,7 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 - Scope: new `research/experiments/exp0_stage_classifier_leak.py` and `research/results/exp0_stage_classifier_leak.json`; a short entry in `research/README.md`.
 - Out of scope: any new model or data.
 - Acceptance criteria:
-  - [ ] The script reads the original split from git history and needs no manual step
+  - [ ] The script reads the original split from git history (`e123bd5`, the last commit before B-07 rebuilt it) and needs no manual step
   - [ ] The results file holds macro-F1 and accuracy for lexical, MuRIL and fused on all / leaked / unseen turns, with n for each
   - [ ] Re-running reproduces the file byte for byte
 - How Dhrumil verifies it:

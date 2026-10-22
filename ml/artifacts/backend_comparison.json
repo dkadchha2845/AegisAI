@@ -1,37 +1,25 @@
 {
   "schema": 2,
   "status": "refused",
-  "reason": "311 of the 423 test turns are in the checkpoint's own training data",
-  "n_test": 423,
+  "reason": "302 of the 402 test turns are in the checkpoint's own training data",
+  "n_test": 402,
   "leak_check": {
-    "n_test": 423,
-    "overlap_turns": 311,
+    "n_test": 402,
+    "overlap_turns": 302,
     "overlap_calls": 60,
-    "test_calls": 84,
+    "test_calls": 82,
     "by_archetype": {
-      "courier_parcel": {
-        "overlap": 118,
-        "turns": 118
+      "army_officer_olx": {
+        "overlap": 109,
+        "turns": 109
       },
-      "credit_limit_upgrade": {
+      "electricity_bill": {
         "overlap": 0,
-        "turns": 19
-      },
-      "genuine_police": {
-        "overlap": 0,
-        "turns": 27
-      },
-      "income_tax_refund": {
-        "overlap": 0,
-        "turns": 22
-      },
-      "kyc_expiry": {
-        "overlap": 0,
-        "turns": 12
+        "turns": 50
       },
       "loan_app_harassment": {
         "overlap": 86,
-        "turns": 86
+        "turns": 104
       },
       "refund_overpayment": {
         "overlap": 107,
@@ -55,8 +43,8 @@
   },
   "results": {
     "lexical": {
-      "macro_f1": 0.3748427636783711,
-      "weighted_f1": 0.3812231246754251
+      "macro_f1": 0.23661774031752447,
+      "weighted_f1": 0.20798466284710995
     }
   }
 }

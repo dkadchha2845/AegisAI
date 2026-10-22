@@ -11,7 +11,10 @@ model loaded?" is a question with a checkable answer rather than a hope.
 
 from __future__ import annotations
 
+import json
+from collections import Counter
 from contextlib import asynccontextmanager
+from functools import lru_cache
 from typing import Any, AsyncIterator, Dict
 
 from fastapi import Depends, FastAPI
@@ -24,7 +27,7 @@ from . import db as db_mod
 from . import llm
 from .agents import registry
 from .auth import auth_enabled, kdf_name, public, purge_expired_sessions, seed_admin
-from .config import settings
+from .config import DATA_DIR, settings
 from .db import SessionLocal, init_db
 from .engine import classifier as classifier_mod
 from .engine.classifier import load_classifier
@@ -149,6 +152,53 @@ def warm() -> None:
         purge_expired_sessions(_db)
     finally:
         _db.close()
+
+
+#: Below this many examples a per-class F1 moves by a whole point on one
+#: prediction, so the card names the class instead of quoting it.
+THIN_CLASS = 10
+
+
+@lru_cache(maxsize=1)
+def _corpus() -> Dict[str, Any] | None:
+    """Call and label counts of the committed splits, for the model card.
+
+    Read from `ml/data/processed` rather than written into the card: the card
+    said "320 synthetic calls" and "2 and 4 test examples" for two splits after
+    those stopped being true (audit item D-12). None when the files are absent.
+    """
+    out: Dict[str, Any] = {"calls": {}, "labels": {}}
+    for name in ("train", "val", "test"):
+        path = DATA_DIR / "processed" / f"{name}.jsonl"
+        try:
+            rows = [json.loads(line) for line in path.open(encoding="utf-8") if line.strip()]
+        except (OSError, json.JSONDecodeError):
+            return None
+        out["calls"][name] = len({r["call_id"] for r in rows})
+        out["labels"][name] = dict(Counter(r["label"] for r in rows))
+    return out
+
+
+def _corpus_limitations() -> list[str]:
+    corpus = _corpus()
+    if corpus is None:
+        return ["The training splits are not present here, so their size is unreported."]
+    calls = corpus["calls"]
+    total = sum(calls.values())
+    thin = [
+        f"{label} has {count} {'validation' if split == 'val' else split} examples"
+        for split in ("test", "val")
+        for label, count in sorted(corpus["labels"][split].items())
+        if count < THIN_CLASS
+    ]
+    lines = [
+        f"{total} synthetic calls ({calls['train']} train, {calls['val']} validation, "
+        f"{calls['test']} test) is too few for an 8-way classifier. This is a "
+        "corpus-size problem; more and more varied calls is the fix, not more epochs.",
+    ]
+    if thin:
+        lines.append("; ".join(thin) + ". No per-class figure for them is quotable.")
+    return lines
 
 
 def _comparison() -> Dict[str, Any]:
@@ -352,7 +402,8 @@ def model_card() -> Dict[str, Any]:
         "training_data": {
             "source": "synthetic Hinglish corpus, LLM-generated from a seeded "
                       "diversity grid, validated client-side",
-            "split": "leave-archetypes-out — whole call skeletons held out for test",
+            "split": "leave-archetypes-out — every scam type sits in exactly one of "
+                     "train, validation and test (ml/data/processed/report.md)",
             "why": "utterances within one call share names and phrasing, so an "
                    "utterance-level split leaks test into train and inflates macro-F1",
         },
@@ -362,18 +413,16 @@ def model_card() -> Dict[str, Any]:
             "selection": classifier_mod.selection_reason,
         },
         "limitations": [
-            "On scam archetypes it was not trained on, the fine-tuned checkpoint "
-            "scores macro-F1 0.30 against the lexical baseline's 0.43 (0.22 against "
-            "0.37 on its original test split), so it is not promoted. The gate "
-            "refuses to score it on the current test split, most of which it was "
-            "trained on. It reached 0.98 on validation, which is memorisation of "
-            "the training archetypes, not generalisation.",
-            "320 synthetic calls is too few for an 8-way classifier. This is a "
-            "corpus-size problem; more and more varied calls is the fix, not more "
-            "epochs.",
+            "The fine-tuned checkpoint is not promoted. On the 112 turns of the "
+            "previous test split it had not trained on, it scored macro-F1 0.30 "
+            "against the lexical baseline's 0.43, after 0.98 on validation — "
+            "memorisation of its training archetypes, not generalisation. That "
+            "split shared three scam types between splits (docs/AUDIT.md, B-07); "
+            "the current one does not, and the gate refuses to score the "
+            "checkpoint on it because most of its test turns are in the "
+            "checkpoint's training data.",
+            *_corpus_limitations(),
             "Trained on synthetic calls. Real-world transfer is unmeasured.",
-            "PAYMENT_SETUP and PAYMENT_EXECUTION have 2 and 4 test examples. No "
-            "per-class figure for them is quotable.",
             "Text-only. Prosodic coercion features are absent without live audio.",
             "Hinglish and English only.",
             "Not a substitute for reporting fraud on 1930 or cybercrime.gov.in.",

@@ -717,11 +717,14 @@ separately and gated (T-43).
 | SAGE-style tabular baseline | ⛔ blocked on audit Q5 (the paper has not been read); T-40 |
 | Single-LLM baseline (one prompt, no agents) | 🆕 T-40 [ASSUMPTION — proposed, not yet agreed] |
 
-**The first result (T-06), leak-free:** on the 112 test turns from archetypes
-the served checkpoint never saw, lexical scores macro-F1 **0.431** against
+**The first result (T-06), leak-free:** on the 112 turns of the pre-B-07 test
+split that were not in the served checkpoint's training data, lexical scores macro-F1 **0.431** against
 MuRIL's **0.300**; on MuRIL's own original held-out split, 0.372 against
 0.221. The 0.767 once published for MuRIL was a train/test leak — measured on
-its own training data — and must not be cited.
+its own training data — and must not be cited. That split also shared three
+scam types between splits (B-07); on the archetype-disjoint split that replaced
+it on 2026-10-22, lexical scores **0.237**, and MuRIL cannot be scored until it
+is retrained on it (T-45).
 
 ### 11.5 Ablations (T-57)
 

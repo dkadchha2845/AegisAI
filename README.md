@@ -42,7 +42,10 @@ AegisAI's conversation-analysis agent.
 > train/test leak: 311 of the 423 test turns were in the data the served
 > weights were trained on. On the 112 turns it had not seen, it scores
 > **0.300** — below the keyword baseline's **0.431**. See
-> [`docs/AUDIT.md`](./docs/AUDIT.md), item B-01.
+> [`docs/AUDIT.md`](./docs/AUDIT.md), item B-01. Since 2026-10-22 the split
+> keeps every scam type in one split only (B-07); the keyword baseline scores
+> **0.237** on that test split, and the checkpoint cannot be scored on it
+> without the same leak.
 
 | | |
 |---|---|

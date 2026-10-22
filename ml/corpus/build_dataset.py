@@ -15,8 +15,15 @@ Splits are made **by call, never by utterance**. Utterances inside one call
 share names, case IDs, amounts, and phrasing tics, so splitting at the
 utterance level leaks the test set into training and inflates macro-F1 by a
 wide margin. A number produced that way is not a number you can defend to a
-judge who asks how you split. Archetypes are stratified across the splits so
-each one appears in all three.
+judge who asks how you split.
+
+And splits are made **by archetype**, so every scam type sits in exactly one
+of train, validation and test (audit B-07). The previous builder held out
+call *skeletons*; three archetypes have more than one skeleton, so
+`kyc_expiry` was in all three splits and `loan_app_harassment` and
+`genuine_police` in both validation and test — the split was called
+leave-archetypes-out and was not. `services/api/tests/test_dataset_split.py`
+now asserts the disjointness on the committed files.
 """
 
 from __future__ import annotations
@@ -52,7 +59,9 @@ def normalise(text: str) -> str:
 
 def load_calls(path: Path) -> list[dict]:
     calls = []
-    with path.open() as f:
+    # UTF-8, explicitly: two calls once carried a Windows-1252 byte and the
+    # default encoding of whatever machine ran this decided whether it worked.
+    with path.open(encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -74,61 +83,120 @@ def split_key(call: dict) -> str:
     return call["seed"].get("derived_from") or call["seed"]["call_id"]
 
 
+#: Target share of *turns* in each split. The archetypes are of very different
+#: sizes (1 call to 22), so the split fills toward these rather than counting
+#: archetypes.
+TEST_SHARE = 0.25
+VAL_SHARE = 0.15
+#: How many seeds the builder will try for a split that meets every constraint
+#: before giving up. Deterministic: the first seed (from `seed` upward) that
+#: works is the one used, and the report records it.
+MAX_SEED_TRIES = 500
+#: Archetypes that always train. `digital_arrest` is the scam the live product
+#: is built around: holding it out would leave the Digital Twin — fitted on
+#: training calls only — with no digital-arrest transitions at all, and any
+#: retrain with no example of the call it exists to stop. Pinning it is a
+#: product decision, stated here and in the report, not a tuning of the
+#: benchmark: the test set still contains only archetypes never trained on.
+PINNED_TRAIN = frozenset({"digital_arrest"})
+
+
+def _turns(calls: list[dict]) -> int:
+    return sum(len(c["turns"]) for c in calls)
+
+
+def _labels(calls: list[dict]) -> set[str]:
+    return {t["stage"] for c in calls for t in c["turns"]}
+
+
+def _try_split(
+    groups: dict[str, list[dict]], rng: random.Random
+) -> tuple[list[str], list[str], list[str]]:
+    """One attempt: fill test, then validation, toward their target shares with
+    whole archetypes, two scam to one benign so neither split is one-sided, and
+    skipping any archetype that would overshoot the share by more than a fifth.
+    Everything left is training."""
+    total = sum(_turns(g) for g in groups.values())
+    free = [a for a in groups if a not in PINNED_TRAIN]
+    scam = [a for a in free if groups[a][0]["seed"]["is_scam"]]
+    benign = [a for a in free if not groups[a][0]["seed"]["is_scam"]]
+    rng.shuffle(scam)
+    rng.shuffle(benign)
+
+    def fill(share: float) -> list[str]:
+        target = share * total
+        chosen: list[str] = []
+        size = 0
+        pattern = ("scam", "scam", "benign")
+        k = 0
+        tries = 0
+        while size < 0.9 * target and (scam or benign) and tries < 4 * len(groups):
+            tries += 1
+            pool = scam if (pattern[k % 3] == "scam" and scam) or not benign else benign
+            k += 1
+            archetype = pool[-1]
+            n = _turns(groups[archetype])
+            if size + n > 1.2 * target:
+                # Too big for what is left of this share: rotate it to the front
+                # of its pool so a smaller one gets the next turn.
+                pool.insert(0, pool.pop())
+                continue
+            pool.pop()
+            chosen.append(archetype)
+            size += n
+        return chosen
+
+    test = fill(TEST_SHARE)
+    val = fill(VAL_SHARE)
+    train = scam + benign + sorted(PINNED_TRAIN & set(groups))
+    return train, val, test
+
+
 def split_by_call(
-    calls: list[dict], n_test_skeletons: int = 8, seed: int = 7
-) -> tuple[list, list, list, list[str]]:
+    calls: list[dict], seed: int = 7
+) -> tuple[list, list, list, dict[str, list[str]]]:
+    """Leave-archetypes-out split. Returns (train, val, test, archetypes_by_split).
+
+    Whole archetypes are assigned to one split each, so the test set is scam
+    types the model has never seen in any form — which measures whether it
+    recognises coercion, rather than whether it has memorised these scripts.
+    Validation is archetype-disjoint too: it picks the early-stopping epoch, and
+    a validation set that shares archetypes with training rewards the same
+    memorisation the test set is there to expose.
+
+    A split is accepted only if both validation and test contain every one of
+    the eight stages and both scam and benign calls; seeds are tried in order
+    from `seed` until one does.
     """
-    Leave-archetypes-out split. Returns (train, val, test, held_out_skeletons).
-
-    The corpus is 16 hand-written skeletons expanded into variants, and every
-    archetype has exactly one skeleton -- so a skeleton cannot be split without
-    putting a near-copy of every training sentence into the test set.
-
-    Instead **whole skeletons are held out**. The test set is entire scam types
-    the model has never trained on, which measures the thing that actually
-    matters: does it recognise coercion, or has it memorised these scripts?
-    It is a harder benchmark than a same-archetype split and the only one that
-    can be defended when someone asks how the corpus was built.
-
-    Validation is carved from the *training* skeletons' variants. Mild leakage
-    is acceptable there -- val only picks the early-stopping epoch, it is never
-    reported as a result.
-    """
-    rng = random.Random(seed)
-
     groups: dict[str, list[dict]] = defaultdict(list)
     for c in calls:
-        groups[split_key(c)].append(c)
+        groups[c["seed"]["archetype_id"]].append(c)
 
-    # Hold out a mix of scam and benign skeletons: an all-benign test set would
-    # report a flattering number that says nothing about scam detection.
-    scam_keys = [k for k, g in groups.items() if g[0]["seed"]["is_scam"]]
-    benign_keys = [k for k, g in groups.items() if not g[0]["seed"]["is_scam"]]
-    rng.shuffle(scam_keys)
-    rng.shuffle(benign_keys)
+    for attempt in range(MAX_SEED_TRIES):
+        rng = random.Random(seed + attempt)
+        train_a, val_a, test_a = _try_split(groups, rng)
+        parts = {
+            "train": [c for a in train_a for c in groups[a]],
+            "val": [c for a in val_a for c in groups[a]],
+            "test": [c for a in test_a for c in groups[a]],
+        }
+        ok = all(
+            _labels(parts[p]) >= set(LABELS)
+            and any(c["seed"]["is_scam"] for c in parts[p])
+            and any(not c["seed"]["is_scam"] for c in parts[p])
+            for p in ("val", "test")
+        ) and _labels(parts["train"]) >= set(LABELS)
+        if ok:
+            for part in parts.values():
+                rng.shuffle(part)
+            chosen = {"train": sorted(train_a), "val": sorted(val_a), "test": sorted(test_a),
+                      "seed": [str(seed + attempt)]}
+            return parts["train"], parts["val"], parts["test"], chosen
 
-    n_benign_test = max(1, n_test_skeletons // 4)
-    n_scam_test = max(1, n_test_skeletons - n_benign_test)
-    held_out = scam_keys[:n_scam_test] + benign_keys[:n_benign_test]
-
-    train_keys = [k for k in groups if k not in set(held_out)]
-
-    test: list[dict] = []
-    for k in held_out:
-        test += groups[k]
-
-    train: list[dict] = []
-    val: list[dict] = []
-    for k in train_keys:
-        variants = list(groups[k])
-        rng.shuffle(variants)
-        n_val = max(1, round(len(variants) * 0.15))
-        val += variants[:n_val]
-        train += variants[n_val:]
-
-    for part in (train, val, test):
-        rng.shuffle(part)
-    return train, val, test, sorted(held_out)
+    raise SystemExit(
+        f"No archetype split within {MAX_SEED_TRIES} seeds gives validation and test "
+        "every stage. Generate more varied calls before building."
+    )
 
 
 def to_utterances(calls: list[dict], seen: set[str] | None = None) -> list[dict]:
@@ -244,18 +312,24 @@ def write_jsonl(rows: list[dict], path: Path) -> None:
 
 
 def report(splits: dict[str, list[dict]], calls: list[dict], trans: dict,
-           held_out: list[str]) -> str:
+           held_out: dict[str, list[str]]) -> str:
     lines = ["# AegisAI corpus report", ""]
     lines.append(f"- Calls: **{len(calls)}** "
                  f"({sum(c['seed']['is_scam'] for c in calls)} scam / "
                  f"{sum(not c['seed']['is_scam'] for c in calls)} benign)")
     total = sum(len(v) for v in splits.values())
     lines.append(f"- Utterances after de-duplication: **{total}**")
-    lines.append(f"- **Leave-archetypes-out split.** {len(held_out)} whole skeletons "
-                 "are held out for test; the model never trains on them.")
-    lines.append("- Held out: " + ", ".join(f"`{h}`" for h in held_out))
-    lines.append("- Validation is carved from training skeletons (used only for "
-                 "early stopping, never reported).")
+    lines.append("- **Leave-archetypes-out split.** Every archetype (scam type) sits in "
+                 "exactly one split; the model never sees a test archetype in any form. "
+                 f"Seed {held_out['seed'][0]}.")
+    for name in ("test", "val"):
+        lines.append(f"- {name.capitalize()} archetypes ({len(held_out[name])}): "
+                     + ", ".join(f"`{h}`" for h in held_out[name]))
+    lines.append(f"- Train archetypes: {len(held_out['train'])} "
+                 f"(always including {', '.join(f'`{a}`' for a in sorted(PINNED_TRAIN))}, "
+                 "the scam the live product is built around)")
+    lines.append("- Validation is archetype-disjoint from training too; it picks the "
+                 "early-stopping epoch and is never reported.")
     lines.append("")
 
     lines.append("## Class distribution")
