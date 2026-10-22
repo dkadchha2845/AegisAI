@@ -1,0 +1,20 @@
+{"text": "Good afternoon, I am Inspector Rathore from the Delhi Crime Branch. A package in your name with fake passports was intercepted. Pay the verification amount of 30,000 or we will register a case and arrest you.", "is_scam": true, "kind": "police_extortion"}
+{"text": "Blue Dart here. Your consignment was stopped by customs for contraband. Clear the penalty of 7,999 right away otherwise a police complaint will be lodged.", "is_scam": true, "kind": "courier_customs"}
+{"text": "Your SIM card will be blocked in 2 hours due to KYC non-compliance. Give me the OTP sent to your number to verify.", "is_scam": true, "kind": "kyc_expiry"}
+{"text": "This call is from the Cyber Crime cell. Stay on the line and keep this between us; your bank account is linked to money laundering.", "is_scam": true, "kind": "digital_arrest"}
+{"text": "Pay 2,000 as a refundable registration fee to get the work-from-home job. Send it to my UPI and share the screenshot.", "is_scam": true, "kind": "job_fee"}
+{"text": "We are from the FedEx legal department. A parcel with drugs was booked using your Aadhaar. You will be arrested unless you pay the settlement amount today.", "is_scam": true, "kind": "courier_customs"}
+{"text": "Your PAN card is blocked. Update now by clicking this link and entering your card number, CVV and PIN.", "is_scam": true, "kind": "card_phishing"}
+{"text": "Ma'am, scan this QR code to receive your refund of 4,500. Enter your UPI PIN to complete the transaction now.", "is_scam": true, "kind": "qr_refund"}
+{"text": "I am calling from customs at Mumbai airport. Your gift parcel from London contains foreign currency. Pay the customs clearance charge of 45,000 immediately.", "is_scam": true, "kind": "courier_customs"}
+{"text": "Your Netflix subscription has been suspended. Verify your card details within 24 hours to avoid termination.", "is_scam": true, "kind": "subscription"}
+{"text": "Your FedEx shipment 7781 is in transit and will arrive on Friday. Track it on fedex.com.", "is_scam": false, "kind": "delivery"}
+{"text": "Customs duty of Rs 1,180 is payable on your DHL import shipment. Pay on the DHL website or to the courier at delivery.", "is_scam": false, "kind": "customs_duty"}
+{"text": "Reminder: your car insurance renewal is due next week. Visit our nearest branch or renew in the app.", "is_scam": false, "kind": "renewal"}
+{"text": "Mumbai Police: beware of callers claiming to be from customs or FedEx. Police never demand money over the phone.", "is_scam": false, "kind": "awareness"}
+{"text": "Your traffic challan has been paid successfully. Thank you. -Parivahan", "is_scam": false, "kind": "challan"}
+{"text": "Hi, it's Rahul. Running 10 minutes late, order the starters without me.", "is_scam": false, "kind": "chat"}
+{"text": "Your Airtel bill of Rs 599 is generated. Pay by the due date to avoid a late fee.", "is_scam": false, "kind": "utility_bill"}
+{"text": "Thank you for visiting the branch today. Your fixed deposit has been opened.", "is_scam": false, "kind": "bank_notice"}
+{"text": "Your account statement for September is ready. Log in to net banking to view it.", "is_scam": false, "kind": "bank_notice"}
+{"text": "Dear parent, school fees for term 2 are due by 30 Oct. Pay at the school office or online.", "is_scam": false, "kind": "school_fees"}

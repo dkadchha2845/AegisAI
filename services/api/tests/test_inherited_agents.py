@@ -514,6 +514,17 @@ def test_a_benign_line_never_reaches_the_script_gate(name: str) -> None:
     done = investigate(make_state(BENIGN[name]))
     script = by_agent(done)[signals.SCRIPT_MATCH]
     assert script.features[signals.K_SCRIPT_SIMILARITY] < SCRIPT_MIN
+    # Nor does it leave a finding on the report (audit B-05): the delivery
+    # notice once carried a FEAR_INDUCTION "script match" while scoring CALM.
+    assert values(script, signals.F_SCRIPT_MATCH) == []
+
+
+def test_a_scripted_line_still_leaves_its_finding() -> None:
+    """The other side of B-05: a real match keeps its finding and template."""
+    done = investigate(make_state(CALL))
+    script = by_agent(done)[signals.SCRIPT_MATCH]
+    assert script.features[signals.K_SCRIPT_SIMILARITY] >= SCRIPT_MIN
+    assert values(script, signals.F_SCRIPT_MATCH)
 
 
 def test_an_ordinary_indian_mobile_fails_no_number_check() -> None:

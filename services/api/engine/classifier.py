@@ -119,6 +119,8 @@ CUES: dict[str, list[tuple[str, float]]] = {
         (r"\b(irs|fbi|social security administration|amazon|microsoft|apple) (security|support|department)\b", 0.9),
         (r"\byour (case|reference|complaint) (number|id) is\b", 0.8),
         (r"\b(legal|fraud|investigation|enforcement) department\b", 0.7),
+        # Courier/customs impersonation (audit B-08): "This is FedEx customs."
+        (r"\bcustoms (department|officer|authority|office)?\b", 0.8),
     ],
     "FEAR_INDUCTION": [
         (r"\b(arrest|warrant|fir|case register|non[- ]?bailable)\b", 1.0),
@@ -132,6 +134,9 @@ CUES: dict[str, list[tuple[str, float]]] = {
         (r"\byour (identity|ssn|social security) (has been|is) (compromised|linked to|involved in)\b", 0.9),
         (r"\b(criminal|federal) (case|charges) (against you|filed)\b", 0.9),
         (r"\bif you (don'?t|do not) (act|pay|cooperate) (now|immediately)\b", 0.6),
+        (r"\b(illegal (items|goods|substances)|contraband|seized|intercepted)\b", 0.9),
+        (r"\bpolice (case|complaint)\b", 0.9),
+        (r"\b(case|fir|complaint) will be (filed|registered|lodged)\b", 1.0),
     ],
     "ISOLATION": [
         (r"\b(confidential|kisi ko (mat|nahi) bat)\w*", 1.0),
@@ -169,6 +174,13 @@ CUES: dict[str, list[tuple[str, float]]] = {
         (r"\byou (need|have|are required) to (pay|deposit|transfer)\b", 0.7),
         (r"\bto (clear|settle|resolve) (your name|this case|the matter)\b", 0.8),
         (r"\b(wire|western union|moneygram) (the )?(money|amount|funds)\b", 0.8),
+        (r"\b(pay|clear|settle) (the |a |this )?[\w ]{0,20}(fine|penalty)\b", 0.8),
+        (r"\bto (release|unlock|claim) (the |your )?(prize|parcel|amount|funds|winnings)\b", 0.8),
+        # A "safe" account is the scam's own vocabulary, and the payment turn
+        # often names the account before the verb: "RBI safe account mein
+        # transfer kariye" was staged AUTHORITY_CLAIM (audit B-04).
+        (r"\b(safe|surakshit|secure|custody) (custody )?(account|khaate|khata)\b", 1.0),
+        (r"\b(account|khaate|khata)\b.*\b(transfer|bhej|jama)\w*", 0.7),
     ],
     "PAYMENT_EXECUTION": [
         (r"\b(upi|gpay|google pay|phonepe|paytm|bhim)\b", 0.9),

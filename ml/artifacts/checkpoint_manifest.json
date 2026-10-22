@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "measured_at": "2026-10-22T10:07:15+00:00",
+  "measured_at": "2026-10-22T10:24:27+00:00",
   "checkpoint_dir": "stage-classifier",
   "fingerprint": {
     "files": {
@@ -68,8 +68,8 @@
     },
     "results": {
       "lexical": {
-        "macro_f1": 0.23661774031752447,
-        "weighted_f1": 0.20798466284710995
+        "macro_f1": 0.24014339363245338,
+        "weighted_f1": 0.21130222315867128
       }
     },
     "produced_by": "ml/evaluation/eval_backends.py"

@@ -111,7 +111,7 @@ Tasks T-07 and T-08 exist to close the first and third.
 | Modality: image / document | — | 🟡 | `engine/ocr.py`, `/api/analyze/image` | Tesseract OCR + zbar QR on the legacy path. Not a graph agent. Not run today |
 | Modality: transaction / metadata | — | 🟡 | `engine/upi.py`, `engine/spoofing.py` | UPI and number-spoofing checks exist. `number_spoofing` is registered but had nothing to read on a pasted message |
 | Calibrated late fusion | Per-modality scores, calibrated, fused | ❌ | `engine/threat.py` | Scoring is hand-weighted signal fusion on the legacy path. No per-modality score, no calibration, no ECE anywhere in the repo |
-| Scam-stage state machine | Tracks the victim's stage | ✅ / 🟡 | `/api/session/*` | Four-turn arc ran today: AUTHORITY_CLAIM → FEAR_INDUCTION → ISOLATION → AUTHORITY_CLAIM. The last turn ("transfer 50000") should be PAYMENT_SETUP (B-04). Stage accuracy on unseen scam types is poor (B-01) |
+| Scam-stage state machine | Tracks the victim's stage | ✅ / 🟡 | `/api/session/*` | Four-turn arc ran today: AUTHORITY_CLAIM → FEAR_INDUCTION → ISOLATION → AUTHORITY_CLAIM. The last turn ("transfer 50000") should be PAYMENT_SETUP (B-04 — fixed in T-71: it now stages PAYMENT_SETUP, 0.74, in a live session). Stage accuracy on unseen scam types is poor (B-01) |
 | Investigation case file | Structured, exportable | 🟡 | `/api/investigations/{id}/report`, `.pdf` | JSON and a valid PDF both returned 200. Honest but thin: findings and trace, no score, entities or actions |
 | Live intervention | Alerts during an ongoing scam | 🟡 | `/api/session`, `/live`, `/analyst/console` | Utterance → frame works over REST; a WebSocket route, coach lines, payment hold and guardian acknowledgement endpoints exist. Text utterances only: no streaming STT, no WebRTC. Latency unmeasured |
 | Live console demo | — | 🎭 | `hooks/useStreamPlayer.ts` | Defaults to a recorded fixture, **labelled "recorded stream"** in the UI, with a one-click switch to live |
@@ -262,11 +262,22 @@ classified `AUTHORITY_CLAIM` (0.67) with `PAYMENT_SETUP` at 0.10. The same miss
 was recorded on 2026-08-24. It is a symptom of B-01, on the turn where a
 warning matters most.
 
+**Fixed in T-71 (2026-10-22).** The lexical model now knows the scam's own
+vocabulary for the destination ("safe", "custody" account) and the Hinglish
+word order that names the account before the verb; the line stages
+`PAYMENT_SETUP` (0.74). Test: `test_english_probes.py`.
+
 ### B-05 — Low — A benign delivery SMS still emits a script-match finding
 
 `script_match` attached a `FEAR_INDUCTION` finding to "Your Amazon order has
 been shipped…". The threat level stayed CALM, so no false positive reached the
 user; the finding still appears on the report. Confidence not inspected.
+
+**Fixed in T-71 (2026-10-22).** The finding was emitted at any similarity; the
+agent now attaches one only at or above `SCRIPT_MIN` (0.45), the gate fusion
+already applied, and still reports the similarity as a feature. Every benign
+fixture in `test_inherited_agents.py` asserts no script-match finding; a scripted
+call asserts it keeps one.
 
 ### B-06 — Low — `.claude/launch.json` cannot start the API from a worktree
 
@@ -283,6 +294,68 @@ customs. A parcel in your name contains illegal items. Pay the clearance fine of
 with the fused model and **25 WATCH** with the lexical one. A false negative on
 a textbook script, in the language the project already knew was its weak one.
 Owned by T-45 (corpus) and T-42 (fusion).
+
+**Fixed in T-71 (2026-10-22), and what fixing it found.** The cause was not the
+classifier: every mechanical check that floors a score (credential request,
+secrecy, payment to an individual, implausible procedure) was written in
+Hinglish. English probe sets were written first — `ml/data/probes/`, a dev set
+to tune on and a held-out set scored once at the end, each with scams *and*
+benign messages written to sit beside them (a real customs-duty notice, an
+e-challan, a police awareness SMS) — and `ml/evaluation/eval_probes.py` scores
+them, or every corpus call (`--calls`), through `analyze_text`.
+
+Measuring found the opposite failure in the same checks. Single words floored
+genuine messages at 87–95: "transfer"/"bhej"/"deposit" (a call transfer, a fixed
+deposit, a refund timeline, a mother asking her son for money), "confidential"
+in "NetBank will never ask for your confidential details", and a credential
+named in a Hinglish warning ("koi OTP mat dena", "nahi chahiye") or delivered by
+the bank's own SMS. **9 of 106 benign corpus calls** and 3 of 22 benign probes
+scored as scams.
+
+Changes: payment under threat of *criminal* consequence ("pay … or a police
+case will be filed", "warna arrest") now fails *Procedural plausibility* —
+civil consequences (an e-challan's "virtual court", a tax notice's "legal
+action") do not, nor does a warning naming both. *Payment to individual* fails
+only on scam-shaped framing (a safe / custody / RBI account, a refundable
+deposit, proving innocence, a fee demanded before a prize or withdrawal is
+released). *Secrecy* needs a demand, not the word. The credential check knows
+the Hinglish refusal forms and a delivered code. English stage cues for
+customs, contraband and "police case" were added.
+
+| | before | after |
+|---|---|---|
+| English dev probes — scams flagged (≥ 40) | 4 / 12 | 7 / 12 |
+| English dev probes — benign flagged | 2 / 12 | **0 / 12** |
+| English held-out probes — scams flagged | 5 / 10 | **8 / 10** |
+| English held-out probes — benign flagged | 1 / 10 | **0 / 10** |
+| Corpus benign calls flagged (all splits) | 9 / 106 | 3 / 106 |
+| Corpus scam calls flagged — train | 66 / 75 | 65 / 75 |
+| Corpus scam calls flagged — validation | 20 / 42 | 20 / 42 |
+| Corpus scam calls flagged — test | **43 / 81** | **23 / 81** |
+| Lexical stage macro-F1, test split | 0.237 | 0.240 |
+
+**The cost, stated.** Twenty test-split scam calls were caught only by the bare
+"transfer"/"bhej" floor — nineteen of them `refund_overpayment`, whose payment
+turn is an ordinary-sounding request to send money back. That rule fired on
+seven genuine calls, so by invariant 5 it was never conclusive; the recall it
+bought belongs to the stage model and fusion (T-42, T-45), not to a floor.
+No rule was written from test-split text. The held-out totals were seen once,
+mid-way, when the evaluator printed every set by default; nothing was tuned on
+them afterwards, and they did not change. The three benign corpus calls still
+flagged: two by fusion alone (46, 42), one by a genuine request to type a PIN
+into an "automated security call" mid-conversation, which the check is right to
+flag. The probes are synthetic and written by the project — a regression net
+and a measurement of this gap, not a detection rate.
+
+### B-09 — Low — Validation and test hold one benign call each
+
+*Found 2026-10-22 during B-08.* The archetype-disjoint split (B-07) keeps every
+stage in validation and test, but benign *archetypes* landed almost entirely in
+train: validation and test each hold one benign call (`credit_card_reward`,
+`telecom_plan_upgrade`). Turn-level BENIGN labels are still present, so the
+stage figure is sound; a call-level false-positive rate on either split is
+not measurable. The split search should also require a minimum number of benign
+calls per split. Owned by T-38.
 
 ### B-07 — Medium — The current split is "leave-archetypes-out" in name only
 

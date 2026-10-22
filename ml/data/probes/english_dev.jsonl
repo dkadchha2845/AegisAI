@@ -1,0 +1,24 @@
+{"text": "This is FedEx customs. A parcel in your name contains illegal items. Pay the clearance fine of 4999 now or a police case will be filed.", "is_scam": true, "kind": "courier_customs"}
+{"text": "Hello, I'm calling from DHL. Your parcel to Taiwan has been seized by customs; it contains 5 passports and 200 grams of MDMA. I am transferring your call to the Mumbai cyber crime police.", "is_scam": true, "kind": "courier_customs"}
+{"text": "This is Officer Sharma from Mumbai Police. An FIR has been registered against your Aadhaar. Pay a security deposit of 95,000 to the RBI verification account or you will be arrested today.", "is_scam": true, "kind": "police_extortion"}
+{"text": "Your electricity will be disconnected tonight at 9:30 pm because your last bill was not updated. Call our officer immediately on 9876543210.", "is_scam": true, "kind": "electricity_bill"}
+{"text": "Dear customer, your KYC has expired and your bank account will be blocked within 24 hours. Share the OTP you just received to update it.", "is_scam": true, "kind": "kyc_expiry"}
+{"text": "I am calling from the TRAI legal department. Your mobile number will be suspended in 2 hours because it was used for illegal activity. Press 9 to speak to the officer.", "is_scam": true, "kind": "telecom"}
+{"text": "Sir, this is the Income Tax Department. You have an outstanding penalty. Transfer 25,000 now or a non-bailable warrant will be issued against you.", "is_scam": true, "kind": "tax_extortion"}
+{"text": "Congratulations, you have won a KBC lottery of 25 lakh. To release the prize, pay the processing fee of 12,500 to this UPI ID: kbcprize@ybl.", "is_scam": true, "kind": "lottery"}
+{"text": "I'm from Amazon security. Someone ordered an iPhone on your account. To cancel it, install AnyDesk and read me the code on your screen.", "is_scam": true, "kind": "remote_access"}
+{"text": "Do not disconnect this call and do not tell your family. You are under digital arrest until the investigation is complete.", "is_scam": true, "kind": "digital_arrest"}
+{"text": "I accidentally sent 5000 to your Paytm. Please return it to my number, I am a student and that was my fees.", "is_scam": true, "kind": "refund_overpayment"}
+{"text": "Your son has been caught by the police in a serious case. Send 50,000 immediately on Google Pay or he will go to jail.", "is_scam": true, "kind": "family_emergency"}
+{"text": "Your Amazon order 402-8891 is out for delivery today between 2pm and 6pm.", "is_scam": false, "kind": "delivery"}
+{"text": "Dear Customer, Rs 450.00 debited from A/c XX3421 to VPA grocerystore@ybl. Not you? Call 1800-11-2211. -SBI", "is_scam": false, "kind": "bank_alert"}
+{"text": "This is a reminder from HDFC Bank: we will never ask for your OTP, PIN or CVV.", "is_scam": false, "kind": "bank_warning"}
+{"text": "Your e-challan of Rs 500 for over-speeding is pending. Pay within 60 days at echallan.parivahan.gov.in or the challan will be sent to the virtual court.", "is_scam": false, "kind": "challan"}
+{"text": "Your India Post parcel is held for customs duty of Rs 340. Pay at the post office counter when you collect it.", "is_scam": false, "kind": "customs_duty"}
+{"text": "Hi, this is Priya from Dr. Mehta's clinic confirming your appointment tomorrow at 11 am. Reply C to confirm.", "is_scam": false, "kind": "appointment"}
+{"text": "Police advisory: no agency arrests anyone over a video call. Never pay anyone who threatens arrest, and report it on 1930.", "is_scam": false, "kind": "awareness"}
+{"text": "Your electricity bill of Rs 1,240 is due on 15 Oct. Pay through the BESCOM app or at any bill desk.", "is_scam": false, "kind": "utility_bill"}
+{"text": "Your OTP for login is 482913. Do not share it with anyone. -ICICI Bank", "is_scam": false, "kind": "otp_sms"}
+{"text": "Hey, can you transfer my share of the dinner, 850, to my account when you get a chance? No hurry.", "is_scam": false, "kind": "friend_payment"}
+{"text": "Your Swiggy order has been delivered. Rate your experience.", "is_scam": false, "kind": "delivery"}
+{"text": "Income Tax Department: your refund of Rs 3,200 has been credited to your bank account.", "is_scam": false, "kind": "tax_refund"}

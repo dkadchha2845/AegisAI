@@ -39,6 +39,7 @@ from __future__ import annotations
 from schema.models import AgentResult, AgentStatus, Finding, InvestigationState
 
 from ...engine.scripts import get_script_matcher
+from ...engine.threat import SCRIPT_MIN
 from .. import registry
 from ..base import AgentContext, Stage
 from . import conversation, signals
@@ -49,7 +50,7 @@ class ScriptMatchAgent:
     """How close the caller's lines are to a known scam script."""
 
     name = signals.SCRIPT_MATCH
-    version = "1.0.0"
+    version = "1.1.0"
     stage = Stage.REASON
 
     def can_handle(self, state: InvestigationState) -> bool:
@@ -84,6 +85,21 @@ class ScriptMatchAgent:
             return AgentResult(
                 agent=self.name, version=self.version,
                 status=AgentStatus.OK, confidence=0.0,
+            )
+
+        # A finding only at or above the gate `fuse` applies. Below it the
+        # similarity is shared vocabulary, not a script — and a finding is what
+        # the report shows, so emitting one put "FEAR_INDUCTION" on a benign
+        # delivery SMS that scored CALM (audit B-05). The feature is still
+        # reported, so the number stays inspectable.
+        if best.similarity < SCRIPT_MIN:
+            return AgentResult(
+                agent=self.name,
+                version=self.version,
+                status=AgentStatus.OK,
+                confidence=best.similarity,
+                features={signals.K_SCRIPT_SIMILARITY: best.similarity},
+                provenance=[f"scripts:{best.backend}"],
             )
 
         return AgentResult(

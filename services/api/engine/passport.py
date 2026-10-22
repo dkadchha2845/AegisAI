@@ -62,9 +62,23 @@ _CREDENTIAL = re.compile(r"\b(otp|cvv|upi pin|atm pin|pin|password)\b", re.I)
 #: CRITICAL — the exact false positive that teaches users to ignore alerts.
 _CREDENTIAL_ADVISORY = re.compile(
     r"(kabhi|never|nahi|not|don'?t|do not|mat)\s+\w*\s*"
-    r"(mang|maang|poochh|puch|ask|share|batao|bataye|bataenge|give|denge|dunga|dungi)"
+    r"(mang|maang|pooch|puch|ask|share|batao|bataye|bataenge|give|denge|dunga|dungi)"
     r"|(mang|maang|ask|share|batao|bataye)\w*\s+(nahi|mat|never)"
-    r"|\bnever share\b|\bdo not share\b",
+    r"|\bnever share\b|\bdo not share\b"
+    # The Hinglish warning puts the refusal after the credential: "koi OTP mat
+    # dena", "maange toh mat dijiyega", "OTP ya card details nahi chahiye".
+    # Each read as a request until audit B-08's call-level run found five
+    # genuine bank and support calls scored 95 on exactly these lines.
+    r"|\b(mat|nahi|never)\s+(dena|dijiye\w*|dein|do|batana|bataiye\w*|chahiye)\b",
+    re.I,
+)
+
+#: A credential being *delivered* rather than requested: the bank's own SMS
+#: states the code ("Your OTP for login is 482913"), and a delivery agent at the
+#: door asks to be *shown* one. Neither can be done to a caller on the phone,
+#: which is the only place this check matters.
+_CREDENTIAL_DELIVERY = re.compile(
+    r"\b(otp|code|pin)\b[^.?!]{0,25}\bis\s*:?\s*\d{4,8}\b|\b(otp|code)\b[^.?!]{0,10}\bdikha\w*",
     re.I,
 )
 
@@ -77,12 +91,74 @@ _ADVISORY_WINDOW = 45
 
 def _is_credential_request(text: str) -> bool:
     """True if a credential is being asked for, rather than warned about."""
+    if _CREDENTIAL_DELIVERY.search(text):
+        return False
     for match in _CREDENTIAL.finditer(text):
         start = max(0, match.start() - _ADVISORY_WINDOW)
         window = text[start : match.end() + _ADVISORY_WINDOW]
         if not _CREDENTIAL_ADVISORY.search(window):
             return True
     return False
+
+
+#: Secrecy as a *demand*. The bare word "confidential" fired on "NetBank will
+#: never ask for your confidential details" — a bank warning — and floored a
+#: genuine call at 91 (audit B-08). The Hinglish forms are already imperatives.
+_SECRECY = re.compile(
+    r"\b(kisi ko (mat|nahi)|disconnect mat|digital arrest|akele)\b"
+    r"|\b(this|the|yeh|ye) (matter|call|case|investigation|conversation) is "
+    r"(strictly |highly )?(confidential|classified|secret)\b"
+    r"|\b(keep|kept) (this|it|everything) (strictly )?(confidential|secret|between us)\b"
+    r"|\b(confidential|gopniya) (hai|rakh)\w*"
+    r"|\b(do not|don'?t|must not) (tell|inform) (anyone|anybody|your family)\b",
+)
+
+#: The same word in a warning: "we will never ask for your confidential details".
+_SECRECY_ADVISORY = re.compile(r"\bnever ask\w* (you )?for (your )?confidential\b")
+
+#: Money asked for in the shape only a scam uses: an account that is "safe",
+#: "supervised" or the regulator's, a deposit that is "refundable", a payment
+#: that proves innocence. The old pattern matched the bare verbs transfer,
+#: bhej and deposit, and floored at 87 a call transfer, a fixed deposit, a
+#: refund timeline and a mother asking her son to send money (audit B-08).
+#: A plain request to pay still reaches the score through the payment stage —
+#: it is just no longer conclusive on its own.
+_SCAM_PAYMENT = re.compile(
+    r"\b(escrow|supervised account|security deposit|refundable (deposit|fee|amount|charge))\b"
+    r"|\b(safe|surakshit|secure|verification|rbi|government|sarkari) (custody )?(account|khaate|khata)\b"
+    r"|\bcustody account\b"
+    # Advance fee: money demanded before a prize, a withdrawal or a refund is
+    # released. A real payout deducts its tax; it never asks for it first.
+    r"|\bpre-?deposit\b"
+    r"|\b(to (release|unlock|claim|withdraw)|before (you can )?(withdraw|release))\b[^.?!]{0,50}"
+    r"\b(pay|deposit|fee|tax|charge)\w*"
+    r"|\b(withdraw\w*|release|nikaal\w*) (se|karne se) pehle\b[^.?!]{0,60}\b(tax|fee|charge|deposit|pay)\w*"
+    r"|\b(prove|clear) (your )?(innocence|name)\b|\bnaam clear\b"
+    r"|\b(paise|paisa|amount|funds?|money|rupees|rs\.?|₹|\d{4,})\b[^.?!]{0,40}"
+    r"\b(rbi|government|sarkari) (ke )?(account|khaate|khata|mein)\b",
+)
+
+#: Payment demanded on pain of arrest. Kept to *criminal* consequences on
+#: purpose: a real e-challan says "pay within 60 days or it goes to the virtual
+#: court", and a real tax notice threatens "legal action" — neither threatens
+#: to arrest you unless you pay now, which no agency does.
+_PAY_VERB = r"\b(pay|transfer|deposit|send|clear|bhej\w*|jama kar\w*|bhar\w*|transfer kar\w*)\b"
+_THREAT = (
+    r"\b(arrest\w*|police (case|complaint)|fir\b|warrant|jail|giraftar\w*|"
+    r"case (will be |hoga |ho jayega )?(filed|registered|darj))"
+)
+_PAYMENT_UNDER_THREAT = re.compile(
+    _PAY_VERB + r"[^.?!]{0,80}?\b(or( else)?|otherwise|warna|varna|nahi to|failing which)\b"
+    r"[^.?!]{0,60}?" + _THREAT
+    + r"|" + _THREAT + r"[^.?!]{0,80}?\bunless (you )?(pay|transfer|deposit|send)\b"
+)
+_NEGATED_PAYMENT = re.compile(r"\b(never|do not|don'?t|mat|nahi)\s+(\w+\s+)?(pay|transfer|send|bhej)")
+
+
+def _is_payment_under_threat(text: str) -> bool:
+    """"Pay 4999 now or a police case will be filed." A warning that names
+    both ("never pay anyone who threatens arrest") is not one."""
+    return bool(_PAYMENT_UNDER_THREAT.search(text)) and not _NEGATED_PAYMENT.search(text)
 
 
 class TrustPassport:
@@ -140,17 +216,14 @@ class TrustPassport:
                 "banks and RBI never ask for OTP PIN CVV or passwords",
             )
 
-        if re.search(
-            r"\b(confidential|kisi ko (mat|nahi)|disconnect mat|digital arrest|akele)\b",
-            low,
-        ):
+        if _SECRECY.search(low) and not _SECRECY_ADVISORY.search(low):
             self._fail(
                 "Secrecy demand",
                 "required secrecy from family or threatened consequences for hanging up",
                 "digital arrest is not a legal procedure secrecy from family",
             )
 
-        if re.search(r"\b(transfer|bhej|deposit|escrow|supervised account|security deposit)\b", low):
+        if _SCAM_PAYMENT.search(low):
             self._fail(
                 "Payment to individual",
                 "asked for funds to be sent to prove innocence or secure a refund",
@@ -171,6 +244,14 @@ class TrustPassport:
                 "Procedural plausibility",
                 "described a procedure that does not exist in Indian law",
                 "no agency conducts a digital arrest",
+            )
+
+        if _is_payment_under_threat(low):
+            self._fail(
+                "Procedural plausibility",
+                "demanded payment to avoid arrest or a police case — no agency "
+                "settles a criminal matter by a payment over the phone",
+                "money is never seized by asking the owner to send it",
             )
 
     def _fail(self, name: str, detail: str, cite_query: str) -> None:

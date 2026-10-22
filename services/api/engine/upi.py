@@ -261,7 +261,12 @@ FRAMING_RULES: list[tuple[str, str, float, str, str]] = [
         "upi-safety.md § Transaction limits shape the script",
     ),
     (
-        r"\b(refundable|security deposit|escrow|supervised account|verification (ke liye|charge))\b",
+        # "verification ke liye" alone is how a genuine branch asks you to come
+        # in with documents ("physical verification ke liye"), and it floored
+        # one such call at 89 (audit B-08). Only money sent *for* verification.
+        r"\b(refundable|security deposit|escrow|supervised account|verification (charge|fee))\b"
+        r"|\b(paise|paisa|amount|transfer|bhej\w*|jama|deposit|pay)\b[^.?!]{0,40}\bverification ke liye\b"
+        r"|\bverification ke liye\b[^.?!]{0,40}\b(paise|paisa|amount|transfer|bhej\w*|jama|deposit|pay)\b",
         "Refundable-deposit framing",
         0.85,
         "Money sent to prove innocence or unlock a refund is never returned. No "
