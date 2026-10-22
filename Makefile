@@ -12,7 +12,7 @@ PY        := .venv/bin/python
 WEB       := --prefix apps/web
 
 .DEFAULT_GOAL := help
-.PHONY: help gates check lint types cov audit test contract typecheck build up down reset status logs api worker dlq web install serving verify-checkpoint eval graph graph-summary migrate migrate-status seed users set-password db-shell
+.PHONY: help gates check lint types cov audit test contract typecheck webtest e2e build up down reset status logs api worker dlq web install serving verify-checkpoint eval graph graph-summary migrate migrate-status seed users set-password db-shell
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -51,6 +51,12 @@ typecheck: ## Frontend typecheck, and the landing's transcription check
 	# the 48-frame stream to render a marketing page. This proves the literals
 	# still agree with the recording — see the script's own note.
 	node apps/web/scripts/check-landing-session.mjs
+
+webtest: ## Frontend component tests (Vitest + Testing Library; T-15)
+	npm test $(WEB)
+
+e2e: ## End-to-end smoke (Playwright; starts or reuses the API on :8000 and the web app on :5173)
+	npm run test:e2e $(WEB)
 
 build: ## Frontend production build
 	npm run build $(WEB)

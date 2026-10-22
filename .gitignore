@@ -85,3 +85,7 @@ aegis.db.pre-*
 .coverage.*
 htmlcov/
 coverage.xml
+
+# Playwright output (T-15)
+apps/web/test-results/
+apps/web/playwright-report/

@@ -76,7 +76,7 @@ reused.
 | T-12 | Carry a request and case ID through structured logs | M1 | 🧪 | S | 10.2 |
 | T-13 | Give every route one error envelope | M1 | 🧪 | S | — |
 | T-14 | Move prompts into versioned files | M1 | 🧪 | S | — |
-| T-15 | Stand up the frontend test harness | M1 | ⬜ | S | 7.10 |
+| T-15 | Stand up the frontend test harness | M1 | 🧪 | S | 7.10 |
 | T-16 | Build the design-system components the brief requires | M1 | ⬜ | WP | 7.1 |
 | T-17 | Add verification fields to the investigation contract | M2 | ⬜ | S | — |
 | T-18 | Extract entities inside the graph | M2 | 🧪 | S | — |
@@ -483,7 +483,8 @@ with seven roles, the API skeleton and CI. These are what is left.
 
 ### T-15 — Stand up the frontend test harness
 - Milestone: M1
-- Status: ⬜ Todo
+- Status: 🧪 Built under T-71 (2026-10-22), awaiting `approve T-15`
+- Evidence: `npm test --prefix apps/web` (`make webtest`) — 3 RiskDial tests pass: the score and level shown verbatim, an unscored case drawn as "Not scored" with no lit ticks and no "0", confidence kept separate. `npm run test:e2e --prefix apps/web` (`make e2e`) — 2 Playwright tests pass: landing loads with no page error; a demo analyst signs in and reaches the app. Run twice: reusing the running dev servers, and with `CI=1 PW_API_PORT=8013 PW_WEB_PORT=5183`, where the config started both servers itself (the API told to allow that web origin). CI: component tests in the `frontend` job, the smoke as a new `e2e` job. `make gates` green, and the typecheck now covers the test files. Dependencies: vitest 2.1.9 (Vite 5 compatible), Testing Library, jsdom 25, @playwright/test 1.64.0 pinned to the cached Chromium 1248, so no browser was downloaded. Found and fixed: S-09 (React Router advisory). Not done: the four gates were not extended to five — the component tests run in CI and `make webtest`, and changing the canonical gate list is a process change for the owner.
 - Depends on: —
 - Fixes / implements: D-06
 - Goal: The frontend has no tests at all. Add the harness and one real test of each kind, wired into the gates, so later tasks can add tests instead of infrastructure.
