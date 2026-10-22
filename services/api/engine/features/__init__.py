@@ -2,12 +2,17 @@
 AegisAI scam feature extraction — the spec's Section 5.
 
     A. callflow.py         call-flow sequence features
-    B. script_templates.py scam script template matching
-    C. spoofing.py         number-spoofing intelligence
-    D. video.py            video-call intelligence
     E. linguistic.py       linguistic features
     F. behaviour.py        behavioural features
     G. emotion.py          emotional features
+
+Sections B (script templates), C (number spoofing) and D (video) were removed
+in T-71 (audit D-02). Nothing imported them: B and C duplicated the serving
+modules `engine/scripts.py` and `engine/spoofing.py`, which are what every
+path uses, and D analysed video, which is out of scope. Git history keeps them.
+The four that remain are off the serving path too, but the RSSIE training
+pipeline (`ml/training/rssie/dataset.py`) builds its behavioural vectors from
+them, so they stay.
 
 The spec calls this layer "the heart of your novelty", and the distinction it
 draws is the one this package is organised around: these are *Digital Arrest-
@@ -24,9 +29,6 @@ from .behaviour import BehaviourFeatures, BehaviourTracker
 from .callflow import CallFlowFeatures, CallFlowTracker
 from .emotion import EmotionFeatures, EmotionTracker
 from .linguistic import LinguisticFeatures, extract_linguistic
-from .script_templates import ScriptMatchOut, match_templates
-from .spoofing import SpoofingOut, analyze_number
-from .video import VideoOut, analyze_video
 
 __all__ = [
     "BehaviourFeatures",
@@ -36,11 +38,5 @@ __all__ = [
     "EmotionFeatures",
     "EmotionTracker",
     "LinguisticFeatures",
-    "ScriptMatchOut",
-    "SpoofingOut",
-    "VideoOut",
-    "analyze_number",
-    "analyze_video",
     "extract_linguistic",
-    "match_templates",
 ]

@@ -384,9 +384,9 @@ eval_backends.py    → Compare MuRIL vs lexical on measured F1
 | Deliverable | Status | Location |
 |---|---|---|
 | **Working Prototype** | ✅ Complete | See §11 Demo Instructions |
-| **Architecture Diagram** | ✅ Complete | `docs/PRESENTATION.html` · Slide 5; `attached_assets/architecture_1784735112762.md` |
+| **Architecture Diagram** | ✅ Complete | `docs/PRESENTATION.html` · Slide 5; `docs/archive/attached_assets/architecture_1784735112762.md` |
 | **Presentation Deck** | ✅ Complete | `docs/PRESENTATION.html` (11 slides, fully interactive) |
-| **Demo Video** | 📋 Script ready | `attached_assets/demo_script_1784735112763.md` (3–4 min script) |
+| **Demo Video** | 📋 Script ready | `docs/archive/attached_assets/demo_script_1784735112763.md` (3–4 min script) |
 
 ### Submission Form Requirements (from screenshot)
 
@@ -396,7 +396,7 @@ eval_backends.py    → Compare MuRIL vs lexical on measured F1
 | Additional file | `docs/PRESENTATION.html` (open in any browser — no install required) |
 | Problem statement | **PS 6** — AI for Digital Public Safety: Defeating Counterfeiting, Fraud & Digital Arrest Scams |
 | GitHub URL | https://github.com/dkadchha2845/AegisAI |
-| Demo video | 3–4 min. Script in `attached_assets/demo_script_1784735112763.md` |
+| Demo video | 3–4 min. Script in `docs/archive/attached_assets/demo_script_1784735112763.md` |
 
 ### Additional Artefacts Produced
 
@@ -404,9 +404,9 @@ eval_backends.py    → Compare MuRIL vs lexical on measured F1
 |---|---|
 | Presentation HTML (11 slides, animated) | `docs/PRESENTATION.html` |
 | Technical architecture doc | `docs/SUBMISSION_DOCUMENT.md` (this file) |
-| Demo script | `attached_assets/demo_script_1784735112763.md` |
-| PPT content breakdown | `attached_assets/detailed_ppt_content_1784735112763.md` |
-| Architecture diagrams (Mermaid) | `attached_assets/architecture_1784735112762.md` |
+| Demo script | `docs/archive/attached_assets/demo_script_1784735112763.md` |
+| PPT content breakdown | `docs/archive/attached_assets/detailed_ppt_content_1784735112763.md` |
+| Architecture diagrams (Mermaid) | `docs/archive/attached_assets/architecture_1784735112762.md` |
 | Build status record | `STATUS.md` |
 | Implementation report | `docs/IMPLEMENTATION-REPORT.md` |
 

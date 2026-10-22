@@ -34,9 +34,10 @@ not of any token.
 That package is research-only, and this model is its only reader: nothing under
 `services/` imports it, so these are *not* the features the served rule-based
 path computes. That path uses `engine/spoofing.py` and `engine/scripts.py`,
-which `engine/features/` partly duplicates — and `features/spoofing.py` and
-`features/script_templates.py` have no importer at all. Which features the
-serving path actually consumes is task 4.1's feature registry to decide.
+which `engine/features/` used to partly duplicate; the duplicates
+(`features/spoofing.py`, `features/script_templates.py`) had no importer and
+were removed in T-71 (audit D-02). Which features the serving path actually
+consumes is T-19's feature-assembly contract to decide.
 
 Uncertainty weighting
 ---------------------

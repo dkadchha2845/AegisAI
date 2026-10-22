@@ -317,8 +317,8 @@ The web app renders from a mock stream if the API is down. The API answers witho
 |---|---|
 | **Presentation** (`docs/PRESENTATION.html`) | Open in any browser. Arrow keys or buttons to navigate. Press `F` for fullscreen. 11 slides. |
 | **Technical write-up** (`docs/SUBMISSION_DOCUMENT.md`) | Full technical detail, metrics, deliverables |
-| **Demo script** (`attached_assets/demo_script_1784735112763.md`) | 3–4 minute demo walkthrough |
-| **Architecture diagrams** (`attached_assets/architecture_1784735112762.md`) | Mermaid source for the inherited diagrams |
+| **Demo script** (`docs/archive/attached_assets/demo_script_1784735112763.md`) | 3–4 minute demo walkthrough |
+| **Architecture diagrams** (`docs/archive/attached_assets/architecture_1784735112762.md`) | Mermaid source for the inherited diagrams |
 
 > These describe the inherited KAVACH engine. The original ET AI Hackathon 2026
 > submission PDFs are preserved unmodified in
