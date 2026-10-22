@@ -1,5 +1,9 @@
 # AegisAI — UI/UX audit and redesign
 
+> **Historical — the UI audit of 2026-08-26.** Kept for the record; it describes the project
+> as it was then. What is true of the code today is in [`AUDIT.md`](AUDIT.md);
+> what is next is in [`TASKS.md`](TASKS.md).
+
 **Date:** 2026-08-26 · **Scope:** every route, both themes, desktop and mobile.
 
 This is the record of a full-product interface audit and the redesign that

@@ -1,5 +1,9 @@
 # AegisAI — Asset Inventory & Honest Gap Analysis
 
+> **Historical — a snapshot of 2026-08-23.** It is kept because later documents
+> cite it, not because it is current. What is true of the code today is in
+> [`AUDIT.md`](AUDIT.md); what is next is in [`TASKS.md`](TASKS.md).
+
 **Date:** 2026-08-23 · **Baseline verified:** 84 backend tests pass, contract consistent,
 frontend typecheck clean, production build succeeds.
 

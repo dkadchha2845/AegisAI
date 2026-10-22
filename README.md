@@ -46,11 +46,13 @@ AegisAI's conversation-analysis agent.
 
 | | |
 |---|---|
-| **Working today** | Live call analysis, 8-stage scam-arc classifier, coercion index, Digital Twin forecast, identity passport, number-spoofing intel, OCR + QR, fraud graph (NetworkX), RAG with citations, evidence PDF, multi-tenant RBAC + audit, 17-route React SPA |
-| **In progress** | Agent architecture + LangGraph orchestration (Phase 1) |
-| **Planned** | URL/APK/email/image agents · Neo4j + Qdrant + Postgres · calibrated ML risk engine · WebRTC live calls · AIFC dataset · research evaluation |
+| **Where things stand** | [`docs/PROGRESS.md`](./docs/PROGRESS.md) — what was finished, when, and how it was verified |
+| **What is next** | [`docs/TASKS.md`](./docs/TASKS.md) — every task, its status and acceptance criteria |
+| **What is true of the code** | [`docs/AUDIT.md`](./docs/AUDIT.md) — working / partial / missing, and every known bug, security issue and debt item |
+| **What it must do** | [`docs/PRD.md`](./docs/PRD.md) — requirements, each marked built, partial or new |
 
-📍 **Full honest gap analysis:** [`docs/INVENTORY.md`](./docs/INVENTORY.md)
+Older status documents (`STATUS.md`, July) are in [`docs/archive/`](./docs/archive/);
+[`docs/INVENTORY.md`](./docs/INVENTORY.md) is a dated August snapshot kept for the record.
 
 ---
 
@@ -58,9 +60,12 @@ AegisAI's conversation-analysis agent.
 
 | Document | What's in it |
 |---|---|
-| 📊 [`docs/INVENTORY.md`](./docs/INVENTORY.md) | What exists (verified), what doesn't, known defects and risks |
-| 🏗️ [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Agent graph, `InvestigationState` contract, scoring architecture, security design |
-| ✅ [`docs/TASKS.md`](./docs/TASKS.md) | The phased task backlog with acceptance criteria, timeline and critical path |
+| 🔎 [`docs/AUDIT.md`](./docs/AUDIT.md) | What exists (verified), what doesn't, and every known bug, security issue, UI issue and debt item |
+| 📋 [`docs/PRD.md`](./docs/PRD.md) | Users, stories, requirements, agent specification, API surface, evaluation plan |
+| 🏗️ [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | The five layers, the agent graph today and as targeted, A7, scoring and calibration, operations |
+| 🎨 [`docs/DESIGN_SYSTEM.md`](./docs/DESIGN_SYSTEM.md) | Tokens, risk levels, measured contrast, components and their gaps |
+| ✅ [`docs/TASKS.md`](./docs/TASKS.md) | The task list with acceptance criteria and critical path |
+| 📈 [`docs/PROGRESS.md`](./docs/PROGRESS.md) | One entry per finished task, with how it was verified |
 | 🤝 [`CLAUDE.md`](./CLAUDE.md) | Contributor working rules: invariants, quality gates, and the definition of done |
 | 🔐 [`docs/AUTH.md`](./docs/AUTH.md) | Accounts, roles, permissions, sessions, seeding, and how to open the database |
 | 🚀 [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) | Hosting it: Render + Vercel from GitHub (free, auto-deploys), or one VPS with Caddy |
@@ -426,7 +431,7 @@ aegis/
 │
 ├── .github/workflows/ci.yml    CI (py3.11 + py3.12 + frontend)
 ├── .env.example                Environment template
-└── STATUS.md                   Running build status
+└── docs/PROGRESS.md            Running record of finished work
 ```
 
 ---
@@ -589,7 +594,7 @@ npm run typecheck --prefix apps/web
 
 ### Handing Over
 
-Update `STATUS.md` when you finish something. It is the running record — the next person shouldn't have to reverse-engineer the diff.
+Add an entry to `docs/PROGRESS.md` when you finish a task. It is the running record — the next person shouldn't have to reverse-engineer the diff.
 
 ---
 

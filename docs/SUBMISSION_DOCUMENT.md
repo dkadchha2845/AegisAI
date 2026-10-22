@@ -1,4 +1,8 @@
 # AegisAI — Detailed Submission Document
+
+> **Historical — the ET AI Hackathon 2026 submission.** Kept for the record; it describes the project
+> as it was then. What is true of the code today is in [`AUDIT.md`](AUDIT.md);
+> what is next is in [`TASKS.md`](TASKS.md).
 ## ET AI Hackathon 2026 · Problem Statement 6
 ### AI for Digital Public Safety: Defeating Counterfeiting, Fraud & Digital Arrest Scams
 
@@ -407,7 +411,7 @@ eval_backends.py    → Compare MuRIL vs lexical on measured F1
 | Demo script | `docs/archive/attached_assets/demo_script_1784735112763.md` |
 | PPT content breakdown | `docs/archive/attached_assets/detailed_ppt_content_1784735112763.md` |
 | Architecture diagrams (Mermaid) | `docs/archive/attached_assets/architecture_1784735112762.md` |
-| Build status record | `STATUS.md` |
+| Build status record | `docs/PROGRESS.md` (the July `STATUS.md` is in `docs/archive/`) |
 | Implementation report | `docs/IMPLEMENTATION-REPORT.md` |
 
 ---
