@@ -6,7 +6,7 @@ Fraud Investigation**
 | | |
 |---|---|
 | Version | 1.0 — 2026-10-22 (T-01) |
-| Status | 🧪 Awaiting the owner's review |
+| Status | ✅ Approved by the owner, 2026-10-22 — the six `[ASSUMPTION]`s stay open until confirmed |
 | Owner | Dhrumil Kadchha |
 | Team | **[ASSUMPTION]** four members per the brief; the repository credits two authors. Names to be supplied |
 | Programme | Final-year Major Project, B.Tech CSE, Dayananda Sagar University, AY 2026–27 (brief §2) |

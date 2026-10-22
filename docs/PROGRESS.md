@@ -4,7 +4,7 @@ One entry per finished piece of work, newest last. A new session reads this
 after [`TASKS.md`](TASKS.md) to find where things stand.
 
 **Current state (2026-10-22):** Phase 0 and Phase 3 approved. T-04 approved
-2026-10-10; T-05, T-69 and T-70 approved 2026-10-22. On the owner's
+2026-10-10; T-05, T-69, T-70, T-01, T-02 and T-03 approved 2026-10-22. On the owner's
 instruction T-01, T-02 and T-03 run back to back, then the open issues from
 T-04 and T-05 (D-12, D-13, D-14, B-07, B-08); each is committed at 🧪. T-69 and T-70 (landing fixes, sections 01–02 then 03, 04, 06
 and 09) were added on the owner's request ahead of the recommended order; the

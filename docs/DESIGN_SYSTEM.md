@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Version | 1.0 — 2026-10-22 (T-03) |
-| Status | 🧪 Awaiting the owner's review |
+| Status | ✅ Approved by the owner, 2026-10-22 |
 | Source of truth | [`apps/web/src/styles/tokens.css`](../apps/web/src/styles/tokens.css) (tokens) · [`primitives.css`](../apps/web/src/styles/primitives.css) (primitives) · [`components/ui/`](../apps/web/src/components/ui/) |
 | Scope | The product (every route inside the app shell). The landing page has its own scoped surface — §8 |
 

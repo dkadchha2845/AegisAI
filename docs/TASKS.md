@@ -42,8 +42,8 @@ reused.
 | Phase | What | Status |
 |---|---|---|
 | 0 — Audit | [`AUDIT.md`](AUDIT.md) | ✅ Approved 2026-10-09 |
-| 1 — PRD | T-01 | 🧪 |
-| 2 — Architecture and design system | T-02, T-03 | 🧪 |
+| 1 — PRD | T-01 | ✅ Approved 2026-10-22 |
+| 2 — Architecture and design system | T-02, T-03 | ✅ Approved 2026-10-22 |
 | 3 — Task list | this file | ✅ Approved 2026-10-09 |
 | 4 — Execution | M0 → M5, one task at a time | ⬜ |
 
@@ -62,9 +62,9 @@ reused.
 
 | ID | Title | Milestone | Status | Size | Legacy |
 |---|---|---|---|---|---|
-| T-01 | Write the PRD | P1 | 🧪 | S×2 | — |
-| T-02 | Bring the architecture document to the brief's shape | P2 | 🧪 | S | — |
-| T-03 | Write the design-system document from the shipped tokens | P2 | 🧪 | S | 7.1 |
+| T-01 | Write the PRD | P1 | ✅ | S×2 | — |
+| T-02 | Bring the architecture document to the brief's shape | P2 | ✅ | S | — |
+| T-03 | Write the design-system document from the shipped tokens | P2 | ✅ | S | 7.1 |
 | T-04 | Correct the stage-classifier claim everywhere it is stated | M0 | ✅ | S | — |
 | T-05 | Make the promotion gate refuse a contaminated comparison | M0 | ✅ | S | — |
 | T-06 | Commit the leak-free classifier baseline as the first research result | M0 | ⬜ | S | — |
@@ -205,7 +205,7 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-01 — Write the PRD
 - Milestone: P1
-- Status: 🧪 Awaiting my review (2026-10-22)
+- Status: ✅ Approved (2026-10-22)
 - Depends on: — (Q1 and Q2 are decided; team and review dates stay `[ASSUMPTION]` placeholders until the owner supplies them)
 - Fixes / implements: D-10; brief §4
 - Goal: A complete PRD that describes the product the brief pitches, grounded in what the audit found exists, with every guess marked **[ASSUMPTION]**.
@@ -226,7 +226,7 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-02 — Bring the architecture document to the brief's shape
 - Milestone: P2
-- Status: 🧪 Awaiting my review (2026-10-22)
+- Status: ✅ Approved (2026-10-22)
 - Depends on: T-01
 - Fixes / implements: brief §5; D-01
 - Goal: `docs/ARCHITECTURE.md` already describes the system well; it lacks the brief's five-layer mapping, A7, the two sequence diagrams and a fusion formula. Add them without rewriting what is right.
@@ -245,7 +245,7 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-03 — Write the design-system document from the shipped tokens
 - Milestone: P2
-- Status: 🧪 Awaiting my review (2026-10-22)
+- Status: ✅ Approved (2026-10-22)
 - Depends on: T-01
 - Fixes / implements: U-05, D-10; brief §5
 - Goal: Document the design system the product already has, and list — as a gap table — the components the brief requires and the product lacks. The gap table becomes T-16.
