@@ -716,6 +716,9 @@ function Outcome({
   pending: boolean;
 }) {
   const scored = state?.risk_score != null && state?.risk_level != null;
+  // The provisional judge tags every score it writes; the caption repeats the
+  // tag in words rather than letting a bare number read as calibrated (T-20).
+  const uncalibrated = scored && state?.degraded.includes("score:uncalibrated");
 
   // While the graph is still running there is no verdict to draw, and drawing
   // an empty dial that later fills in would imply the score was climbing.
@@ -745,9 +748,11 @@ function Outcome({
             score={state.risk_score ?? null}
             level={state.risk_level ?? null}
             caption={
-              scored
-                ? undefined
-                : "This investigation could not be scored. Every check that ran is listed in the report below, with what it found."
+              !scored
+                ? "This investigation could not be scored. Every check that ran is listed in the report below, with what it found."
+                : uncalibrated
+                  ? "Provisional, uncalibrated score — the same one the Analyze page gives this evidence. Read the band as a guide, not a probability."
+                  : undefined
             }
           />
           <dl className="kv" style={{ marginTop: "var(--s-4)" }}>

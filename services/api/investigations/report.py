@@ -26,14 +26,14 @@ with its hash, a degraded agent is visible in the agent table, and the PDF path
 returns a 503 with instructions rather than a stack trace when reportlab is
 absent.
 
-**Limitations, stated.** `risk_score`, `evidence` and `recommendations` are
-empty for every investigation this system currently produces, because the
-judgement tier (tasks 4.6 and 4.7) has no agents in it. The report says so, in
-those words, in the field a reader looks at first. That is the whole design
-decision here and it is worth being explicit about: an unscored investigation
-rendered as `0.0 / CALM` is a false negative wearing a number, and this file
-would rather hand back a report that says "not scored" than one that reads as a
-clearance. When 4.6 lands, the same fields fill in and this file does not change.
+**Limitations, stated.** `risk_score` is written by a provisional judge
+(T-20): the same deterministic score `/api/analyze/text` gives, tagged
+`score:uncalibrated`, and the report says so in `assessment.note` and marks
+`calibrated: false`. `evidence` and `recommendations` stay empty until the
+explainability tier (T-47) fills them. An investigation the judge could not
+score — evidence with no readable text — says "not scored" in the field a reader
+looks at first, because an unscored case rendered as `0.0 / CALM` is a false
+negative wearing a number.
 
 The disclaimer is not boilerplate
 ---------------------------------
@@ -57,10 +57,20 @@ from ..engine.report import DISCLAIMER, REPORTING_GUIDANCE
 #: its own reads as a bug rather than as a stage of the roadmap.
 NOT_SCORED = (
     "This investigation has not been scored. The evidence below was collected "
-    "and recorded, but the risk model and evidence-fusion agents are not yet "
-    "part of this build, so no risk number is claimed. Absence of a score is "
-    "not a finding of safety."
+    "and recorded, but none of it was something the scoring judge could read "
+    "(it scores text, a transcript, or text recovered from an upload), so no "
+    "risk number is claimed. Absence of a score is not a finding of safety."
 )
+
+#: Shown beside every score the provisional judge wrote (T-20). The tag says
+#: it to a machine; this says it to the person reading the report.
+UNCALIBRATED = (
+    "Provisional, uncalibrated score. It is the same deterministic score the "
+    "Analyze page gives this evidence — weighted signals, raised to a floor when "
+    "a check is conclusive on its own — and it has not been calibrated against "
+    "real outcomes. Read the band as a guide, not as a probability."
+)
+UNCALIBRATED_TAG = "score:uncalibrated"
 
 
 def _agent_rows(state: InvestigationState) -> List[Dict[str, Any]]:
@@ -171,6 +181,14 @@ def _trace_summary(state: InvestigationState) -> Dict[str, Any]:
     }
 
 
+def _assessment_note(state: InvestigationState, scored: bool) -> str | None:
+    if not scored:
+        return NOT_SCORED
+    if UNCALIBRATED_TAG in state.degraded:
+        return UNCALIBRATED
+    return None
+
+
 def build_report(state: InvestigationState) -> Dict[str, Any]:
     """Project a finished investigation into the package a person reads."""
     scored = state.risk_score is not None
@@ -195,7 +213,8 @@ def build_report(state: InvestigationState) -> Dict[str, Any]:
             "risk_level": state.risk_level.value if state.risk_level else None,
             "confidence": state.confidence,
             "classification": state.classification.value if state.classification else None,
-            "note": None if scored else NOT_SCORED,
+            "calibrated": scored and UNCALIBRATED_TAG not in state.degraded,
+            "note": _assessment_note(state, scored),
         },
         "inputs": _inputs(state),
         "entities": _entities(state),
@@ -326,6 +345,8 @@ def render_pdf(report: Dict[str, Any]) -> bytes:
                 body,
             )
         )
+        if assessment.get("note"):
+            story.append(Paragraph(esc(assessment["note"]), warn))
     else:
         story.append(Paragraph(esc(assessment.get("note") or NOT_SCORED), warn))
 

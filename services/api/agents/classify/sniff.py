@@ -291,6 +291,12 @@ def _is_generic_declared_type(declared_type: str) -> bool:
 _URL_RE = re.compile(r"\bhttps?://[^\s<>\"']{3,2048}", re.I)
 _BARE_URL_RE = re.compile(r"^\s*(?:https?://)?(?:[a-z0-9-]+\.)+[a-z]{2,24}(?:/\S*)?\s*$", re.I)
 _PHONE_ONLY_RE = re.compile(r"^\s*(?:\+|00)?(?:91[\-\s]?)?[6-9]\d{9}\s*$")
+#: An international number written as one: a `+` or `00` prefix, then 8-15
+#: digits with the usual separators. Without the prefix a digit run could be an
+#: account number or an amount, so only an Indian mobile is accepted bare. The
+#: foreign-caller checks are exactly the ones that need this: a "+1-838…"
+#: submitted alone was typed TEXT, and the spoofing agent never saw it.
+_INTL_PHONE_ONLY_RE = re.compile(r"^\s*(?:\+|00)[1-9](?:[\s\-().]{0,2}\d){7,14}\s*$")
 _UPI_ONLY_RE = re.compile(r"^\s*[a-zA-Z0-9._\-]{2,64}@[a-zA-Z][a-zA-Z0-9]{1,32}\s*$")
 _UPI_IN_TEXT_RE = re.compile(r"\b[a-zA-Z0-9._\-]{2,64}@(?!gmail|yahoo|outlook|hotmail|icloud|proton)[a-zA-Z][a-zA-Z0-9]{1,32}\b")
 _EMAIL_ADDR_RE = re.compile(r"^\s*[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}\s*$")
@@ -352,7 +358,7 @@ def sniff_text(text: str) -> Tuple[Tuple[InputType, ...], str, str]:
 
     # A single identifier, alone on the line, is that identifier — not prose
     # that happens to contain one.
-    if _PHONE_ONLY_RE.match(stripped):
+    if _PHONE_ONLY_RE.match(stripped) or _INTL_PHONE_ONLY_RE.match(stripped):
         return (InputType.PHONE,), "text/plain", "content:bare_phone"
     if _EMAIL_ADDR_RE.match(stripped):
         return (InputType.EMAIL,), "text/plain", "content:bare_email_address"

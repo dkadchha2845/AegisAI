@@ -169,9 +169,17 @@ def extract_from_text(text: str) -> ExtractedEntities:
     # demand takes ("...Rs 10 bhejiye: sbi.kyc@okhdfcbank"), so the single most
     # important entity in the message went missing, silently, with no error and
     # no graph edge.
+    #
+    # And a "." is a continuation only when something follows it. A full stop
+    # ending the sentence — "...to VPA grocerystore@ybl. Not you?" — is the
+    # other most common shape, and dropped the VPA from every bank alert that
+    # ends a sentence with one (found by T-18's benign test).
     for m in _UPI.finditer(text):
         s, e, tok = m.start(), m.end(), m.group(0)
-        if _in_email(s, e) or text[e : e + 1] in ("-", "."):
+        continues = text[e : e + 1] == "-" or (
+            text[e : e + 1] == "." and text[e + 1 : e + 2].isalnum()
+        )
+        if _in_email(s, e) or continues:
             continue
         suffix = tok.split("@", 1)[1].lower()
         if suffix in _EMAIL_SUFFIXES:
@@ -237,6 +245,22 @@ def extract_from_text(text: str) -> ExtractedEntities:
     except Exception:
         pass
 
+    return out
+
+
+#: A link as it was written, scheme and path included. `domains` holds the
+#: host alone for the graph; the URL is what a later URL agent fetches (behind
+#: the SSRF guard) and what a person recognises in the report.
+_URL = re.compile(r"\b(?:https?://|www\.)[^\s<>\"')\]]+", re.I)
+
+
+def extract_urls(text: str) -> List[str]:
+    """Every link in `text`, deduplicated, trailing punctuation removed."""
+    out: List[str] = []
+    for m in _URL.finditer(text or ""):
+        url = m.group(0).rstrip(".,;:!?")
+        if url not in out:
+            out.append(url)
     return out
 
 

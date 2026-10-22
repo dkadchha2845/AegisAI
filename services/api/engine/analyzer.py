@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import asdict, dataclass, field
+from typing import Iterable
 
 from ..rag.coach import get_coach
 from ..rag.store import get_kb
@@ -330,13 +331,8 @@ def analyze_text(
     ]
 
     # Payment framing + any VPAs mentioned in the body.
-    findings += analyze_payment_framing(raw)
-    upi_payload = None
-    for vpa in extract_upi_ids(raw)[:3]:
-        upi = analyze_upi(vpa, claimed_identity=passport.claimed_identity)
-        findings.extend(upi.findings)
-        if upi_payload is None:
-            upi_payload = asdict(upi)
+    framed, upi_payload = text_findings(raw, passport.claimed_identity)
+    findings += framed
 
     # Peak stage over the whole artifact, not the last one. A message that
     # reaches ISOLATION and then chats about the weather is still an isolation
@@ -387,11 +383,7 @@ def analyze_text(
     # Mechanical findings escalate the score. They are checks, not
     # correlations — "asked for an OTP" does not become less dispositive
     # because the surrounding text was polite.
-    score = fusion.score
-    for finding in findings:
-        if finding.verdict == "FAIL":
-            score = max(score, 55.0 + 40.0 * finding.weight)
-    score = round(min(100.0, score), 1)
+    score = dispositive_floor(fusion.score, [f.weight for f in findings if f.verdict == "FAIL"])
 
     coach_out = get_coach().suggest(
         peak.stage if peak else "BENIGN",
@@ -421,6 +413,35 @@ def analyze_text(
         upi=upi_payload,
         number_intel=number_intel,
     )
+
+
+def text_findings(raw: str, claimed_identity: str | None) -> tuple[list[Finding], dict | None]:
+    """How a payment is framed in the text, and what the VPAs in it say.
+
+    One function for both pipelines: `analyze_text` and the investigation's
+    provisional judge (`agents/inherited/fusion.py`) floor their scores on
+    exactly these findings, so they cannot drift apart (audit B-02).
+    """
+    findings = analyze_payment_framing(raw)
+    upi_payload = None
+    for vpa in extract_upi_ids(raw)[:3]:
+        upi = analyze_upi(vpa, claimed_identity=claimed_identity)
+        findings.extend(upi.findings)
+        if upi_payload is None:
+            upi_payload = asdict(upi)
+    return findings, upi_payload
+
+
+def dispositive_floor(score: float, weights: Iterable[float]) -> float:
+    """Raise `score` to what a conclusive check demands, and round it.
+
+    Mechanical findings escalate the score. They are checks, not
+    correlations — "asked for an OTP" does not become less dispositive
+    because the surrounding text was polite. A weight-1.0 check floors at 95.
+    """
+    for weight in weights:
+        score = max(score, 55.0 + 40.0 * weight)
+    return round(min(100.0, score), 1)
 
 
 def _stage_rank(stage: str, confidence: float) -> float:

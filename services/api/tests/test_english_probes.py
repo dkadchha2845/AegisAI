@@ -82,6 +82,8 @@ def test_the_payment_turn_is_staged_as_payment() -> None:
         "Transfer 25,000 now or a non-bailable warrant will be issued against you.",
         "Abhi 50000 transfer karo warna arrest ho jayega.",
         "A case will be registered and you will be arrested unless you pay today.",
+        # A dot inside the VPA is not the end of the sentence.
+        "Pay 4999 now to fedex.customs@okaxis or a police case will be filed.",
     ],
 )
 def test_payment_on_pain_of_arrest_is_conclusive(text: str) -> None:

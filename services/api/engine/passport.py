@@ -147,10 +147,14 @@ _THREAT = (
     r"\b(arrest\w*|police (case|complaint)|fir\b|warrant|jail|giraftar\w*|"
     r"case (will be |hoga |ho jayega )?(filed|registered|darj))"
 )
+#: Within one sentence. A "." inside a token — `fedex.customs@okaxis`, "Rs.",
+#: "4,999.00" — is not the end of one, and stopping there let "pay … to
+#: fedex.customs@okaxis or a police case will be filed" through.
+_SAME_SENTENCE = r"(?:[^.?!]|\.(?=\S))"
 _PAYMENT_UNDER_THREAT = re.compile(
-    _PAY_VERB + r"[^.?!]{0,80}?\b(or( else)?|otherwise|warna|varna|nahi to|failing which)\b"
-    r"[^.?!]{0,60}?" + _THREAT
-    + r"|" + _THREAT + r"[^.?!]{0,80}?\bunless (you )?(pay|transfer|deposit|send)\b"
+    _PAY_VERB + _SAME_SENTENCE + r"{0,80}?\b(or( else)?|otherwise|warna|varna|nahi to|failing which)\b"
+    + _SAME_SENTENCE + r"{0,60}?" + _THREAT
+    + r"|" + _THREAT + _SAME_SENTENCE + r"{0,80}?\bunless (you )?(pay|transfer|deposit|send)\b"
 )
 _NEGATED_PAYMENT = re.compile(r"\b(never|do not|don'?t|mat|nahi)\s+(\w+\s+)?(pay|transfer|send|bhej)")
 

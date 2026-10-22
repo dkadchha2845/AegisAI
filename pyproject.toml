@@ -130,8 +130,10 @@ check_untyped_defs = true
 # are still not part of what this gate covers, for the reason above. `silent`
 # keeps their types available — so the new code is genuinely checked against
 # them — while leaving their own 10 pre-existing errors out of a gate that is
-# kept at zero precisely so a new one is visible.
-module = ["services.api.engine.*", "services.api.rag.*"]
+# kept at zero precisely so a new one is visible. `intel` joined in T-18, when
+# the entity agent started reusing `intel/entities.py` rather than a second
+# extractor; its import of networkx (no stubs) is its own concern, not the gate's.
+module = ["services.api.engine.*", "services.api.rag.*", "services.api.intel.*"]
 follow_imports = "silent"
 
 [[tool.mypy.overrides]]

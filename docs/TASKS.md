@@ -79,9 +79,9 @@ reused.
 | T-15 | Stand up the frontend test harness | M1 | ⬜ | S | 7.10 |
 | T-16 | Build the design-system components the brief requires | M1 | ⬜ | WP | 7.1 |
 | T-17 | Add verification fields to the investigation contract | M2 | ⬜ | S | — |
-| T-18 | Extract entities inside the graph | M2 | ⬜ | S | — |
+| T-18 | Extract entities inside the graph | M2 | 🧪 | S | — |
 | T-19 | Define the feature-assembly contract, version 0 | M2 | ⬜ | S | 4.1 |
-| T-20 | Port the served threat score into the graph as a provisional judge | M2 | ⬜ | S | 4.6 |
+| T-20 | Port the served threat score into the graph as a provisional judge | M2 | 🧪 | S | 4.6 |
 | T-21 | Build the A7 adversarial verifier — deterministic challenger | M2 | ⬜ | S | — |
 | T-22 | Add the A7 LLM challenger, with fallback to the deterministic one | M2 | ⬜ | S | — |
 | T-23 | Derive recommendations from verified findings | M2 | ⬜ | S | — |
@@ -546,7 +546,8 @@ demonstrated as the brief describes it — on one modality, honestly labelled.
 
 ### T-18 — Extract entities inside the graph
 - Milestone: M2
-- Status: ⬜ Todo
+- Status: 🧪 Built under T-71 (2026-10-22), awaiting `approve T-18`
+- Evidence: `test_entity_agent.py` — the three identifiers with their source item; benign masked-account SMS yields no phone, VPA or account; a raising extractor leaves the investigation COMPLETE with `agent:entity_extractor:…` in `degraded`; the API and report return the entities. Live: a message with a VPA, a number and a link shows all three in `GET /api/investigations/{id}` and the report. Found and fixed on the way: B-10 (VPA before a full stop), B-11 (foreign caller number typed TEXT). Not met as written: "declares its features in the feature registry" — that registry is T-19 and does not exist yet; the agent publishes per-kind counts as features.
 - Depends on: —
 - Fixes / implements: B-03
 - Goal: Wrap the entity extractor the legacy path already uses as a graph agent, so `state.entities` is populated and later agents have something to investigate.
@@ -584,7 +585,8 @@ demonstrated as the brief describes it — on one modality, honestly labelled.
 
 ### T-20 — Port the served threat score into the graph as a provisional judge
 - Milestone: M2
-- Status: ⬜ Todo
+- Status: 🧪 Built under T-71 (2026-10-22), awaiting `approve T-20`
+- Evidence: `test_provisional_judge.py` — graph score equals `/api/analyze/text` to 0.05 on five scam and three benign texts; every scam ≥ 70 and tagged `score:uncalibrated`; bank debit, delivery and KYC reminder < 25 with no conclusive check; the score is reached with every LLM entry point patched to raise. Report: `assessment.note` and `calibrated: false`; Investigate page caption. Live: 93.0 CRITICAL on both paths for the digital-arrest text, 91.0 on both for a customs message. Deviation, stated: built before T-19 (the owner chose "make them agree now"); the judge reads the agents' published findings and features directly rather than an assembled vector, and `classification` stays None.
 - Depends on: T-19 (Q4 decided 2026-10-09: show the score, tagged uncalibrated)
 - Fixes / implements: B-02, D-01; legacy 4.6 (interim)
 - Goal: Make the graph return the same score the legacy path returns for the same input, tagged as uncalibrated, so the two pipelines stop disagreeing and the investigation has a verdict.

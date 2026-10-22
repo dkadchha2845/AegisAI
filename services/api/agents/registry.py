@@ -63,6 +63,39 @@ class RegistrationError(ValueError):
     """
 
 
+#: The `InvestigationState` fields an agent may set through `state_update`.
+#: Everything else is the orchestrator's (`agent_results`, `trace`, `degraded`,
+#: `status`) or the caller's (`inputs`, identity), and an agent writing them
+#: would let one node rewrite what another produced.
+WRITABLE_FIELDS = frozenset({
+    "entities", "risk_score", "risk_level", "confidence", "classification", "risk_features",
+})
+
+
+def _check_writes(cls_name: str, instance: object, writes: tuple) -> None:
+    """An agent that writes state says which fields, once, at import time.
+
+    Two agents in one tier writing the same field would make the result depend
+    on which ran last, so that is refused here rather than discovered in a
+    trace.
+    """
+    from .base import stage_of
+
+    if not callable(getattr(instance, "state_update", None)):
+        raise RegistrationError(f"{cls_name}: declares `writes` but has no state_update()")
+    unknown = sorted(set(writes) - WRITABLE_FIELDS)
+    if unknown:
+        raise RegistrationError(f"{cls_name}: may not write {unknown}; writable: {sorted(WRITABLE_FIELDS)}")
+    tier = stage_of(instance)  # type: ignore[arg-type]
+    for other in _REGISTRY.values():
+        shared = set(writes) & set(getattr(other, "writes", ()))
+        if shared and stage_of(other) is tier:
+            raise RegistrationError(
+                f"{cls_name} and {type(other).__name__} both write {sorted(shared)} "
+                f"in the {tier.value} tier; the result would depend on completion order"
+            )
+
+
 def register(cls: A) -> A:
     """Class decorator. Instantiates once and records the instance.
 
@@ -96,6 +129,10 @@ def register(cls: A) -> A:
     if not isinstance(instance, Agent):
         missing = [m for m in ("can_handle", "run") if not callable(getattr(instance, m, None))]
         raise RegistrationError(f"{cls.__name__}: does not satisfy Agent; missing {missing}")
+
+    writes = getattr(instance, "writes", ())
+    if writes:
+        _check_writes(cls.__name__, instance, tuple(writes))
 
     if name in _REGISTRY:
         existing = _REGISTRY[name]

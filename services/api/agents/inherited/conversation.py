@@ -36,7 +36,7 @@ adapter in this package skips, which is the correct outcome — see the note in
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Sequence
+from typing import List
 
 from schema.models import InputType, InvestigationState
 
@@ -135,22 +135,19 @@ def claimed_identity_text(state: InvestigationState) -> str:
 
 
 def phone_numbers(state: InvestigationState) -> List[str]:
-    """Numbers this investigation was actually given, in a stable order.
+    """The caller's number, if the investigation was given one, in a stable order.
 
-    Two sources, both explicit. `entities.phones` is the contract field the
-    entity extraction of 2.1/3.2 will fill; until then the only way a number
-    reaches an investigation is as its own evidence item, which the 1.4
-    classifier types `PHONE`. Numbers merely *mentioned* inside a message are
-    deliberately not scraped here — pulling identifiers out of text is an
-    extraction agent's job, and a regex in this file would be a second, unowned
-    implementation of it.
+    Only a number submitted as its own evidence item, which the input
+    classifier types `PHONE`. `state.entities.phones` is *not* read: since the
+    entity agent (T-18) it also holds every number written inside a message,
+    and a number in an SMS is a call-back number, not caller ID. Running the
+    caller-ID checks on it would let "call us on 98…" in a genuine message fail
+    "authority claim from a personal mobile" — and would make the
+    investigation's score differ from `/api/analyze/text`, which takes the
+    caller's number only when it is given as one (T-20).
     """
     found: List[str] = []
     seen: set[str] = set()
-    for value in _ordered(state.entities.phones):
-        if value not in seen:
-            seen.add(value)
-            found.append(value)
     for item in state.inputs:
         if item.kind is InputType.PHONE and item.text:
             value = item.text.strip()
@@ -158,10 +155,6 @@ def phone_numbers(state: InvestigationState) -> List[str]:
                 seen.add(value)
                 found.append(value)
     return found
-
-
-def _ordered(values: Sequence[str]) -> List[str]:
-    return [v.strip() for v in values if v and v.strip()]
 
 
 __all__ = [

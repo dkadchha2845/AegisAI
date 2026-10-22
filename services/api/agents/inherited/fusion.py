@@ -27,25 +27,29 @@ the same input — the whole point of 1.7 expressed as an equality.
 
 **Limitations, stated — and this is the important part of this file.**
 
-*It does not write `state.risk_score`.* The contract's score is task 4.6's to
-fill, from a calibrated model plus deterministic rules plus graph evidence.
-Filling it here from a heuristic weighted sum would put an unearned number in
-the field the report reads first, and CLAUDE.md is explicit that a model that
-has not been evaluated does not get to advertise the capability. So the fused
-score travels as a *feature*: available to 4.1's assembly, visible in the
-trace, and not yet a claim.
+*It writes `state.risk_score`, provisionally.* Until 2026-10-22 it did not:
+the contract's score was to come from a calibrated model, and a heuristic sum
+in that field would have been an unearned number. The cost was audit item
+B-02 — the same digital-arrest message read 93 CRITICAL on `/api/analyze/text`
+and *unscored* in an investigation, with this agent reporting a third answer
+(ELEVATED, its pre-floor band). The owner decided (Q4, 2026-10-09) to show the
+score tagged uncalibrated. So this agent now writes `risk_score` and
+`risk_level`, and declares `score:uncalibrated` as a tag that travels with
+every score it writes; the report says it in words. It is replaced, not
+extended, by the calibrated judge (T-41, T-42).
 
-*It does not apply the dispositive floor.* `analyze_text` escalates the score
-when a check is conclusive on its own — a credential request does not become
-less dispositive because the surrounding text was polite. That escalation is a
-deterministic rule, and ARCHITECTURE.md §4 puts deterministic rules inside the
-fusion box that 4.6 builds. Reimplementing the formula here would give the
-project two copies of it, which is how the two paths start disagreeing about a
-69.6. The passport and spoofing agents publish the FAILs the rule acts on; the
-rule stays where the architecture put it. Concretely: on evidence with a
-dispositive FAIL this agent's `threat_score` is *lower* than what
-`/api/analyze/text` returns for the same text, and that difference is the floor
-not yet being applied rather than a disagreement between the paths.
+*It applies the dispositive floor by calling the analyzer's own functions.*
+`analyze_text` escalates the score when a check is conclusive on its own — a
+credential request does not become less dispositive because the surrounding
+text was polite. Rather than a second copy of that rule, this agent calls
+`analyzer.dispositive_floor` with the weights in `analyzer.DISPOSITIVE_CHECKS`
+and `DISPOSITIVE_SPOOF_CHECKS` for the FAILs the passport and spoofing agents
+published, plus `analyzer.text_findings` over the same text. One rule, reached
+two ways — which is what the parity test asserts.
+
+*It does not classify.* `classification` stays None: no rule maps the scam arc
+onto the twelve fraud categories, and inventing one here would be a new rule
+outside this task (T-20) — it is the calibrated judge's.
 
 Why the accumulator is replayed rather than passed
 --------------------------------------------------
@@ -68,12 +72,18 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-from schema.models import AgentResult, AgentStatus, Finding, InvestigationState
+from schema.models import AgentResult, AgentStatus, Finding, InvestigationState, ThreatLevel
 
-from ...engine.threat import ManipulationAccumulator, fuse
+from ...engine.analyzer import (
+    DISPOSITIVE_CHECKS,
+    DISPOSITIVE_SPOOF_CHECKS,
+    dispositive_floor,
+    text_findings,
+)
+from ...engine.threat import ManipulationAccumulator, fuse, level_of
 from .. import registry
 from ..base import AgentContext, Stage
-from . import signals
+from . import conversation, signals
 
 
 def _accumulator(state: InvestigationState) -> ManipulationAccumulator:
@@ -96,8 +106,11 @@ class ThreatFusionAgent:
     """Combines the conversational signals and the number metadata into one score."""
 
     name = signals.THREAT_FUSION
-    version = "1.0.0"
+    version = "2.0.0"
     stage = Stage.JUDGE
+    #: The provisional judge (T-20). Every score it writes carries the tag.
+    writes = ("risk_score", "risk_level")
+    write_tags = ("score:uncalibrated",)
 
     def can_handle(self, state: InvestigationState) -> bool:
         """Only once something has been classified.
@@ -146,6 +159,10 @@ class ThreatFusionAgent:
             dt_s=0.0,
         )
 
+        conclusive = _dispositive(state, passport_result, spoof_result)
+        risk = dispositive_floor(result.score, [f.confidence for f in conclusive])
+        level = level_of(risk)
+
         findings: List[Finding] = [
             Finding(
                 label=signals.F_THREAT_DRIVER,
@@ -156,18 +173,24 @@ class ThreatFusionAgent:
             )
             for driver in result.drivers
         ]
+        findings.extend(conclusive)
         findings.append(
             Finding(
                 label=signals.F_THREAT_LEVEL,
-                value=result.level,
+                value=level,
                 confidence=1.0,
                 source="threat_fusion",
-                detail=f"{result.score:.1f}/100 from {len(result.drivers)} driver(s)",
+                detail=(
+                    f"{risk:.1f}/100 from {len(result.drivers)} driver(s)"
+                    + (f" and {len(conclusive)} conclusive check(s)" if conclusive else "")
+                    + " — uncalibrated"
+                ),
             )
         )
 
         features: Dict[str, float] = {
             signals.K_THREAT_SCORE: result.score,
+            signals.K_RISK_SCORE: risk,
             signals.K_TACTIC_PRESSURE: round(accumulator.pressure, 3),
         }
         for tactic, value in accumulator.as_dict().items():
@@ -214,6 +237,56 @@ class ThreatFusionAgent:
             provenance=provenance,
             error=("fused without " + ", ".join(sorted(failed))) if failed else None,
         )
+
+
+    def state_update(self, state: InvestigationState, result: AgentResult) -> Dict[str, object]:
+        risk = result.features.get(signals.K_RISK_SCORE)
+        if risk is None:
+            return {}
+        return {"risk_score": risk, "risk_level": ThreatLevel(level_of(risk))}
+
+
+def _dispositive(
+    state: InvestigationState,
+    passport_result: Optional[AgentResult],
+    spoof_result: Optional[AgentResult],
+) -> List[Finding]:
+    """The conclusive checks behind the floor, as findings the report can cite.
+
+    The same three sources `analyze_text` floors on: the passport's dispositive
+    FAILs, the payment framing and VPA findings over the evidence text, and the
+    number checks that settle a verdict alone. Weights come from the analyzer's
+    own tables, so the two paths cannot weigh one check differently.
+    """
+    out: List[Finding] = []
+    for f in signals.findings(passport_result, signals.F_PASSPORT_FAIL):
+        if f.value in DISPOSITIVE_CHECKS:
+            out.append(_conclusive(f.value, DISPOSITIVE_CHECKS[f.value], f.detail, f.source))
+
+    claimed = signals.first_finding(passport_result, "claimed_identity")
+    framed, _ = text_findings(
+        conversation.source_text(state), claimed.value if claimed else None
+    )
+    for item in framed:
+        if item.verdict == "FAIL":
+            out.append(_conclusive(item.label, item.weight, item.detail, item.source))
+
+    for f in signals.findings(spoof_result, signals.F_NUMBER_FAIL):
+        if f.value in DISPOSITIVE_SPOOF_CHECKS:
+            out.append(
+                _conclusive(f"Number: {f.value}", DISPOSITIVE_SPOOF_CHECKS[f.value], f.detail, f.source)
+            )
+    return out
+
+
+def _conclusive(name: str, weight: float, detail: Optional[str], source: Optional[str]) -> Finding:
+    return Finding(
+        label=signals.F_DISPOSITIVE,
+        value=name,
+        confidence=weight,
+        source=source or "threat_fusion",
+        detail=detail,
+    )
 
 
 __all__ = ["ThreatFusionAgent", "_accumulator"]

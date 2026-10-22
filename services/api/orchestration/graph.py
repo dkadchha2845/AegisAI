@@ -29,10 +29,11 @@ entry point end to end.
 *not* implemented. `AgentContext.max_depth` is carried and enforced, so the
 bound exists, but nothing yet discovers an entity worth recursing on — that
 needs the Phase 2 agents, and building the loop now would mean testing it
-against a toy that pretends. The judgement tier is a real node with no agents
-in it yet; 4.6 and 4.7 fill it, so an investigation completes today with
-`risk_score` still None — unscored, which the report says rather than rendering
-as zero. Nothing here persists: the state comes back to the caller, and 1.5's
+against a toy that pretends. The judgement tier holds one provisional judge,
+`threat_fusion`, which writes the same score `/api/analyze/text` gives and tags
+it `score:uncalibrated` (T-20); the calibrated judge is T-41/T-42. Agents set
+state fields only through a declared `writes` + `state_update` (T-18, T-20),
+applied in `_state_writes`. Nothing here persists: the state comes back to the caller, and 1.5's
 `EvidenceStore` is what writes it down.
 
 Why LangGraph owns the graph but not the fan-out
@@ -221,11 +222,51 @@ async def _run_stage(
     results = [outcome[0] for _, outcome in paired]
     tags = [t for _, outcome in paired for t in outcome[1]]
 
+    by_name = {a.name: a for a in agents}
+    writes, write_tags = _state_writes(
+        [(by_name[name], outcome[0]) for name, outcome in paired],
+        state.model_copy(update={"agent_results": [*state.agent_results, *results]}),
+    )
+
     return {
         "agent_results": [*state.agent_results, *results],
-        "degraded": [*state.degraded, *tags],
+        "degraded": [*state.degraded, *tags, *write_tags],
         "trace": recorder.ordered(),
+        **writes,
     }
+
+
+def _state_writes(
+    ran: Sequence[Tuple[Any, AgentResult]], state: InvestigationState
+) -> Tuple[Dict[str, Any], List[str]]:
+    """The state fields this tier's agents set, from their own results.
+
+    Agents return an `AgentResult` and nothing else; a field such as
+    `entities` or `risk_score` is set only by an agent that declares it in
+    `writes` (checked at registration) and only from a result that was not an
+    error. `state` already carries this tier's results, so a judge can read
+    what its peers published. A `state_update` that raises costs its fields,
+    not the investigation, and says so in `degraded`.
+    """
+    update: Dict[str, Any] = {}
+    tags: List[str] = []
+    for agent, result in ran:
+        declared = tuple(getattr(agent, "writes", ()))
+        if not declared or result.status not in (AgentStatus.OK, AgentStatus.DEGRADED):
+            continue
+        try:
+            fields = agent.state_update(state, result)
+        except Exception:
+            tags.append(f"state_update:{agent.name}")
+            continue
+        written = {k: v for k, v in fields.items() if k in declared}
+        update.update(written)
+        # A field written under a standing caveat carries it every time: the
+        # provisional judge's score is never in the state without
+        # `score:uncalibrated` beside it.
+        if written:
+            tags.extend(getattr(agent, "write_tags", ()))
+    return update, tags
 
 
 def _unknown_input_fallback(state: InvestigationState) -> Dict[str, Any]:

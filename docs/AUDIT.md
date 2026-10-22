@@ -247,6 +247,18 @@ it is unscored, which is correct behaviour, but it means the flow the project
 is named after cannot yet tell a user whether something is a scam, while the
 older flow beside it can.
 
+**Fixed in T-71 via T-20 (2026-10-22).** `threat_fusion` is now the provisional
+judge: it writes `risk_score` and `risk_level`, floored by the same function
+`/api/analyze/text` uses (`analyzer.dispositive_floor`, over
+`analyzer.text_findings` and the passport and number FAILs, weighted from the
+analyzer's own tables), and every score it writes carries `score:uncalibrated`
+in `degraded`. The report says so in words (`assessment.note`,
+`calibrated: false`) and so does the Investigate page. Parity is a test over
+eight scam and benign texts (`test_provisional_judge.py`). Verified live: the
+same digital-arrest text reads 93.0 CRITICAL on both, and a customs message
+91.0 on both, with the caption on the page. `classification` stays None — no
+rule maps the arc to a fraud category, and inventing one was out of scope.
+
 ### B-03 — Medium — Investigations extract no entities
 
 The input classifier correctly detects `TEXT`, `URL` and `UPI_ID` in a message
@@ -254,6 +266,34 @@ containing a link, a UPI ID and a phone number, and `state.entities` is still
 `{}`. The legacy path extracts the same entities. No agent in the graph writes
 them, so nothing downstream (graph lookup, URL checks, the case file) has
 anything to work on.
+
+**Fixed in T-71 via T-18 (2026-10-22).** `agents/entities/agent.py` runs
+`intel/entities.py` in the EXTRACT tier over every evidence item, with the item
+each identifier came from, and writes `state.entities` (URLs too, now extracted
+by `intel.entities.extract_urls`). Agents set state fields only through a
+declared `writes` + `state_update`, refused at registration for a field outside
+an allow-list or one another agent in the same tier writes. Verified live: a
+message with a VPA, a number and a link lists all three in the investigation
+and its report. Two defects surfaced on the way, B-10 and B-11.
+
+### B-10 — Medium — A VPA ending a sentence was not extracted
+
+*Found and fixed 2026-10-22 (T-18).* `intel/entities.py` discarded a UPI handle
+followed by ".", reading it as the middle of a longer domain — so "…to VPA
+grocerystore@ybl. Not you?", the shape of every bank alert, lost its VPA, on
+the knowledge-graph path as well as the new agent. A "." now counts as a
+continuation only when a character follows it. Test: `test_entity_agent.py`.
+
+### B-11 — Medium — A foreign caller number submitted alone was typed TEXT
+
+*Found and fixed 2026-10-22 (T-18).* The input classifier recognised only an
+Indian mobile as a bare `PHONE`; "+1-838-224-7719" became `TEXT`, so in a real
+investigation the foreign-number spoofing checks never ran — only tests
+reached them, by writing `entities.phones` directly. An explicit international
+number (`+` or `00`, 8–15 digits) is now `PHONE`; a bare digit run that is not
+an Indian mobile stays `TEXT`. The spoofing agent now reads only submitted
+numbers: a number written inside a message is a call-back number, not caller
+ID, and treating it as one would differ from `/api/analyze/text`.
 
 ### B-04 — Medium — The decisive payment turn is mis-staged
 
@@ -413,7 +453,7 @@ No screenshots were saved to the repository during this audit.
 | U-01 | The Model card shows the leaked **0.767** under "Measured, not assumed" (B-01). *Fixed in T-05: the page now shows the gate's refusal and the lexical figure alone* | `/model` |
 | U-02 | Two icon buttons in the app header have no accessible name. **Resolved — verified 2026-10-22 (T-71):** every product control on ten routes has an accessible name; the only unnamed controls are the dev-only Agentation toolbar (`import.meta.env.DEV`), which never ships | `components/layout/AppShell.tsx` |
 | U-03 | Internal task numbers in user-facing copy: "The judgement tier has no agents yet (tasks 4.6 and 4.7)". **Fixed in T-71** — the only one in rendered strings, replaced with plain copy | `/investigate` |
-| U-04 | Two entry points for one job. "Analyze" gives a score; "Investigate" gives an agent trace and no score. A user cannot know which to use | `/analyze`, `/investigate` |
+| U-04 | Two entry points for one job. "Analyze" gives a score; "Investigate" gives an agent trace and no score. A user cannot know which to use. **Partly fixed in T-71 (2026-10-22):** both now give the same score for the same evidence (B-02), Investigate labelled uncalibrated. Merging the two pages is T-47 | `/analyze`, `/investigate` |
 | U-05 | The design system exists as code (`tokens.css`, `primitives.css`) and is undocumented; several components the brief requires — risk gauge, stage timeline, agent-trace panel, evidence viewer — are absent or one-off | `apps/web/src/styles/` |
 | U-06 | No Hindi interface, for a product whose strongest model is Hindi/Hinglish | — |
 | U-08 | *Found during T-03.* The landing's `--lp-ink-3` (`#6f7789`) measures **4.46:1** on `--lp-deep` — under the 4.5:1 AA floor for the captions and micro-labels it sets. Its comment in `landing.css` claims 4.6:1; the light value measures 4.14:1 on a card. **Fixed in T-71:** `#788092` / `#616977`, ≥ 4.73:1 on every landing surface | `styles/landing.css` |
@@ -428,7 +468,7 @@ overflow at 375 px, the app chrome renders in dark theme.
 
 | ID | Issue |
 |---|---|
-| D-01 | **Two analysis pipelines.** The legacy engine behind `/api/analyze` and `/api/session`, and the investigation graph. They disagree on the same input (B-02) and every new capability must currently choose one |
+| D-01 | **Two analysis pipelines.** The legacy engine behind `/api/analyze` and `/api/session`, and the investigation graph. They disagree on the same input (B-02) and every new capability must currently choose one. **Partly fixed in T-71 (2026-10-22):** they now agree — the graph reaches the analyzer's score through the analyzer's own floor and findings functions, under a parity test. Two pipelines still exist; retiring one is T-47 |
 | D-02 | `engine/features/` (about 600 statements) is off the serving path and duplicates `engine/spoofing.py` and `engine/scripts.py`. Carried from `docs/INVENTORY.md`; not re-measured today |
 | D-03 | Stale and stray documents: `STATUS.md` (dated 22 July, titled "AegisAI / AegisAI"), the task-history header (2026-08-27, "575 tests"), `docs/INVENTORY.md` (2026-08-23), `aegis_ai_pipeline_docs.md` at the root, `attached_assets/`, `ui-design/`, `Skills/` |
 | D-04 | `research/` is empty. No experiment, ablation, baseline or result has been committed |

@@ -114,6 +114,24 @@ def make_state(text: str, **kw: Any) -> InvestigationState:
     )
 
 
+def make_call(text: str, number: str) -> InvestigationState:
+    """A conversation plus the caller's number, submitted the way the API takes
+    one: as its own evidence item, typed PHONE. A number written *inside* a
+    message is a call-back number, not caller ID, and the spoofing agent
+    deliberately does not read it (`conversation.phone_numbers`)."""
+    return InvestigationState(
+        case_id="AEG-INHERITED",
+        org_id="org-1",
+        created_by="test@aegis.local",
+        created_at=utc_now_iso(),
+        inputs=[
+            EvidenceItem(id="ev-01", kind=InputType.TEXT, text=text),
+            EvidenceItem(id="ev-02", kind=InputType.PHONE, text=number),
+        ],
+        input_types=[InputType.TEXT, InputType.PHONE],
+    )
+
+
 def investigate(state: InvestigationState) -> InvestigationState:
     return asyncio.run(orch.investigate(state))
 
@@ -529,12 +547,12 @@ def test_a_scripted_line_still_leaves_its_finding() -> None:
 
 def test_an_ordinary_indian_mobile_fails_no_number_check() -> None:
     """Metadata a legitimate caller might have must not manufacture a verdict."""
-    state = make_state(
-        "Hi, this is Ramesh from the shop. Your order is ready for pickup.",
-        entities={"phones": ["+919812345678"]},
+    state = make_call(
+        "Hi, this is Ramesh from the shop. Your order is ready for pickup.", "+919812345678"
     )
     result = run_one(signals.NUMBER_SPOOFING, state)
     assert result.status is AgentStatus.OK
+    assert result.features[signals.K_NUMBER_FAILS] == 0.0
     assert values(result, signals.F_NUMBER_FAIL) == []
     assert result.features[signals.K_SPOOFING_RISK] == 0.0
 
@@ -628,7 +646,7 @@ def test_an_unsure_stage_adds_no_points_not_merely_no_driver() -> None:
 
 
 def test_the_spoofing_agent_matches_the_engine_on_a_foreign_authority_claim() -> None:
-    state = make_state(CALL, entities={"phones": ["+1-838-224-7719"]})
+    state = make_call(CALL, "+1-838-224-7719")
     done = investigate(state)
     result = by_agent(done)[signals.NUMBER_SPOOFING]
 
@@ -688,7 +706,7 @@ def test_an_absent_number_is_carried_as_unmeasured_and_not_as_clean() -> None:
     assert fusion.confidence == pytest.approx(0.8)
 
     with_number = by_agent(
-        investigate(make_state(CALL, entities={"phones": ["+1-838-224-7719"]}))
+        investigate(make_call(CALL, "+1-838-224-7719"))
     )[signals.THREAT_FUSION]
     assert signals.NUMBER_SPOOFING in with_number.provenance
     assert with_number.confidence == pytest.approx(1.0)
@@ -839,7 +857,7 @@ def test_every_feature_the_fusion_agent_reads_is_actually_published() -> None:
     notices — the two sides import the same constants, so a rename fails here
     rather than becoming a signal that quietly disappeared.
     """
-    state = make_state(CALL, entities={"phones": ["+1-838-224-7719"]})
+    state = make_call(CALL, "+1-838-224-7719")
     produced = by_agent(investigate(state))
 
     expected = {

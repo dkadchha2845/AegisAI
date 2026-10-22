@@ -58,7 +58,7 @@ from services.api.agents import registry
 from services.api.config import settings
 from services.api.db import SessionLocal, init_db
 from services.api.investigations import intake as intake_mod
-from services.api.investigations.report import NOT_SCORED, build_report
+from services.api.investigations.report import NOT_SCORED, UNCALIBRATED, build_report
 from services.api.investigations.runner import InvestigationRunner
 from services.api.main import app
 from services.api.orchestration.graph import node_plan
@@ -705,10 +705,15 @@ def test_a_small_text_upload_is_inlined_and_a_binary_one_is_not() -> None:
 def test_an_unscored_investigation_says_so_rather_than_reading_as_safe(
     client: TestClient,
 ) -> None:
-    """The judgement tier is empty until 4.6, and the report must not paper
-    over it. `0.0 / CALM` on an unscored case is a false negative wearing a
-    number — which is exactly why `risk_score` is Optional in the contract."""
-    case_id = submit(client)
+    """Evidence the judge cannot read is not scored, and the report must not
+    paper over it. `0.0 / CALM` on an unscored case is a false negative wearing
+    a number — which is exactly why `risk_score` is Optional in the contract.
+
+    A bare link is such evidence: it is an identifier, not something anybody
+    said, so no conversational agent runs and the provisional judge (T-20) has
+    nothing to fuse.
+    """
+    case_id = submit(client, "http://sbi-kyc-verify.top/login")
     finish(client, case_id)
     assessment = client.get(f"/api/investigations/{case_id}/report").json()["assessment"]
 
@@ -720,12 +725,25 @@ def test_an_unscored_investigation_says_so_rather_than_reading_as_safe(
     assert "not a finding of safety" in assessment["note"]
 
 
+def test_a_scored_investigation_says_its_score_is_uncalibrated(client: TestClient) -> None:
+    """T-20: the provisional judge's score is shown, and labelled, every time."""
+    case_id = submit(client)
+    state = finish(client, case_id)
+    assert state["risk_score"] is not None
+    assert "score:uncalibrated" in state["degraded"]
+    assessment = client.get(f"/api/investigations/{case_id}/report").json()["assessment"]
+    assert assessment["scored"] is True
+    assert assessment["calibrated"] is False
+    assert assessment["note"] == UNCALIBRATED
+
+
 def test_a_scored_investigation_reports_its_score_verbatim() -> None:
     """Every number in the report is copied from a contract field.
 
-    Built directly rather than through the API because no agent scores yet;
-    what is being pinned is that when 4.6 lands, the report renders the score
-    it was given and does not re-band it.
+    Built directly rather than through the API, so the values are ones no
+    agent would produce together: what is pinned is that the report renders
+    the score it was given and does not re-band it. A state without the
+    `score:uncalibrated` tag is a calibrated one, and carries no caveat.
     """
     from schema.models import FraudCategory, ThreatLevel
 
@@ -747,6 +765,7 @@ def test_a_scored_investigation_reports_its_score_verbatim() -> None:
         "risk_level": "HIGH",
         "confidence": 0.81,
         "classification": "upi_payment_fraud",
+        "calibrated": True,
         "note": None,
     }
 
@@ -806,47 +825,45 @@ def test_the_trace_separates_wall_clock_from_summed_agent_time(client: TestClien
 def test_a_legitimate_bank_alert_produces_no_manufactured_signal(client: TestClient) -> None:
     """A benign input must come out benign.
 
-    There is nothing to score yet, so the claim this can make is precise: the
-    lifecycle produces no type conflict, no degradation and no classification
-    for an ordinary debit alert. When 4.6 adds a score, this test is where the
-    benign case is already waiting.
+    The lifecycle produces no type conflict and no classification for an
+    ordinary debit alert, and the provisional judge (T-20) scores it CALM.
 
-    The alert names `grocerystore@ybl`, so `UPI_ID` is detected — and that is
-    the point rather than a wrinkle. Extraction is not judgement: a legitimate
-    SMS about a legitimate payment contains a legitimate VPA, and a system that
-    treated "a UPI ID is present" as a signal would flag every bank alert in
-    India. The identifier is recorded; nothing is concluded from its existence.
+    The alert names `grocerystore@ybl`, so `UPI_ID` is detected and the entity
+    agent records it — and that is the point rather than a wrinkle. Extraction
+    is not judgement: a legitimate SMS about a legitimate payment contains a
+    legitimate VPA, and a system that treated "a UPI ID is present" as a signal
+    would flag every bank alert in India. The identifier is recorded; nothing
+    is concluded from its existence.
     """
     case_id = submit(client, BENIGN_TEXT)
     state = finish(client, case_id)
 
     assert state["classification"] is None
-    assert state["risk_score"] is None
+    assert state["risk_score"] < 25.0
+    assert state["risk_level"] == "CALM"
+    assert state["entities"]["upi_ids"] == ["grocerystore@ybl"]
+    # The masked account and the toll-free number are not identifiers.
+    assert state["entities"]["phones"] == [] and state["entities"]["bank_accounts"] == []
     labels = [f["label"] for r in state["agent_results"] for f in r["findings"]]
     assert "type_conflict" not in labels
+    assert "dispositive_check" not in labels
     assert state["input_types"] == ["TEXT", "UPI_ID"]
     assert client.get(f"/api/investigations/{case_id}/report").json()["evidence"] == []
 
     # Nothing in `degraded` is a claim about this message. Every tag is an
     # `agent:<name>:degraded` capability shortfall — on a machine with no
     # promoted checkpoint the stage classifier serves the lexical model and says
-    # so. A tag that named the evidence would be a finding wearing a shortfall's
-    # clothes.
-    assert all(d.startswith("agent:") and d.endswith(":degraded") for d in state["degraded"]), (
-        state["degraded"]
-    )
+    # so — or the standing caveat on the provisional score. A tag that named
+    # the evidence would be a finding wearing a shortfall's clothes.
+    assert all(
+        (d.startswith("agent:") and d.endswith(":degraded")) or d == "score:uncalibrated"
+        for d in state["degraded"]
+    ), state["degraded"]
 
-    # And the inherited engine, now wired into the graph, does not manufacture a
-    # threat out of an ordinary bank alert.
     fusion = next(r for r in state["agent_results"] if r["agent"] == "threat_fusion")
     assert fusion["features"]["threat_score"] < 25.0
     level = next(f["value"] for f in fusion["findings"] if f["label"] == "threat_level")
     assert level == "CALM"
-
-
-# --------------------------------------------------------------------------
-# Tenancy
-# --------------------------------------------------------------------------
 
 
 def _scope_of(client: TestClient) -> str:

@@ -68,6 +68,9 @@ F_NEXT_STAGE = "next_stage"
 #: One per fused driver, and the band the score falls in.
 F_THREAT_DRIVER = "threat_driver"
 F_THREAT_LEVEL = "threat_level"
+#: A check conclusive on its own, which floors the score: `value` names it,
+#: `confidence` is its weight, `detail` what was observed.
+F_DISPOSITIVE = "dispositive_check"
 
 # --- feature keys -----------------------------------------------------------
 
@@ -76,6 +79,9 @@ K_TRUST_PCT = "trust_pct"
 K_SPOOFING_RISK = "spoofing_risk"
 K_SCRIPT_SIMILARITY = "script_similarity"
 K_THREAT_SCORE = "threat_score"
+#: `threat_score` after the dispositive floor — the number the investigation
+#: reports, equal to `/api/analyze/text`'s for the same evidence (T-20).
+K_RISK_SCORE = "risk_score"
 K_STAGE_CONFIDENCE = "stage_confidence"
 K_CALLER_TURNS = "caller_turns"
 K_VICTIM_TURNS = "victim_turns"
@@ -148,6 +154,7 @@ def first_finding(result: Optional[AgentResult], label: str) -> Optional[Finding
 __all__ = [
     "COERCION_TRACKER",
     "DIGITAL_TWIN",
+    "F_DISPOSITIVE",
     "F_NEXT_STAGE",
     "F_NUMBER_FAIL",
     "F_NUMBER_PASS",
@@ -168,6 +175,7 @@ __all__ = [
     "K_FORECAST_PROBABILITY",
     "K_NUMBER_FAILS",
     "K_PASSPORT_FAILS",
+    "K_RISK_SCORE",
     "K_SCRIPT_SIMILARITY",
     "K_SPOOFING_RISK",
     "K_STAGE_CONFIDENCE",

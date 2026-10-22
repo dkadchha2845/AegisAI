@@ -20,6 +20,7 @@ themselves). See docs/ARCHITECTURE.md §3 and docs/TASKS.md phases 1-2.
 # process's live agent set explicit: the graph CLI and the lifecycle API both
 # import this package, so neither can silently omit an implemented agent.
 from .classify.agent import InputClassifierAgent
+from .entities.agent import EntityExtractorAgent
 from .inherited import (
     CoercionAgent,
     DigitalTwinAgent,
@@ -33,6 +34,7 @@ from .inherited import (
 __all__ = [
     "CoercionAgent",
     "DigitalTwinAgent",
+    "EntityExtractorAgent",
     "InputClassifierAgent",
     "NumberSpoofingAgent",
     "ScriptMatchAgent",
