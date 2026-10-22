@@ -387,7 +387,7 @@ what builds or finishes it.
 | FR-60 | Seven roles, one grant map (`permissions.py`), revocable server-side sessions | ✅ | `auth.py`, `permissions.py` |
 | FR-61 | Tenancy (`org_id`) enforced in the repository layer | ✅ | `stores/` |
 | FR-62 | A caller with only `*_READ_OWN` is narrowed in the query; another's record 404s | ✅ | `docs/AUTH.md` |
-| FR-63 | Every route declares its permission, or is documented as deliberately public | 🟡 **gap found during T-01:** 25 routes — all 8 analyze, all 7 shield, 10 of 13 session — declare none and do not identify the caller; `ANALYZE_USE` exists and is required nowhere (audit S-07) | T-59 |
+| FR-63 | Every route declares its permission, or is documented as deliberately public | ✅ since T-71 — four declared guards, enforced by `test_route_guards.py`; live sessions need their token (S-07) | `auth.py`, `routes/session.py` |
 | FR-64 | Production refuses open demo mode | 🟡 (S-01; `render.yaml` sets `AEGIS_AUTH=1`; production not probed) | T-66 |
 
 ### 5.14 Export

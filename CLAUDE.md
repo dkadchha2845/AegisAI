@@ -203,7 +203,9 @@ panel. Then run the four gates.
 - **Uploads:** validate by magic bytes, not extension. Enforce size caps.
 - **Tenancy:** `org_id` isolation is enforced in the repository layer, not the route.
 - **Access control:** `services/api/permissions.py` is the single grant map, and
-  every route declares `require_permission(...)`. Tenancy answers "which org",
+  every route declares its guard — `require_permission(...)`, a signed-in user, a
+  resource capability (a live session's token, a vault token), or `public(reason)` —
+  and `test_route_guards.py` fails on a route with none or an unreviewed public one. Tenancy answers "which org",
   ownership answers "may *you*" — a caller with only `*_READ_OWN` is narrowed in
   the **query**, and a row they may not read 404s rather than 403s. Frontend
   guards mirror the server and are never the boundary. See `docs/AUTH.md`.

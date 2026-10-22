@@ -56,6 +56,7 @@ from ..auth import (
     kdf_name,
     needs_rehash,
     password_problem,
+    public,
     require_permission,
     revoke_all_sessions,
     revoke_session,
@@ -198,7 +199,7 @@ def _session_payload(db: Session, user: User, token: Optional[str] = None) -> Di
 # --------------------------------------------------------------------------
 
 
-@router.post("/signup", status_code=201)
+@router.post("/signup", status_code=201, dependencies=[Depends(public("creating an account is how an anonymous caller stops being one"))])
 def signup(req: SignupRequest, request: Request, db: Session = Depends(get_db)) -> Dict[str, Any]:
     """Create a public account and open a session for it.
 
@@ -264,7 +265,7 @@ def signup(req: SignupRequest, request: Request, db: Session = Depends(get_db)) 
 # --------------------------------------------------------------------------
 
 
-@router.post("/login")
+@router.post("/login", dependencies=[Depends(public("signing in is how an anonymous caller gets a token"))])
 def login(req: LoginRequest, request: Request, db: Session = Depends(get_db)) -> Dict[str, Any]:
     ip = _ip(request)
     meta = _meta(request)
@@ -479,7 +480,7 @@ def change_password(
     return {"ok": True, "other_sessions_ended": revoked}
 
 
-@router.post("/password/forgot")
+@router.post("/password/forgot", dependencies=[Depends(public("a user who cannot sign in requests a reset"))])
 def forgot_password(
     req: ForgotPasswordRequest,
     request: Request,
@@ -524,7 +525,7 @@ def forgot_password(
     return generic
 
 
-@router.post("/password/reset")
+@router.post("/password/reset", dependencies=[Depends(public("a reset token is redeemed by someone who cannot sign in"))])
 def reset_password(
     req: ResetPasswordRequest,
     request: Request,
@@ -588,7 +589,7 @@ def list_roles(_: User = Depends(get_current_user)) -> Dict[str, Any]:
     }
 
 
-@router.get("/demo-accounts")
+@router.get("/demo-accounts", dependencies=[Depends(public("the sign-in screen's role switcher; empty whenever auth is enforced"))])
 def demo_accounts() -> Dict[str, Any]:
     """The seeded demo roster, so the sign-in screen's role switcher is not a
     hard-coded list of emails in React that drifts from what was actually seeded.
@@ -750,7 +751,7 @@ def update_user(
     return {"user": target.as_public(), "changed": changes, "sessions_ended": revoked}
 
 
-@router.get("/status")
+@router.get("/status", dependencies=[Depends(public("the client must learn whether sign-in is required before it can sign in"))])
 def auth_status() -> Dict[str, Any]:
     """What this deployment's authentication actually is — unauthenticated, so a
     sign-in screen can render the right thing before anyone has signed in.

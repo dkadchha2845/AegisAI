@@ -32,9 +32,10 @@ from .. import audit
 from ..auth import require_permission, user_permissions
 from ..db import get_db
 from ..engine.report import build_evidence_package
-from ..engine.session import registry
+from ..engine.session import Session as LiveSession
 from ..models_db import CaseRecord, User
 from ..orgs import scope_query
+from .session import session_access
 
 router = APIRouter(tags=["reports"])
 
@@ -44,11 +45,13 @@ def save_report(
     session_id: str,
     user: User = Depends(require_permission("REPORT_CREATE")),
     db: Session = Depends(get_db),
+    session: LiveSession = Depends(session_access),
 ) -> Dict[str, Any]:
-    """Build the evidence package and persist it as a case record."""
-    session = registry.get(session_id)
-    if session is None:
-        raise HTTPException(status_code=404, detail=f"No session {session_id}")
+    """Build the evidence package and persist it as a case record.
+
+    Needs the session itself as well as `REPORT_CREATE` (S-07): the permission
+    says you may save case files, not that you may save someone else's call.
+    """
 
     package = build_evidence_package(session)
     incident = package.get("incident", {})

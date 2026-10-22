@@ -517,3 +517,32 @@ Stated rather than glossed, per invariant 7.
    and this project does not claim one.
 8. **No MFA, no OAuth, no social sign-in.** The sign-in screen shows no social
    buttons because there is no social login behind them.
+
+---
+
+## Route guards and live-session access (S-07, T-71)
+
+Every route declares exactly one of four guards, and
+`services/api/tests/test_route_guards.py` reads them off FastAPI's dependency
+tree — a route with none fails the suite, and so does a public route that is
+not on the reviewed list in that file:
+
+| Guard | Declared with | Used by |
+|---|---|---|
+| A permission | `require_permission("CODE", ...)` | most routes |
+| Any signed-in user | `get_current_user` | profile, own sessions, logout |
+| A resource capability | `session_access` (routes/session.py), `_vault_token` (routes/shield.py) | live sessions, the citizen vault |
+| Public, with a reason | `public("why")` | health, model card, analyze, the citizen shield, sign-up/login/reset, `POST /api/session` |
+
+Public routes are still rate-limited per IP (`security.py`).
+
+**Live sessions.** `POST /api/session` is public — a citizen starts protection
+without an account — and returns the first frame plus a `session_token`, shown
+once and stored server-side only as a SHA-256. Every other session route
+answers to one of: that token (`X-Session-Token`, or `?token=` on the WebSocket
+and the report download links, which cannot carry a header); the signed-in
+user who created the session; or staff holding `INVESTIGATION_READ_ALL`.
+Anyone else is told the session does not exist (404). Listing every session
+needs `INVESTIGATION_READ_ALL`. Payment actions are REST-only — permission-
+checked and audited; the WebSocket refuses them with `use_rest`.
+

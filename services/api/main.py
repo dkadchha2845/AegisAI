@@ -14,7 +14,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Dict
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from schema.models import CONTRACT_VERSION, INVESTIGATION_CONTRACT_VERSION
@@ -23,7 +23,7 @@ from . import agents as _agents  # noqa: F401  (registers the built-in agents)
 from . import db as db_mod
 from . import llm
 from .agents import registry
-from .auth import auth_enabled, kdf_name, purge_expired_sessions, seed_admin
+from .auth import auth_enabled, kdf_name, public, purge_expired_sessions, seed_admin
 from .config import settings
 from .db import SessionLocal, init_db
 from .engine import classifier as classifier_mod
@@ -157,7 +157,7 @@ def _comparison() -> Dict[str, Any]:
     return classifier_mod.comparison_scores()
 
 
-@app.get("/api/health")
+@app.get("/api/health", dependencies=[Depends(public("liveness and what is serving; probed by deploys and CI"))])
 def health() -> Dict[str, Any]:
     classifier = load_classifier()
     kb = get_kb()
@@ -333,7 +333,7 @@ def _intel_status() -> Dict[str, Any]:
         return {"backend": "networkx", "error": str(exc)[:120]}
 
 
-@app.get("/api/model/card")
+@app.get("/api/model/card", dependencies=[Depends(public("the model card states what the model is and where it is weak; nothing private"))])
 def model_card() -> Dict[str, Any]:
     """What the model is, what it was trained on, and where it is weak.
 

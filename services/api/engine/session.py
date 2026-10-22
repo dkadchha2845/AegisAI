@@ -20,6 +20,9 @@ logic drifting apart in two languages.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
+import secrets
 import time
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -79,6 +82,12 @@ class Narration:
 class Session:
     def __init__(self, session_id: str | None = None, caller_number: str | None = None):
         self.id = session_id or f"s_{uuid.uuid4().hex[:10]}"
+        # Who may read and drive this session (audit S-07). The id is in every
+        # URL and every frame, so it is not a secret; the token is. Only its
+        # hash is kept, so a memory dump of the registry hands out no access.
+        self._token_hash: str | None = None
+        #: The signed-in user who opened it, if any.
+        self.owner_id: int | None = None
         self.seq = 0
         self.started_at = time.time()
         self.caller_number = caller_number
@@ -470,6 +479,24 @@ class Session:
             },
             "degraded": degraded,
         }
+
+
+def _hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def issue_token(session: "Session") -> str:
+    """Mint the session's access token. Returned once, to whoever created it."""
+    token = secrets.token_urlsafe(32)
+    session._token_hash = _hash_token(token)
+    return token
+
+
+def token_matches(session: "Session", token: str | None) -> bool:
+    """Constant-time check of a presented token against the session's."""
+    if not token or session._token_hash is None:
+        return False
+    return hmac.compare_digest(session._token_hash, _hash_token(token))
 
 
 class SessionRegistry:

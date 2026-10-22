@@ -23,6 +23,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from ..auth import public
 from ..db import get_db
 from ..engine.report_pdf import pdf_available, render_pdf
 from ..models_db import CitizenReport
@@ -31,6 +32,20 @@ from ..shield.complaint import complaint_to_evidence_package
 from ..shield.response import HELPLINES
 
 router = APIRouter(prefix="/api/shield", tags=["shield"])
+
+
+def _vault_token() -> None:
+    """Marks the vault routes' guard: possession of the token in the URL.
+
+    Deliberate — a citizen gets one link to their preserved report and its
+    complaint, without an account. The token is unguessable and is the whole
+    of the access check, which `vault_read` enforces by looking it up.
+    """
+    return None
+
+
+_vault_token.aegis_guard = ("capability", "the vault token in the URL")  # type: ignore[attr-defined]
+_PUBLIC = public("the citizen shield: verification, reporting directory and awareness need no account")
 
 
 class VerifyRequest(BaseModel):
@@ -47,14 +62,14 @@ class PreserveRequest(VerifyRequest):
     the user taps 'save this as evidence'."""
 
 
-@router.get("/helplines")
+@router.get("/helplines", dependencies=[Depends(_PUBLIC)])
 def helplines() -> Dict[str, Any]:
     """The official reporting directory. Public and static — the one thing a
     citizen must always be able to reach, even if everything else is down."""
     return {"helplines": HELPLINES}
 
 
-@router.post("/verify")
+@router.post("/verify", dependencies=[Depends(_PUBLIC)])
 def verify_route(req: VerifyRequest) -> Dict[str, Any]:
     """Verify a suspicious message / number / UPI. Fuses Module 1 + Module 2 and
     returns the verdict, stage-aware guidance, and an emergency response."""
@@ -72,7 +87,7 @@ def verify_route(req: VerifyRequest) -> Dict[str, Any]:
     )
 
 
-@router.post("/preserve", status_code=201)
+@router.post("/preserve", status_code=201, dependencies=[Depends(_PUBLIC)])
 def preserve_route(req: PreserveRequest, db: Session = Depends(get_db)) -> Dict[str, Any]:
     """Verify and preserve the submission in the evidence vault. Returns a token
     the citizen keeps to retrieve the report or generate a complaint later."""
@@ -114,7 +129,7 @@ def preserve_route(req: PreserveRequest, db: Session = Depends(get_db)) -> Dict[
     return {"token": token, "summary": record.as_summary(), "result": result}
 
 
-@router.get("/vault/{token}")
+@router.get("/vault/{token}", dependencies=[Depends(_vault_token)])
 def vault_read(token: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
     """Read a preserved report by its token. Possession of the token is the
     authorization — there is no citizen account to scope by."""
@@ -125,7 +140,7 @@ def vault_read(token: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
     return {"summary": record.as_summary(), **blob}
 
 
-@router.get("/vault/{token}/complaint")
+@router.get("/vault/{token}/complaint", dependencies=[Depends(_vault_token)])
 def vault_complaint(token: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
     """Generate the structured cybercrime-complaint package for a preserved
     report."""
@@ -142,7 +157,7 @@ def vault_complaint(token: str, db: Session = Depends(get_db)) -> Dict[str, Any]
     return complaint
 
 
-@router.get("/vault/{token}/complaint.pdf")
+@router.get("/vault/{token}/complaint.pdf", dependencies=[Depends(_vault_token)])
 def vault_complaint_pdf(token: str, db: Session = Depends(get_db)) -> Response:
     """The complaint as a PDF, rendered by the same engine as the Module 1
     evidence package. 503 if reportlab is absent, with the JSON route as the
@@ -170,7 +185,7 @@ def vault_complaint_pdf(token: str, db: Session = Depends(get_db)) -> Response:
     )
 
 
-@router.get("/awareness")
+@router.get("/awareness", dependencies=[Depends(_PUBLIC)])
 def awareness(db: Session = Depends(get_db)) -> Dict[str, Any]:
     """Fraud-awareness feed: the scam types and hotspots the network is seeing
     most right now (from Module 2), so a citizen learns what is circulating in

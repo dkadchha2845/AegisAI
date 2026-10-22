@@ -16,17 +16,27 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 from .. import llm
+from ..auth import public
 from ..config import settings
 from ..engine.analyzer import analyze_text
 from ..engine.ocr import extract_text
 from ..engine.upi import analyze_upi
 from ..rag.store import get_kb
 
-router = APIRouter(prefix="/api/analyze", tags=["analyze"])
+#: Public by design (audit S-07): a citizen checks a suspicious message without
+#: creating an account first — the moment they need this is not the moment to
+#: ask them to sign up. Every route here is still rate-limited per IP
+#: (`security.py`, the `analyze` bucket), stores nothing about the caller, and
+#: returns only an analysis of what was sent.
+router = APIRouter(
+    prefix="/api/analyze",
+    tags=["analyze"],
+    dependencies=[Depends(public("citizens check a message without an account; rate-limited per IP"))],
+)
 
 #: Extensions we will read as text. Anything else is rejected with a message
 #: that says what to do instead, rather than a generic 400.

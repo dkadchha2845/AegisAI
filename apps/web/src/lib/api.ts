@@ -67,12 +67,64 @@ export const setToken = (token: string | null): void => {
   }
 };
 
+// ---------------------------------------------------------------------------
+// Live-session tokens (audit S-07)
+// ---------------------------------------------------------------------------
+//
+// A live session answers only to the token it was created with (or to its
+// signed-in creator, or to staff). The token comes back once, from
+// `POST /api/session`, and is kept here for the life of the tab — in memory,
+// mirrored to sessionStorage so a reload does not orphan a call in progress.
+// It is sent as `X-Session-Token` on every session call, and as `?token=` on the
+// two URLs a browser cannot attach a header to: the WebSocket and the report
+// download links.
+
+const SESSION_TOKEN_KEY = "aegis:session-token:";
+const sessionTokens = new Map<string, string>();
+
+const rememberSessionToken = (sessionId: string, token: string) => {
+  sessionTokens.set(sessionId, token);
+  try {
+    sessionStorage.setItem(SESSION_TOKEN_KEY + sessionId, token);
+  } catch {
+    /* storage unavailable — the in-memory copy still serves this page */
+  }
+};
+
+export const sessionTokenFor = (sessionId: string): string | null => {
+  const held = sessionTokens.get(sessionId);
+  if (held) return held;
+  try {
+    const stored = sessionStorage.getItem(SESSION_TOKEN_KEY + sessionId);
+    if (stored) sessionTokens.set(sessionId, stored);
+    return stored;
+  } catch {
+    return null;
+  }
+};
+
+/** The session a path belongs to, if it is a per-session route. */
+const sessionIdOf = (path: string): string | null => {
+  const m = /^\/api\/session\/(?!ws\/)([^/?#]+)/.exec(path);
+  return m ? decodeURIComponent(m[1]) : null;
+};
+
+/** Append the session's token to a URL that cannot carry a header. */
+const withSessionToken = (url: string, sessionId: string): string => {
+  const token = sessionTokenFor(sessionId);
+  if (!token) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`;
+};
+
 async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
   try {
     const token = getToken();
     const authHeader: Record<string, string> = token
       ? { Authorization: `Bearer ${token}` }
       : {};
+    const liveSession = sessionIdOf(path);
+    const sessionToken = liveSession ? sessionTokenFor(liveSession) : null;
+    if (sessionToken) authHeader["X-Session-Token"] = sessionToken;
     const res = await fetch(`${API_BASE}${path}`, {
       ...init,
       headers:
@@ -371,14 +423,20 @@ export interface SessionActionResult {
   outcome?: { state: string; reason: string | null };
 }
 
-export const startSession = (callerNumber?: string, guardianName?: string) =>
-  request<StateFrame>("/api/session", {
+export const startSession = async (callerNumber?: string, guardianName?: string) => {
+  const res = await request<StateFrame & { session_token?: string }>("/api/session", {
     method: "POST",
     body: JSON.stringify({
       caller_number: callerNumber ?? null,
       guardian_name: guardianName ?? null,
     }),
   });
+  // The token is not part of the frame contract and is shown exactly once.
+  if (res.ok && res.data.session_token) {
+    rememberSessionToken(res.data.session_id, res.data.session_token);
+  }
+  return res;
+};
 
 export const injectUtterance = (
   sessionId: string,
@@ -437,7 +495,7 @@ export const investigateSession = (sessionId: string, city?: string | null) =>
  * gets `wss:` for free on an HTTPS site.
  */
 export const socketUrl = (sessionId: string) => {
-  const path = `/api/session/ws/${sessionId}`;
+  const path = withSessionToken(`/api/session/ws/${sessionId}`, sessionId);
   if (/^https?:\/\//i.test(API_BASE)) {
     return `${API_BASE.replace(/^http/i, "ws")}${path}`;
   }
@@ -452,12 +510,12 @@ export const socketUrl = (sessionId: string) => {
 
 /** URL of the structured JSON evidence package. */
 export const reportUrl = (sessionId: string) =>
-  `${API_BASE}/api/session/${sessionId}/report`;
+  withSessionToken(`${API_BASE}/api/session/${sessionId}/report`, sessionId);
 
 /** URL of the court-admissible PDF. The server sets Content-Disposition, so
  *  navigating here downloads the file. */
 export const reportPdfUrl = (sessionId: string) =>
-  `${API_BASE}/api/session/${sessionId}/report.pdf`;
+  withSessionToken(`${API_BASE}/api/session/${sessionId}/report.pdf`, sessionId);
 
 export interface EvidencePackage {
   report_id: string;

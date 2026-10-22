@@ -851,7 +851,60 @@ def require_permission(*codes: str) -> Callable[..., User]:
             )
         return user
 
+    _dep.aegis_guard = ("permission", codes)  # type: ignore[attr-defined]
     return _dep
+
+
+# --- route guards, declared ------------------------------------------------
+#
+# Every route says how it is guarded, and `test_route_guards.py` fails if one
+# does not (audit S-07). There are exactly four answers:
+#
+#   * `require_permission(...)` — a role must hold these permissions;
+#   * `get_current_user`        — any signed-in identity;
+#   * a resource capability     — e.g. a live session's token (routes/session.py);
+#   * `public(reason)`          — open on purpose, and the reason is written down.
+#
+# The marker is an attribute on the dependency, so the test can read a route's
+# guard straight off FastAPI's dependency tree instead of trusting a list that
+# drifts from the code.
+
+get_current_user.aegis_guard = ("signed-in",)  # type: ignore[attr-defined]
+
+
+def public(reason: str) -> Callable[[], None]:
+    """Declare a route open to anonymous callers, and say why.
+
+    A no-op at request time — it exists so that "no guard" is a decision that
+    can be read, reviewed and tested, rather than the silent default it was:
+    25 routes had no guard and nothing said whether that was intended.
+    Public routes are still rate-limited per IP (`security.py`).
+    """
+    if not reason.strip():  # pragma: no cover - a blank reason fails at import
+        raise ValueError("a public route must say why it is public")
+
+    def _public() -> None:
+        return None
+
+    _public.aegis_guard = ("public", reason)  # type: ignore[attr-defined]
+    return _public
+
+
+def user_if_any(
+    request: Request,
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    """The caller's identity if they have one, else None — never a 401.
+
+    For routes that are public but behave differently for a known caller (a
+    live session records who opened it). In open mode an anonymous caller is
+    the open-mode identity, exactly as `get_current_user` would say.
+    """
+    try:
+        return get_current_user(request, authorization, db)
+    except HTTPException:
+        return None
 
 
 __all__ = [
@@ -874,6 +927,7 @@ __all__ = [
     "kdf_name",
     "needs_rehash",
     "password_problem",
+    "public",
     "purge_expired_sessions",
     "require_permission",
     "require_role",
@@ -885,6 +939,7 @@ __all__ = [
     "set_password",
     "set_user_role",
     "start_session",
+    "user_if_any",
     "user_permissions",
     "verify_password",
 ]
