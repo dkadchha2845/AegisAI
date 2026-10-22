@@ -38,7 +38,8 @@
 
   --lp-ink: #eceef2;
   --lp-ink-2: #969db0;      /* 6.9:1 on --lp-deep */
-  --lp-ink-3: #6f7789;      /* 4.6:1 — captions and micro-labels only */
+  --lp-ink-3: #788092;      /* 5.06:1 on --lp-deep, 4.77:1 on a card (worst case) — captions and micro-labels.
+                               Was #6f7789, which measured 4.46:1 against a claimed 4.6 (audit U-08). */
 
   /* ---- Accents --------------------------------------------------------
      One primary, two structural. Cyan carries *evidence* (things entering the
@@ -113,7 +114,7 @@ html[data-theme="light"] .lp {
 
   --lp-ink: #12141a;
   --lp-ink-2: #545c6b;
-  --lp-ink-3: #6a7280;
+  --lp-ink-3: #616977;      /* 5.35:1 on --lp-deep, 4.73:1 on a card. Was #6a7280: 4.14:1 on a card (U-08). */
 
   --lp-cyan: #0d7f8e;
   --lp-indigo: #5b4bd6;

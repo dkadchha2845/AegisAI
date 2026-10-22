@@ -273,6 +273,8 @@ user; the finding still appears on the report. Confidence not inspected.
 The `api` configuration uses a relative `.venv/bin/python`, which exists only
 in the main checkout.
 
+**Fixed in T-71 (2026-10-22):** `scripts/dev.sh api|web` runs the checkout's own code with its own `.venv` / `node_modules`, or the primary checkout's when a worktree has none; `.claude/launch.json` calls it. Verified: the API answers from a worktree with no `.venv`.
+
 ### B-08 — Medium — An English payment-demand scam is scored as legitimate
 
 *Found 2026-10-10 during T-05; not fixed, and not caused by it.* "This is FedEx
@@ -321,13 +323,13 @@ No screenshots were saved to the repository during this audit.
 | ID | Issue | Where |
 |---|---|---|
 | U-01 | The Model card shows the leaked **0.767** under "Measured, not assumed" (B-01). *Fixed in T-05: the page now shows the gate's refusal and the lexical figure alone* | `/model` |
-| U-02 | Two icon buttons in the app header have no accessible name | `components/layout/AppShell.tsx` |
-| U-03 | Internal task numbers in user-facing copy: "The judgement tier has no agents yet (tasks 4.6 and 4.7)" | `/investigate` |
+| U-02 | Two icon buttons in the app header have no accessible name. **Resolved — verified 2026-10-22 (T-71):** every product control on ten routes has an accessible name; the only unnamed controls are the dev-only Agentation toolbar (`import.meta.env.DEV`), which never ships | `components/layout/AppShell.tsx` |
+| U-03 | Internal task numbers in user-facing copy: "The judgement tier has no agents yet (tasks 4.6 and 4.7)". **Fixed in T-71** — the only one in rendered strings, replaced with plain copy | `/investigate` |
 | U-04 | Two entry points for one job. "Analyze" gives a score; "Investigate" gives an agent trace and no score. A user cannot know which to use | `/analyze`, `/investigate` |
 | U-05 | The design system exists as code (`tokens.css`, `primitives.css`) and is undocumented; several components the brief requires — risk gauge, stage timeline, agent-trace panel, evidence viewer — are absent or one-off | `apps/web/src/styles/` |
 | U-06 | No Hindi interface, for a product whose strongest model is Hindi/Hinglish | — |
-| U-08 | *Found during T-03.* The landing's `--lp-ink-3` (`#6f7789`) measures **4.46:1** on `--lp-deep` — under the 4.5:1 AA floor for the captions and micro-labels it sets. Its comment in `landing.css` claims 4.6:1. Owned by T-60 | `styles/landing.css` |
-| U-07 | Six `ERR_CONNECTION_REFUSED` console errors in dev before sign-in. Source not confirmed; the dev-only Agentation toolbar is the likely cause. None after sign-in | browser console |
+| U-08 | *Found during T-03.* The landing's `--lp-ink-3` (`#6f7789`) measures **4.46:1** on `--lp-deep` — under the 4.5:1 AA floor for the captions and micro-labels it sets. Its comment in `landing.css` claims 4.6:1; the light value measures 4.14:1 on a card. **Fixed in T-71:** `#788092` / `#616977`, ≥ 4.73:1 on every landing surface | `styles/landing.css` |
+| U-07 | Six `ERR_CONNECTION_REFUSED` console errors in dev before sign-in. **Not reproducible on 2026-10-22 (T-71):** a clean load of `/login` and `/` with the API up gives no console error and no failed request; the errors seen this session came only while a dev server was down | browser console |
 
 Verified fine: the landing and login scroll, `/investigate` has no horizontal
 overflow at 375 px, the app chrome renders in dark theme.

@@ -348,15 +348,16 @@ the product's accent (`--lp-accent: var(--accent)`) and threat ramp, and adds:
 | `--lp-deep` | `#07080b` | `#fbfbfd` | ground |
 | `--lp-ink` | `#eceef2` | `#12141a` | 17.24 / 17.81 on `--lp-deep` |
 | `--lp-ink-2` | `#969db0` | `#545c6b` | 7.39 / 6.51 |
-| `--lp-ink-3` | `#6f7789` | `#6a7280` | **4.46** / 4.69 — dark fails AA by 0.04 (U-08) |
+| `--lp-ink-3` | `#788092` | `#616977` | 5.06 / 5.35 on `--lp-deep`; 4.77 / 4.73 on a card — fixed in T-71 (U-08; was `#6f7789` / `#6a7280`, 4.46 and 4.14 at worst) |
 | `--lp-cyan` | `#49cfdd` | `#0d7f8e` | 10.73 on `--lp-deep` / 4.73 on white |
 | `--lp-indigo` | `#8b7bff` | `#5b4bd6` | structural accent |
 | `--lp-mono` | `ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace` | | the real monospace |
 
-`--lp-ink-3`'s comment in `landing.css` claims 4.6:1 on `--lp-deep`; it
-measures 4.46:1, under the AA floor for the captions and micro-labels it is
-used for. Recorded as audit **U-08**, owned by T-60; this task changes no
-stylesheet.
+`--lp-ink-3` used to be `#6f7789` / `#6a7280`: 4.46:1 on `--lp-deep` in dark
+(its comment claimed 4.6) and 4.14:1 on a card in light — under the AA floor
+for the captions and micro-labels it sets (audit **U-08**). T-71 lightened the
+dark value and deepened the light one; both now clear 4.5:1 on every landing
+surface, cards included.
 
 ---
 
@@ -377,4 +378,4 @@ stylesheet.
 | G-11 | Inputs have no invalid state | `.field[aria-invalid]` + message pattern |
 | G-12 | ~12 ad-hoc breakpoints, no tokens | Three: 560 / 900 / 1080 (§7.1) |
 | G-13 | `--font-mono` is DM Sans, not a monospace; the comment says JetBrains Mono | Decide, and make the comment and the token agree |
-| G-14 | `--lp-ink-3` at 4.46:1 (U-08) | Lighten to clear 4.5:1 (T-60) |
+| G-14 | `--lp-ink-3` at 4.46:1 (U-08) | ✅ Fixed in T-71 |

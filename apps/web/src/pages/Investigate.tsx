@@ -747,7 +747,7 @@ function Outcome({
             caption={
               scored
                 ? undefined
-                : "The judgement tier has no agents yet (tasks 4.6 and 4.7). Everything below it ran, and its findings are on the report."
+                : "This investigation could not be scored. Every check that ran is listed in the report below, with what it found."
             }
           />
           <dl className="kv" style={{ marginTop: "var(--s-4)" }}>

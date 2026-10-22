@@ -70,9 +70,9 @@ reused.
 | T-06 | Commit the leak-free classifier baseline as the first research result | M0 | ⬜ | S | — |
 | T-07 | Re-verify the infrastructure path with the stack up | M0 | ⬜ | S | — |
 | T-08 | Prove the project runs from a fresh clone | M0 | ⬜ | S | — |
-| T-09 | Retire the stale status documents | M0 | ⬜ | S | — |
-| T-10 | Move vendored and unrelated directories out of the product tree | M0 | ⬜ | S | — |
-| T-11 | Fix the two truthfulness and labelling defects in the UI | M0 | ⬜ | S | — |
+| T-09 | Retire the stale status documents | M0 | 🧪 | S | — |
+| T-10 | Move vendored and unrelated directories out of the product tree | M0 | 🧪 | S | — |
+| T-11 | Fix the two truthfulness and labelling defects in the UI | M0 | 🧪 | S | — |
 | T-12 | Carry a request and case ID through structured logs | M1 | ⬜ | S | 10.2 |
 | T-13 | Give every route one error envelope | M1 | ⬜ | S | — |
 | T-14 | Move prompts into versioned files | M1 | ⬜ | S | — |
