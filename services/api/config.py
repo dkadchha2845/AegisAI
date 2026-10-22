@@ -121,7 +121,14 @@ class Settings(BaseSettings):
         description="SQLAlchemy URL. Unset => ephemeral in-memory SQLite "
                     "(tagged `db:ephemeral`), so a clean clone boots with zero setup.",
     )
-    auth_enforced: bool = Field(default=False, validation_alias=_alias("AUTH"))
+    #: Enforced unless `AEGIS_AUTH=0` says otherwise (audit S-01). It used to
+    #: default to open demo mode, in which a request with no token is the
+    #: platform owner — so one forgotten variable turned a deployment's audit
+    #: log, user list and demo password public. Open mode is still one flag
+    #: away for a local demo (`make api` and `scripts/dev.sh api` set it), but
+    #: it is now something a person asks for, never something they get by
+    #: omission.
+    auth_enforced: bool = Field(default=True, validation_alias=_alias("AUTH"))
     secret_key: str = Field(
         default="",
         validation_alias=_alias("SECRET_KEY"),

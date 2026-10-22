@@ -43,6 +43,14 @@ os.environ["AEGIS_LLM"] = "none"
 # summary line this file writes, and task 1.7b for why it is printed.
 os.environ["AEGIS_QUEUE"] = "0"
 
+# Open demo mode, explicitly. Since S-01 auth is enforced by default, and most
+# of the suite exercises routes as the seeded owner — which is exactly what open
+# mode is. The enforced path is tested where it matters (`test_rbac.py`,
+# `test_orgs.py` turn it on per test), and `test_config.py` asserts that an
+# unset variable means enforced, so this pin cannot hide a regression of the
+# default.
+os.environ["AEGIS_AUTH"] = "0"
+
 
 # ---------------------------------------------------------------------------
 # The built-in agent set, restored before every test

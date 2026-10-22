@@ -119,3 +119,20 @@ def test_blank_string_means_unset(monkeypatch):
     """conftest sets DATABASE_URL="" to force the ephemeral DB."""
     monkeypatch.setenv("DATABASE_URL", "")
     assert Settings().database_url is None
+
+
+def test_auth_is_enforced_when_nothing_says_otherwise(monkeypatch):
+    """S-01. With no variable at all, the API requires tokens.
+
+    Open demo mode — every tokenless request is the platform owner — used to be
+    the default, so a deployment that forgot one variable published its audit
+    log, user list and demo password. It must now be asked for by name.
+    """
+    monkeypatch.delenv("AEGIS_AUTH", raising=False)
+    monkeypatch.delenv("PRESAGE_AUTH", raising=False)
+    assert Settings(_env_file=None).auth_enforced is True
+
+
+def test_open_demo_mode_needs_an_explicit_zero(monkeypatch):
+    monkeypatch.setenv("AEGIS_AUTH", "0")
+    assert Settings(_env_file=None).auth_enforced is False

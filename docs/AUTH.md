@@ -182,10 +182,10 @@ exist, or if a code is granted to nobody.
 
 `AEGIS_AUTH` chooses:
 
-- **open (default)** — a request with **no `Authorization` header** acts as the
+- **open (`AEGIS_AUTH=0`, local demos only)** — a request with **no `Authorization` header** acts as the
   seeded owner, so the demo runs with no login while every route still declares
   the RBAC it *would* enforce. A presented token is honoured for who it names.
-- **enforced (`AEGIS_AUTH=1`)** — every protected route requires a valid token.
+- **enforced (the default since S-01; `AEGIS_AUTH=1` or unset)** — every protected route requires a valid token. Open mode used to be the default, so one forgotten variable made a deployment's audit log, user list and demo password public; it now has to be asked for by name, and `make api` / `scripts/dev.sh api` do so for local demos.
 
 A **presented-and-refused** credential is a 401 in *both* modes. It used to fall
 through to the open-mode identity, which meant that in the default configuration
@@ -299,7 +299,7 @@ Three accounts were **added** so each audience in the specification has one:
 `citizen@aegis.local`, `police@aegis.local`, `researcher@aegis.local`.
 
 All demo accounts share `AEGIS_DEMO_PASSWORD` (default `changeme`) and **none of
-them are created when `AEGIS_AUTH=1`** — a real deployment ships no
+them are created unless `AEGIS_AUTH=0`** — a real deployment ships no
 known-password accounts.
 
 ---
@@ -435,7 +435,7 @@ capabilities rather than duplicating four pages.
 |---|---|---|
 | `DATABASE_URL` | unset | SQLAlchemy URL. Unset ⇒ ephemeral temp SQLite. |
 | `AEGIS_SECRET_KEY` | unset | HMAC signing key. Unset ⇒ a per-process key; tokens die with the process. **Set this in production.** |
-| `AEGIS_AUTH` | `0` | `1` enforces authentication on every protected route. |
+| `AEGIS_AUTH` | `1` | Enforced by default. `0` turns on open demo mode — local demos only; `make api` sets it. |
 | `AEGIS_TOKEN_TTL` | `43200` | Session lifetime, seconds. |
 | `AEGIS_ADMIN_EMAIL` / `AEGIS_ADMIN_PASSWORD` | `admin@aegis.local` / `changeme` | The seeded owner. |
 | `AEGIS_DEMO_PASSWORD` | `changeme` | Shared password for the demo roster (open mode only). |

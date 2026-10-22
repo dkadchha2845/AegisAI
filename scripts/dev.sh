@@ -29,6 +29,9 @@ venv_python() {
 
 case "${1:-}" in
   api)
+    # Open demo mode unless the caller says otherwise: auth is enforced by
+    # default since S-01, and a local demo wants the seeded roster.
+    export AEGIS_AUTH="${AEGIS_AUTH:-0}"
     exec "$(venv_python)" -m uvicorn services.api.main:app --reload \
       --reload-dir services --reload-dir schema --port "${PORT:-8000}"
     ;;

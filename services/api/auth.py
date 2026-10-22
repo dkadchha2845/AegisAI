@@ -40,11 +40,11 @@ written down in `docs/AUTH.md` rather than papered over.
 
 Two modes, chosen by `AEGIS_AUTH`
 ---------------------------------
-  * **enforced** — protected routes require a valid bearer token, and
-    `require_permission` gates on `permissions.ROLE_PERMISSIONS`.
-  * **open** (default) — `get_current_user` returns the seeded owner, so the
-    demo runs with no login while every route still declares the RBAC it *would*
-    enforce. Flipping the flag turns the whole thing on without touching a route.
+  * **enforced** (default since S-01) — protected routes require a valid bearer
+    token, and `require_permission` gates on `permissions.ROLE_PERMISSIONS`.
+  * **open** (`AEGIS_AUTH=0`, local demos only) — `get_current_user` returns the
+    seeded owner, so the demo runs with no login while every route still
+    declares the RBAC it *would* enforce. `make api` sets it; nothing else does.
 """
 
 from __future__ import annotations
