@@ -4,11 +4,12 @@ One entry per finished piece of work, newest last. A new session reads this
 after [`TASKS.md`](TASKS.md) to find where things stand.
 
 **Current state (2026-10-22):** Phase 0 and Phase 3 approved. T-04 approved
-2026-10-10; T-05, T-69, T-70, T-01, T-02 and T-03 approved 2026-10-22; T-71
-and with it T-06, T-09, T-10, T-11, T-12, T-13, T-14, T-15, T-18 and T-20
-approved 2026-10-22. Open for the owner: S-08 (reset tokens in the log) and
-S-06 (rotate the Gemini key). The remaining landing sections (05, 07, 08,
-10–12) await the owner's feedback. Next in the recommended order: T-07.
+2026-10-10; T-05, T-69, T-70, T-01, T-02, T-03, T-71 (with T-06, T-09–T-15,
+T-18, T-20), T-07, T-08, T-16, T-17 and T-19 approved 2026-10-22. New from
+T-07 and T-19: T-72 to T-76 (B-13 is High). Open for the owner: S-08, S-06,
+B-16's option (T-76), the T-19 degraded-agent rule, and design gaps G-09,
+G-10, G-12, G-13. The remaining landing sections (05, 07, 08, 10–12) await
+the owner's feedback.
 
 ---
 
@@ -445,7 +446,7 @@ full pipeline merge (T-47). One commit per change, each with its gates.
 - How to verify: `make gates`, `make webtest`, `make e2e`; read each 🧪
   task's Evidence line in `docs/TASKS.md`.
 
-## T-07 — Re-verify the infrastructure path with the stack up — 2026-10-22 (🧪)
+## T-07 — Re-verify the infrastructure path with the stack up — 2026-10-22 (✅ approved 2026-10-22)
 
 - What changed: no code. Results appended to `docs/AUDIT.md` §1.
 - Ran: `colima start && make up` (all four stores healthy);
@@ -466,7 +467,7 @@ full pipeline merge (T-47). One commit per change, each with its gates.
   temp directory, never committed. The verification database was dropped.
 - How to verify: the commands above; the table in `docs/AUDIT.md` §1.
 
-## T-08 — Prove the project runs from a fresh clone — 2026-10-22 (🧪)
+## T-08 — Prove the project runs from a fresh clone — 2026-10-22 (✅ approved 2026-10-22)
 
 Transcript (macOS, Homebrew Python 3.12 present, pip/npm caches warm):
 
@@ -484,14 +485,14 @@ Transcript (macOS, Homebrew Python 3.12 present, pip/npm caches warm):
 - Files: `Makefile` (`install` creates `.venv`, `PYTHON` override, version guard), `README.md` (Quick Start).
 - Not measured: a cold machine's download time — caches were warm.
 
-## T-17 — Add verification fields to the investigation contract — 2026-10-22 (🧪)
+## T-17 — Add verification fields to the investigation contract — 2026-10-22 (✅ approved 2026-10-22)
 
 - `Finding.verification` (verdict, reason, challenger, confidence before and after, weight) on both sides of the contract; the model refuses a verdict that raises confidence or mismatches its weight. Pre-T-17 fixture from git validates. 10 tests; contract consistent.
 
-## T-19 — Define the feature-assembly contract, version 0 — 2026-10-22 (🧪)
+## T-19 — Define the feature-assembly contract, version 0 — 2026-10-22 (✅ approved 2026-10-22)
 
 - `services/api/agents/features.py`: 62 declared features, 51 assembled into `risk_features` by a new `assemble_features` graph node before the judge; skipped or errored agents are `null`. 11 tests. Live: 51 features, nulls where agents were skipped. Deviation for the owner: DEGRADED agents keep their values. Found B-16 (queue with no worker), T-76.
 
-## T-16 — Build the design-system components the brief requires — 2026-10-22 (🧪)
+## T-16 — Build the design-system components the brief requires — 2026-10-22 (✅ approved 2026-10-22)
 
 - Seven components in `apps/web/src/components/ui/` with 32 new component tests, and a gallery at `/design`. Verified in the browser: keyboard behaviour of the dialog and toast, both themes, 375 px. One bug found only in the running page (trace rows ignored `hidden`) and fixed.

@@ -68,8 +68,8 @@ reused.
 | T-04 | Correct the stage-classifier claim everywhere it is stated | M0 | ✅ | S | — |
 | T-05 | Make the promotion gate refuse a contaminated comparison | M0 | ✅ | S | — |
 | T-06 | Commit the leak-free classifier baseline as the first research result | M0 | ✅ | S | — |
-| T-07 | Re-verify the infrastructure path with the stack up | M0 | 🧪 | S | — |
-| T-08 | Prove the project runs from a fresh clone | M0 | 🧪 | S | — |
+| T-07 | Re-verify the infrastructure path with the stack up | M0 | ✅ | S | — |
+| T-08 | Prove the project runs from a fresh clone | M0 | ✅ | S | — |
 | T-09 | Retire the stale status documents | M0 | ✅ | S | — |
 | T-10 | Move vendored and unrelated directories out of the product tree | M0 | ✅ | S | — |
 | T-11 | Fix the two truthfulness and labelling defects in the UI | M0 | ✅ | S | — |
@@ -77,10 +77,10 @@ reused.
 | T-13 | Give every route one error envelope | M1 | ✅ | S | — |
 | T-14 | Move prompts into versioned files | M1 | ✅ | S | — |
 | T-15 | Stand up the frontend test harness | M1 | ✅ | S | 7.10 |
-| T-16 | Build the design-system components the brief requires | M1 | 🧪 | WP | 7.1 |
-| T-17 | Add verification fields to the investigation contract | M2 | 🧪 | S | — |
+| T-16 | Build the design-system components the brief requires | M1 | ✅ | WP | 7.1 |
+| T-17 | Add verification fields to the investigation contract | M2 | ✅ | S | — |
 | T-18 | Extract entities inside the graph | M2 | ✅ | S | — |
-| T-19 | Define the feature-assembly contract, version 0 | M2 | 🧪 | S | 4.1 |
+| T-19 | Define the feature-assembly contract, version 0 | M2 | ✅ | S | 4.1 |
 | T-20 | Port the served threat score into the graph as a provisional judge | M2 | ✅ | S | 4.6 |
 | T-21 | Build the A7 adversarial verifier — deterministic challenger | M2 | ⬜ | S | — |
 | T-22 | Add the A7 LLM challenger, with fallback to the deterministic one | M2 | ⬜ | S | — |
@@ -331,7 +331,7 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-07 — Re-verify the infrastructure path with the stack up
 - Milestone: M0
-- Status: 🧪 Done 2026-10-22, awaiting `approve T-07`
+- Status: ✅ Approved 2026-10-22
 - Evidence: results in `docs/AUDIT.md` §1, "Re-verified with the stack up". Gates with the stack up: 793 passed, **0 skipped**, PostgreSQL migration line present. Health: all four stores reachable. A worker-executed investigation survived SIGKILL of its pool process mid-job and completed, persisted in Postgres, one timeline. Image analysis on a real PNG: OCR, 91 CRITICAL. Audio on a real WAV: ran, degraded (`asr:unavailable`) — no ASR installed. Found, recorded and not fixed (verification only): B-13, B-14, B-15, D-17, with tasks T-72 to T-75. Criterion "audio … runs once on a real file" is met only as far as the degradation path: transcription needs T-75.
 - Depends on: —
 - Fixes / implements: the "not verified today" list in `docs/AUDIT.md` §1
@@ -351,7 +351,7 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-08 — Prove the project runs from a fresh clone
 - Milestone: M0
-- Status: 🧪 Done 2026-10-22, awaiting `approve T-08`
+- Status: ✅ Approved 2026-10-22
 - Evidence: transcript in `docs/PROGRESS.md`. First clone: `make install` failed at once (nothing created `.venv`); the README's own `python3 -m venv` gives macOS's Python 3.9; the README said `cd aegis`; and its backend command started with sign-in enforced and no demo accounts while the next section promised an open demo (stale since S-01). Fixed: `make install` creates `.venv` from Python 3.11+ (3.12 first) and refuses an older one with the remedy; the Quick Start is `git clone → cd AegisAI → make install → make gates → make api → make web`, with the by-hand commands corrected. Second clone, no manual step: install and gates exit 0 in 42 s (warm caches), `classifier: lexical (best available) — no checkpoint here`. `make api` + `make web` from a clone: landing loads, no console errors, every API request 200. `.claude/launch.json` needed no change (it calls `scripts/dev.sh`).
 - Depends on: T-05
 - Fixes / implements: M0 exit criterion; B-06
@@ -514,7 +514,7 @@ with seven roles, the API skeleton and CI. These are what is left.
 
 ### T-16 — Build the design-system components the brief requires
 - Milestone: M1
-- Status: 🧪 Done 2026-10-22, awaiting `approve T-16`. Split from `docs/DESIGN_SYSTEM.md` §9, one component per sub-task, all built:
+- Status: ✅ Approved 2026-10-22. Split from `docs/DESIGN_SYSTEM.md` §9, one component per sub-task, all built:
   - **T-16a** — gallery route `/design` + `RiskBadge` (G-08) — 4 tests
   - **T-16b** — `Toast` on `--z-toast` (G-06) — 4 tests
   - **T-16c** — `Modal`: focus trap, Escape, focus return (G-07) — 5 tests
@@ -552,7 +552,7 @@ demonstrated as the brief describes it — on one modality, honestly labelled.
 
 ### T-17 — Add verification fields to the investigation contract
 - Milestone: M2
-- Status: 🧪 Done 2026-10-22, awaiting `approve T-17`
+- Status: ✅ Approved 2026-10-22
 - Evidence: `Finding.verification: Optional[Verification] = None` in `schema/models.py` and `verification?: Verification | null` in `schema/types.ts`, with `VerificationVerdict` (`UPHELD` / `DOWNGRADED` / `REJECTED`), `reason`, `challenger`, `confidence_before`, `confidence_after` and `weight` — the last from `ARCHITECTURE.md` §2.3's `verified_weight`, which the spec did not list; §2.3 now describes the built shape. The model enforces A7's rule (never raises confidence; weight 1 / 0 / between by verdict). `check_contract.py` compares the enum (3 members) — contract consistent; the fixture carries one illustrative verdict so the typecheck exercises the type. `test_contract_verification.py` (10): the pre-T-17 fixture from git (`d0ca55c`) validates; the enums agree; every rule-breaking verdict is refused. Contract version unchanged — the field is additive and optional, as earlier additions were.
 - Depends on: T-02
 - Fixes / implements: A7 (brief §2, §8)
@@ -591,7 +591,7 @@ demonstrated as the brief describes it — on one modality, honestly labelled.
 
 ### T-19 — Define the feature-assembly contract, version 0
 - Milestone: M2
-- Status: 🧪 Done 2026-10-22, awaiting `approve T-19`
+- Status: ✅ Approved 2026-10-22
 - Evidence: `services/api/agents/features.py` declares 62 features (51 inputs, 11 judge-tier outputs never assembled) with type, range, producing agent and null policy; `SCHEMA_SHA256` pins them. The graph's new `assemble_features` node, between `reason_stage` and `judge_stage`, writes `state.risk_features`; a failure there tags `features:unavailable` and the case still completes. Contract: `risk_features` is `dict[str, Optional[float]]` / `Record<string, number | null>` so missing can be said; the fixture carries one null. `test_features.py` (11): every emitted feature declared; vector = declared inputs in order, no judge output; a skipped or errored agent is null, a ran-but-unobserved count is 0; determinism across a re-run; ranges and integer types hold on four fixtures; the drift guard; the failed-assembly path; the API returns nulls. Live (in-process API): `risk_features` of 51, `null` for the coercion and spoofing features of an SMS with no victim side and no number, scored 95.0, the node listed in the stream. **Deviation, for the owner:** the criterion says a *degraded* agent yields missing; the contract defines DEGRADED as a usable answer from a fallback, and the coercion agent is DEGRADED on every text call (no audio), so its values are kept and only skipped / errored agents are missing. Found: B-16 (T-76).
 - Depends on: T-18
 - Fixes / implements: legacy 4.1
