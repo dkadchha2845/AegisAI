@@ -4,11 +4,11 @@ One entry per finished piece of work, newest last. A new session reads this
 after [`TASKS.md`](TASKS.md) to find where things stand.
 
 **Current state (2026-10-22):** Phase 0 and Phase 3 approved. T-04 approved
-2026-10-10; T-05, T-69, T-70, T-01, T-02 and T-03 approved 2026-10-22. T-71
-(close the audit's open issues) is at 🧪, and with it T-06, T-09, T-10, T-11,
-T-12, T-13, T-14, T-15, T-18 and T-20, each awaiting `approve`. Open for the
-owner: S-08 (reset tokens in the log) and S-06 (rotate the Gemini key). The
-remaining landing sections (05, 07, 08, 10–12) await the owner's feedback.
+2026-10-10; T-05, T-69, T-70, T-01, T-02 and T-03 approved 2026-10-22; T-71
+and with it T-06, T-09, T-10, T-11, T-12, T-13, T-14, T-15, T-18 and T-20
+approved 2026-10-22. Open for the owner: S-08 (reset tokens in the log) and
+S-06 (rotate the Gemini key). The remaining landing sections (05, 07, 08,
+10–12) await the owner's feedback. Next in the recommended order: T-07.
 
 ---
 
@@ -399,7 +399,7 @@ committed to `main`, with no separate branches.
 - How to verify: open `docs/DESIGN_SYSTEM.md`; pick three tokens and find
   them in `apps/web/src/styles/tokens.css`; values match.
 
-## T-71 — Close the audit's open issues — 2026-10-22 (🧪)
+## T-71 — Close the audit's open issues — 2026-10-22 (✅ approved 2026-10-22)
 
 On the owner's instruction ("fix all the bugs, errors, security issues, UI/UX
 issues, code quality and tech debt from the audit"), with T-01, T-02 and T-03

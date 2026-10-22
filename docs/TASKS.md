@@ -67,21 +67,21 @@ reused.
 | T-03 | Write the design-system document from the shipped tokens | P2 | ✅ | S | 7.1 |
 | T-04 | Correct the stage-classifier claim everywhere it is stated | M0 | ✅ | S | — |
 | T-05 | Make the promotion gate refuse a contaminated comparison | M0 | ✅ | S | — |
-| T-06 | Commit the leak-free classifier baseline as the first research result | M0 | 🧪 | S | — |
+| T-06 | Commit the leak-free classifier baseline as the first research result | M0 | ✅ | S | — |
 | T-07 | Re-verify the infrastructure path with the stack up | M0 | ⬜ | S | — |
 | T-08 | Prove the project runs from a fresh clone | M0 | ⬜ | S | — |
-| T-09 | Retire the stale status documents | M0 | 🧪 | S | — |
-| T-10 | Move vendored and unrelated directories out of the product tree | M0 | 🧪 | S | — |
-| T-11 | Fix the two truthfulness and labelling defects in the UI | M0 | 🧪 | S | — |
-| T-12 | Carry a request and case ID through structured logs | M1 | 🧪 | S | 10.2 |
-| T-13 | Give every route one error envelope | M1 | 🧪 | S | — |
-| T-14 | Move prompts into versioned files | M1 | 🧪 | S | — |
-| T-15 | Stand up the frontend test harness | M1 | 🧪 | S | 7.10 |
+| T-09 | Retire the stale status documents | M0 | ✅ | S | — |
+| T-10 | Move vendored and unrelated directories out of the product tree | M0 | ✅ | S | — |
+| T-11 | Fix the two truthfulness and labelling defects in the UI | M0 | ✅ | S | — |
+| T-12 | Carry a request and case ID through structured logs | M1 | ✅ | S | 10.2 |
+| T-13 | Give every route one error envelope | M1 | ✅ | S | — |
+| T-14 | Move prompts into versioned files | M1 | ✅ | S | — |
+| T-15 | Stand up the frontend test harness | M1 | ✅ | S | 7.10 |
 | T-16 | Build the design-system components the brief requires | M1 | ⬜ | WP | 7.1 |
 | T-17 | Add verification fields to the investigation contract | M2 | ⬜ | S | — |
-| T-18 | Extract entities inside the graph | M2 | 🧪 | S | — |
+| T-18 | Extract entities inside the graph | M2 | ✅ | S | — |
 | T-19 | Define the feature-assembly contract, version 0 | M2 | ⬜ | S | 4.1 |
-| T-20 | Port the served threat score into the graph as a provisional judge | M2 | 🧪 | S | 4.6 |
+| T-20 | Port the served threat score into the graph as a provisional judge | M2 | ✅ | S | 4.6 |
 | T-21 | Build the A7 adversarial verifier — deterministic challenger | M2 | ⬜ | S | — |
 | T-22 | Add the A7 LLM challenger, with fallback to the deterministic one | M2 | ⬜ | S | — |
 | T-23 | Derive recommendations from verified findings | M2 | ⬜ | S | — |
@@ -132,7 +132,7 @@ reused.
 | T-68 | Paper draft and reproducibility package | M5 | ⬜ | WP | 9.7 |
 | T-69 | Landing: fix the hero, the problem web and the evidence grid | UI | ✅ | S | — |
 | T-70 | Landing: the investigation rail, the agent diagram, the intelligence graph, the research sidebar | UI | ✅ | S | — |
-| T-71 | Close the audit's open issues (from T-04/T-05, then all fixable audit items) | M0 | 🧪 | S×4 | — |
+| T-71 | Close the audit's open issues (from T-04/T-05, then all fixable audit items) | M0 | ✅ | S×4 | — |
 
 71 tasks: 39 single-sitting (28 written out in full below), 32 work packages.
 T-69 and T-70 were added on the owner's request on 2026-10-21 and 2026-10-22,
@@ -307,7 +307,7 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-06 — Commit the leak-free classifier baseline as the first research result
 - Milestone: M0
-- Status: 🧪 Built under T-71 (2026-10-22), awaiting `approve T-06`
+- Status: ✅ Approved 2026-10-22 — Built under T-71 (2026-10-22)
 - Evidence: `.venv/bin/python research/experiments/exp0_stage_classifier_leak.py` reads both historical test splits from git (`e123bd5`, and `85a2aee`, the revision the checkpoint's provenance record names) with no manual step, and writes macro-F1 and accuracy for `lexical@e123bd5` (the cues as they were), `lexical` (today's), `muril` and `fused@e123bd5` on all / leaked / unseen turns with n for each. It reproduces 0.767 / 1.000 / 0.300 vs lexical 0.431, and 0.221 vs 0.372. Two runs under different `PYTHONHASHSEED`s give a byte-identical file — after fixing B-12, which the first two runs exposed. `test_research_results.py` checks the schema, that leaked + unseen = all for each split, and the published figures. Deviation, stated: macro-F1 is averaged over the labels present in gold or prediction, the gate's own convention — over all eight, the leaked cut (no BENIGN turn) reads 0.875 for a checkpoint that labels every turn correctly.
 - Depends on: T-05
 - Fixes / implements: B-01, D-04
@@ -363,7 +363,7 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-09 — Retire the stale status documents
 - Milestone: M0
-- Status: 🧪 Built 2026-10-22 (commit `0863b44`), awaiting `approve T-09`
+- Status: ✅ Approved 2026-10-22 — Built 2026-10-22 (commit `0863b44`)
 - Evidence: `STATUS.md` moved to `docs/archive/`; README status section points at PROGRESS, TASKS, AUDIT and PRD; dated "Historical" notices on INVENTORY, UI_AUDIT, SUBMISSION_DOCUMENT, ROADMAP, build-dossier and PRESENTATION; D-15 corrected in DATASETS.md. `test_contributor_docs.py` 44 passed; gates green.
 - Depends on: T-04
 - Fixes / implements: D-03
@@ -382,7 +382,7 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-10 — Move vendored and unrelated directories out of the product tree
 - Milestone: M0
-- Status: 🧪 Built 2026-10-22 (commit `83e4e04`), awaiting `approve T-10`
+- Status: ✅ Approved 2026-10-22 — Built 2026-10-22 (commit `83e4e04`)
 - Evidence: `Skills/` (1,613 files, S-05) and `ui-design/` removed, `attached_assets/` and `aegis_ai_pipeline_docs.md` moved to `docs/archive/`, as the owner confirmed; D-02's three unimported feature modules removed, the four the RSSIE training imports kept. History keeps everything removed. ruff clean; gates green.
 - Depends on: — (Q7 decided 2026-10-09)
 - Fixes / implements: D-03, S-05
@@ -401,7 +401,7 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-11 — Fix the two truthfulness and labelling defects in the UI
 - Milestone: M0
-- Status: 🧪 Built 2026-10-22 (commit `25282d9`), awaiting `approve T-11`
+- Status: ✅ Approved 2026-10-22 — Built 2026-10-22 (commit `25282d9`)
 - Evidence: U-03 task number in rendered copy replaced; U-08 `--lp-ink-3` clears 4.5:1 on every landing surface in both themes; U-02 verified resolved; U-07 not reproducible. Verified in the running app; gates green.
 - Depends on: —
 - Fixes / implements: U-02, U-03
@@ -428,7 +428,7 @@ with seven roles, the API skeleton and CI. These are what is left.
 
 ### T-12 — Carry a request and case ID through structured logs
 - Milestone: M1
-- Status: 🧪 Built under T-71 (2026-10-22), awaiting `approve T-12`
+- Status: ✅ Approved 2026-10-22 — Built under T-71 (2026-10-22)
 - Evidence: `test_logging.py` (8) — the ids survive an await, a task and a thread hop; a line is one JSON object with both ids and its extra fields; every response carries `X-Request-ID`, a well-formed supplied one is kept and a hostile one replaced; the request line has the path and never the query; one investigation's lines share one case id and the submitting request's id, from "investigation started" through every agent span to "investigation finished", and a unique marker in the evidence appears in no line; a reset request logs no email; no `print()` in any served module. Live: an investigation submitted with `X-Request-ID: verify-t12-001` produced 10 JSON lines in the running API, all carrying that id and the case id. Deviations, stated: the module is `services/api/logs.py`, not `logging.py`, so it cannot shadow the standard library; the worker path is covered by code (the job carries `request_id`, `drive` binds the case) but was not run here, as no broker is up. Found: S-08 (reset tokens in the log), left open for the owner.
 - Depends on: —
 - Fixes / implements: D-08; brief §8
@@ -448,7 +448,7 @@ with seven roles, the API skeleton and CI. These are what is left.
 
 ### T-13 — Give every route one error envelope
 - Milestone: M1
-- Status: 🧪 Built under T-71 (2026-10-22), awaiting `approve T-13`
+- Status: ✅ Approved 2026-10-22 — Built under T-71 (2026-10-22)
 - Evidence: `test_error_envelope.py` (9) — 422 validation (and it no longer echoes the submitted value), 404 missing case, 404 unknown route, 405, 415, 401, 403, 429 from the rate limiter, and an unhandled exception as a 500 that names neither the exception nor the file; each asserts the same five fields and that `request_id` equals the `X-Request-ID` header. `check_contract.py` compares `ErrorResponse` field by field across `models.py` and `types.ts`. `api.ts` reads the envelope in one function (`errorOf`) and returns `code` and `requestId` with a failure. No status code changed; `detail` is kept for clients that read it, so the 739 existing tests passed unchanged. Live: a malformed `POST /api/analyze/text` and `GET /api/investigations/AEG-NOPE` return the same shape.
 - Depends on: T-12
 - Fixes / implements: D-09; brief §8
@@ -467,7 +467,7 @@ with seven roles, the API skeleton and CI. These are what is left.
 
 ### T-14 — Move prompts into versioned files
 - Milestone: M1
-- Status: 🧪 Built under T-71 (2026-10-22), awaiting `approve T-14`
+- Status: ✅ Approved 2026-10-22 — Built under T-71 (2026-10-22)
 - Evidence: `test_prompts.py` (13) — the explainer's and the assistant's rendered prompt and system prompt equal, byte for byte, a snapshot captured from the inline strings *before* the move (`tests/snapshots/prompts_t14.json`); evidence is still quoted once in `<analysis>`; no prompt text remains in `llm.py`; each answer names `prompt:<id>@<version>`; the loader refuses a file with no version, a non-integer version, a wrong id, no user section or no header; placeholders must match exactly and placeholder-shaped evidence is never substituted. Live: `/api/health` reports `prompts: [explain@1, assistant@1]`. Not exercised live: an actual LLM explanation — the dev API has no backend configured, and turning one on would send data to an external service; the path is proven with a recording backend.
 - Depends on: —
 - Fixes / implements: D-05; brief §8
@@ -487,7 +487,7 @@ with seven roles, the API skeleton and CI. These are what is left.
 
 ### T-15 — Stand up the frontend test harness
 - Milestone: M1
-- Status: 🧪 Built under T-71 (2026-10-22), awaiting `approve T-15`
+- Status: ✅ Approved 2026-10-22 — Built under T-71 (2026-10-22)
 - Evidence: `npm test --prefix apps/web` (`make webtest`) — 3 RiskDial tests pass: the score and level shown verbatim, an unscored case drawn as "Not scored" with no lit ticks and no "0", confidence kept separate. `npm run test:e2e --prefix apps/web` (`make e2e`) — 2 Playwright tests pass: landing loads with no page error; a demo analyst signs in and reaches the app. Run twice: reusing the running dev servers, and with `CI=1 PW_API_PORT=8013 PW_WEB_PORT=5183`, where the config started both servers itself (the API told to allow that web origin). CI: component tests in the `frontend` job, the smoke as a new `e2e` job. `make gates` green, and the typecheck now covers the test files. Dependencies: vitest 2.1.9 (Vite 5 compatible), Testing Library, jsdom 25, @playwright/test 1.64.0 pinned to the cached Chromium 1248, so no browser was downloaded. Found and fixed: S-09 (React Router advisory). Not done: the four gates were not extended to five — the component tests run in CI and `make webtest`, and changing the canonical gate list is a process change for the owner.
 - Depends on: —
 - Fixes / implements: D-06
@@ -554,7 +554,7 @@ demonstrated as the brief describes it — on one modality, honestly labelled.
 
 ### T-18 — Extract entities inside the graph
 - Milestone: M2
-- Status: 🧪 Built under T-71 (2026-10-22), awaiting `approve T-18`
+- Status: ✅ Approved 2026-10-22 — Built under T-71 (2026-10-22)
 - Evidence: `test_entity_agent.py` — the three identifiers with their source item; benign masked-account SMS yields no phone, VPA or account; a raising extractor leaves the investigation COMPLETE with `agent:entity_extractor:…` in `degraded`; the API and report return the entities. Live: a message with a VPA, a number and a link shows all three in `GET /api/investigations/{id}` and the report. Found and fixed on the way: B-10 (VPA before a full stop), B-11 (foreign caller number typed TEXT). Not met as written: "declares its features in the feature registry" — that registry is T-19 and does not exist yet; the agent publishes per-kind counts as features.
 - Depends on: —
 - Fixes / implements: B-03
@@ -593,7 +593,7 @@ demonstrated as the brief describes it — on one modality, honestly labelled.
 
 ### T-20 — Port the served threat score into the graph as a provisional judge
 - Milestone: M2
-- Status: 🧪 Built under T-71 (2026-10-22), awaiting `approve T-20`
+- Status: ✅ Approved 2026-10-22 — Built under T-71 (2026-10-22)
 - Evidence: `test_provisional_judge.py` — graph score equals `/api/analyze/text` to 0.05 on five scam and three benign texts; every scam ≥ 70 and tagged `score:uncalibrated`; bank debit, delivery and KYC reminder < 25 with no conclusive check; the score is reached with every LLM entry point patched to raise. Report: `assessment.note` and `calibrated: false`; Investigate page caption. Live: 93.0 CRITICAL on both paths for the digital-arrest text, 91.0 on both for a customs message. Deviation, stated: built before T-19 (the owner chose "make them agree now"); the judge reads the agents' published findings and features directly rather than an assembled vector, and `classification` stays None.
 - Depends on: T-19 (Q4 decided 2026-10-09: show the score, tagged uncalibrated)
 - Fixes / implements: B-02, D-01; legacy 4.6 (interim)
