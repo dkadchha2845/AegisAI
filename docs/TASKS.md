@@ -68,7 +68,7 @@ reused.
 | T-04 | Correct the stage-classifier claim everywhere it is stated | M0 | ✅ | S | — |
 | T-05 | Make the promotion gate refuse a contaminated comparison | M0 | ✅ | S | — |
 | T-06 | Commit the leak-free classifier baseline as the first research result | M0 | ✅ | S | — |
-| T-07 | Re-verify the infrastructure path with the stack up | M0 | ⬜ | S | — |
+| T-07 | Re-verify the infrastructure path with the stack up | M0 | 🧪 | S | — |
 | T-08 | Prove the project runs from a fresh clone | M0 | ⬜ | S | — |
 | T-09 | Retire the stale status documents | M0 | ✅ | S | — |
 | T-10 | Move vendored and unrelated directories out of the product tree | M0 | ✅ | S | — |
@@ -133,8 +133,12 @@ reused.
 | T-69 | Landing: fix the hero, the problem web and the evidence grid | UI | ✅ | S | — |
 | T-70 | Landing: the investigation rail, the agent diagram, the intelligence graph, the research sidebar | UI | ✅ | S | — |
 | T-71 | Close the audit's open issues (from T-04/T-05, then all fixable audit items) | M0 | ✅ | S×4 | — |
+| T-72 | A failed citation must not erase a Trust Passport check | M0 | ⬜ | S | — |
+| T-73 | Warm the worker's agents, and make dense retrieval fork-safe | M0 | ⬜ | S | — |
+| T-74 | An analysis that read nothing reports no score | M0 | ⬜ | S | — |
+| T-75 | Declare and document the speech-to-text dependency | M0 | ⬜ | S | — |
 
-71 tasks: 39 single-sitting (28 written out in full below), 32 work packages.
+75 tasks: 43 single-sitting (32 written out in full below), 32 work packages.
 T-69 and T-70 were added on the owner's request on 2026-10-21 and 2026-10-22,
 out of the recommended order; they are specified at the end of this file.
 
@@ -326,7 +330,8 @@ Set by the project owner on 2026-08-24, restated by the brief, and binding:
 
 ### T-07 — Re-verify the infrastructure path with the stack up
 - Milestone: M0
-- Status: ⬜ Todo
+- Status: 🧪 Done 2026-10-22, awaiting `approve T-07`
+- Evidence: results in `docs/AUDIT.md` §1, "Re-verified with the stack up". Gates with the stack up: 793 passed, **0 skipped**, PostgreSQL migration line present. Health: all four stores reachable. A worker-executed investigation survived SIGKILL of its pool process mid-job and completed, persisted in Postgres, one timeline. Image analysis on a real PNG: OCR, 91 CRITICAL. Audio on a real WAV: ran, degraded (`asr:unavailable`) — no ASR installed. Found, recorded and not fixed (verification only): B-13, B-14, B-15, D-17, with tasks T-72 to T-75. Criterion "audio … runs once on a real file" is met only as far as the degradation path: transcription needs T-75.
 - Depends on: —
 - Fixes / implements: the "not verified today" list in `docs/AUDIT.md` §1
 - Goal: The audit ran with every backing store down. Run it again with them up and record what is true.
@@ -839,3 +844,50 @@ The paper's contribution. Nothing here is claimed until it is measured.
   3. Expect: the rail tracks the panels; the agent diagram builds whole with a packet running through it; the graph answers every hover; the research sidebar follows the scroll
 - Tests to add: none until T-15 provides a frontend harness. Measured in the running page; numbers in `docs/PROGRESS.md`
 
+### T-72 — A failed citation must not erase a Trust Passport check
+- Milestone: M0
+- Status: ⬜ Todo
+- Depends on: —
+- Fixes / implements: B-13 (found in T-07)
+- Goal: A passport FAIL stands whether or not its supporting citation could be fetched.
+- Scope: `services/api/engine/passport.py` (`_cite` degrades to no source plus a tag), the passport agent's degradation path.
+- Acceptance criteria:
+  - [ ] With `get_kb().search` raising, the digital-arrest fixture still scores ≥ 90 on both paths, with a `kb:unavailable`-style tag
+  - [ ] A benign fixture is unchanged
+- Tests to add: the raising-KB case on `/api/analyze/text` and through the graph
+
+### T-73 — Warm the worker's agents, and make dense retrieval fork-safe
+- Milestone: M0
+- Status: ⬜ Todo
+- Depends on: —
+- Fixes / implements: B-14 (found in T-07)
+- Goal: The first investigation on a worker is as fast and as complete as the hundredth.
+- Scope: `services/worker/` (warm agents per pool process, after fork), the dense retrieval device choice in a forked process.
+- Acceptance criteria:
+  - [ ] A fresh worker's first investigation has no agent over 1 s for warm-up
+  - [ ] `make worker` on macOS scores the digital-arrest fixture the same as the API
+- Tests to add: a worker test asserting warm-up runs in the pool process
+
+### T-74 — An analysis that read nothing reports no score
+- Milestone: M0
+- Status: ⬜ Todo
+- Depends on: —
+- Fixes / implements: B-15 (found in T-07)
+- Goal: `INSUFFICIENT` never travels with `0.0 / CALM`.
+- Scope: the analyzer result for unreadable input (`score`/`level` null), the Analyze page's verdict block, the contract if the field is typed there.
+- Acceptance criteria:
+  - [ ] Audio with no ASR, and an image with no text, return no score and no level
+  - [ ] The Analyze page shows "Not scored", never "0"
+- Tests to add: API and component tests for the unreadable case
+
+### T-75 — Declare and document the speech-to-text dependency
+- Milestone: M0
+- Status: ⬜ Todo
+- Depends on: —
+- Fixes / implements: D-17 (found in T-07)
+- Goal: An install made from the README can transcribe audio, or says plainly why not.
+- Scope: an optional requirements file for `faster-whisper`, a `make` step, the README; the model download is the user's choice and is documented, not automatic.
+- Acceptance criteria:
+  - [ ] Following the README's optional step, `/api/analyze/audio` transcribes the T-07 recording and scores it
+  - [ ] Without it, the degradation message names the step
+- Tests to add: none beyond a smoke run recorded in PROGRESS

@@ -61,6 +61,26 @@ The gates and the API ran in the main checkout, which is the only place the
 - Audio (`/api/analyze/audio`) and image (`/api/analyze/image`) analysis,
   password reset, the evidence vault and complaint PDF.
 - A fresh-clone install. The audit ran in the existing checkout.
+
+### Re-verified with the stack up — T-07, 2026-10-22
+
+colima and `make up`: Postgres 16.6, Redis 7.4, Neo4j 5.26 and Qdrant 1.12 all
+healthy. Main at `f85fd73`.
+
+| Check | Result |
+|---|---|
+| `AEGIS_REQUIRE_SERVING_BEST=1 make gates` | **Exit 0. 793 passed, 0 skipped.** `queue: broker … answered — Redis journal and worker tests ran`; `postgres: … answered — migrations proven on PostgreSQL too`. Contract consistent, typecheck and build clean |
+| `/api/health` | All four stores `reachable: true` (Postgres, Neo4j, Qdrant, Redis); execution `mode: worker`, broker reachable. Neo4j and Qdrant are reachable but not used (`networkx`, in-house retrieval) — Phase 3 |
+| `make migrate` on a fresh Postgres database | 0001 → 0002 → 0003 (head), clean |
+| Investigation on a Celery worker | API and worker both on Postgres (`DATABASE_URL`, database `aegis_t07`). Submitted case `AEG-ECB3A5006AC5`; the worker took it. To kill it mid-job the worker was started through a throwaway module that delayed each run by 15 s (a test harness, not committed). At 8 s the pool processes were sent SIGKILL: `WorkerLostError`, the message requeued at once (`acks_late`, `reject_on_worker_lost`), a fresh pool process ran it, `COMPLETE` and persisted in Postgres, one event timeline (seq 1–9, no duplicate from the killed attempt) |
+| … but the worker scored it wrong | **31.3 WATCH** where the same text scores ~95 CRITICAL in the API process: `trust_passport` errored on the worker — **B-13**, **B-14** |
+| `/api/analyze/image` on a rendered SMS screenshot (PNG) | Tesseract OCR read it; **91.0 CRITICAL, LIKELY_SCAM** |
+| `/api/analyze/audio` on a recorded WAV (macOS `say`, 16 kHz) | Ran and degraded honestly: `asr:unavailable`, verdict INSUFFICIENT — no speech-to-text backend is installed (**D-17**). The response carries **score 0.0, level CALM** beside that verdict (**B-15**) |
+
+Not verified in T-07: password reset, the evidence vault, the complaint PDF,
+Neo4j/Qdrant as serving stores (nothing uses them yet), and audio transcription
+itself (needs D-17).
+
 - `pip-audit` / `npm audit`.
 - The deployed site.
 
@@ -288,6 +308,35 @@ refuses the checkpoint), but it would have the day one is promoted, with two
 workers disagreeing about the same turn. Labels are now iterated in the
 taxonomy's order; `test_fused_determinism.py` runs six processes with different
 hash seeds.
+
+### B-13 — High — A failed citation lookup erases the Trust Passport's conclusive checks
+
+*Found during T-07.* Every passport FAIL fetches a knowledge-base passage to
+cite (`TrustPassport._cite` → `get_kb().search`). When that lookup raised, the
+whole agent errored — so the mechanical checks it had already decided ("safe
+account", "pay or be arrested", "tell no one") were lost, and the dispositive
+floor never applied. On a Celery worker the same digital-arrest message scored
+**31.3 WATCH** instead of ~95 CRITICAL. The degradation was tagged
+(`agent:trust_passport:error`), so it was not silent, but a citation is
+supporting evidence and must not be able to delete a finding. Owned by T-72.
+
+### B-14 — Medium — The worker never warms its agents, and dense retrieval fails after fork on macOS
+
+*Found during T-07.* The API warms every agent at startup (`registry.warm_all`);
+the Celery worker does not, so the first investigation on each pool process
+builds the knowledge base inside the 8 s node budget (7.99 s here). And with
+`AEGIS_DENSE_RAG` on (the default) that build used sentence-transformers on
+Apple's Metal in a forked prefork child, which Metal does not support: "Unable
+to reach MTLCompilerService". Linux workers have no Metal, so production is
+not known to be affected; a local worker is. Owned by T-73.
+
+### B-15 — Low — An analysis that could not read its input reports 0 / CALM
+
+*Found during T-07.* `/api/analyze/audio` with no speech-to-text backend
+returns verdict `INSUFFICIENT` with `score: 0.0` and `level: CALM`, and the
+Analyze page prints "0" beside "Not enough to judge". That is the "false
+negative wearing a number" `investigations/report.py` and `RiskDial` refuse:
+nothing was read, so nothing was scored. Owned by T-74.
 
 ### B-10 — Medium — A VPA ending a sentence was not extracted
 
@@ -521,6 +570,7 @@ overflow at 375 px, the app chrome renders in dark theme.
 | D-14 | *Found during T-05.* Every `make eval` rewrites the tracked `ml/artifacts/checkpoint_manifest.json` with a new `measured_at`, so re-running the gate leaves the working tree dirty even when nothing changed. **Fixed in T-71 (2026-10-22):** the manifest is rewritten only when something it states changes |
 | D-15 | *Found during T-01.* `docs/DATASETS.md` §2 gives the call corpus as "1,692 calls"; the generated `ml/data/processed/report.md` says 338 calls (209 scam, 129 benign) and 1,617 utterances. The PRD uses the generated figures. Owned by T-37's data card. **Fixed (2026-10-22):** `DATASETS.md` §2 quotes the generated report (corrected in T-09; the PRD's note is updated), and the report now also says 304 of the 338 calls contribute after de-duplication |
 | D-16 | *Found during B-09.* The lexical classifier's score is described as sound on any split because it is not trained. Its cues are hand-written with the corpus in view, and B-08's revision read lines from `investment_returns` and `mutual_fund_sip`, both now in the test split. So its figure is a regression measure for this code, not a clean held-out estimate; `eval_backends.py` now says so. A clean comparison needs a fold the rules were never written against — fresh calls (T-37) or a frozen rule set scored on newly generated archetypes |
+| D-17 | *Found during T-07.* Audio transcription has no declared dependency. `faster-whisper` is in neither `services/api/requirements.txt` nor any setup step, so `/api/analyze/audio` and the live call's ASR cannot read speech on any install made from the README; it degrades to `asr:unavailable`. Owned by T-75 |
 | D-11 | The plan is behind its own timeline. Phase 2 was scheduled for 28 Sep – 1 Nov; the last commit is 7 Sep and Phase 2 has not started. The plan totals about 1,060 hours |
 
 ---

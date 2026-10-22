@@ -444,3 +444,24 @@ full pipeline merge (T-47). One commit per change, each with its gates.
   envelope, `/api/health`'s prompt versions.
 - How to verify: `make gates`, `make webtest`, `make e2e`; read each 🧪
   task's Evidence line in `docs/TASKS.md`.
+
+## T-07 — Re-verify the infrastructure path with the stack up — 2026-10-22 (🧪)
+
+- What changed: no code. Results appended to `docs/AUDIT.md` §1.
+- Ran: `colima start && make up` (all four stores healthy);
+  `AEGIS_REQUIRE_SERVING_BEST=1 make gates` — 793 passed, 0 skipped, queue
+  and PostgreSQL lines both "answered"; `make migrate` on a fresh Postgres
+  database (0001 → 0003); an API and a Celery worker on that database; a
+  worker-executed investigation whose pool process was SIGKILLed 8 s into a
+  15 s harness delay — requeued, completed, persisted, one timeline; image
+  analysis on a real PNG (91 CRITICAL); audio on a real WAV (degraded,
+  `asr:unavailable`).
+- Found, not fixed (verification only, per the task's scope): **B-13** the
+  passport loses its conclusive checks when a citation lookup fails — on the
+  worker the digital-arrest text scored 31.3 instead of ~95; **B-14** the
+  worker never warms agents and dense retrieval fails after fork on macOS;
+  **B-15** unreadable input reports 0 / CALM beside INSUFFICIENT; **D-17**
+  no declared speech-to-text dependency. Tasks T-72 to T-75.
+- Harness, stated: the 15 s delay came from a throwaway Celery module in a
+  temp directory, never committed. The verification database was dropped.
+- How to verify: the commands above; the table in `docs/AUDIT.md` §1.
