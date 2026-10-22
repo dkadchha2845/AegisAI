@@ -32,6 +32,7 @@ from .db import SessionLocal, init_db
 from .engine import classifier as classifier_mod
 from .engine.classifier import load_classifier
 from .engine.twin import DigitalTwin
+from .errors import install as install_error_handlers
 from .intel import get_intel
 from .jobs import broker as job_broker
 from .jobs import queue_purpose
@@ -113,6 +114,9 @@ app.add_middleware(
     # search needs.
     expose_headers=["X-Request-ID"],
 )
+# Every 4xx and 5xx in one envelope (T-13).
+install_error_handlers(app)
+
 # Outermost, so the ID is set before every other layer and a 429 or a 500
 # still returns `X-Request-ID` (T-12).
 app.add_middleware(RequestIdMiddleware)

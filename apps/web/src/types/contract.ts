@@ -793,3 +793,16 @@ export interface InvestigationEvent {
   degraded: string[];
   error: string | null;
 }
+
+/** The one shape every 4xx and 5xx response has (T-13, audit D-09).
+ *  Branch on `code`, show `message`, quote `request_id` — it is the id on every
+ *  log line the request wrote. `detail` is the same string as `message`, or for
+ *  a 422 the list of fields that failed. A 500 never carries a stack trace. */
+export interface ErrorResponse {
+  status: number;
+  /** stable machine key, e.g. 'not_found', 'rate_limited' */
+  code: string;
+  message: string;
+  request_id: string | null;
+  detail: unknown;
+}

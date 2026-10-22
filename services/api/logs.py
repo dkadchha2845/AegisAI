@@ -77,6 +77,9 @@ class JsonFormatter(logging.Formatter):
                 out[key] = value
         if record.exc_info and record.exc_info[0] is not None:
             out["exc_type"] = record.exc_info[0].__name__
+            # Bounded: a traceback names code, not data, but an exception's
+            # message is whatever its raiser put in it.
+            out["traceback"] = self.formatException(record.exc_info)[-4000:]
         return json.dumps(out, default=str, ensure_ascii=False)
 
 
@@ -165,11 +168,12 @@ class RequestIdMiddleware:
                 supplied = value.decode("latin-1")
                 break
         rid = new_request_id(supplied)
-        status = {"code": 500}
+        status = {"code": 500, "started": False}
 
         async def send_with_id(message: Any) -> None:
             if message["type"] == "http.response.start":
                 status["code"] = message["status"]
+                status["started"] = True
                 headers = list(message.get("headers") or [])
                 headers.append((b"x-request-id", rid.encode("ascii")))
                 message = {**message, "headers": headers}
@@ -179,6 +183,19 @@ class RequestIdMiddleware:
         token = request_id.set(rid)
         try:
             await self.app(scope, receive, send_with_id)
+        except Exception as exc:
+            # Nothing caught it. Answer here, where the request id is still
+            # set, in the same envelope as every other error (T-13): the type
+            # and traceback go to the log under this id, and none of it goes
+            # to the client. A WebSocket, or a response already half-sent, can
+            # only be closed, so those re-raise.
+            self.log.error("unhandled exception", exc_info=exc,
+                           extra={"error": describe_error(exc)})
+            if scope["type"] != "http" or status["started"]:
+                raise
+            from .errors import INTERNAL_MESSAGE, error_response
+
+            await error_response(500, INTERNAL_MESSAGE)(scope, receive, send_with_id)
         finally:
             route = scope.get("route")
             self.log.info(

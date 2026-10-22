@@ -127,6 +127,26 @@ def check_investigation_fixture() -> list[str]:
     return failures
 
 
+def check_error_response(ts: str) -> list[str]:
+    """`ErrorResponse` has the same fields on both sides (T-13).
+
+    The enum comparison cannot see a field, and no fixture carries an error, so
+    this compares the field names directly. Every client's error handling reads
+    these names; a renamed one would fail silently into a generic message.
+    """
+    from schema.models import ErrorResponse
+
+    m = re.search(r"export interface ErrorResponse \{(.*?)\n\}", ts, re.S)
+    if not m:
+        return ["types.ts: could not find `export interface ErrorResponse`"]
+    ts_fields = re.findall(r"^\s*(\w+)\??:", m.group(1), re.M)
+    py_fields = list(ErrorResponse.model_fields)
+    if ts_fields != py_fields:
+        return [f"ErrorResponse: models.py={py_fields}, types.ts={ts_fields}"]
+    print(f"  ok  ErrorResponse fields agree ({len(py_fields)})")
+    return []
+
+
 def main() -> int:
     ts = (HERE / "types.ts").read_text()
     failures: list[str] = []
@@ -191,6 +211,7 @@ def main() -> int:
         print("  --  mock-stream.json absent (run mock_stream.py)")
 
     failures.extend(check_investigation_fixture())
+    failures.extend(check_error_response(ts))
 
     if failures:
         print("\nCONTRACT DRIFT:", file=sys.stderr)

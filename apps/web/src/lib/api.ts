@@ -9,6 +9,7 @@
  */
 
 import type {
+  ErrorResponse,
   InvestigationEvent,
   InvestigationState,
   InvestigationStatus,
@@ -33,7 +34,30 @@ export const API_BASE =
 
 export type ApiResult<T> =
   | { ok: true; data: T }
-  | { ok: false; error: string; status?: number };
+  | { ok: false; error: string; status?: number; code?: string; requestId?: string };
+
+/** Read the server's error envelope (T-13). Every 4xx/5xx has the
+ *  `ErrorResponse` shape; `detail` is read only for a body from before it, and
+ *  the status line is the last resort for a body that is not JSON at all. */
+async function errorOf(res: Response): Promise<{ message: string; code?: string; requestId?: string }> {
+  const fallback = `${res.status} ${res.statusText}`;
+  try {
+    const body = (await res.json()) as Partial<ErrorResponse> | null;
+    const message =
+      typeof body?.message === "string"
+        ? body.message
+        : typeof body?.detail === "string"
+          ? body.detail
+          : fallback;
+    return {
+      message,
+      code: typeof body?.code === "string" ? body.code : undefined,
+      requestId: body?.request_id ?? res.headers.get("X-Request-ID") ?? undefined,
+    };
+  } catch {
+    return { message: fallback, requestId: res.headers.get("X-Request-ID") ?? undefined };
+  }
+}
 
 // --- session token ---------------------------------------------------------
 //
@@ -133,17 +157,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T
           : { "content-type": "application/json", ...authHeader, ...(init?.headers ?? {}) },
     });
     if (!res.ok) {
-      // FastAPI puts the useful message in `detail`. Surfacing it beats
-      // "Request failed" — a 415 that says which formats are accepted is
-      // the difference between a user retrying correctly and giving up.
-      let message = `${res.status} ${res.statusText}`;
-      try {
-        const body = await res.json();
-        if (typeof body?.detail === "string") message = body.detail;
-      } catch {
-        /* non-JSON error body; the status line is all we have */
-      }
-      return { ok: false, error: message, status: res.status };
+      // The server's own message beats "Request failed" — a 415 that says
+      // which formats are accepted is the difference between a user retrying
+      // correctly and giving up.
+      const err = await errorOf(res);
+      return { ok: false, error: err.message, status: res.status, code: err.code, requestId: err.requestId };
     }
     return { ok: true, data: (await res.json()) as T };
   } catch {
@@ -1375,11 +1393,5 @@ function parseFrame(frame: string): InvestigationEvent | null {
 }
 
 async function detailOf(response: Response): Promise<string> {
-  try {
-    const body = await response.json();
-    if (typeof body?.detail === "string") return body.detail;
-  } catch {
-    /* non-JSON error body */
-  }
-  return `${response.status} ${response.statusText}`;
+  return (await errorOf(response)).message;
 }

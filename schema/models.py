@@ -40,7 +40,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -897,6 +897,23 @@ class InvestigationState(BaseModel):
     # --- operational ---
     degraded: list[str] = Field(default_factory=list)
     trace: list[TraceSpan] = Field(default_factory=list)
+
+
+class ErrorResponse(BaseModel):
+    """The one shape every 4xx and 5xx response has (T-13, audit D-09).
+
+    A client handles every error with one code path: `code` to branch on,
+    `message` to show, `request_id` to quote — it is the id on every log line
+    the request wrote (T-12). `detail` is what FastAPI clients already read:
+    the same string as `message`, or for a 422 the list of fields that failed.
+    An unhandled exception is `internal_error` and never carries a stack trace.
+    """
+
+    status: int = Field(ge=400, le=599)
+    code: str = Field(description="stable machine key, e.g. 'not_found', 'rate_limited'")
+    message: str
+    request_id: Optional[str] = None
+    detail: Any = None
 
 
 def utc_now_iso() -> str:

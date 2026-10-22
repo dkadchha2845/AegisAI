@@ -74,7 +74,7 @@ reused.
 | T-10 | Move vendored and unrelated directories out of the product tree | M0 | 🧪 | S | — |
 | T-11 | Fix the two truthfulness and labelling defects in the UI | M0 | 🧪 | S | — |
 | T-12 | Carry a request and case ID through structured logs | M1 | 🧪 | S | 10.2 |
-| T-13 | Give every route one error envelope | M1 | ⬜ | S | — |
+| T-13 | Give every route one error envelope | M1 | 🧪 | S | — |
 | T-14 | Move prompts into versioned files | M1 | ⬜ | S | — |
 | T-15 | Stand up the frontend test harness | M1 | ⬜ | S | 7.10 |
 | T-16 | Build the design-system components the brief requires | M1 | ⬜ | WP | 7.1 |
@@ -444,7 +444,8 @@ with seven roles, the API skeleton and CI. These are what is left.
 
 ### T-13 — Give every route one error envelope
 - Milestone: M1
-- Status: ⬜ Todo
+- Status: 🧪 Built under T-71 (2026-10-22), awaiting `approve T-13`
+- Evidence: `test_error_envelope.py` (9) — 422 validation (and it no longer echoes the submitted value), 404 missing case, 404 unknown route, 405, 415, 401, 403, 429 from the rate limiter, and an unhandled exception as a 500 that names neither the exception nor the file; each asserts the same five fields and that `request_id` equals the `X-Request-ID` header. `check_contract.py` compares `ErrorResponse` field by field across `models.py` and `types.ts`. `api.ts` reads the envelope in one function (`errorOf`) and returns `code` and `requestId` with a failure. No status code changed; `detail` is kept for clients that read it, so the 739 existing tests passed unchanged. Live: a malformed `POST /api/analyze/text` and `GET /api/investigations/AEG-NOPE` return the same shape.
 - Depends on: T-12
 - Fixes / implements: D-09; brief §8
 - Goal: A client should be able to handle every error the API returns with one code path.

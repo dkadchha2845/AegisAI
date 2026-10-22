@@ -33,7 +33,9 @@ from typing import Deque, Dict, Tuple
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse, Response
+from starlette.responses import Response
+
+from .errors import error_response
 
 # --- security headers -------------------------------------------------------
 
@@ -145,9 +147,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 q.popleft()
             if len(q) >= limit:
                 retry = max(1, int(q[0] + window - now))
-                return JSONResponse(
-                    status_code=429,
-                    content={"detail": f"Rate limit exceeded. Retry in {retry}s."},
+                return error_response(
+                    429,
+                    f"Rate limit exceeded. Retry in {retry}s.",
                     headers={"Retry-After": str(retry)},
                 )
             q.append(now)
