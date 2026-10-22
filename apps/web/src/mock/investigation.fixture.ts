@@ -284,6 +284,7 @@ export const INVESTIGATION_FIXTURE: InvestigationState = {
     "has_login_form": 1.0,
     "ti_hits": 1.0,
     "graph_prior_observations": 4.0,
+    "spoofing_risk": null,
   },
   "risk_score": 88.4,
   "risk_level": "HIGH",

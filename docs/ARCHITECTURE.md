@@ -309,7 +309,7 @@ class InvestigationState(BaseModel):
     rag_context: list[RetrievedChunk]    # text + citation, never invented
 
     # --- judgement ---
-    risk_features: dict[str, float]      # the ML model's exact input vector
+    risk_features: dict[str, float | None]  # the judge's exact input vector; None = missing (T-19)
     risk_score: float = Field(ge=0, le=100)
     confidence: float = Field(ge=0, le=1)
     classification: Optional[FraudCategory]
@@ -348,6 +348,17 @@ not let an LLM decide the score.**
 
 The diagram below is the 🎯 target. §4.1 is the scoring that runs today; §4.2
 is the calibrated late fusion that replaces it.
+
+**Feature assembly is built (T-19, version 0).** `services/api/agents/features.py`
+declares every feature today's agents emit — 62, with type, range, producing
+agent and null policy; 51 are judge inputs, 11 are the judge tier's own outputs
+and never assembled. The graph runs `assemble()` as its own node,
+`assemble_features`, between the reason and judge tiers, writing
+`state.risk_features` in declaration order. A feature whose agent was skipped
+or failed is `null` — missing, never zero; a DEGRADED agent's values are kept,
+because the contract defines DEGRADED as a usable answer. `SCHEMA_SHA256`
+pins the declarations. The provisional judge (T-20) does not read the vector
+yet; the calibrated judge (T-41, T-42) will.
 
 ```mermaid
 flowchart LR

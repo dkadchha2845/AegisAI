@@ -935,8 +935,10 @@ class InvestigationState(BaseModel):
     rag_context: list[RetrievedChunk] = Field(default_factory=list)
 
     # --- judgement ---
-    risk_features: dict[str, float] = Field(
-        default_factory=dict, description="the ML model's exact input vector"
+    risk_features: dict[str, Optional[float]] = Field(
+        default_factory=dict,
+        description="the judge's exact input vector (services/api/agents/features.py); "
+                    "null = missing — the producing agent was skipped or failed, never zero",
     )
     risk_score: Optional[float] = Field(None, ge=0, le=100)
     risk_level: Optional[ThreatLevel] = None

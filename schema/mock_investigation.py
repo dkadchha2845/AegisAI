@@ -336,6 +336,8 @@ def build() -> InvestigationState:
             "has_login_form": 1.0,
             "ti_hits": 1.0,
             "graph_prior_observations": 4.0,
+            # Missing, not zero: the producing agent was skipped (T-19).
+            "spoofing_risk": None,
         },
         risk_score=88.4,
         risk_level=ThreatLevel.HIGH,

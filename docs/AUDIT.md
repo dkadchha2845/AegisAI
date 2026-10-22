@@ -338,6 +338,19 @@ Analyze page prints "0" beside "Not enough to judge". That is the "false
 negative wearing a number" `investigations/report.py` and `RiskDial` refuse:
 nothing was read, so nothing was scored. Owned by T-74.
 
+### B-16 — Medium — With a broker up and no worker, investigations queue and never run
+
+*Found during T-19.* When Redis answers, the API hands every investigation to
+the queue, whether or not a worker is consuming it. With `make up` and
+`make api` but no `make worker`, a submission is accepted (202) and stays
+`QUEUED` indefinitely; the Investigate page waits on a stream that never
+advances. `/api/health` does raise `queue:no_workers` — `broker.py` calls it
+"the one queue state that is unambiguously broken" — but nothing tells the
+submitter, and nothing falls back. A worker started later does pick the jobs
+up, so this is a choice between waiting and running in process, and it is the
+owner's: run in process when no worker answers (with `queue:in_process` on the
+202), or keep queuing and say so on the 202. Owned by T-76.
+
 ### B-10 — Medium — A VPA ending a sentence was not extracted
 
 *Found and fixed 2026-10-22 (T-18).* `intel/entities.py` discarded a UPI handle

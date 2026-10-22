@@ -103,6 +103,7 @@ from schema.models import (
     InvestigationStatus,
     utc_now_iso,
 )
+from services.api.agents import features as features_mod
 from services.api.agents import registry
 from services.api.agents.base import STAGE_ORDER, Agent, AgentContext, run_agent, stage_of
 from services.api.agents.base import Stage as AgentStage
@@ -383,19 +384,29 @@ def build_graph(
             "trace": rec.ordered(),
         }
 
+    async def assemble_features(state: InvestigationState) -> Dict[str, Any]:
+        """The judge's input vector, from what every earlier tier published
+        (T-19). Its own node, so it runs after the last input agent and before
+        any judge — and a failure here costs the vector, not the case."""
+        try:
+            return {"risk_features": features_mod.assemble(state)}
+        except Exception:
+            return {"degraded": [*state.degraded, FEATURES_UNAVAILABLE]}
+
     g: Any = StateGraph(InvestigationState)
     g.add_node("begin", begin)
     g.add_node("classify", classify)
     for stage in STAGE_ORDER:
         g.add_node(f"{stage.value}_stage", make_stage_node(stage))
+    g.add_node(ASSEMBLE_NODE, assemble_features)
     g.add_node("finish", finish)
 
     g.add_edge(START, "begin")
     g.add_edge("begin", "classify")
     previous = "classify"
-    for stage in STAGE_ORDER:
-        g.add_edge(previous, f"{stage.value}_stage")
-        previous = f"{stage.value}_stage"
+    for name in _stage_nodes():
+        g.add_edge(previous, name)
+        previous = name
     g.add_edge(previous, "finish")
     g.add_edge("finish", END)
 
@@ -411,7 +422,22 @@ def node_plan() -> List[str]:
     Without it the UI would have to guess how many steps are left, which is the
     fake timer task 1.9 forbids.
     """
-    return ["begin", "classify", *(f"{s.value}_stage" for s in STAGE_ORDER), "finish"]
+    return ["begin", "classify", *_stage_nodes(), "finish"]
+
+
+#: The feature-assembly node: after the reason tier, before the judge (T-19).
+ASSEMBLE_NODE = "assemble_features"
+FEATURES_UNAVAILABLE = "features:unavailable"
+
+
+def _stage_nodes() -> List[str]:
+    """The tier nodes in order, with feature assembly before the judge tier."""
+    out: List[str] = []
+    for stage in STAGE_ORDER:
+        if stage is AgentStage.JUDGE:
+            out.append(ASSEMBLE_NODE)
+        out.append(f"{stage.value}_stage")
+    return out
 
 
 @dataclass(frozen=True)

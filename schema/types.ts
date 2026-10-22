@@ -741,8 +741,9 @@ export interface InvestigationState {
   rag_context: RetrievedChunk[];
 
   // --- judgement ---
-  /** the ML model's exact input vector */
-  risk_features: Record<string, number>;
+  /** the judge's exact input vector (services/api/agents/features.py);
+   *  null = missing — the producing agent was skipped or failed, never zero */
+  risk_features: Record<string, number | null>;
   risk_score: number | null;
   risk_level: ThreatLevel | null;
   confidence: number | null;

@@ -80,7 +80,7 @@ reused.
 | T-16 | Build the design-system components the brief requires | M1 | ⬜ | WP | 7.1 |
 | T-17 | Add verification fields to the investigation contract | M2 | 🧪 | S | — |
 | T-18 | Extract entities inside the graph | M2 | ✅ | S | — |
-| T-19 | Define the feature-assembly contract, version 0 | M2 | ⬜ | S | 4.1 |
+| T-19 | Define the feature-assembly contract, version 0 | M2 | 🧪 | S | 4.1 |
 | T-20 | Port the served threat score into the graph as a provisional judge | M2 | ✅ | S | 4.6 |
 | T-21 | Build the A7 adversarial verifier — deterministic challenger | M2 | ⬜ | S | — |
 | T-22 | Add the A7 LLM challenger, with fallback to the deterministic one | M2 | ⬜ | S | — |
@@ -137,8 +137,9 @@ reused.
 | T-73 | Warm the worker's agents, and make dense retrieval fork-safe | M0 | ⬜ | S | — |
 | T-74 | An analysis that read nothing reports no score | M0 | ⬜ | S | — |
 | T-75 | Declare and document the speech-to-text dependency | M0 | ⬜ | S | — |
+| T-76 | Decide what a submission does when no worker is consuming the queue | M0 | ⬜ | S | — |
 
-75 tasks: 43 single-sitting (32 written out in full below), 32 work packages.
+76 tasks: 44 single-sitting (33 written out in full below), 32 work packages.
 T-69 and T-70 were added on the owner's request on 2026-10-21 and 2026-10-22,
 out of the recommended order; they are specified at the end of this file.
 
@@ -581,7 +582,8 @@ demonstrated as the brief describes it — on one modality, honestly labelled.
 
 ### T-19 — Define the feature-assembly contract, version 0
 - Milestone: M2
-- Status: ⬜ Todo
+- Status: 🧪 Done 2026-10-22, awaiting `approve T-19`
+- Evidence: `services/api/agents/features.py` declares 62 features (51 inputs, 11 judge-tier outputs never assembled) with type, range, producing agent and null policy; `SCHEMA_SHA256` pins them. The graph's new `assemble_features` node, between `reason_stage` and `judge_stage`, writes `state.risk_features`; a failure there tags `features:unavailable` and the case still completes. Contract: `risk_features` is `dict[str, Optional[float]]` / `Record<string, number | null>` so missing can be said; the fixture carries one null. `test_features.py` (11): every emitted feature declared; vector = declared inputs in order, no judge output; a skipped or errored agent is null, a ran-but-unobserved count is 0; determinism across a re-run; ranges and integer types hold on four fixtures; the drift guard; the failed-assembly path; the API returns nulls. Live (in-process API): `risk_features` of 51, `null` for the coercion and spoofing features of an SMS with no victim side and no number, scored 95.0, the node listed in the stream. **Deviation, for the owner:** the criterion says a *degraded* agent yields missing; the contract defines DEGRADED as a usable answer from a fallback, and the coercion agent is DEGRADED on every text call (no audio), so its values are kept and only skipped / errored agents are missing. Found: B-16 (T-76).
 - Depends on: T-18
 - Fixes / implements: legacy 4.1
 - Goal: The judge must read a typed, deterministic feature vector — not agent internals. Define the registry for the features today's agents already produce.
@@ -893,3 +895,15 @@ The paper's contribution. Nothing here is claimed until it is measured.
   - [ ] Following the README's optional step, `/api/analyze/audio` transcribes the T-07 recording and scores it
   - [ ] Without it, the degradation message names the step
 - Tests to add: none beyond a smoke run recorded in PROGRESS
+
+### T-76 — Decide what a submission does when no worker is consuming the queue
+- Milestone: M0
+- Status: ⬜ Todo — needs the owner's decision first
+- Depends on: —
+- Fixes / implements: B-16 (found in T-19)
+- Goal: A submission never waits silently on a queue nobody reads.
+- Options: (a) when no worker answers the ping, run in process and tag the 202 `queue:in_process` (recommended — the citizen gets an answer, the operator sees the tag); (b) keep queuing, and say on the 202 and the Investigate page that no worker is running.
+- Acceptance criteria:
+  - [ ] With Redis up and no worker, a submission either completes or tells the submitter, in the response, that it is waiting for a worker
+  - [ ] With a worker, nothing changes
+- Tests to add: the no-worker case through the API
