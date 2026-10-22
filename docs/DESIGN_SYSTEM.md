@@ -269,23 +269,25 @@ states the brief requires. **Missing** — not built.
 |---|---|---|---|---|
 | 1 | Buttons | **Have** | `.btn2` family, `.iconbtn` — `styles/primitives.css` | — |
 | 2 | Inputs | **Have** | `.field`, `.fieldlabel`, `.fieldhint`, `.segmented` — `styles/primitives.css` | No error/invalid style or message pattern |
-| 3 | File dropzone | **Partial** | Inline in `pages/Shield.tsx` (`onDrop`, `onDragOver`) and `pages/Investigate.tsx` | Two implementations; no shared component, no rejected-file state |
+| 3 | File dropzone | **Have** (T-16d) | `components/ui/Dropzone.tsx` — the two page versions are not yet moved onto it (M3) | — |
 | 4 | Cards | **Have** | `.card` family, `.panel` — `styles/primitives.css` | Several page-specific cards (`.featurecard`, `.clustercard`, `.home-task`) |
-| 5 | Risk badge | **Have** | `.chip--caps` with `data-risk` — `styles/primitives.css` | Not a React component; each page writes the markup |
+| 5 | Risk badge | **Have** (T-16a) | `components/ui/RiskBadge.tsx` (label + number + colour; unscored is "Not scored") | Pages still write the chip markup until M3 wires it |
 | 6 | Risk gauge | **Have** | `components/ui/RiskDial.tsx`; `components/ThreatMeter.tsx` (live) | Two gauges for one idea |
-| 7 | Timeline (scam stages) | **Partial** | `.live-timeline` inline in `pages/LiveProtection.tsx` (events by time) | No stage-by-stage timeline component; nothing for an investigation's timeline (T-52) |
-| 8 | Evidence viewer | **Missing** | — | Nothing shows a submitted image, recording or document with what was extracted from it (T-48) |
-| 9 | Agent-trace panel | **Partial** | `AgentRow` inline in `pages/Investigate.tsx` (status, latency) | Not reusable; no graph view, no inputs/outputs on click (T-49) |
+| 7 | Timeline (scam stages) | **Have** (T-16e) | `components/ui/StageTimeline.tsx` — the seven arc stages, reached / current / ahead | An investigation's event timeline is T-52 |
+| 8 | Evidence viewer | **Have** (T-16g) | `components/ui/EvidenceViewer.tsx` — artefact beside each extraction, its extractor and confidence; type mismatch shown | Wiring into the case file is T-48 |
+| 9 | Agent-trace panel | **Have** (T-16f) | `components/ui/AgentTrace.tsx` — rows open to findings, features, errors and A7 verdicts | The graph view is T-49 |
 | 10 | Case-file viewer | **Partial** | `components/report/InvestigationReport.tsx` | Renders the thin report; no A7 verdicts, entities or hashes yet (T-50) |
 | 11 | Tables | **Have** | `.table`, `.tablewrap` — `styles/primitives.css` | Two page variants (`.admin-table`, `.cb-table`); no sort or empty-row pattern |
-| 12 | Toasts | **Missing** | — | `--z-toast` is reserved, nothing uses it |
-| 13 | Modals | **Partial** | `components/layout/CommandPalette.tsx` (`role="dialog"`, `aria-modal`) | One bespoke dialog; no general modal with focus trap and return |
+| 12 | Toasts | **Have** (T-16b) | `components/ui/Toast.tsx` — `ToastProvider` / `useToast()` on `--z-toast` | Not yet mounted app-wide (M3) |
+| 13 | Modals | **Have** (T-16c) | `components/ui/Modal.tsx` — focus trap, Escape, focus return, scroll lock | — |
 | 14 | Empty states | **Have** | `EmptyState` — `components/ui/States.tsx` | — |
 | 15 | Loading skeletons | **Have** | `Skeleton`, `SkeletonRows`, `Spinner` — `components/ui/States.tsx` | — |
 | 16 | Error states | **Have** | `ErrorState` — `components/ui/States.tsx` | — |
 
-**Count: 9 have, 5 partial, 2 missing.** The partial and missing ones are the
-scope of T-16.
+**Count after T-16: 15 have, 1 partial (10, the case-file viewer — T-50).** Every
+component is shown, in both themes and at phone width, on the gallery route
+`/design`. As built in T-16: components exist and are tested; moving the pages
+onto them is M3.
 
 ---
 
@@ -365,17 +367,17 @@ surface, cards included.
 
 | ID | Gap | Proposed resolution |
 |---|---|---|
-| G-01 | No reusable file dropzone (two inline implementations) | `ui/Dropzone.tsx`: drag, browse, accepted types, size cap, rejected-file state |
-| G-02 | No stage timeline component | `ui/StageTimeline.tsx`: the eight stages, current and visited, with timestamps — live and investigation |
-| G-03 | No evidence viewer | `ui/EvidenceViewer.tsx`: image / audio / document, with the extracted text and its confidence beside it |
-| G-04 | Agent trace is page-inline | `ui/AgentTrace.tsx`: one row per agent (status, latency, findings), expandable to inputs/outputs; the graph view is T-49 |
+| G-01 | ✅ T-16d — `ui/Dropzone.tsx` | `ui/Dropzone.tsx`: drag, browse, accepted types, size cap, rejected-file state |
+| G-02 | ✅ T-16e — `ui/StageTimeline.tsx` | `ui/StageTimeline.tsx`: the eight stages, current and visited, with timestamps — live and investigation |
+| G-03 | ✅ T-16g — `ui/EvidenceViewer.tsx` | `ui/EvidenceViewer.tsx`: image / audio / document, with the extracted text and its confidence beside it |
+| G-04 | ✅ T-16f — `ui/AgentTrace.tsx` | `ui/AgentTrace.tsx`: one row per agent (status, latency, findings), expandable to inputs/outputs; the graph view is T-49 |
 | G-05 | Case-file viewer renders the thin report | Extend `report/InvestigationReport.tsx` for A7 verdicts, entities, hashes, timeline (T-50) |
-| G-06 | No toast | `ui/Toast.tsx` on `--z-toast`, `aria-live`, auto-dismiss that pauses on hover |
-| G-07 | No general modal | `ui/Modal.tsx`: focus trap, Escape, focus return, `aria-modal` |
-| G-08 | Risk badge is markup, not a component | `ui/RiskBadge.tsx`: number + label + colour from one `level` and `score` |
+| G-06 | ✅ T-16b — `ui/Toast.tsx` | `ui/Toast.tsx` on `--z-toast`, `aria-live`, auto-dismiss that pauses on hover |
+| G-07 | ✅ T-16c — `ui/Modal.tsx` | `ui/Modal.tsx`: focus trap, Escape, focus return, `aria-modal` |
+| G-08 | ✅ T-16a — `ui/RiskBadge.tsx` | `ui/RiskBadge.tsx`: number + label + colour from one `level` and `score` |
 | G-09 | Two risk gauges (`RiskDial`, `ThreatMeter`) | Decide one gauge with a live mode |
 | G-10 | Three stat variants, two table variants | Consolidate into `.stat` and `.table` |
-| G-11 | Inputs have no invalid state | `.field[aria-invalid]` + message pattern |
+| G-11 | ✅ T-16d — `.field[aria-invalid]` + `.fieldmsg--bad` | `.field[aria-invalid]` + message pattern |
 | G-12 | ~12 ad-hoc breakpoints, no tokens | Three: 560 / 900 / 1080 (§7.1) |
 | G-13 | `--font-mono` is DM Sans, not a monospace; the comment says JetBrains Mono | Decide, and make the comment and the token agree |
 | G-14 | `--lp-ink-3` at 4.46:1 (U-08) | ✅ Fixed in T-71 |

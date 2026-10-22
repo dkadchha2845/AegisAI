@@ -53,6 +53,9 @@ const Shield = lazy(() => import("@/pages/Shield").then((m) => ({ default: m.Shi
 const CaseBook = lazy(() => import("@/pages/CaseBook").then((m) => ({ default: m.CaseBook })));
 const Knowledge = lazy(() => import("@/pages/Knowledge").then((m) => ({ default: m.Knowledge })));
 const ModelCard = lazy(() => import("@/pages/ModelCard").then((m) => ({ default: m.ModelCard })));
+const ComponentGallery = lazy(() =>
+  import("@/pages/ComponentGallery").then((m) => ({ default: m.ComponentGallery })),
+);
 
 /** Per-route document titles — the tab should say where you are, not repeat
  *  the tagline. Rendered inside BrowserRouter so useLocation is available. */
@@ -82,6 +85,7 @@ const TITLES: Record<string, string> = {
   "/analyzer": "Analyzer (audit) · AegisAI",
   "/guardian": "Guardian · AegisAI",
   "/model": "Model card · AegisAI",
+  "/design": "Components · AegisAI",
 };
 
 /** Routes that are a fixed instrument viewport rather than a scrolling
@@ -209,6 +213,9 @@ export default function App() {
                 <Route path="/learn" element={<Knowledge />} />
                 <Route path="/emergency" element={<Emergency />} />
                 <Route path="/profile" element={<Profile />} />
+                {/* The design-system gallery (T-16): renders components from
+                    the contract fixture, fetches nothing, holds no case data. */}
+                <Route path="/design" element={<ComponentGallery />} />
 
                 {/* Old paths keep working — redirect to their citizen homes. */}
                 <Route path="/shield" element={<Navigate to="/analyze" replace />} />

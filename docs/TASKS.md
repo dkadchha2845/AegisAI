@@ -77,7 +77,7 @@ reused.
 | T-13 | Give every route one error envelope | M1 | ✅ | S | — |
 | T-14 | Move prompts into versioned files | M1 | ✅ | S | — |
 | T-15 | Stand up the frontend test harness | M1 | ✅ | S | 7.10 |
-| T-16 | Build the design-system components the brief requires | M1 | ⬜ | WP | 7.1 |
+| T-16 | Build the design-system components the brief requires | M1 | 🧪 | WP | 7.1 |
 | T-17 | Add verification fields to the investigation contract | M2 | 🧪 | S | — |
 | T-18 | Extract entities inside the graph | M2 | ✅ | S | — |
 | T-19 | Define the feature-assembly contract, version 0 | M2 | 🧪 | S | 4.1 |
@@ -514,7 +514,16 @@ with seven roles, the API skeleton and CI. These are what is left.
 
 ### T-16 — Build the design-system components the brief requires
 - Milestone: M1
-- Status: ⬜ Todo
+- Status: 🧪 Done 2026-10-22, awaiting `approve T-16`. Split from `docs/DESIGN_SYSTEM.md` §9, one component per sub-task, all built:
+  - **T-16a** — gallery route `/design` + `RiskBadge` (G-08) — 4 tests
+  - **T-16b** — `Toast` on `--z-toast` (G-06) — 4 tests
+  - **T-16c** — `Modal`: focus trap, Escape, focus return (G-07) — 5 tests
+  - **T-16d** — `Dropzone` with rejected-file state; invalid-input pattern (G-01, G-11) — 5 tests
+  - **T-16e** — `StageTimeline` (G-02) — 4 tests
+  - **T-16f** — `AgentTrace` (G-04) — 4 tests
+  - **T-16g** — `EvidenceViewer` (G-03) — 6 tests
+  - Not in T-16: G-05 (case-file viewer, T-50); G-09, G-10, G-12, G-13 are decisions for the owner.
+- Evidence: `make webtest` 35 passed (8 files). Every component with async data has loading, empty and error states; every interactive one is keyboard-operable with a visible focus ring. Colour, spacing, radius, motion and z-index come from tokens; the only raw numbers are layout sizes. Verified in the running app at `/design`: no console errors; the Modal opened with Enter, kept focus inside across Tab, closed on Escape and returned focus; an error toast announced as an alert without moving focus; dark and light themes; 375 px with no horizontal overflow. The running gallery found one bug the unit tests could not — `.atr__panel { display: grid }` overrode `hidden`, so every trace row stood open; fixed (`.atr__panel[hidden]`). Pages are not moved onto the components (out of scope; M3).
 - Depends on: T-03, T-15
 - Fixes / implements: U-05
 - Goal: Close the gap table from T-03 — expected to include the risk gauge, stage timeline, evidence viewer, agent-trace panel, toasts and loading skeletons.

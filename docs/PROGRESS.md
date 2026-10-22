@@ -483,3 +483,15 @@ Transcript (macOS, Homebrew Python 3.12 present, pip/npm caches warm):
 
 - Files: `Makefile` (`install` creates `.venv`, `PYTHON` override, version guard), `README.md` (Quick Start).
 - Not measured: a cold machine's download time — caches were warm.
+
+## T-17 — Add verification fields to the investigation contract — 2026-10-22 (🧪)
+
+- `Finding.verification` (verdict, reason, challenger, confidence before and after, weight) on both sides of the contract; the model refuses a verdict that raises confidence or mismatches its weight. Pre-T-17 fixture from git validates. 10 tests; contract consistent.
+
+## T-19 — Define the feature-assembly contract, version 0 — 2026-10-22 (🧪)
+
+- `services/api/agents/features.py`: 62 declared features, 51 assembled into `risk_features` by a new `assemble_features` graph node before the judge; skipped or errored agents are `null`. 11 tests. Live: 51 features, nulls where agents were skipped. Deviation for the owner: DEGRADED agents keep their values. Found B-16 (queue with no worker), T-76.
+
+## T-16 — Build the design-system components the brief requires — 2026-10-22 (🧪)
+
+- Seven components in `apps/web/src/components/ui/` with 32 new component tests, and a gallery at `/design`. Verified in the browser: keyboard behaviour of the dialog and toast, both themes, 375 px. One bug found only in the running page (trace rows ignored `hidden`) and fixed.
