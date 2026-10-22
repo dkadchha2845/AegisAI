@@ -63,6 +63,7 @@ from sqlalchemy.orm import Session
 
 from .config import settings
 from .db import get_db
+from .logs import get_logger
 from .models_db import (
     ROLE_RANK,
     ROLES,
@@ -82,6 +83,8 @@ from .permissions import (
     ROLE_PERMISSIONS,
     permissions_for,
 )
+
+log = get_logger("auth")
 
 # --- base64url, without padding ---------------------------------------------
 # Defined first: the pbkdf2 hash format uses them, and `DUMMY_PASSWORD_HASH`
@@ -249,8 +252,8 @@ def _secret() -> bytes:
         return settings.secret_key.encode("utf-8")
     if _dev_secret is None:
         _dev_secret = secrets.token_bytes(32)
-        print("[aegis] AEGIS_SECRET_KEY unset — using an ephemeral dev key; "
-              "tokens will not survive a restart")
+        log.warning("AEGIS_SECRET_KEY unset: using an ephemeral dev key; "
+                    "tokens will not survive a restart")
     return _dev_secret
 
 
@@ -596,8 +599,11 @@ def seed_admin(db: Session) -> None:
             org_id=default_org.id,
             full_name="Platform Owner",
         )
-        print(f"[aegis] seeded default org {default_org.slug!r} + owner "
-              f"{settings.default_admin_email!r} — change the password (AEGIS_ADMIN_PASSWORD)")
+        # The owner's address is configuration, but it is still a person's
+        # address; the line says what happened, not to whom (T-12).
+        log.warning("seeded the default organisation and its owner account; "
+                    "change the owner password (AEGIS_ADMIN_PASSWORD)",
+                    extra={"org": default_org.slug})
 
     if auth_enabled():
         return
@@ -623,8 +629,10 @@ def seed_admin(db: Session) -> None:
             )
             created += 1
     if created:
-        print(f"[aegis] seeded {created} demo account(s) (open mode) — "
-              f"password {demo_password()!r}; disabled when AEGIS_AUTH=1")
+        # No password in the log: the sign-in page lists the demo accounts in
+        # open mode, which is where a person looks for them (T-12).
+        log.warning("seeded demo accounts (open mode); disabled when AEGIS_AUTH=1",
+                    extra={"count": created})
 
 
 # --- password reset ---------------------------------------------------------

@@ -73,7 +73,7 @@ reused.
 | T-09 | Retire the stale status documents | M0 | 🧪 | S | — |
 | T-10 | Move vendored and unrelated directories out of the product tree | M0 | 🧪 | S | — |
 | T-11 | Fix the two truthfulness and labelling defects in the UI | M0 | 🧪 | S | — |
-| T-12 | Carry a request and case ID through structured logs | M1 | ⬜ | S | 10.2 |
+| T-12 | Carry a request and case ID through structured logs | M1 | 🧪 | S | 10.2 |
 | T-13 | Give every route one error envelope | M1 | ⬜ | S | — |
 | T-14 | Move prompts into versioned files | M1 | ⬜ | S | — |
 | T-15 | Stand up the frontend test harness | M1 | ⬜ | S | 7.10 |
@@ -424,7 +424,8 @@ with seven roles, the API skeleton and CI. These are what is left.
 
 ### T-12 — Carry a request and case ID through structured logs
 - Milestone: M1
-- Status: ⬜ Todo
+- Status: 🧪 Built under T-71 (2026-10-22), awaiting `approve T-12`
+- Evidence: `test_logging.py` (8) — the ids survive an await, a task and a thread hop; a line is one JSON object with both ids and its extra fields; every response carries `X-Request-ID`, a well-formed supplied one is kept and a hostile one replaced; the request line has the path and never the query; one investigation's lines share one case id and the submitting request's id, from "investigation started" through every agent span to "investigation finished", and a unique marker in the evidence appears in no line; a reset request logs no email; no `print()` in any served module. Live: an investigation submitted with `X-Request-ID: verify-t12-001` produced 10 JSON lines in the running API, all carrying that id and the case id. Deviations, stated: the module is `services/api/logs.py`, not `logging.py`, so it cannot shadow the standard library; the worker path is covered by code (the job carries `request_id`, `drive` binds the case) but was not run here, as no broker is up. Found: S-08 (reset tokens in the log), left open for the owner.
 - Depends on: —
 - Fixes / implements: D-08; brief §8
 - Goal: One ID should let you follow a request from the route, through the graph and each agent, to the worker — in logs a machine can parse.

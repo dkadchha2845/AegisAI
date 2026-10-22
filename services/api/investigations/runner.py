@@ -82,8 +82,12 @@ from schema.models import (
 from ..db import SessionLocal
 from ..jobs import broker
 from ..jobs.journal import KEEPALIVE_S, RETAIN_S, Journal, MemoryJournal, RedisJournal
+from ..logs import bind, describe_error, get_logger
+from ..logs import request_id as current_request_id
 from ..orchestration.graph import investigate_stream, node_plan
 from ..stores.evidence import EvidenceStore
+
+log = get_logger("investigations")
 
 #: A ceiling on remembered in-process runs, so a busy process cannot accumulate
 #: journals without bound. Oldest finished run goes first; a running one is
@@ -288,7 +292,32 @@ async def drive(
     The one place an investigation is executed, whichever process is executing
     it. `session_factory` is a parameter because the worker binds its own
     sessions and because the tests substitute a store that refuses to write.
+
+    Every line logged inside — by the graph, each agent's span, the store —
+    carries this case's id, in the API process and on the worker alike,
+    because both arrive here (T-12).
     """
+    with bind(case=run.case_id):
+        started = time.perf_counter()
+        log.info("investigation started", extra={"org_id": run.org_id})
+        try:
+            await _drive(run, session_factory)
+        except Exception as exc:
+            log.error("investigation failed", extra={"error": describe_error(exc)})
+            raise
+        finally:
+            log.info(
+                "investigation finished",
+                extra={
+                    "status": run.state.status.value,
+                    "agents": len(run.state.agent_results),
+                    "degraded": list(run.state.degraded),
+                    "elapsed_ms": round((time.perf_counter() - started) * 1000, 1),
+                },
+            )
+
+
+async def _drive(run: Run, session_factory: Callable[[], Session]) -> None:
     try:
         async for update in investigate_stream(run.state):
             run.note_node(update.node, dict(update.update), update.state)
@@ -430,7 +459,7 @@ class InvestigationRunner:
             if self._enqueue(run):
                 return run
         except Exception as exc:
-            print(f"[aegis] queue unusable ({type(exc).__name__}: {exc}); running in process")
+            log.warning("queue unusable; running in process", extra={"error": describe_error(exc)})
         self._runs.pop((org_id, state.case_id), None)
         return None
 
@@ -467,13 +496,14 @@ class InvestigationRunner:
                     "case_id": run.case_id,
                     "org_id": run.org_id,
                     "state_json": run.state.model_dump_json(),
+                    "request_id": current_request_id.get(),
                 },
                 queue=queue_for(run.state),
             )
             remember_task(run.org_id, run.case_id, result.id)
             return True
         except Exception as exc:  # broker refused, celery absent, anything
-            print(f"[aegis] queue unavailable ({type(exc).__name__}: {exc}); running in process")
+            log.warning("queue unavailable; running in process", extra={"error": describe_error(exc)})
             return False
 
     async def _drive_locally(self, run: Run) -> None:

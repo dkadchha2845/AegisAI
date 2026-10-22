@@ -29,6 +29,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from ..config import settings
+from ..logs import describe_error, get_logger
+
+log = get_logger("rag")
 
 
 @dataclass
@@ -199,7 +202,7 @@ class KnowledgeBase:
                 self.backend = "dense"
                 return
             except Exception as exc:  # no torch, no model cache, offline
-                print(f"[aegis] dense RAG unavailable ({exc}); using BM25")
+                log.warning("dense RAG unavailable; using BM25", extra={"error": describe_error(exc)})
         self.index = BM25Index(self.chunks)
         self.backend = "bm25"
 

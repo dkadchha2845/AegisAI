@@ -28,6 +28,9 @@ import re
 from dataclasses import dataclass
 
 from ..config import settings  # noqa: F401  (kept: AEGIS_DENSE_SCRIPTS may join Settings)
+from ..logs import describe_error, get_logger
+
+log = get_logger("engine")
 
 _TOKEN = re.compile(r"[a-z0-9]+")
 
@@ -144,7 +147,8 @@ class ScriptMatcher:
             try:
                 self._impl = _DenseMatcher(templates)
             except Exception as exc:  # no torch / no model cache / offline
-                print(f"[aegis] dense script matcher unavailable ({exc}); using lexical")
+                log.warning("dense script matcher unavailable; using lexical",
+                            extra={"error": describe_error(exc)})
                 self._impl = _LexicalMatcher(templates)
         else:
             self._impl = _LexicalMatcher(templates)

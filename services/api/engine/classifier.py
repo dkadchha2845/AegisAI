@@ -28,6 +28,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..config import settings
+from ..logs import describe_error, get_logger
+
+log = get_logger("engine")
 
 # taxonomy.py is the single source of truth for labels and threat weights, so
 # the API imports it rather than restating the eight stages and letting them
@@ -568,7 +571,7 @@ def load_classifier() -> StageClassifier:
                 serving_is_fallback = False
                 return _cached
             except Exception as exc:  # transformers/torch missing, bad export
-                print(f"[aegis] MuRIL unavailable ({exc}); using lexical classifier")
+                log.warning("MuRIL unavailable; using lexical classifier", extra={"error": describe_error(exc)})
                 selection_reason = f"checkpoint failed to load: {exc}"
                 serving_is_fallback = True
         else:
@@ -577,7 +580,7 @@ def load_classifier() -> StageClassifier:
             # the gate refused to score it, or was never run. In every case the
             # lexical model is the best model with anything behind it, so this
             # is *not* degraded: it is what every machine now serves.
-            print(f"[aegis] checkpoint present but {reason}")
+            log.info(f"checkpoint present but {reason}")
             selection_reason = f"checkpoint present but {reason}"
             serving_is_fallback = False
     else:

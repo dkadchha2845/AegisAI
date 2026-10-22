@@ -25,6 +25,9 @@ import re
 from dataclasses import dataclass, field
 
 from ..config import settings
+from ..logs import describe_error, get_logger
+
+log = get_logger("engine")
 
 
 @dataclass
@@ -133,7 +136,8 @@ def load_ocr() -> OcrEngine:
         selection_reason = f"{cls.name} ready"
         return _cached
     except Exception as exc:
-        print(f"[aegis] OCR backend {requested!r} unavailable ({exc}); OCR disabled")
+        log.warning("OCR backend unavailable; OCR disabled",
+                    extra={"backend": requested, "error": describe_error(exc)})
         selection_reason = f"{requested} unavailable: {exc}"
         _cached = NullOcr()
         return _cached

@@ -22,10 +22,15 @@ EnvironmentFile=/srv/aegisai/app/.env
 # --proxy-headers with --forwarded-allow-ips lets uvicorn trust the
 # X-Forwarded-For Caddy sets, so the audit log and the per-IP rate limiter
 # record the visitor's address rather than 127.0.0.1 for every request.
+#
+# --no-access-log: the API writes its own request line, as JSON with a request
+# id and without the query string (T-12). uvicorn's would print the full URL,
+# and a live session's ?token= travels in it.
 ExecStart=/srv/aegisai/app/.venv/bin/uvicorn services.api.main:app \
     --host 127.0.0.1 --port 8000 \
     --workers 2 \
-    --proxy-headers --forwarded-allow-ips=127.0.0.1
+    --proxy-headers --forwarded-allow-ips=127.0.0.1 \
+    --no-access-log
 
 Restart=always
 RestartSec=3

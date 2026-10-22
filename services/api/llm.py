@@ -22,6 +22,9 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 from .config import settings
+from .logs import describe_error, get_logger
+
+log = get_logger("llm")
 
 TIMEOUT_S = 12.0
 
@@ -187,7 +190,7 @@ def answer_question(question: str, contexts: List[Dict[str, str]]) -> Optional[s
         # prompt so it answers from context instead of explaining a verdict.
         return backend(prompt, system=ASSISTANT_SYSTEM)
     except Exception as exc:  # network, quota, malformed — all degrade to None
-        print(f"[aegis] knowledge assistant unavailable: {exc}")
+        log.warning("knowledge assistant unavailable", extra={"error": describe_error(exc)})
         return None
 
 
@@ -225,7 +228,7 @@ def explain(analysis: Dict[str, Any], language: str = "auto") -> Optional[str]:
     try:
         return backend(prompt)
     except Exception as exc:  # network, quota, malformed response — all equal
-        print(f"[aegis] LLM explanation unavailable: {exc}")
+        log.warning("LLM explanation unavailable", extra={"error": describe_error(exc)})
         return None
 
 

@@ -68,6 +68,7 @@ from ..auth import (
 )
 from ..config import settings
 from ..db import get_db
+from ..logs import get_logger
 from ..models_db import ROLES, User, UserSession
 from ..orgs import scope_query
 from ..permissions import (
@@ -80,6 +81,8 @@ from ..permissions import (
     outranks,
 )
 from ..security import login_locked, record_login_attempt
+
+log = get_logger("auth")
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -515,10 +518,13 @@ def forgot_password(
     audit.record(db, "password.forgot", actor=user.email, actor_user_id=user.id,
                  resource_type="user", resource_id=str(user.id), org_id=user.org_id,
                  detail="reset token issued", **meta)
-    # The token, never the password, and never into the audit log.
-    print(
-        f"[aegis] password reset for {user.email}: token={token} "
-        f"(valid {settings.password_reset_ttl_s}s)"
+    # The token, never the password, and never into the audit log. The user
+    # by internal id, not email: an address is personal data (T-12). That the
+    # token is in the log at all is the documented delivery while there is no
+    # mail transport — and an open decision, audit item S-08.
+    log.warning(
+        "password reset token issued",
+        extra={"user_id": user.id, "token": token, "valid_s": settings.password_reset_ttl_s},
     )
     if settings.dev_password_reset and not auth_enabled():
         return {**generic, "dev_token": token, "dev_only": True}

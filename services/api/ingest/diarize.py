@@ -30,7 +30,10 @@ import os
 import re
 from dataclasses import dataclass, field
 
+from ..logs import describe_error, get_logger
 from .types import Turn
+
+log = get_logger("ingest")
 
 # --- Role-indicative language ---------------------------------------------
 # Weighted because the signals are not equally diagnostic. "bataiye" (tell me)
@@ -189,7 +192,7 @@ def diarize_audio(audio_path: str, segments: list) -> DiarizationResult | None:
             )
         return DiarizationResult(turns=turns, backend="pyannote", degraded=[], confidence=0.9)
     except Exception as exc:
-        print(f"[aegis] pyannote diarization failed ({exc}); using lexical roles")
+        log.warning("pyannote diarization failed; using lexical roles", extra={"error": describe_error(exc)})
         return None
 
 

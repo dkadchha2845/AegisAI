@@ -36,6 +36,8 @@ from .intel import get_intel
 from .jobs import broker as job_broker
 from .jobs import queue_purpose
 from .jobs.journal import dead_letters
+from .logs import RequestIdMiddleware
+from .logs import configure as configure_logging
 from .orchestration.graph import graph_summary
 from .rag.coach import get_coach
 from .rag.store import get_kb
@@ -83,6 +85,8 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     yield
 
 
+configure_logging(settings.log_level)
+
 app = FastAPI(
     title="AegisAI API",
     version="0.1.0",
@@ -105,7 +109,13 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # Readable by the frontend, so an error it shows can quote the ID a log
+    # search needs.
+    expose_headers=["X-Request-ID"],
 )
+# Outermost, so the ID is set before every other layer and a 429 or a 500
+# still returns `X-Request-ID` (T-12).
+app.add_middleware(RequestIdMiddleware)
 
 app.include_router(analyze.router)
 app.include_router(investigations.router)

@@ -41,6 +41,9 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from schema.models import AgentStatus, TraceSpan
+from services.api.logs import get_logger
+
+_log = get_logger("trace")
 
 
 @dataclass
@@ -104,6 +107,21 @@ class TraceRecorder:
             error=error,
         )
         self.spans.append(span)
+        # One line per span, so a log search for a case id shows every agent
+        # it ran, in order, with its outcome — the trace, for whoever has only
+        # the logs (T-12). Error text is bounded: an agent's error string is
+        # its own, but it is not evidence and must not grow into it.
+        _log.info(
+            "span",
+            extra={
+                "node": span.node,
+                "agent": span.agent,
+                "status": span.status.value,
+                "attempt": span.attempt,
+                "latency_ms": span.latency_ms,
+                **({"error": (error or "")[:200]} if error else {}),
+            },
+        )
         return span
 
     def ordered(self) -> List[TraceSpan]:

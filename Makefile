@@ -119,7 +119,7 @@ status: ## Show container health and what the API can actually reach
 
 api: ## Run the API in open demo mode (AEGIS_AUTH=0; reload-dir set, or reloads wipe the ephemeral DB)
 	AEGIS_AUTH=$${AEGIS_AUTH:-0} $(PY) -m uvicorn services.api.main:app --reload \
-	  --reload-dir services --reload-dir schema --port 8000
+	  --reload-dir services --reload-dir schema --port 8000 --no-access-log
 
 worker: ## Run a Celery worker on all three queues (task 1.8; needs `make up`)
 	.venv/bin/celery -A services.worker.celery_app worker \

@@ -26,7 +26,7 @@ could not:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated, Literal, Optional
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
@@ -286,6 +286,10 @@ class Settings(BaseSettings):
     #: steady stream of capped ones filling the evidence store. 0 = no quota.
     org_upload_quota_mb: int = Field(
         default=256, ge=0, validation_alias=_alias("ORG_UPLOAD_QUOTA_MB")
+    )
+    #: Level of the JSON log lines `services/api/logs.py` writes (T-12).
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = Field(
+        default="INFO", validation_alias=_alias("LOG_LEVEL")
     )
     frame_hz: float = Field(
         default=4.0, gt=0, le=60,

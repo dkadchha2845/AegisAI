@@ -55,10 +55,15 @@ from typing import Any, Dict
 from celery import Task
 
 from schema.models import InvestigationEventKind, InvestigationState
+from services.api.config import settings
 from services.api.investigations.runner import Run, drive
 from services.api.jobs.journal import RedisJournal, dead_letter
+from services.api.logs import bind, configure
 
 from .celery_app import app
+
+# The worker logs the same JSON lines as the API, under the same ids (T-12).
+configure(settings.log_level)
 
 #: Default duration of the sandbox probe. 90 seconds because that is the shape
 #: task 1.8's acceptance criterion names — "a 90-second APK-shaped stub runs off
@@ -101,7 +106,12 @@ class InvestigationTask(Task):
 
 @app.task(bind=True, base=InvestigationTask, name="aegis.investigate")
 def run_investigation(
-    self: Task, *, case_id: str, org_id: str, state_json: str
+    self: Task,
+    *,
+    case_id: str,
+    org_id: str,
+    state_json: str,
+    request_id: str | None = None,
 ) -> Dict[str, Any]:
     """Execute one investigation's graph, off the request path.
 
@@ -118,7 +128,11 @@ def run_investigation(
 
     run = Run(state, org_id, journal=journal)
     started = time.perf_counter()
-    asyncio.run(drive(run))
+    # The submitting request's id travels with the message (absent on a
+    # message queued before T-12), so one id follows the case from the route
+    # to this process; `drive` binds the case id itself.
+    with bind(request=request_id):
+        asyncio.run(drive(run))
     return {
         "case_id": case_id,
         "status": run.state.status.value,
