@@ -277,6 +277,42 @@ FRAMING_RULES: list[tuple[str, str, float, str, str]] = [
 
 _FRAMING = [(re.compile(p, re.I), *rest) for p, *rest in FRAMING_RULES]
 
+#: Advance-fee offers, read over the whole message: a job, a prize or a loan
+#: that costs money to receive. The offer and the fee are often in different
+#: sentences ("Your loan is approved. Pay Rs 1,499 processing fee…"), which is
+#: why this is a message-level check and not a per-sentence passport one. A
+#: real employer does not charge to hire, a real lottery deducts its tax, and a
+#: real lender takes its fee out of the loan (T-77).
+_FEE_OFFER = re.compile(
+    r"\b(job|jobs|work from home|work-from-home|part[- ]time|earn|earning|income|salary|hiring|vacancy|"
+    r"won|winner|lottery|lucky draw|prize|kbc|jackpot|instant loan|pre-?approved|loan offer)\b"
+    r"|\bloan\b[^.?!]{0,40}\bapproved\b",
+    re.I,
+)
+_FEE_DEMAND = re.compile(
+    r"\b(pay|deposit|send|transfer)\w*\b[^.?!]{0,40}\b(registration|joining|processing|security|training|"
+    r"activation|verification|clearance|insurance|gst|file|documentation|delivery|service)\s+"
+    r"(fee|fees|charge|charges|amount|deposit)\b"
+    r"|\b(registration|joining|processing|activation|file)\s+(fee|fees|charge|charges)\b[^.?!]{0,40}"
+    r"\b(pay|deposit|send|transfer)\w*",
+    re.I,
+)
+#: "There is no fee at any stage" — the honest employer's line.
+_NO_FEE = re.compile(r"\b(no|zero|never (ask|charge)\w*( for)?( any)?)\s+(\w+\s+)?(fee|fees|charges?)\b", re.I)
+
+
+def advance_fee(text: str) -> list[Finding]:
+    if _FEE_OFFER.search(text) and _FEE_DEMAND.search(text) and not _NO_FEE.search(text):
+        return [Finding(
+            "Advance fee demanded",
+            0.8,
+            "A job, prize or loan that must be paid for before it is given. Real "
+            "employers do not charge to hire, and real lotteries and lenders never ask "
+            "for a fee first.",
+            source="rbi-advisories.md § Money is never seized by asking the owner to send it",
+        )]
+    return []
+
 
 def analyze_payment_framing(text: str) -> list[Finding]:
     """Findings about how a payment is being *described*, independent of any
@@ -285,4 +321,5 @@ def analyze_payment_framing(text: str) -> list[Finding]:
     for pattern, label, weight, detail, source in _FRAMING:
         if pattern.search(text):
             out.append(Finding(label, weight, detail, source=source))
+    out += advance_fee(text)
     return out

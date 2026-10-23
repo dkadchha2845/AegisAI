@@ -104,8 +104,17 @@ def _is_credential_request(text: str) -> bool:
 #: Secrecy as a *demand*. The bare word "confidential" fired on "NetBank will
 #: never ask for your confidential details" — a bank warning — and floored a
 #: genuine call at 91 (audit B-08). The Hinglish forms are already imperatives.
+#: "Digital arrest" as something *done to the listener* — "Aap digital arrest
+#: par hain", "you are under digital arrest" — not the phrase itself. The bare
+#: phrase made the project's own README score 93: "Digital arrest scams
+#: defrauded citizens of ₹1,776 crore" is a sentence *about* scams (T-77).
+_DIGITAL_ARREST = (
+    r"\b(aap|aapko|tum|you|you are|you're|placed|put|kept|under)\b[^.?!]{0,25}\bdigital arrest\b"
+    r"|\bdigital arrest (par|pe|mein|me|main) (hain|ho|hai|rahenge|rahiye|rakh\w*)"
+)
 _SECRECY = re.compile(
-    r"\b(kisi ko (mat|nahi)|disconnect mat|digital arrest|akele)\b"
+    r"\b(kisi ko (mat|nahi)|disconnect mat|akele)\b"
+    r"|" + _DIGITAL_ARREST +
     r"|\b(this|the|yeh|ye) (matter|call|case|investigation|conversation) is "
     r"(strictly |highly )?(confidential|classified|secret)\b"
     r"|\b(keep|kept) (this|it|everything) (strictly )?(confidential|secret|between us)\b"
@@ -115,6 +124,20 @@ _SECRECY = re.compile(
 
 #: The same word in a warning: "we will never ask for your confidential details".
 _SECRECY_ADVISORY = re.compile(r"\bnever ask\w* (you )?for (your )?confidential\b")
+
+#: A sentence that *warns the reader* rather than asking them for anything:
+#: "Never share your OTP or transfer money to a safe account. Report it on
+#: 1930." It names every scam ingredient and demands none of them, and it is
+#: what banks, police and this project's own pages say. Such a sentence cannot
+#: trip the secrecy, payment or procedure checks (T-77). "Do not tell anyone"
+#: is deliberately absent — that *is* the secrecy demand.
+_WARNING = re.compile(
+    r"\b(never|beware|be careful|be alert|stay alert|stay safe|awareness|advisory|caution)\b"
+    r"|\b(do not|don'?t)\s+(share|transfer|pay|send|click|install|reply|fall for|trust)\b"
+    r"|\breport (it|this|them|fraud|scams?|cyber ?crime|to|on|at)\b"
+    r"|\bno (bank|agency|police|government|officer|official|cbi|rbi)\b"
+    r"|\b(will|would) never\b|\bscams?\b|\bfraudsters?\b",
+)
 
 #: Money asked for in the shape only a scam uses: an account that is "safe",
 #: "supervised" or the regulator's, a deposit that is "refundable", a payment
@@ -135,7 +158,11 @@ _SCAM_PAYMENT = re.compile(
     r"|\b(withdraw\w*|release|nikaal\w*) (se|karne se) pehle\b[^.?!]{0,60}\b(tax|fee|charge|deposit|pay)\w*"
     r"|\b(prove|clear) (your )?(innocence|name)\b|\bnaam clear\b"
     r"|\b(paise|paisa|amount|funds?|money|rupees|rs\.?|₹|\d{4,})\b[^.?!]{0,40}"
-    r"\b(rbi|government|sarkari) (ke )?(account|khaate|khata|mein)\b",
+    r"\b(rbi|government|sarkari) (ke )?(account|khaate|khata|mein)\b"
+    # The same advance fee, payment first: "pay the processing fee to claim
+    # your prize" (T-77; the reverse order above missed it).
+    r"|\b(pay|deposit|transfer|send)\w*\b[^.?!]{0,60}\b(to|before you can|and) "
+    r"(claim|release|receive|get|unlock|collect)\b[^.?!]{0,25}\b(prize|reward|winnings|lottery|loan|refund|parcel|gift|cashback|amount)\b",
 )
 
 #: Payment demanded on pain of arrest. Kept to *criminal* consequences on
@@ -220,14 +247,16 @@ class TrustPassport:
                 "banks and RBI never ask for OTP PIN CVV or passwords",
             )
 
-        if _SECRECY.search(low) and not _SECRECY_ADVISORY.search(low):
+        warning = bool(_WARNING.search(low))
+
+        if _SECRECY.search(low) and not _SECRECY_ADVISORY.search(low) and not warning:
             self._fail(
                 "Secrecy demand",
                 "required secrecy from family or threatened consequences for hanging up",
                 "digital arrest is not a legal procedure secrecy from family",
             )
 
-        if _SCAM_PAYMENT.search(low):
+        if _SCAM_PAYMENT.search(low) and not warning:
             self._fail(
                 "Payment to individual",
                 "asked for funds to be sent to prove innocence or secure a refund",
@@ -243,14 +272,16 @@ class TrustPassport:
                 "a genuine caller loses nothing if you verify them",
             )
 
-        if re.search(r"\b(digital arrest|video call on rakh|warrant.*(2|two) (ghante|hours))\w*", low):
+        if not warning and re.search(
+            _DIGITAL_ARREST + r"|\b(video call on rakh|warrant.*(2|two) (ghante|hours))\w*", low
+        ):
             self._fail(
                 "Procedural plausibility",
                 "described a procedure that does not exist in Indian law",
                 "no agency conducts a digital arrest",
             )
 
-        if _is_payment_under_threat(low):
+        if _is_payment_under_threat(low) and not warning:
             self._fail(
                 "Procedural plausibility",
                 "demanded payment to avoid arrest or a police case — no agency "

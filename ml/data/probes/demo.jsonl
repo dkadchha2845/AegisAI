@@ -1,0 +1,35 @@
+{"expect": "scam", "kind": "otp_kyc", "text": "Dear customer, your SBI account will be blocked today. Share the OTP sent to your number to update KYC. Call 9876543210"}
+{"expect": "scam", "kind": "digital_arrest", "text": "This is CBI officer Rathore. A parcel in your name has drugs. Do not tell anyone. Transfer 50000 to the RBI safe account now or you will be arrested."}
+{"expect": "scam", "kind": "job_fee", "text": "Earn Rs 5000 daily from home! Pay registration fee of Rs 999 to jobs@okaxis to join. Limited seats."}
+{"expect": "scam", "kind": "lottery", "text": "Congratulations! You won KBC lottery of 25 lakh. Pay processing fee 12500 to claim prize. Call +919812345678"}
+{"expect": "scam", "kind": "courier_customs", "text": "This is FedEx customs. A parcel in your name contains illegal items. Pay the clearance fine of 4999 now or a police case will be filed."}
+{"expect": "scam", "kind": "qr_refund", "text": "Sir, I am sending a QR code. Scan it and enter your UPI PIN to receive your refund of Rs 2,000."}
+{"expect": "scam", "kind": "card_phishing", "text": "Your credit card is blocked. Reply with your card number, CVV and expiry date to unblock it immediately."}
+{"expect": "scam", "kind": "remote_access", "text": "I am from bank support. Please install AnyDesk and tell me the code on your screen so I can reverse the wrong transaction. Also share the OTP you receive."}
+{"expect": "scam", "kind": "loan_fee", "text": "Your instant loan of Rs 2 lakh is approved. Pay Rs 1,499 processing fee to loan.desk@ybl to get the amount today."}
+{"expect": "scam", "kind": "police_threat", "text": "Sir, I am Inspector Sharma from Mumbai Police. An FIR is registered on your Aadhaar. Pay 25,000 security deposit or a warrant will be issued today."}
+{"expect": "scam", "kind": "hinglish_arrest", "text": "Main CBI officer bol raha hoon. Aap digital arrest par hain. Kisi ko mat batana. Abhi 50000 RBI safe account mein transfer kariye warna arrest hoga."}
+{"expect": "scam", "kind": "hinglish_otp", "text": "Sir aapka account block ho jayega. Jo OTP aaya hai woh bata dijiye, abhi verify karna hai."}
+{"expect": "scam", "kind": "hinglish_safe_account", "text": "Aapke paise surakshit karne ke liye unhe safe account mein transfer karna hoga, verification ke baad wapas mil jayega."}
+{"expect": "benign", "kind": "chat", "text": "hello how are you, lets meet for lunch tomorrow at 1pm"}
+{"expect": "benign", "kind": "chat_number", "text": "Hi, this is Rahul from college. My new number is 9876543210, save it. Call me when you are free."}
+{"expect": "benign", "kind": "family", "text": "Mummy I reached the hostel safely, will call you at night."}
+{"expect": "benign", "kind": "friend_money", "text": "Hey, can you send me 500 for the movie tickets? I'll return it tomorrow."}
+{"expect": "benign", "kind": "bank_otp_sms", "text": "Your OTP for login is 482913. Do not share it with anyone. -ICICI Bank"}
+{"expect": "benign", "kind": "bank_debit", "text": "Rs 450.00 debited from A/c XX3421 to VPA grocerystore@ybl on 22-10-26. Not you? Call 1800-11-2211. -SBI"}
+{"expect": "benign", "kind": "salary", "text": "Your salary of Rs 42,000 has been credited to your account XX9921. -HDFC Bank"}
+{"expect": "benign", "kind": "delivery", "text": "Your Amazon order is out for delivery today. The delivery agent will call you before arriving."}
+{"expect": "benign", "kind": "appointment", "text": "Hi, this is City Clinic. Your appointment with Dr. Mehta is confirmed for Friday at 11 am. Call 080-23456789 to reschedule."}
+{"expect": "benign", "kind": "utility_bill", "text": "Your electricity bill of Rs 1,240 is due on 15 Nov. Pay through the BESCOM app or any bill desk."}
+{"expect": "benign", "kind": "school", "text": "Dear parent, school fees for term 2 are due by 30 Oct. Pay at the school office or online."}
+{"expect": "benign", "kind": "news", "text": "The RBI kept the repo rate unchanged at 6.5% today. Banks are expected to keep loan rates steady."}
+{"expect": "benign", "kind": "job_real", "text": "We are hiring a junior developer. Send your resume to careers@infosys.com. There is no fee at any stage."}
+{"expect": "benign", "kind": "awareness_police", "text": "Beware: police never arrest anyone over a video call. Never share your OTP or transfer money to a safe account. Report fraud on 1930."}
+{"expect": "benign", "kind": "awareness_bank", "text": "SBI will never ask for your PIN, OTP or CVV. Do not share them with anyone. Report suspicious calls to 1930."}
+{"expect": "benign", "kind": "project_sentence", "text": "Digital arrest scams defrauded Indian citizens of 1,776 crore rupees in the first nine months of 2024."}
+{"expect": "benign", "kind": "courier_real", "text": "Your DHL shipment has customs duty of Rs 1,180. Pay on the DHL website or to the courier at delivery."}
+{"expect": "benign", "kind": "chat_hinglish", "text": "Bhai kal milte hain, 5 baje college gate pe aa jana."}
+{"expect": "benign", "kind": "maintenance", "text": "Power supply will be off today from 10 am to 2 pm for maintenance work. -BESCOM"}
+{"expect": "insufficient", "kind": "word", "text": "test"}
+{"expect": "insufficient", "kind": "greeting", "text": "hi"}
+{"expect": "insufficient", "kind": "number_only", "text": "9876543210"}

@@ -138,8 +138,9 @@ reused.
 | T-74 | An analysis that read nothing reports no score | M0 | ⬜ | S | — |
 | T-75 | Declare and document the speech-to-text dependency | M0 | ⬜ | S | — |
 | T-76 | Decide what a submission does when no worker is consuming the queue | M0 | ⬜ | S | — |
+| T-77 | Make the text check trustworthy: documents, warnings and fee scams | M0 | 🧪 | S | — |
 
-76 tasks: 44 single-sitting (33 written out in full below), 32 work packages.
+77 tasks: 45 single-sitting (34 written out in full below), 32 work packages.
 T-69 and T-70 were added on the owner's request on 2026-10-21 and 2026-10-22,
 out of the recommended order; they are specified at the end of this file.
 
@@ -916,3 +917,11 @@ The paper's contribution. Nothing here is claimed until it is measured.
   - [ ] With Redis up and no worker, a submission either completes or tells the submitter, in the response, that it is waiting for a worker
   - [ ] With a worker, nothing changes
 - Tests to add: the no-worker case through the API
+
+### T-77 — Make the text check trustworthy: documents, warnings and fee scams
+- Milestone: M0
+- Status: 🧪 Done 2026-10-23, awaiting `approve T-77`
+- Depends on: —
+- Fixes / implements: B-17 (reported by the owner before Review-I), B-15 (in the Analyze page)
+- Goal: What a person types into Analyze gets the obvious answer: a scam reads as one, an ordinary message does not, and a document is told it is not a message.
+- Evidence: Before — the project README and brief scored 93 "likely scam", a police awareness SMS 87, a job-fee scam 7.5, a loan-fee scam 24.6. Changes: (1) a document gate — headings, lists, tables or > 2,500 characters with no speaker labels returns "this looks like a document, not a message" and no score; a labelled call transcript is never refused; (2) "digital arrest" counts only when said to the listener ("Aap digital arrest par hain"), not when mentioned; (3) a sentence that warns the reader (never / beware / report to 1930 / no bank will…) cannot trip the secrecy, payment or procedure checks; (4) an advance-fee check over the whole message (a job, prize or loan that costs money first); (5) Analyze draws "Not scored" for an INSUFFICIENT verdict instead of a 0 / CALM dial. After — `ml/data/probes/demo.jsonl` 35/35 right (13 scams ≥ 70, 19 ordinary < 40, 3 too-thin INSUFFICIENT); README, brief and PRD all "document"; held-out probes and corpus splits unchanged (dev 7/12, held-out 8/10, benign 0 on both; test split 23/72, benign 0/23). `test_text_check_demo.py` (43). Gates green, 831 passed; ruff, mypy clean. The demo set was written while fixing, so it is a regression net and the demo script, not an unbiased measure.

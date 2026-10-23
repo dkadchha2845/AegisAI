@@ -351,6 +351,16 @@ up, so this is a choice between waiting and running in process, and it is the
 owner's: run in process when no worker answers (with `queue:in_process` on the
 202), or keep queuing and say so on the 202. Owned by T-76.
 
+### B-17 — High — A document about scams scored as a scam
+
+*Reported by the owner, 2026-10-22; fixed in T-77 (2026-10-23).* Pasting the
+project's own brief into Analyze read 95% scam: the analyzer scored a document
+sentence by sentence as if a caller had said each one, and the bare phrase
+"digital arrest" fired two conclusive checks. A police awareness message read
+87 the same way. Fixed with a document gate, a narrower "digital arrest"
+rule, and a warning-sentence guard; the same pass found two misses (job-fee
+7.5, loan-fee 24.6), now caught by a message-level advance-fee check. See T-77.
+
 ### B-10 — Medium — A VPA ending a sentence was not extracted
 
 *Found and fixed 2026-10-22 (T-18).* `intel/entities.py` discarded a UPI handle

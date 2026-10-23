@@ -267,6 +267,22 @@ def analyze_text(
             summary="Nothing to analyse.", degraded=degraded,
         )
 
+    # A document is not a message. A README, an article or a report about
+    # scams contains every scam word and asks the reader for nothing; scored
+    # sentence by sentence as if a caller had said each one, the project's own
+    # brief read 93 (T-77). Say what it is instead of scoring it.
+    reason = document_reason(raw)
+    if reason:
+        return AnalysisResult(
+            kind=kind, score=0.0, level="CALM", verdict="INSUFFICIENT",
+            summary=(
+                f"This looks like a document, not a message someone sent you ({reason}). "
+                "AegisAI checks messages, chats and call transcripts — paste the message "
+                "itself, or label a conversation with 'Caller:' and 'Me:'."
+            ),
+            degraded=degraded,
+        )
+
     manipulation = ManipulationAccumulator()
     coercion = CoercionTracker()
     passport = TrustPassport()
@@ -413,6 +429,34 @@ def analyze_text(
         upi=upi_payload,
         number_intel=number_intel,
     )
+
+
+#: Markdown and report structure: headings, tables, code fences, list items,
+#: bold runs, links. A message someone sends rarely has more than one or two.
+_DOC_LINE = re.compile(r"^\s*(#{1,6}\s|\|.*\||```|[-*+]\s|\d+\.\s|>\s)")
+_DOC_INLINE = re.compile(r"\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\)|`[^`]+`")
+
+#: Longer than any one message. Real scam SMS and WhatsApp forwards measured in
+#: the corpus run to a few hundred characters; a call transcript can be long,
+#: but it carries speaker labels and is never refused for length.
+DOC_MAX_CHARS = 2500
+
+
+def document_reason(raw: str) -> str | None:
+    """Why `raw` reads as a document rather than a message, or None.
+
+    Never refuses a labelled conversation ("Caller: … / Me: …"): a long call
+    transcript is exactly what the analyzer is for.
+    """
+    lines = [ln for ln in raw.splitlines() if ln.strip()]
+    if any(_SPEAKER_RE.match(ln) for ln in lines):
+        return None
+    structured = sum(1 for ln in lines if _DOC_LINE.match(ln)) + len(_DOC_INLINE.findall(raw))
+    if structured >= 4:
+        return "it has headings, lists or tables"
+    if len(raw) > DOC_MAX_CHARS:
+        return f"it is {len(raw):,} characters long"
+    return None
 
 
 def text_findings(raw: str, claimed_identity: str | None) -> tuple[list[Finding], dict | None]:

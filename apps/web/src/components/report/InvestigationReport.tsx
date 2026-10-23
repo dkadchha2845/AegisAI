@@ -69,6 +69,7 @@ export function InvestigationReport({
 }) {
   const em = result.emergency;
   const confidence = computeConfidence(result);
+  const unjudged = result.verdict === "INSUFFICIENT";
   const primaryHelpline = em.helplines.find((h) => h.value === "1930") ?? em.helplines.find((h) => h.priority === "primary");
   const shareText = `AegisAI check: ${VERDICT_COPY[result.verdict] ?? result.verdict} (${Math.round(result.score)}/100). ${result.summary}`;
 
@@ -126,23 +127,34 @@ export function InvestigationReport({
             thought, and splitting it let the first half travel alone. */}
         <div className="verdict" data-v={result.verdict}>
           <div className="verdict__dial">
+            {/* "Not enough to judge" is not a reading of 0 / CALM — that would be
+                a false negative wearing a number (audit B-15). The verdict is
+                the server's; this only declines to draw a dial for it. */}
             <RiskDial
-              score={result.score}
-              level={result.level}
-              confidence={confidence.pct / 100}
+              score={unjudged ? null : result.score}
+              level={unjudged ? null : result.level}
+              confidence={unjudged ? undefined : confidence.pct / 100}
               size={148}
             />
           </div>
           <div className="verdict__body">
             <h2 className="verdict__label">
-              <AlertTriangle size={18} aria-hidden="true" />
+              {result.verdict === "LIKELY_LEGITIMATE" ? (
+                <ShieldCheck size={18} aria-hidden="true" />
+              ) : unjudged ? (
+                <Info size={18} aria-hidden="true" />
+              ) : (
+                <AlertTriangle size={18} aria-hidden="true" />
+              )}
               {VERDICT_COPY[result.verdict] ?? result.verdict}
             </h2>
             <p className="verdict__summary">{result.summary}</p>
             <div className="row" style={{ gap: 6, marginTop: "var(--s-3)" }}>
-              <span className="chip chip--caps" data-risk={result.level}>
-                {result.level}
-              </span>
+              {!unjudged && (
+                <span className="chip chip--caps" data-risk={result.level}>
+                  {result.level}
+                </span>
+              )}
               {result.stage !== "BENIGN" && (
                 <span className="chip">Stage: {result.stage.replace(/_/g, " ").toLowerCase()}</span>
               )}
