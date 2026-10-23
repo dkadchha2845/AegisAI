@@ -361,6 +361,25 @@ sentence by sentence as if a caller had said each one, and the bare phrase
 rule, and a warning-sentence guard; the same pass found two misses (job-fee
 7.5, loan-fee 24.6), now caught by a message-level advance-fee check. See T-77.
 
+### B-18 — Medium — Uploaded evidence was deleted at every restart
+
+*Reported by the owner, 2026-10-23; fixed in T-78.* With `DATABASE_URL` set
+and `AEGIS_EVIDENCE_DIR` unset, cases survived a restart but their screenshots
+did not; the sidebar said "1 running degraded" (`blobs:ephemeral`) and the
+example config left the fix commented out. `var/`, where the evidence goes, was
+not gitignored.
+
+### B-19 — Medium — The fraud map showed "API KEY REQUIRED" tiles
+
+*Reported by the owner, 2026-10-23; fixed in T-78.* CARTO began requiring a key
+for its basemaps; every tile became a placeholder. The map moved to
+OpenStreetMap tiles, which need no key, and says so when tiles fail.
+
+### B-20 — Low — The Organisations card loaded for ever for an organisation admin
+
+*Reported by the owner, 2026-10-23; fixed in T-78.* The card was shown to a role
+the server refuses (403), and no tenancy panel handled a failed load.
+
 ### B-10 — Medium — A VPA ending a sentence was not extracted
 
 *Found and fixed 2026-10-22 (T-18).* `intel/entities.py` discarded a UPI handle

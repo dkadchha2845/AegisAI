@@ -66,6 +66,9 @@ aegis.db-shm
 # credential leak that survives every later fix.
 aegis.db.backup-*
 aegis.db.pre-*
+# Uploaded evidence (AEGIS_EVIDENCE_DIR=./var/evidence): citizens' screenshots
+# and recordings. Never committed.
+var/
 *.sql.gz
 .preview/
 

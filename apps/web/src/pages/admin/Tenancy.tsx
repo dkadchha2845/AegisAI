@@ -16,7 +16,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Ban, RefreshCw, ShieldCheck, UserPlus } from "lucide-react";
 import { IconRoster } from "@/components/brand/icons";
-import { EmptyState, SkeletonRows } from "@/components/ui/States";
+import { EmptyState, ErrorState, SkeletonRows } from "@/components/ui/States";
 import * as api from "@/lib/api";
 import type { AuditEvent, AuthUser, RoleInfo } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
@@ -25,11 +25,13 @@ import { useAuth } from "@/context/AuthContext";
 
 export function Organizations() {
   const [rows, setRows] = useState<api.Organization[] | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const res = await api.listOrgs();
+    setFailed(res.ok ? null : res.error);
     if (res.ok) setRows(res.data.organizations);
   }, []);
 
@@ -59,7 +61,10 @@ export function Organizations() {
         Tenants on this platform. Users, saved cases, and the audit log are scoped
         to one of these; the fraud-intelligence graph is shared across all of them.
       </p>
-      {!rows && <SkeletonRows rows={3} cols={5} />}
+      {!rows && !failed && <SkeletonRows rows={3} cols={5} />}
+      {!rows && failed && (
+        <ErrorState inline title="Organisations could not be loaded" detail={failed} onRetry={load} />
+      )}
       {rows && (
         <div className="cb-tablewrap">
           <table className="cb-table">
@@ -112,9 +117,11 @@ export function Organizations() {
 
 export function AuditLog() {
   const [rows, setRows] = useState<AuditEvent[] | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const res = await api.getAudit();
+    setFailed(res.ok ? null : res.error);
     if (res.ok) setRows(res.data.events);
   }, []);
 
@@ -130,7 +137,10 @@ export function AuditLog() {
           <RefreshCw size={13} /> Refresh
         </button>
       </h2>
-      {!rows && <SkeletonRows rows={4} cols={5} />}
+      {!rows && !failed && <SkeletonRows rows={4} cols={5} />}
+      {!rows && failed && (
+        <ErrorState inline title="The activity log could not be loaded" detail={failed} onRetry={load} />
+      )}
       {rows && rows.length === 0 && (
         <EmptyState
           inline
@@ -206,6 +216,7 @@ export function AuditLog() {
 export function Users() {
   const { user: me, can } = useAuth();
   const [rows, setRows] = useState<AuthUser[] | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
   const [roles, setRoles] = useState<RoleInfo[]>([]);
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
@@ -216,6 +227,7 @@ export function Users() {
 
   const load = useCallback(async () => {
     const res = await api.listUsers();
+    setFailed(res.ok ? null : res.error);
     if (res.ok) setRows(res.data.users);
   }, []);
 
@@ -277,7 +289,10 @@ export function Users() {
         Changing a role or disabling an account signs that person out everywhere —
         a demotion that leaves the old session working is not a demotion.
       </p>
-      {!rows && <SkeletonRows rows={4} cols={6} />}
+      {!rows && !failed && <SkeletonRows rows={4} cols={6} />}
+      {!rows && failed && (
+        <ErrorState inline title="Users could not be loaded" detail={failed} onRetry={load} />
+      )}
       {rows && (
         <div className="cb-tablewrap">
           <table className="cb-table">

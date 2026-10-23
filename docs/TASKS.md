@@ -139,8 +139,9 @@ reused.
 | T-75 | Declare and document the speech-to-text dependency | M0 | ⬜ | S | — |
 | T-76 | Decide what a submission does when no worker is consuming the queue | M0 | ⬜ | S | — |
 | T-77 | Make the text check trustworthy: documents, warnings and fee scams | M0 | ✅ | S | — |
+| T-78 | Fix the admin dashboard: status pill, map tiles, organisations card | M0 | 🧪 | S | — |
 
-77 tasks: 45 single-sitting (34 written out in full below), 32 work packages.
+78 tasks: 46 single-sitting (35 written out in full below), 32 work packages.
 T-69 and T-70 were added on the owner's request on 2026-10-21 and 2026-10-22,
 out of the recommended order; they are specified at the end of this file.
 
@@ -925,3 +926,12 @@ The paper's contribution. Nothing here is claimed until it is measured.
 - Fixes / implements: B-17 (reported by the owner before Review-I), B-15 (in the Analyze page)
 - Goal: What a person types into Analyze gets the obvious answer: a scam reads as one, an ordinary message does not, and a document is told it is not a message.
 - Evidence: Before — the project README and brief scored 93 "likely scam", a police awareness SMS 87, a job-fee scam 7.5, a loan-fee scam 24.6. Changes: (1) a document gate — headings, lists, tables or > 2,500 characters with no speaker labels returns "this looks like a document, not a message" and no score; a labelled call transcript is never refused; (2) "digital arrest" counts only when said to the listener ("Aap digital arrest par hain"), not when mentioned; (3) a sentence that warns the reader (never / beware / report to 1930 / no bank will…) cannot trip the secrecy, payment or procedure checks; (4) an advance-fee check over the whole message (a job, prize or loan that costs money first); (5) Analyze draws "Not scored" for an INSUFFICIENT verdict instead of a 0 / CALM dial. After — `ml/data/probes/demo.jsonl` 35/35 right (13 scams ≥ 70, 19 ordinary < 40, 3 too-thin INSUFFICIENT); README, brief and PRD all "document"; held-out probes and corpus splits unchanged (dev 7/12, held-out 8/10, benign 0 on both; test split 23/72, benign 0/23). `test_text_check_demo.py` (43). Gates green, 831 passed; ruff, mypy clean. The demo set was written while fixing, so it is a regression net and the demo script, not an unbiased measure.
+
+### T-78 — Fix the admin dashboard: status pill, map tiles, organisations card
+- Milestone: M0
+- Status: 🧪 Done 2026-10-23, awaiting `approve T-78`
+- Depends on: —
+- Fixes / implements: B-18, B-19, B-20 (reported by the owner on `/admin/dashboard`)
+- Goal: The admin dashboard shows the true state of the system and nothing that cannot load.
+- Evidence: (1) "1 running degraded" was `blobs:ephemeral` — a durable `aegis.db` with evidence written to a temp dir that is deleted at exit. The owner's `.env` now sets `AEGIS_EVIDENCE_DIR=./var/evidence`, `.env.example` sets it beside `DATABASE_URL`, and `var/` is gitignored (it was not: uploaded screenshots were committable). Health after restart: `degraded: []`, pill "All systems live". (2) Every CARTO basemap tile now returns an "API KEY REQUIRED" image (checked by fetching one with and without a referer). The map uses the standard OpenStreetMap tiles with OSM attribution; the dark theme darkens each tile with a CSS filter so markers keep their colours; a tile that fails to load is said under the map. Verified in both themes: tiles load, 114 reports shown. (3) The Organisations card was rendered for an organisation admin, whose `GET /api/orgs` is correctly 403 (ORG_MANAGE is the owner's), and a failed load left the skeleton up for ever. The card is now shown only with ORG_MANAGE, and the organisations, users and activity-log panels show the server's reason and a retry on failure. Verified: org admin sees no Organisations card; owner sees all 3 organisations. `Tenancy.test.tsx` (3). Gates green.
+

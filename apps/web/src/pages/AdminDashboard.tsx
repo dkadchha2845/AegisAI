@@ -28,7 +28,7 @@ import { ScamMap } from "@/components/map/ScamMap";
 import { useAuth } from "@/context/AuthContext";
 
 export function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, can } = useAuth();
   const [health, setHealth] = useState<Health | null>(null);
   const [card, setCard] = useState<ModelCard | null>(null);
   const [stats, setStats] = useState<IntelStats | null>(null);
@@ -213,8 +213,10 @@ export function AdminDashboard() {
 
       {/* Tenancy — organisations, users, audit trail. One implementation,
           shared with nothing else: `/reports` used to render a second user
-          table with a second add-user form beside this one. */}
-      <Organizations />
+          table with a second add-user form beside this one. The organisation
+          list is the platform owner's (ORG_MANAGE); an organisation admin
+          sees only their own users and log. */}
+      {can("ORG_MANAGE") && <Organizations />}
       <UserRoster />
       <AuditLog />
     </div>

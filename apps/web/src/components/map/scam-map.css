@@ -84,6 +84,11 @@
 
 /* Leaflet chrome, themed to the app rather than its default blue/white. */
 .scam-map .leaflet-container { font: inherit; }
+/* OSM has one (light) style; in the dark theme the tiles alone are
+   inverted, so markers, clusters and popups keep their real colours. */
+.scam-map__canvas[data-tiles="dark"] .leaflet-tile-pane .leaflet-tile {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.35);
+}
 .scam-map .leaflet-control-zoom a {
   background: var(--panel);
   color: var(--ink);

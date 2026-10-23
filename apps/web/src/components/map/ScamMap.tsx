@@ -3,9 +3,12 @@
  *
  * OpenStreetMap tiles via Leaflet, so there is no API key to leak and no
  * per-load billing — a real consideration for a citizen tool that must keep
- * working after the demo. CARTO's light/dark raster themes are used so the map
- * reads as part of the app in either theme rather than a bright rectangle
- * dropped into a dark console.
+ * working after the demo. CARTO's light/dark rasters were used until CARTO began
+ * answering every keyless request with an "API KEY REQUIRED" tile (2026-10);
+ * the standard OSM tiles are drawn as they are in the light theme and darkened
+ * with a CSS filter on the tile pane in the dark one, so the markers above them
+ * keep their real colours. A tile that fails to load is said under the map:
+ * the markers come from our API and stay accurate without a background.
  *
  * Deliberately provider-agnostic at the seam: every Leaflet import is contained
  * in this file, and the public props (`hotspots` / `points` / `height` /
@@ -194,6 +197,7 @@ export function ScamMap({
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [geoBusy, setGeoBusy] = useState(false);
+  const [tilesFailed, setTilesFailed] = useState(false);
   const mapKey = useRef(`map-${Math.random().toString(36).slice(2)}`).current;
 
   const allMarkers = useMemo<MapMarker[]>(() => {
@@ -272,10 +276,7 @@ export function ScamMap({
 
   const doCluster = cluster ?? Boolean(points && points.length);
 
-  const tileUrl =
-    theme === "light"
-      ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-      : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+  const tileUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
   const markerNodes = markers.map((m) => (
     <Marker 
@@ -372,7 +373,7 @@ export function ScamMap({
         </div>
       )}
 
-      <div className="scam-map__canvas" style={{ height }}>
+      <div className="scam-map__canvas" data-tiles={theme} style={{ height }}>
         <MapContainer
           key={mapKey}
           center={[22.6, 79]}
@@ -384,7 +385,8 @@ export function ScamMap({
         >
           <TileLayer
             url={tileUrl}
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            eventHandlers={{ tileerror: () => setTilesFailed(true) }}
           />
           <InvalidateOnMount />
           <FlyToUser pos={userPos} />
@@ -425,6 +427,9 @@ export function ScamMap({
           {markers.length} {points ? "report" : "hotspot"}
           {markers.length === 1 ? "" : "s"} shown
         </span>
+        {tilesFailed && (
+          <span className="scam-map__geoerr">The map background could not load; the report markers are still accurate.</span>
+        )}
         {geoError && <span className="scam-map__geoerr">{geoError}</span>}
         {nearest && !geoError && (
           <span className="scam-map__near">
