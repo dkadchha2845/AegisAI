@@ -138,7 +138,7 @@ reused.
 | T-74 | An analysis that read nothing reports no score | M0 | ⬜ | S | — |
 | T-75 | Declare and document the speech-to-text dependency | M0 | ⬜ | S | — |
 | T-76 | Decide what a submission does when no worker is consuming the queue | M0 | ⬜ | S | — |
-| T-77 | Make the text check trustworthy: documents, warnings and fee scams | M0 | 🧪 | S | — |
+| T-77 | Make the text check trustworthy: documents, warnings and fee scams | M0 | ✅ | S | — |
 
 77 tasks: 45 single-sitting (34 written out in full below), 32 work packages.
 T-69 and T-70 were added on the owner's request on 2026-10-21 and 2026-10-22,
@@ -920,7 +920,7 @@ The paper's contribution. Nothing here is claimed until it is measured.
 
 ### T-77 — Make the text check trustworthy: documents, warnings and fee scams
 - Milestone: M0
-- Status: 🧪 Done 2026-10-23, awaiting `approve T-77`
+- Status: ✅ Approved 2026-10-23
 - Depends on: —
 - Fixes / implements: B-17 (reported by the owner before Review-I), B-15 (in the Analyze page)
 - Goal: What a person types into Analyze gets the obvious answer: a scam reads as one, an ordinary message does not, and a document is told it is not a message.
