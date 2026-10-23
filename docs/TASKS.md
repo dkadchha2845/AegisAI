@@ -139,7 +139,7 @@ reused.
 | T-75 | Declare and document the speech-to-text dependency | M0 | ⬜ | S | — |
 | T-76 | Decide what a submission does when no worker is consuming the queue | M0 | ⬜ | S | — |
 | T-77 | Make the text check trustworthy: documents, warnings and fee scams | M0 | ✅ | S | — |
-| T-78 | Fix the admin dashboard: status pill, map tiles, organisations card | M0 | 🧪 | S | — |
+| T-78 | Fix the admin dashboard: status pill, map tiles, organisations card | M0 | ✅ | S | — |
 
 78 tasks: 46 single-sitting (35 written out in full below), 32 work packages.
 T-69 and T-70 were added on the owner's request on 2026-10-21 and 2026-10-22,
@@ -929,7 +929,7 @@ The paper's contribution. Nothing here is claimed until it is measured.
 
 ### T-78 — Fix the admin dashboard: status pill, map tiles, organisations card
 - Milestone: M0
-- Status: 🧪 Done 2026-10-23, awaiting `approve T-78`
+- Status: ✅ Approved 2026-10-23
 - Depends on: —
 - Fixes / implements: B-18, B-19, B-20 (reported by the owner on `/admin/dashboard`)
 - Goal: The admin dashboard shows the true state of the system and nothing that cannot load.

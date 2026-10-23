@@ -5,7 +5,7 @@ after [`TASKS.md`](TASKS.md) to find where things stand.
 
 **Current state (2026-10-23):** Phase 0 and Phase 3 approved. T-04 approved
 2026-10-10; T-05, T-69, T-70, T-01, T-02, T-03, T-71 (with T-06, T-09–T-15,
-T-18, T-20), T-07, T-08, T-16, T-17 and T-19 approved 2026-10-22; T-77 approved 2026-10-23; T-78 awaiting approval. New from
+T-18, T-20), T-07, T-08, T-16, T-17 and T-19 approved 2026-10-22; T-77 and T-78 approved 2026-10-23. New from
 T-07 and T-19: T-72 to T-76 (B-13 is High). Open for the owner: S-08, S-06,
 B-16's option (T-76), the T-19 degraded-agent rule, and design gaps G-09,
 G-10, G-12, G-13. The remaining landing sections (05, 07, 08, 10–12) await
@@ -501,7 +501,7 @@ Transcript (macOS, Homebrew Python 3.12 present, pip/npm caches warm):
 
 - Reported by the owner before Review-I: the project brief pasted into Analyze scored 95 "likely scam". A document gate (no score for a document or a too-thin input), "digital arrest" only when said to the listener, warnings that cannot trip the secrecy/payment/procedure checks, and a message-level advance-fee check. `ml/data/probes/demo.jsonl` 35/35; README, brief and PRD read as documents; held-out probes and corpus splits unchanged. 43 tests in `test_text_check_demo.py`. Gates green, 831 passed. Separately, `ml/corpus/export_csv.py` writes the splits as CSV.
 
-## T-78 — Fix the admin dashboard: status pill, map tiles, organisations card — 2026-10-23 (🧪)
+## T-78 — Fix the admin dashboard: status pill, map tiles, organisations card — 2026-10-23 (✅ approved 2026-10-23)
 
 - Owner feedback on `/admin/dashboard`: the "degraded" pill was `blobs:ephemeral` (evidence folder now set and gitignored); CARTO tiles became "API KEY REQUIRED" placeholders (now OpenStreetMap, darkened in the dark theme); the Organisations card was shown to an org admin the server refuses and loaded for ever (now owner-only, and all tenancy panels show failures with a retry). Verified in the running app from the main checkout; 3 new component tests.
 
